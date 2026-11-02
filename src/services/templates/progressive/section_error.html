@@ -1,0 +1,34 @@
+<!-- Progressive Section Error Template -->
+<div class="section-error" data-section="{{ section_id }}" data-phase="{{ phase }}">
+  <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+    <div class="flex items-center">
+      <svg class="h-5 w-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+      </svg>
+      <span class="text-red-700 font-medium">Unable to generate {{ section_name }}</span>
+    </div>
+    <p class="text-sm text-red-600 mt-2">
+      This section could not be calculated due to insufficient data or calculation errors.
+    </p>
+  </div>
+  
+  <div class="bg-gray-50 rounded-lg p-4">
+    <h4 class="text-sm font-medium text-gray-900 mb-2">What you can do:</h4>
+    <ul class="text-sm text-gray-600 space-y-1">
+      <li>• Provide additional financial information</li>
+      <li>• Check that your data is complete and accurate</li>
+      <li>• Try refreshing the page</li>
+    </ul>
+  </div>
+</div>
+
+<style>
+.section-error {
+  transition: all 0.3s ease-in-out;
+}
+
+.section-error:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
+}
+</style>

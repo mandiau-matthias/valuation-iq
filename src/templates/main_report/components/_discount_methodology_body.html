@@ -1,0 +1,208 @@
+{% if canonical_fallback_disclosure|default(false) %}
+{% with _saved_pricing_detail="discounts" %}{% include "shared/canonical_saved_pricing.html" %}{% endwith %}
+{% else %}
+{#
+    DISCOUNT BUILD-UP & METHODOLOGY — shared body (screen + PDF)
+
+    Full-transparency addendum: every risk discount applied to the reference
+    multiple, with the factor impact, the rationale, the methodology and the
+    data source behind it. Renders from the calibration context values
+    (`owner_concentration_discount`, `liquidity_discount`, `size_discount`)
+    so it is correct even when the response carried no `discount_build_up`.
+    The applied multiple is derived here from base × Π(1−discount) so it
+    reconciles to the waterfall regardless of the headline-anchor path.
+#}
+{% set _is_en_dm = (locale|default('nl'))|lower == 'en' %}
+{% set _is_fr_dm = (locale|default('nl'))|lower == 'fr' %}
+{# Both external-reference shapes (disclosed fallback and the governed sealed
+   contract) share the same honest wording: the multiple IS the external
+   reference, and this addendum documents zero adjustments. #}
+{% set _dm_ext = is_disclosed_external_market_fallback|default(false) or is_governed_external_market_reference|default(false) %}
+{% set _dm_extmult = fallback_applied_multiple|default(base_multiple|default(0), true) %}
+{% set _dm_ebitda = (sustainable_ebitda|default(0))|float %}
+{% set _dm_base = (base_multiple|default(0))|float %}
+{% set _dm_owner = (owner_concentration_discount|default(0))|float %}
+{% set _dm_dlom = (liquidity_discount|default(0))|float %}
+{% set _dm_size = (size_discount|default(0))|float %}
+{# Use the engine's rounded sequential steps; multiplying percentages again
+   drifts from the committed multiple and can reverse the sign of an impact. #}
+{% set _dm_steps = namespace(owner_before=_dm_base, owner_after=_dm_base * (1 - _dm_owner), dlom_before=none, dlom_after=none, size_before=none, size_after=none) %}
+{% for _dm_step in discount_waterfall|default([]) %}
+  {% if _dm_step.label == 'Owner Concentration' and _dm_step.factor_before is defined %}
+    {% set _dm_steps.owner_before = _dm_step.factor_before|float %}
+    {% set _dm_steps.owner_after = _dm_step.factor_after|float %}
+  {% elif _dm_step.label == 'Liquidity Discount' and _dm_step.factor_before is defined %}
+    {% set _dm_steps.dlom_before = _dm_step.factor_before|float %}
+    {% set _dm_steps.dlom_after = _dm_step.factor_after|float %}
+  {% elif _dm_step.label == 'Size Discount' and _dm_step.factor_before is defined %}
+    {% set _dm_steps.size_before = _dm_step.factor_before|float %}
+    {% set _dm_steps.size_after = _dm_step.factor_after|float %}
+  {% endif %}
+{% endfor %}
+{% set _dm_m_after_owner = _dm_steps.owner_after %}
+{% set _dm_dlom_before = _dm_steps.dlom_before if _dm_steps.dlom_before is not none else _dm_m_after_owner %}
+{% set _dm_m_after_dlom = _dm_steps.dlom_after if _dm_steps.dlom_after is not none else _dm_dlom_before * (1 - _dm_dlom) %}
+{% set _dm_size_before = _dm_steps.size_before if _dm_steps.size_before is not none else _dm_m_after_dlom %}
+{% set _dm_applied = _dm_steps.size_after if _dm_steps.size_after is not none else _dm_size_before * (1 - _dm_size) %}
+
+<p style="margin: 0 0 12pt 0; font-size: 8pt; line-height: 1.55; color: hsl(var(--report-text-muted));">
+    {% if _dm_ext %}{% if _is_fr_dm %}La composante de marché part de la référence externe publiée de {{ _dm_extmult|safe_round(2) }}×. Dans cette valorisation initiale sur base déclarée, aucun ajustement spécifique du multiple n'a été quantifié. Cela ne prouve pas l'absence de risques. Lorsqu'un point d'attention affecte d'abord la base de résultat, le fonds de roulement ou la dette nette, il n'est pas traité en plus comme une décote sur le multiple.{% elif _is_en_dm %}The market component starts from the published external reference of {{ _dm_extmult|safe_round(2) }}×. In this initial, reported-basis valuation no company-specific multiple adjustment has been quantified. That is not evidence that risks are absent. Where an issue primarily affects the earnings basis, working capital or net debt, it is not also applied as a discount on the multiple.{% else %}De marktcomponent vertrekt van de gepubliceerde externe referentie van {{ _dm_extmult|safe_round(2) }}×. In deze initiële waardering op gerapporteerde basis zijn geen bedrijfsspecifieke multiple-aanpassingen gekwantificeerd. Dit bewijst niet dat risico's afwezig zijn. Waar een aandachtspunt primair de resultaatsbasis, het werkkapitaal of de netto-schuld beïnvloedt, wordt het niet tevens als multiplekorting verwerkt.{% endif %}{% elif _is_fr_dm %}Cette annexe détaille chaque décote appliquée au multiple de référence : l'ampleur, la raison, la méthodologie et la source. Les décotes ne sont pas arbitraires — chacune correspond à un risque mesurable de transfert que l'acheteur intègre dans son prix.{% elif _is_en_dm %}This appendix details every discount applied to the reference multiple: the size, the reason, the methodology and the source. Discounts are not arbitrary — each maps to a measurable transfer risk a buyer prices in.{% else %}Deze bijlage geeft per korting op de referentiemultiple de omvang, de reden, de methodologie en de bron. Kortingen zijn niet willekeurig — elke korting weerspiegelt een meetbaar overdrachtsrisico dat een koper in zijn prijs verrekent.{% endif %}
+</p>
+
+{# Starting point — table layout is deterministic in WeasyPrint and prevents
+   the three labels from colliding when the fallback wording is long. #}
+<div style="margin-bottom: 10pt; padding: 8pt 10pt; border-radius: 6pt; background: hsl(var(--report-surface)); border: 1px solid hsl(var(--report-border));">
+    <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+        <tr>
+            <td style="width: 43%; border: none; padding: 0; vertical-align: baseline; font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-text-muted)); font-weight: 700;">{% if _dm_ext %}{% if _is_fr_dm %}Référence externe{% elif _is_en_dm %}External reference{% else %}Externe referentiemultiple{% endif %}{% elif _is_fr_dm %}Multiple de référence{% elif _is_en_dm %}Reference multiple{% else %}Referentiemultiple{% endif %}</td>
+            <td style="width: 17%; border: none; padding: 0; vertical-align: baseline; font-size: 13pt; font-weight: 700; color: hsl(var(--report-foreground)); font-family: 'JetBrains Mono', monospace;">{{ _dm_base|safe_round(2) }}×</td>
+            <td style="width: 40%; border: none; padding: 0; vertical-align: baseline; font-size: 7pt; color: hsl(var(--report-text-muted));">{% if _dm_ext %}{% if _is_fr_dm %}sans ajustement spécifique{% elif _is_en_dm %}without company-specific adjustment{% else %}zonder bedrijfsspecifieke aanpassing{% endif %}{% elif _is_fr_dm %}avant décotes spécifiques{% elif _is_en_dm %}before company-specific discounts{% else %}vóór bedrijfsspecifieke kortingen{% endif %}</td>
+        </tr>
+    </table>
+</div>
+
+{# ── Owner / key-person concentration ───────────────────────────────── #}
+{% if _dm_owner and _dm_owner != 0 %}
+<div style="margin-bottom: 8pt; padding: 9pt 11pt; border-radius: 6pt; border: 1px solid hsl(var(--report-border)); border-left: 3pt solid hsl({{ teal_hsl|default('172, 55%, 45%') }});">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3pt;">
+        <span style="font-size: 9pt; font-weight: 700; color: hsl(var(--report-foreground));">{% if _is_fr_dm %}Concentration / dépendance au dirigeant{% elif _is_en_dm %}Owner / key-person concentration{% else %}Eigenaars- / sleutelpersoonafhankelijkheid{% endif %}</span>
+        <span style="font-size: 9pt; font-weight: 700; color: hsl(var(--report-danger)); font-family: 'JetBrains Mono', monospace;">−{{ (_dm_owner * 100)|safe_round(1) }}%</span>
+    </div>
+    <div style="font-size: 7.5pt; color: hsl(var(--report-text-muted)); margin-bottom: 5pt; font-family: 'JetBrains Mono', monospace;">
+        {{ _dm_steps.owner_before|safe_round(2) }}× → {{ _dm_m_after_owner|safe_round(2) }}×
+        {% if _dm_ebitda %}· {{ (_dm_ebitda * (_dm_m_after_owner - _dm_steps.owner_before))|format_currency }}{% endif %}
+    </div>
+    <p style="margin: 0 0 4pt 0; font-size: 7.5pt; line-height: 1.5; color: hsl(var(--report-text));">
+        {% if _is_fr_dm %}<strong>Pourquoi :</strong> quand le chiffre d'affaires, les relations clients et le savoir-faire dépendent fortement du dirigeant, l'acheteur supporte un risque de transition. Une rétention, un earn-out ou une décote de prix compensent ce risque.{% elif _is_en_dm %}<strong>Why:</strong> when revenue, client relationships and know-how depend heavily on the owner, the buyer carries transition risk. A retention period, earn-out or price discount compensates for it.{% else %}<strong>Waarom:</strong> wanneer omzet, klantrelaties en kennis sterk van de eigenaar afhangen, draagt de koper een transitierisico. Een retentieperiode, earn-out of prijskorting compenseert dit.{% endif %}
+    </p>
+    <p style="margin: 0; font-size: 6.8pt; line-height: 1.45; color: hsl(var(--report-text-muted));">
+        {% if _is_fr_dm %}<strong>Méthodologie & source :</strong> évaluation de la transférabilité (dépendance dirigeant, concentration clientèle, profondeur du management). Réf. : Mercer — key-person risk ; Pratt &amp; Niculita (2008), <em>Valuing a Business</em>.{% elif _is_en_dm %}<strong>Methodology &amp; source:</strong> transferability assessment (owner dependency, customer concentration, management depth). Ref.: Mercer — key-person risk; Pratt &amp; Niculita (2008), <em>Valuing a Business</em>.{% else %}<strong>Methodologie &amp; bron:</strong> overdraagbaarheidsbeoordeling (eigenaarsafhankelijkheid, klantconcentratie, managementdiepte). Ref.: Mercer — key-person risk; Pratt &amp; Niculita (2008), <em>Valuing a Business</em>.{% endif %}
+    </p>
+</div>
+{% endif %}
+
+{# ── Illiquidity / DLOM ─────────────────────────────────────────────── #}
+{% if _dm_dlom and _dm_dlom != 0 %}
+<div style="margin-bottom: 8pt; padding: 9pt 11pt; border-radius: 6pt; border: 1px solid hsl(var(--report-border)); border-left: 3pt solid hsl({{ teal_hsl|default('172, 55%, 45%') }});">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3pt;">
+        <span style="font-size: 9pt; font-weight: 700; color: hsl(var(--report-foreground));">{% if _is_fr_dm %}Décote d'illiquidité (DLOM){% elif _is_en_dm %}Illiquidity discount (DLOM){% else %}Illiquiditeitskorting (DLOM){% endif %}</span>
+        <span style="font-size: 9pt; font-weight: 700; color: hsl(var(--report-danger)); font-family: 'JetBrains Mono', monospace;">−{{ (_dm_dlom * 100)|safe_round(1) }}%</span>
+    </div>
+    <div style="font-size: 7.5pt; color: hsl(var(--report-text-muted)); margin-bottom: 5pt; font-family: 'JetBrains Mono', monospace;">
+        {{ _dm_dlom_before|safe_round(2) }}× → {{ _dm_m_after_dlom|safe_round(2) }}×
+        {% if _dm_ebitda %}· {{ (_dm_ebitda * (_dm_m_after_dlom - _dm_dlom_before))|format_currency }}{% endif %}
+    </div>
+    <p style="margin: 0 0 4pt 0; font-size: 7.5pt; line-height: 1.5; color: hsl(var(--report-text));">
+        {% if _is_fr_dm %}<strong>Pourquoi :</strong> les parts d'une société privée ne se vendent pas sur un marché coté — trouver un acheteur prend du temps et de l'argent. Le marché applique une décote pour ce manque de liquidité.{% elif _is_en_dm %}<strong>Why:</strong> shares in a private company cannot be sold on a public market — finding a buyer costs time and money. The market applies a discount for that lack of marketability.{% else %}<strong>Waarom:</strong> aandelen in een private vennootschap zijn niet op een beurs verhandelbaar — een koper vinden kost tijd en geld. De markt past een korting toe voor dit gebrek aan verhandelbaarheid.{% endif %}
+    </p>
+    <p style="margin: 0; font-size: 6.8pt; line-height: 1.45; color: hsl(var(--report-text-muted));">
+        {% if _is_fr_dm %}<strong>Méthodologie &amp; source :</strong> études restricted-stock &amp; pré-IPO (DLOM typique 10–25 %). Réf. : Stout Risius Ross — Restricted Stock Study ; Mercer Capital (2017) — DLOM/DLOC.{% elif _is_en_dm %}<strong>Methodology &amp; source:</strong> restricted-stock &amp; pre-IPO studies (typical DLOM 10–25%). Ref.: Stout Risius Ross — Restricted Stock Study; Mercer Capital (2017) — DLOM/DLOC.{% else %}<strong>Methodologie &amp; bron:</strong> restricted-stock- &amp; pre-IPO-studies (typische DLOM 10–25%). Ref.: Stout Risius Ross — Restricted Stock Study; Mercer Capital (2017) — DLOM/DLOC.{% endif %}
+    </p>
+</div>
+{% endif %}
+
+{# ── Size premium / small-firm discount ─────────────────────────────── #}
+{% if _dm_size and _dm_size != 0 %}
+<div style="margin-bottom: 8pt; padding: 9pt 11pt; border-radius: 6pt; border: 1px solid hsl(var(--report-border)); border-left: 3pt solid hsl({{ teal_hsl|default('172, 55%, 45%') }});">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3pt;">
+        <span style="font-size: 9pt; font-weight: 700; color: hsl(var(--report-foreground));">{% if _is_fr_dm %}Décote de taille{% elif _is_en_dm %}Size discount{% else %}Omvangskorting{% endif %}</span>
+        <span style="font-size: 9pt; font-weight: 700; color: hsl(var(--report-danger)); font-family: 'JetBrains Mono', monospace;">−{{ (_dm_size * 100)|safe_round(1) }}%</span>
+    </div>
+    <div style="font-size: 7.5pt; color: hsl(var(--report-text-muted)); margin-bottom: 5pt; font-family: 'JetBrains Mono', monospace;">
+        {{ _dm_size_before|safe_round(2) }}× → {{ _dm_applied|safe_round(2) }}×
+        {% if _dm_ebitda %}· {{ (_dm_ebitda * (_dm_applied - _dm_size_before))|format_currency }}{% endif %}
+    </div>
+    <p style="margin: 0 0 4pt 0; font-size: 7.5pt; line-height: 1.5; color: hsl(var(--report-text));">
+        {% if _is_fr_dm %}<strong>Pourquoi :</strong> les petites entreprises présentent un risque plus élevé (moins de diversification, accès au financement plus difficile) et se négocient à des multiples plus bas que les grandes.{% elif _is_en_dm %}<strong>Why:</strong> smaller companies carry higher risk (less diversification, harder financing access) and trade at lower multiples than larger ones.{% else %}<strong>Waarom:</strong> kleinere ondernemingen dragen een hoger risico (minder diversificatie, moeilijkere financieringstoegang) en noteren tegen lagere multiples dan grote.{% endif %}
+    </p>
+    <p style="margin: 0; font-size: 6.8pt; line-height: 1.45; color: hsl(var(--report-text-muted));">
+        {% if _is_fr_dm %}<strong>Méthodologie &amp; source :</strong> prime de taille. Réf. : Duff &amp; Phelps (2024) — Cost of Capital Navigator, size premium.{% elif _is_en_dm %}<strong>Methodology &amp; source:</strong> size premium. Ref.: Duff &amp; Phelps (2024) — Cost of Capital Navigator, size premium.{% else %}<strong>Methodologie &amp; bron:</strong> omvangspremie. Ref.: Duff &amp; Phelps (2024) — Cost of Capital Navigator, size premium.{% endif %}
+    </p>
+</div>
+{% endif %}
+
+{# Factor-treatment table. Without it, "no adjustment applied" reads as
+   "every risk was reviewed and none warranted one". This states, per factor,
+   WHERE it is actually handled — so an item corrected in EBITDA or in the
+   equity bridge is visibly not ALSO discounted on the multiple (double count). #}
+{% if _dm_ext %}
+{% set _st_incl = 'Déjà intégré au benchmark' if _is_fr_dm else ('Already in benchmark' if _is_en_dm else 'Reeds vervat in benchmark') %}
+{% set _st_nq = 'Non quantifié' if _is_fr_dm else ('Not quantified' if _is_en_dm else 'Niet gekwantificeerd') %}
+{% set _st_else = 'Traité ailleurs' if _is_fr_dm else ('Handled elsewhere' if _is_en_dm else 'Elders verwerkt') %}
+{% set _st_nodata = 'Données insuffisantes' if _is_fr_dm else ('Insufficient data' if _is_en_dm else 'Onvoldoende data') %}
+{% set _dm_factors = [
+    (('Taille' if _is_fr_dm else ('Size' if _is_en_dm else 'Omvang')), _st_incl,
+     ('Référence déjà alignée sur les transactions < 5 M€' if _is_fr_dm else ('Reference already matched to sub-EUR-5m transactions' if _is_en_dm else 'Referentie is reeds afgestemd op transacties <€5m'))),
+    (('Dépendance au propriétaire/titulaire' if _is_fr_dm else ('Owner / titular-pharmacist dependence' if _is_en_dm else 'Eigenaar-/titularisafhankelijkheid')), _st_nq,
+     ('Passe d abord par la normalisation EBITDA' if _is_fr_dm else ('Handled first through EBITDA normalisation' if _is_en_dm else 'Eerst via EBITDA-normalisatie'))),
+    (('Loyer de marché / immobilier' if _is_fr_dm else ('Market rent / property' if _is_en_dm else 'Marktconforme huur/vastgoed')), _st_else,
+     ('Via normalisation EBITDA et pont distinct vers les capitaux propres' if _is_fr_dm else ('Via EBITDA normalisation and the separate equity bridge' if _is_en_dm else 'Via EBITDA-normalisatie en afzonderlijke equity bridge'))),
+    (('Stock et fonds de roulement' if _is_fr_dm else ('Stock and working capital' if _is_en_dm else 'Voorraad en werkkapitaal')), _st_else,
+     ('Via BFR normalisé et le mécanisme de prix' if _is_fr_dm else ('Via normalised NWC and the agreed price mechanism' if _is_en_dm else 'Via genormaliseerd NWC en het prijsmechanisme'))),
+    (('Autorisation et continuité du titulaire' if _is_fr_dm else ('Permit and titular continuity' if _is_en_dm else 'Vergunning en titulariscontinuïteit')), _st_nq,
+     ('Point de diligence' if _is_fr_dm else ('Diligence item' if _is_en_dm else 'Diligencepunt'))),
+    (('Concentration clients/fournisseurs' if _is_fr_dm else ('Customer / supplier concentration' if _is_en_dm else 'Leveranciers-/omzetconcentratie')), _st_nodata,
+     ('À évaluer en diligence' if _is_fr_dm else ('To be assessed in diligence' if _is_en_dm else 'Te beoordelen in diligence'))),
+] %}
+<table style="width: 100%; border-collapse: collapse; font-size: 7.5pt; margin: 0 0 10pt 0;">
+    <thead>
+        <tr style="border-bottom: 1pt solid hsl(var(--report-foreground));">
+            <th style="padding: 4pt; text-align: left; color: hsl(var(--report-text-muted)); font-weight: 700;">{% if _is_fr_dm %}Facteur{% elif _is_en_dm %}Factor{% else %}Factor{% endif %}</th>
+            <th style="padding: 4pt; text-align: left; color: hsl(var(--report-text-muted)); font-weight: 700;">{% if _is_fr_dm %}Statut{% elif _is_en_dm %}Status{% else %}Status{% endif %}</th>
+            <th style="padding: 4pt; text-align: left; color: hsl(var(--report-text-muted)); font-weight: 700;">{% if _is_fr_dm %}Traitement{% elif _is_en_dm %}Treatment{% else %}Behandeling{% endif %}</th>
+            <th style="padding: 4pt; text-align: right; color: hsl(var(--report-text-muted)); font-weight: 700; white-space: nowrap;">{% if _is_fr_dm %}Impact appliqué dans cette phase{% elif _is_en_dm %}Applied impact in this phase{% else %}Toegepaste multiple-impact in deze fase{% endif %}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for _f_name, _f_status, _f_treatment in _dm_factors %}
+        <tr style="border-bottom: 0.5pt solid hsl(var(--report-border));">
+            <td style="padding: 4pt; font-weight: 600;">{{ _f_name }}</td>
+            <td style="padding: 4pt; color: hsl(var(--report-text-muted));">{{ _f_status }}</td>
+            <td style="padding: 4pt; color: hsl(var(--report-text-muted));">{{ _f_treatment }}</td>
+            <td style="padding: 4pt; text-align: right; font-family: 'JetBrains Mono', monospace; white-space: nowrap;">0,00×</td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <td style="padding: 4pt; font-weight: 700;" colspan="3">{% if _is_fr_dm %}Ajustement spécifique total quantifié et appliqué{% elif _is_en_dm %}Total quantified and applied company-specific adjustment{% else %}Totale gekwantificeerde en toegepaste bedrijfsspecifieke multiple-aanpassing{% endif %}</td>
+            <td style="padding: 4pt; text-align: right; font-weight: 700; font-family: 'JetBrains Mono', monospace; white-space: nowrap;">0,00×</td>
+        </tr>
+    </tbody>
+</table>
+{% endif %}
+
+{% if not ((_dm_owner and _dm_owner != 0) or (_dm_dlom and _dm_dlom != 0) or (_dm_size and _dm_size != 0)) %}
+<p style="margin: 0 0 8pt 0; font-size: 7.5pt; line-height: 1.5; color: hsl(var(--report-text-muted));">
+    {% if _dm_ext %}{% if _is_fr_dm %}Aucun ajustement spécifique n'a été quantifié dans cette phase : le multiple appliqué reste égal à la référence externe.{% elif _is_en_dm %}No company-specific adjustment was quantified in this phase: the applied multiple remains equal to the external reference.{% else %}In deze fase is geen bedrijfsspecifieke aanpassing gekwantificeerd: de toegepaste multiple blijft gelijk aan de externe referentie.{% endif %}{% elif _is_fr_dm %}Aucune décote spécifique n'a été appliquée : le multiple appliqué est égal au multiple de référence.{% elif _is_en_dm %}No company-specific discounts were applied: the applied multiple equals the reference multiple.{% else %}Er zijn geen bedrijfsspecifieke kortingen toegepast: de toegepaste multiple is gelijk aan de referentiemultiple.{% endif %}
+</p>
+{% endif %}
+
+{# Result — applied multiple #}
+<div style="margin-top: 4pt; padding: 9pt 11pt; border-radius: 6pt; background: hsla({{ teal_hsl|default('172, 55%, 45%') }}, 0.07); border: 1px solid hsla({{ teal_hsl|default('172, 55%, 45%') }}, 0.30);">
+    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+        <span style="font-size: 8pt; font-weight: 700; color: hsl(var(--report-foreground));">{% if _dm_ext %}{% if _is_fr_dm %}Multiple appliqué (inchangé){% elif _is_en_dm %}Applied multiple (unchanged){% else %}Toegepaste multiple (ongewijzigd){% endif %}{% elif _is_fr_dm %}Multiple appliqué (après décotes){% elif _is_en_dm %}Applied multiple (after discounts){% else %}Toegepaste multiple (na kortingen){% endif %}</span>
+        {# The headline's applied multiple is the authority; the base × Π(1−discount)
+           product is the fallback for runs that carry no headline multiple. #}
+        {% set _dm_shown = applied_multiple|default(none, true) %}{% if not _dm_shown or (_dm_shown|float) <= 0 %}{% set _dm_shown = _dm_applied %}{% endif %}
+        <span style="font-size: 13pt; font-weight: 700; color: hsl(var(--report-teal)); font-family: 'JetBrains Mono', monospace;">{{ _dm_shown|safe_round(2) }}×</span>
+    </div>
+    {% if _dm_ebitda %}
+    <div style="margin-top: 3pt; font-size: 7pt; color: hsl(var(--report-text-muted)); font-family: 'JetBrains Mono', monospace;">
+        {% set _dm_shown_ev = (_dm_ebitda * (_dm_shown|float))|round(0) %}{{ _dm_ebitda|format_currency }} × {{ _dm_shown|safe_round(2) }}× = {{ _dm_shown_ev|format_currency }} {% if _is_fr_dm %}(valeur d'entreprise, jambe multiples){% elif _is_en_dm %}(enterprise value, multiples leg){% else %}(ondernemingswaarde, multiples-leg){% endif %}
+    </div>
+    {% endif %}
+</div>
+
+{# SDE synthesis — only when the engine blended an SDE leg into the headline #}
+{% if sde_blend_applied|default(false) and sde_blend_leg_ev and ebitda_blend_leg_ev %}
+<div style="margin-top: 8pt; padding: 9pt 11pt; border-radius: 6pt; border: 1px solid hsl(var(--report-border)); border-left: 3pt solid hsl({{ teal_hsl|default('172, 55%, 45%') }});">
+    <div style="font-size: 8pt; font-weight: 700; color: hsl(var(--report-foreground)); margin-bottom: 3pt;">{% if _is_fr_dm %}Synthèse SDE (micro-entreprise dirigée par le propriétaire){% elif _is_en_dm %}SDE synthesis (owner-led micro-business){% else %}SDE-synthese (eigenaar-geleide micro-onderneming){% endif %}</div>
+    <p style="margin: 0 0 4pt 0; font-size: 7.5pt; line-height: 1.5; color: hsl(var(--report-text));">
+        {% if _is_fr_dm %}Pour ce profil, le moteur pondère la jambe EBITDA et une jambe SDE (Seller's Discretionary Earnings) :{% elif _is_en_dm %}For this profile the engine weights the EBITDA leg together with an SDE (Seller's Discretionary Earnings) leg:{% else %}Voor dit profiel weegt de engine de EBITDA-leg samen met een SDE-leg (Seller's Discretionary Earnings):{% endif %}
+    </p>
+    <div style="font-size: 7.5pt; color: hsl(var(--report-text)); font-family: 'JetBrains Mono', monospace;">
+        {{ ebitda_blend_leg_ev|format_currency }} ({% if _is_fr_dm %}jambe EBITDA{% elif _is_en_dm %}EBITDA leg{% else %}EBITDA-leg{% endif %}, {{ ebitda_blend_weight_pct }}%) + {{ sde_blend_leg_ev|format_currency }} ({% if _is_fr_dm %}jambe SDE{% elif _is_en_dm %}SDE leg{% else %}SDE-leg{% endif %}, {{ sde_blend_weight_pct }}%) = <strong style="color: hsl(var(--report-teal));">{{ sde_blend_headline_ev|format_currency }}</strong>
+    </div>
+</div>
+{% endif %}
+
+{% endif %}

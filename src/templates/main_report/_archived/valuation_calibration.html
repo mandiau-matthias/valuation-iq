@@ -1,0 +1,143 @@
+{# 
+    VALUATION CALIBRATION PAGE
+    Page 4 of 5
+    
+    Contents:
+    - Value bridge (Market → Adjustments → Final)
+    - Calibration ledger table
+    - Reference notes
+#}
+
+<div class="a4-page">
+    {# Page Header #}
+    {% include "main_report/partials/_page_header.html" %}
+    
+    {# Section Header #}
+    <div class="section-header">
+        <span class="section-number">03</span>
+        <h1 class="section-title">Waarderingskalibratie</h1>
+    </div>
+    
+    {# Methodology-specific introduction #}
+    {% if valuation_methodology == 'SDE' or (recommended_methodology and 'SDE' in recommended_methodology) %}
+    <p style="margin-bottom: 16pt; font-size: 9pt; color: hsl(224 10% 45%);">
+        Voor eigenaar-geleide micro-ondernemingen passen we <strong>SDE-multiples</strong> (Seller's Discretionary Earnings) toe.
+        SDE omvat de EBITDA plus eigenaarssalaris en voordelen, wat de werkelijke verdiensten van een eigenaar-operator weergeeft.
+        <span class="badge badge-primary" style="margin-left: 8pt; font-size: 6pt;">SDE Multiples</span>
+    </p>
+    {% elif valuation_methodology == 'DCF Analysis' %}
+    <p style="margin-bottom: 16pt; font-size: 9pt; color: hsl(224 10% 45%);">
+        De <strong>DCF-analyse</strong> (Discounted Cash Flow) waardeert het bedrijf op basis van de contante waarde van toekomstige kasstromen.
+        Deze methode is geschikt wanneer gedetailleerde financiële prognoses beschikbaar zijn.
+        <span class="badge badge-primary" style="margin-left: 8pt; font-size: 6pt;">DCF Analyse</span>
+    </p>
+    {% elif valuation_methodology == 'Hybrid (Multiples + DCF)' %}
+    <p style="margin-bottom: 16pt; font-size: 9pt; color: hsl(224 10% 45%);">
+        Een <strong>hybride benadering</strong> combineert marktmultiples en DCF als afzonderlijke gewogen waarderingsmethodes.
+        De eindwaarde is een gewogen gemiddelde van beide methodes.
+        <span class="badge badge-primary" style="margin-left: 8pt; font-size: 6pt;">Hybride Waardering</span>
+    </p>
+    {% else %}
+    <p style="margin-bottom: 16pt; font-size: 9pt; color: hsl(224 10% 45%);">
+        Elke stap van marktmultiple naar finale ondernemingswaarde — volledige transparantie.
+        {% if valuation_methodology %}
+        <span style="font-size: 7pt; color: hsl(224 10% 55%);">(Methodologie: {{ valuation_methodology }})</span>
+        {% endif %}
+    </p>
+    {% endif %}
+    
+    {# Clean Value Bridge - Adapts to methodology #}
+    <div class="value-bridge">
+        {# 3-Column Bridge #}
+        <div class="value-bridge-grid">
+            {# Market Median / Base #}
+            <div class="value-bridge-item">
+                <div class="value-bridge-label">
+                    {% if valuation_methodology == 'SDE' %}SDE Markt Mediaan
+                    {% elif valuation_methodology == 'DCF Analysis' %}Berekende Waarde
+                    {% else %}Markt Mediaan{% endif %}
+                </div>
+                <div class="value-bridge-value">
+                    {% if valuation_methodology == 'DCF Analysis' %}
+                    {{ valuation|format_currency }}
+                    {% else %}
+                    {{ base_multiple|safe_round(1) }}×
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="value-bridge-operator">
+                {% if valuation_methodology == 'DCF Analysis' %}±{% else %}+{% endif %}
+            </div>
+            
+            {# Risk Discounts / Adjustments #}
+            <div class="value-bridge-item">
+                <div class="value-bridge-label">
+                    {% if valuation_methodology == 'DCF Analysis' %}Marktvalidatie
+                    {% else %}Risicokortingen{% endif %}
+                </div>
+                <div class="value-bridge-value negative">
+                    {% if valuation_methodology == 'DCF Analysis' %}
+                    {% if total_discount %}{{ (total_discount / base_multiple * 100)|safe_round(0) if base_multiple else 0 }}%{% else %}±5%{% endif %}
+                    {% else %}
+                    {{ total_discount|safe_round(2) }}×
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="value-bridge-operator">=</div>
+            
+            {# Applied / Final #}
+            <div class="value-bridge-item value-bridge-result">
+                <div class="value-bridge-label">
+                    {% if valuation_methodology == 'DCF Analysis' %}Finale Waarde
+                    {% else %}Toegepast{% endif %}
+                </div>
+                <div class="value-bridge-value highlight">
+                    {% if valuation_methodology == 'DCF Analysis' %}
+                    {{ valuation|format_currency }}
+                    {% else %}
+                    {{ applied_multiple|safe_round(2) }}×
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        {# Bottom Line - Result #}
+        <div class="value-bridge-bottom">
+            <span class="value-bridge-bottom-text">
+                {% if valuation_methodology == 'SDE' %}
+                {{ sustainable_ebitda|format_currency }} SDE (gewogen) × {{ applied_multiple|safe_round(2) }}×
+                {% elif valuation_methodology == 'DCF Analysis' %}
+                NPV van geprojecteerde kasstromen over {{ dcf_projection_years|default(5) }} jaar
+                {% else %}
+                {{ sustainable_ebitda|format_currency }} duurzame EBITDA (gewogen) × {{ applied_multiple|safe_round(2) }}×
+                {% endif %}
+            </span>
+            <span class="value-bridge-bottom-value">
+                = {{ valuation|format_currency }}
+            </span>
+        </div>
+    </div>
+    
+    {# Full Calibration Ledger #}
+    <h3 style="margin-bottom: 12pt;">Volledige Berekening</h3>
+    
+    {% include "main_report/components/_calibration_ledger.html" %}
+    
+    {# Reference Notes #}
+    <div style="margin-top: 16pt; font-size: 7pt; color: hsl(224 10% 50%); line-height: 1.6;">
+        <p style="margin: 0 0 4pt 0;">
+            ¹ Marktband en referentiemultiple gebaseerd op Europese KMO-transactiedata waar beschikbaar; peer-setdetails alleen wanneer expliciet in het dossier meegeleverd.
+        </p>
+        <p style="margin: 0 0 4pt 0;">² Omvangs- en procesrisico zoals weergegeven in de kalibratiestappen; geen vaste omzetgrens in de voetnoot.</p>
+        <p style="margin: 0;">
+            ³ Illiquiditeitskorting conform gangbare praktijk voor niet-beursgenoteerde ondernemingen (restricted-stock studies).
+        </p>
+    </div>
+
+    {# Page Footer #}
+    {% with page_number=4, total_pages=5 %}
+    {% include "main_report/partials/_footer.html" %}
+    {% endwith %}
+</div>

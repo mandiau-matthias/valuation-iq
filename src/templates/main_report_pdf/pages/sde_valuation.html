@@ -1,0 +1,147 @@
+{#
+    SDE (Seller's Discretionary Earnings) VALUATION — PDF version
+    ========================================================================
+    Per-method dedicated page that mirrors the DCF / NAV / EBITDA-Multiple
+    rhythm:
+      1. Section header + SDE-anchor badge
+      2. Methodology intro (owner-operator narrative)
+      3. Reported earnings → SDE bridge ladder
+      4. SDE × multiple summary card (with P25–P75 buyer-comparable band)
+      5. SDE × multiple sensitivity matrix (re-uses generic component)
+      6. Business-size band callout (micro / lower / mid / upper)
+      7. Assumptions footnote
+
+    Conditionally included when `has_sde_page` is True. Section number and
+    page number are assigned by `report_pagination.assign_sme_html_footer_page_numbers`
+    (no more 'S' / `total_pages - 3` placeholders).
+
+    Migrated 2026-05-15 to share the `method_section` macro with the
+    screen twin.  Only the print-stable body (subtitle, callouts, summary
+    table, sensitivity, business-size band, assumptions + normalization
+    cross-reference) lives here.  The hardcoded-hex subtitle is rendered
+    inside the body slot (not via the macro's `subtitle=` parameter) to
+    preserve print typography until screen+PDF CSS converges.
+
+    Context variables consumed:
+      has_sde_page (bool)
+      sde_section_number (str — "0N" set by pagination, never the 'S' placeholder)
+      sde_page_number (int — set by pagination)
+      sde_method (MethodResult — hoisted from engine in aggregator)
+      sde_value (float — from method_details.sde)
+      sde_base_multiple, sde_multiple_p25, sde_multiple_p75 (floats)
+      sde_business_size, sde_country_code (classification)
+      ev_sde_enterprise_value (set by sde_channel; engine output for SDE × multiple)
+      sde_bridge (list of {label, amount, running_total, kind})
+      sde_sensitivity_matrix_2d / sde_sensitivity_metric / sde_sensitivity_multiple
+#}
+
+{% from "shared/macros/method_section.html" import method_section with context %}
+
+{% call method_section(
+    method_key='sde_multiple',
+    section_number=sde_section_number|default('S'),
+    title=t.sde_dedicated_page_title,
+    subtitle=t.calib_sde_intro,
+    badge_label=t.calib_sde_badge,
+    tree_root='main_report_pdf',
+    page_number=sde_page_number|default(total_pages - 3),
+    method=sde_method
+) %}
+
+    <p style="margin-bottom: 10pt; font-size: 8pt; color: hsl(224, 10%, 45%);">
+        {{ t.calib_sde_intro }}
+        <span class="badge badge-primary" style="margin-left: 8pt; font-size: 6pt;">{{ t.calib_sde_badge }}</span>
+    </p>
+
+    {# Methodology intro — owner-operator narrative. Acknowledges both the
+       net-income decomposition path and the normalized-EBITDA path so the
+       copy never overpromises a 5-line walk on a 2-line bridge. #}
+    <div style="margin-top: 6pt; margin-bottom: 14pt; padding: 8pt 10pt; border-radius: 6pt; border: 1pt solid hsl(224, 10%, 91%); background: hsl(40, 15%, 98%); page-break-inside: avoid; break-inside: avoid;">
+        <p style="margin: 0; font-size: 8pt; color: hsl(224, 12%, 35%); line-height: 1.55;">
+            {{ t.sde_methodology_intro }}
+        </p>
+    </div>
+
+    {# Reported earnings → SDE bridge ladder. #}
+    {% include "main_report_pdf/components/_sde_bridge_ladder.html" ignore missing %}
+
+    {# NOTE: _calibration_ledger.html intentionally NOT included here.
+       Consolidated multi-method ledger is owned by the calibration page
+       (renders directly after this dossier). Dedupe-2026-05-03. #}
+
+    {# SDE summary card — same visual rhythm as DCF EV card. #}
+    {% if sde_value and sde_value|float > 0 %}
+    <div style="margin-top: 18pt; padding: 10pt; border: 1pt solid hsl(224, 10%, 91%); border-left: 3pt solid hsl({{ teal_hsl }}); border-radius: 6pt; page-break-inside: avoid; break-inside: avoid;">
+        <h4 style="font-size: 9.5pt; margin: 0 0 8pt 0; color: hsl(225, 18%, 12%);">{{ t.sde_summary_title }}</h4>
+
+        <table style="width: 100%; font-size: 8pt; border-collapse: collapse;">
+            <tr style="border-bottom: 1pt solid hsl(224, 12%, 96%);">
+                <td style="padding: 3pt 0; color: hsl(224, 10%, 45%); border: none;">{{ t.sde_summary_row_sde }}</td>
+                <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">{{ sde_value|format_currency }}</td>
+            </tr>
+            {% set _multiple_for_summary = sde_multiple|default(sde_base_multiple|default(0)) %}
+            <tr style="border-bottom: 1pt solid hsl(224, 12%, 96%);">
+                <td style="padding: 3pt 0; color: hsl(224, 10%, 45%); border: none;">× {{ t.sde_summary_row_multiple }}</td>
+                <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">{{ _multiple_for_summary|safe_round(1) }}×</td>
+            </tr>
+            {% set _ev_for_summary = ev_sde_enterprise_value|default(enterprise_value_mid|default(valuation|default(0))) %}
+            {% if _ev_for_summary and _ev_for_summary|float > 0 %}
+            <tr>
+                <td style="padding: 5pt 0; font-weight: 700; font-size: 9pt; color: hsl({{ teal_hsl }}); border: none;">= {{ t.sde_enterprise_value_label }}</td>
+                <td style="padding: 5pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 700; font-size: 9pt; color: hsl({{ teal_hsl }}); border: none;">{{ _ev_for_summary|format_currency }}</td>
+            </tr>
+            {% endif %}
+        </table>
+
+        {% if sde_multiple_p25 and sde_multiple_p75 %}
+        <p style="margin: 6pt 0 0 0; font-size: 7pt; color: hsl(224, 10%, 45%);">
+            {{ t.sde_p25_p75_band_label }}: <strong style="color: hsl(224, 16%, 18%);">{{ sde_multiple_p25|safe_round(1) }}× — {{ sde_multiple_p75|safe_round(1) }}×</strong>
+            {% if sde_business_size %}
+            · {{ t.sde_size_band_label }}: <strong style="color: hsl(224, 16%, 18%);">{{ sde_business_size|replace('_', ' ')|title }}</strong>
+            {% endif %}
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {# SDE × multiple sensitivity matrix — re-uses the generic component. #}
+    {% with multiple_sensitivity_matrix_2d=sde_sensitivity_matrix_2d,
+            multiple_sensitivity_metric=sde_sensitivity_metric,
+            multiple_sensitivity_multiple=sde_sensitivity_multiple,
+            metric_base=sde_value,
+            multiple_base=sde_base_multiple,
+            metric_label='SDE',
+            multiple_axis_label=t.sde_summary_row_multiple %}
+    {% include "main_report_pdf/components/_multiple_sensitivity_matrix.html" ignore missing %}
+    {% endwith %}
+
+    {# Business-size band callout — visualises which P25-P75 band the
+       business sits in. Drives the buyer-comparable multiple selection. #}
+    {% if sde_business_size %}
+    <div style="margin-top: 14pt; padding: 8pt 10pt; border-radius: 6pt; border: 1pt solid hsl(224, 10%, 91%); background: hsla({{ teal_hsl }}, 0.04); page-break-inside: avoid; break-inside: avoid;">
+        <p style="margin: 0 0 4pt 0; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(224, 10%, 45%);">
+            {{ t.sde_business_size_label }}
+        </p>
+        <p style="margin: 0; font-size: 8pt; color: hsl(224, 12%, 35%); line-height: 1.5;">
+            {{ t.sde_business_size_intro }}
+            <strong style="color: hsl(224, 16%, 18%);">{{ sde_business_size|replace('_', ' ')|title }}</strong>
+            {% if sde_country_code %} · <span style="color: hsl(224, 10%, 55%);">{{ sde_country_code|upper }} {{ t.sde_buyer_pool_label }}</span>{% endif %}
+        </p>
+    </div>
+    {% endif %}
+
+    {# Assumptions / sources footnote + intra-PDF cross-reference to the
+       EBITDA Normalization page (anchor `#ebitda-normalization-page`).
+       PDF readers honour the anchor; the bookmark is real, not just text. #}
+    <div style="margin-top: 18pt; padding: 8pt 10pt; border-radius: 6pt; border: 1pt solid hsl(224, 10%, 91%); background: hsl(40, 15%, 98%); page-break-inside: avoid; break-inside: avoid;">
+        <p style="margin: 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.5;">
+            {{ t.sde_assumptions_note }}
+        </p>
+        <p style="margin: 4pt 0 0 0; font-size: 7pt; line-height: 1.5;">
+            <a href="#ebitda-normalization-page" style="color: hsl({{ teal_hsl }}); text-decoration: none; font-weight: 500;">
+                {{ t.sde_see_normalization_link }}
+            </a>
+        </p>
+    </div>
+
+{% endcall %}

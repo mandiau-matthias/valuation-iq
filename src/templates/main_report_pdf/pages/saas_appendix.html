@@ -1,0 +1,198 @@
+{# 
+    SAAS ANALYSIS PAGE (PDF/WeasyPrint version)
+    First-class section for ARR-based SaaS valuation context.
+    Positioned right after Executive Summary (page 2b).
+
+    Health-color tiers match screen template (saas_appendix.html):
+      excellent = hsl(143, 40%, 42%)  good = hsl(210, 60%, 50%)
+      warning   = hsl(37, 65%, 55%)   poor = hsl(0, 55%, 50%)
+      default   = hsl(225, 18%, 12%)
+#}
+
+{# Precompute health colors for each metric — keeps inline styles clean #}
+{% set c_d = 'hsl(225, 18%, 12%)' %}
+{% set c_ex = 'hsl(143, 40%, 42%)' %}
+{% set c_gd = 'hsl(210, 60%, 50%)' %}
+{% set c_wr = 'hsl(37, 65%, 55%)' %}
+{% set c_pr = 'hsl(0, 55%, 50%)' %}
+
+{% set nrr_c = c_ex if saas_nrr_pct is not none and saas_nrr_pct >= 120 else (c_gd if saas_nrr_pct is not none and saas_nrr_pct >= 110 else (c_wr if saas_nrr_pct is not none and saas_nrr_pct >= 100 else (c_pr if saas_nrr_pct is not none else c_d))) %}
+{% set ro40_c = c_ex if saas_rule_of_40 is not none and saas_rule_of_40 >= 40 else (c_gd if saas_rule_of_40 is not none and saas_rule_of_40 >= 25 else (c_wr if saas_rule_of_40 is not none and saas_rule_of_40 >= 10 else (c_pr if saas_rule_of_40 is not none else c_d))) %}
+{% set churn_c = c_ex if saas_gross_revenue_churn_pct is not none and saas_gross_revenue_churn_pct <= 5 else (c_gd if saas_gross_revenue_churn_pct is not none and saas_gross_revenue_churn_pct <= 10 else (c_wr if saas_gross_revenue_churn_pct is not none and saas_gross_revenue_churn_pct <= 15 else (c_pr if saas_gross_revenue_churn_pct is not none else c_d))) %}
+{% set ltv_c = c_ex if saas_ltv_cac is not none and saas_ltv_cac >= 3 else (c_gd if saas_ltv_cac is not none and saas_ltv_cac >= 2 else (c_wr if saas_ltv_cac is not none and saas_ltv_cac >= 1 else (c_pr if saas_ltv_cac is not none else c_d))) %}
+{% set magic_c = c_ex if saas_magic_number is not none and saas_magic_number >= 1 else (c_gd if saas_magic_number is not none and saas_magic_number >= 0.75 else (c_wr if saas_magic_number is not none and saas_magic_number >= 0.5 else (c_pr if saas_magic_number is not none else c_d))) %}
+{% set payback_c = c_ex if saas_cac_payback_months is not none and saas_cac_payback_months <= 12 else (c_gd if saas_cac_payback_months is not none and saas_cac_payback_months <= 18 else (c_wr if saas_cac_payback_months is not none and saas_cac_payback_months <= 24 else (c_pr if saas_cac_payback_months is not none else c_d))) %}
+
+<div class="a4-page">
+    {% include "main_report_pdf/partials/_page_header.html" %}
+
+    <div class="section-header">
+        <span class="section-number">{{ saas_appendix_section_number }}</span>
+        <h1 class="section-title">{{ t.saas_appendix_title }}</h1>
+    </div>
+
+    <p style="margin: 0 0 10pt 0; font-size: 8pt; color: hsl(224, 10%, 45%); line-height: 1.5;">
+        {{ t.saas_appendix_intro }}
+    </p>
+
+    {# SaaS Quality Score Banner #}
+    {% if saas_quality_label %}
+    {% set quality_colors = {
+        'strong': c_ex,
+        'healthy': c_gd,
+        'developing': c_wr,
+        'at_risk': c_pr
+    } %}
+    {% set quality_bg_colors = {
+        'strong': 'hsl(143, 40%, 95%)',
+        'healthy': 'hsl(210, 60%, 95%)',
+        'developing': 'hsl(37, 65%, 95%)',
+        'at_risk': 'hsl(0, 55%, 95%)'
+    } %}
+    {% set quality_labels = {
+        'strong': t.saas_quality_strong,
+        'healthy': t.saas_quality_healthy,
+        'developing': t.saas_quality_developing,
+        'at_risk': t.saas_quality_at_risk
+    } %}
+    {% set _qc = quality_colors.get(saas_quality_label, 'hsl(224, 10%, 50%)') %}
+    {% set _qbg = quality_bg_colors.get(saas_quality_label, 'hsl(224, 10%, 95%)') %}
+    {% set _ql = quality_labels.get(saas_quality_label, saas_quality_label) %}
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10pt;">
+        <tr>
+            <td style="padding: 8pt 12pt; border-left: 3pt solid {{ _qc }}; background: {{ _qbg }}; border-radius: 4pt;">
+                <span style="font-size: 6pt; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(224, 10%, 55%);">{{ t.saas_quality_score_label }}</span>
+                <span style="font-size: 10pt; font-weight: 700; color: {{ _qc }}; margin-left: 6pt;">
+                    {{ _ql }}
+                </span>
+                {% if saas_quality_score is not none %}
+                <span style="font-size: 8pt; font-weight: 600; color: {{ _qc }}; float: right;">
+                    {{ saas_quality_score|safe_round(0) }}%
+                </span>
+                {% endif %}
+                {# B6 — methodology disclosure (PDF mirror). #}
+                <p style="margin: 4pt 0 0 0; font-size: 6.5pt; color: hsl(224, 10%, 55%); line-height: 1.4;">
+                    {{ t.saas_quality_score_caption }}
+                </p>
+            </td>
+        </tr>
+    </table>
+    {% endif %}
+
+    {# EV/ARR Hero #}
+    {% if show_saas_formula %}
+    <div class="value-hero" style="margin-bottom: 10pt;">
+        <p class="value-hero-label">{{ t.exec_saas_anchor_label }}</p>
+        <p class="value-hero-amount">{{ saas_enterprise_value|format_currency_compact }}</p>
+        <p class="value-hero-range">
+            {{ saas_arr|format_currency_compact }} &times; {{ saas_arr_multiple|safe_round(1) }}&times;
+        </p>
+        {# B10 — EBITDA × applied-multiple cross-check (PDF mirror). #}
+        {% if sustainable_ebitda and applied_multiple and enterprise_value_mid %}
+        {% set _ebitda_crosscheck_ev = sealed_display.multiples.ebitda_crosscheck_enterprise_value if sealed_display is defined else sustainable_ebitda|float * applied_multiple|float %}
+        <p class="value-hero-range" style="margin-top: 4pt; font-size: 7pt; color: hsl(224, 10%, 55%);">
+            {{ t.saas_appendix_ebitda_crosscheck_label }}: {{ sustainable_ebitda|format_currency_compact }} &times; {{ applied_multiple|safe_round(1) }}&times; = {{ _ebitda_crosscheck_ev|format_currency_compact }}
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {# SaaS Metrics Grid — 4-tier health colors aligned with screen template #}
+    <h3 style="margin: 0 0 6pt 0; font-size: 9pt;">{{ t.saas_appendix_metrics_title }}</h3>
+    <table style="width: 100%; border-collapse: separate; border-spacing: 0 4pt; font-size: 8pt; margin-bottom: 10pt;">
+        {# Row 1: ARR, NRR, Rule of 40 #}
+        <tr>
+            <td style="width: 33%; border: 1pt solid hsl(224, 15%, 90%); border-radius: 4pt; padding: 6pt; background: hsl(224, 15%, 98%);">
+                <div style="font-size: 6pt; text-transform: uppercase; color: hsl(224, 10%, 55%);">{{ t.saas_appendix_arr_label }}</div>
+                <div style="font-weight: 700; color: {{ c_d }};">{{ saas_arr|format_currency if saas_arr is not none else '&mdash;' }}</div>
+            </td>
+            <td style="width: 33%; border: 1pt solid hsl(224, 15%, 90%); border-radius: 4pt; padding: 6pt; background: hsl(224, 15%, 98%);">
+                <div style="font-size: 6pt; text-transform: uppercase; color: hsl(224, 10%, 55%);">{{ t.exec_saas_nrr_label }}</div>
+                <div style="font-weight: 700; color: {{ nrr_c }};">{{ saas_nrr_pct|safe_round(0) if saas_nrr_pct is not none else '&mdash;' }}{% if saas_nrr_pct is not none %}%{% endif %}</div>
+            </td>
+            <td style="width: 33%; border: 1pt solid hsl(224, 15%, 90%); border-radius: 4pt; padding: 6pt; background: hsl(224, 15%, 98%);">
+                <div style="font-size: 6pt; text-transform: uppercase; color: hsl(224, 10%, 55%);">{{ t.exec_saas_rule_of_40_label }}</div>
+                <div style="font-weight: 700; color: {{ ro40_c }};">{{ saas_rule_of_40|safe_round(0) if saas_rule_of_40 is not none else '&mdash;' }}{% if saas_rule_of_40 is not none %}%{% endif %}</div>
+            </td>
+        </tr>
+        {# Row 2: Churn, Customer Churn, LTV/CAC #}
+        <tr>
+            <td style="border: 1pt solid hsl(224, 15%, 90%); border-radius: 4pt; padding: 6pt; background: hsl(224, 15%, 98%);">
+                <div style="font-size: 6pt; text-transform: uppercase; color: hsl(224, 10%, 55%);">{{ t.exec_saas_churn_label }}</div>
+                <div style="font-weight: 700; color: {{ churn_c }};">{{ saas_gross_revenue_churn_pct|safe_round(0) if saas_gross_revenue_churn_pct is not none else '&mdash;' }}{% if saas_gross_revenue_churn_pct is not none %}%{% endif %}</div>
+            </td>
+            <td style="border: 1pt solid hsl(224, 15%, 90%); border-radius: 4pt; padding: 6pt; background: hsl(224, 15%, 98%);">
+                <div style="font-size: 6pt; text-transform: uppercase; color: hsl(224, 10%, 55%);">{{ t.saas_appendix_customer_churn_label }}</div>
+                <div style="font-weight: 700; color: {{ c_d }};">{{ saas_customer_churn_pct|safe_round(0) if saas_customer_churn_pct is not none else '&mdash;' }}{% if saas_customer_churn_pct is not none %}%{% endif %}</div>
+            </td>
+            <td style="border: 1pt solid hsl(224, 15%, 90%); border-radius: 4pt; padding: 6pt; background: hsl(224, 15%, 98%);">
+                <div style="font-size: 6pt; text-transform: uppercase; color: hsl(224, 10%, 55%);">{{ t.saas_appendix_ltv_cac_label }}</div>
+                <div style="font-weight: 700; color: {{ ltv_c }};">{{ saas_ltv_cac|safe_round(1) if saas_ltv_cac is not none else '&mdash;' }}{% if saas_ltv_cac is not none %}&times;{% endif %}</div>
+            </td>
+        </tr>
+        {# Row 3: Magic Number, ARR Growth, Gross Margin #}
+        <tr>
+            <td style="border: 1pt solid hsl(224, 15%, 90%); border-radius: 4pt; padding: 6pt; background: hsl(224, 15%, 98%);">
+                <div style="font-size: 6pt; text-transform: uppercase; color: hsl(224, 10%, 55%);">{{ t.saas_appendix_magic_number_label }}</div>
+                <div style="font-weight: 700; color: {{ magic_c }};">{{ saas_magic_number|safe_round(2) if saas_magic_number is not none else '&mdash;' }}</div>
+            </td>
+            <td style="border: 1pt solid hsl(224, 15%, 90%); border-radius: 4pt; padding: 6pt; background: hsl(224, 15%, 98%);">
+                <div style="font-size: 6pt; text-transform: uppercase; color: hsl(224, 10%, 55%);">{{ t.saas_appendix_arr_growth_label }}</div>
+                <div style="font-weight: 700; color: {{ c_d }};">{{ saas_arr_growth_pct|safe_round(0) if saas_arr_growth_pct is not none else '&mdash;' }}{% if saas_arr_growth_pct is not none %}%{% endif %}</div>
+            </td>
+            <td style="border: 1pt solid hsl(224, 15%, 90%); border-radius: 4pt; padding: 6pt; background: hsl(224, 15%, 98%);">
+                <div style="font-size: 6pt; text-transform: uppercase; color: hsl(224, 10%, 55%);">{{ t.saas_appendix_gross_margin_label }}</div>
+                <div style="font-weight: 700; color: {{ c_d }};">{{ saas_gross_margin_pct|safe_round(0) if saas_gross_margin_pct is not none else '&mdash;' }}{% if saas_gross_margin_pct is not none %}%{% endif %}</div>
+            </td>
+        </tr>
+        {# Row 4: Customer Concentration, CAC Payback, Expansion Revenue #}
+        <tr>
+            <td style="border: 1pt solid hsl(224, 15%, 90%); border-radius: 4pt; padding: 6pt; background: hsl(224, 15%, 98%);">
+                <div style="font-size: 6pt; text-transform: uppercase; color: hsl(224, 10%, 55%);">{{ t.saas_appendix_customer_concentration_label }}</div>
+                <div style="font-weight: 700; color: {{ c_d }};">{{ saas_customer_concentration_pct|safe_round(0) if saas_customer_concentration_pct is not none else '&mdash;' }}{% if saas_customer_concentration_pct is not none %}%{% endif %}</div>
+            </td>
+            <td style="border: 1pt solid hsl(224, 15%, 90%); border-radius: 4pt; padding: 6pt; background: hsl(224, 15%, 98%);">
+                <div style="font-size: 6pt; text-transform: uppercase; color: hsl(224, 10%, 55%);">{{ t.saas_appendix_cac_payback_label }}</div>
+                <div style="font-weight: 700; color: {{ payback_c }};">{{ saas_cac_payback_months|safe_round(1) if saas_cac_payback_months is not none else '&mdash;' }}</div>
+            </td>
+            <td style="border: 1pt solid hsl(224, 15%, 90%); border-radius: 4pt; padding: 6pt; background: hsl(224, 15%, 98%);">
+                <div style="font-size: 6pt; text-transform: uppercase; color: hsl(224, 10%, 55%);">{{ t.saas_expansion_revenue_label }}</div>
+                <div style="font-weight: 700; color: {{ c_d }};">{{ saas_expansion_revenue_pct|safe_round(0) if saas_expansion_revenue_pct is not none else '&mdash;' }}{% if saas_expansion_revenue_pct is not none %}%{% endif %}</div>
+            </td>
+        </tr>
+    </table>
+
+    {# EV/ARR Multiple Waterfall #}
+    <h3 style="margin: 0 0 6pt 0; font-size: 9pt;">{{ t.saas_waterfall_title }}</h3>
+    {% if saas_adjustment_breakdown %}
+    <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt; margin-bottom: 10pt;">
+        <tr style="border-bottom: 2pt solid hsl(172, 55%, 45%);">
+            <td style="padding: 6pt; font-weight: 700; color: {{ c_d }};">{{ t.saas_waterfall_base }}</td>
+            <td style="padding: 6pt; text-align: right; font-weight: 700; color: {{ c_d }};">{{ (saas_base_multiple|default(5.0))|safe_round(1) }}&times;</td>
+            <td style="padding: 6pt; color: hsl(224, 10%, 55%); font-size: 6.5pt;">{{ t.saas_waterfall_benchmark_note }}</td>
+        </tr>
+        {% for adjustment in saas_adjustment_breakdown %}
+        <tr style="border-bottom: 1pt solid hsl(224, 15%, 90%);">
+            <td style="padding: 6pt;">{{ adjustment.factor_display|default(adjustment.factor|replace('_', ' ')|title) }}</td>
+            <td style="padding: 6pt; text-align: right; color: {% if adjustment.change is not none and adjustment.change > 0 %}{{ c_ex }}{% elif adjustment.change is not none and adjustment.change < 0 %}{{ c_pr }}{% else %}{{ c_d }}{% endif %};">
+                {% if adjustment.change is not none and adjustment.change > 0 %}+{% endif %}{{ adjustment.change|safe_round(2) if adjustment.change is not none else '&mdash;' }}&times;
+            </td>
+            <td style="padding: 6pt; font-size: 6.5pt; color: hsl(224, 10%, 55%);">{{ adjustment.note_display|default(adjustment.note) or '&mdash;' }}</td>
+        </tr>
+        {% endfor %}
+        {% if saas_arr_multiple is not none %}
+        <tr style="border-top: 2pt solid hsl(172, 55%, 45%);">
+            <td style="padding: 6pt; font-weight: 700; color: {{ c_d }};">{{ t.saas_waterfall_final }}</td>
+            <td style="padding: 6pt; text-align: right; font-weight: 700; color: hsl(172, 55%, 45%);">{{ saas_arr_multiple|safe_round(1) }}&times;</td>
+            <td style="padding: 6pt; font-size: 6.5pt; color: hsl(224, 10%, 55%);">{{ t.saas_waterfall_clamp_note }}</td>
+        </tr>
+        {% endif %}
+    </table>
+    {% else %}
+    <p style="margin: 0 0 10pt 0; font-size: 8pt; color: hsl(224, 10%, 45%);">{{ t.saas_appendix_no_adjustments }}</p>
+    {% endif %}
+    
+    {% with page_number=total_pages, total_pages=total_pages %}
+    {% include "main_report_pdf/partials/_footer.html" %}
+    {% endwith %}
+</div>

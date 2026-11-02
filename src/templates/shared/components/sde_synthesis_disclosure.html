@@ -1,0 +1,6 @@
+{% if sde_blend_applied|default(false) and sde_blend_leg_ev and ebitda_blend_leg_ev %}
+<p data-sde-synthesis-disclosure style="font-size: 7pt; line-height: 1.5; margin: 6pt 0;">
+    {% if (locale|default('nl'))|lower == 'fr' %}Synthèse de la valeur des capitaux propres{% elif (locale|default('nl'))|lower == 'en' %}Equity value synthesis{% else %}Synthese van de aandelenwaarde{% endif %}:
+    {{ ebitda_blend_weight_pct }}% × {{ ebitda_blend_leg_ev|format_currency }} (EBITDA) + {{ sde_blend_weight_pct }}% × {{ sde_blend_leg_ev|format_currency }} (SDE) = <strong>{{ sde_blend_headline_ev|format_currency }}</strong>.
+</p>
+{% endif %}

@@ -1,0 +1,96 @@
+{#
+    LIQUIDATION ANALYSIS — PAGE: PRIORITY CASCADE (PDF version)
+
+    PDF twin of main_report/pages/liquidation_priority_cascade.html.
+    Phase 2 §05 — BE Boek XX WER / NL Faillissementswet cascade.
+#}
+{% set lr = liquidation_report %}
+{% if lr.priority_cascade_orderly %}
+{% set co = lr.priority_cascade_orderly %}
+{% set cf = lr.priority_cascade_forced %}
+<section class="pdf-page liquidation-page">
+    <header class="pdf-section-header">
+        <span class="pdf-section-number">05</span>
+        <h1 class="pdf-section-title">{{ lr.t.cascade_section_title }}</h1>
+        <span class="pdf-badge">{{ co.subtitle }}</span>
+    </header>
+
+    {% if co.warnings or cf.warnings %}
+    <div class="pdf-card pdf-card-warning">
+        <div class="pdf-prose">{{ lr.t.cascade_estimated_buckets_warning }}</div>
+    </div>
+    {% endif %}
+
+    <h2 class="pdf-h2">{{ lr.t.scenario_orderly }}</h2>
+    <table class="pdf-table pdf-table-compact">
+        <thead>
+            <tr>
+                <th>{{ lr.t.cascade_col_tier }}</th>
+                <th>{{ lr.t.cascade_col_anchor }}</th>
+                <th class="pdf-num">{{ lr.t.cascade_col_claim }}</th>
+                <th class="pdf-num">{{ lr.t.cascade_col_recovery }}</th>
+                <th class="pdf-num">{{ lr.t.cascade_col_recovery_rate }}</th>
+                <th class="pdf-num">{{ lr.t.cascade_col_shortfall }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tier in co.tiers %}
+            {% if (tier.claim_amount|float) > 0 %}
+            <tr>
+                <td>{{ tier.label }}</td>
+                <td class="pdf-anchor">{{ tier.statutory_anchor }}</td>
+                <td class="pdf-num">€{{ tier.claim_amount|format_eur_amount }}</td>
+                <td class="pdf-num">€{{ tier.recovery_amount|format_eur_amount }}</td>
+                <td class="pdf-num">{{ tier.recovery_rate|format_factor_pct(1) }}</td>
+                <td class="pdf-num">€{{ tier.shortfall|format_eur_amount }}</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+            <tr class="pdf-row-total">
+                <td colspan="5">{{ lr.t.cascade_equity_to_shareholders }}</td>
+                <td class="pdf-num">€{{ co.equity_to_shareholders|format_eur_amount }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    {% if cf %}
+    {# Forced cascade — symmetric to orderly so columns line up
+       side-by-side (audit P0 #5). #}
+    <h2 class="pdf-h2">{{ lr.t.scenario_forced }}</h2>
+    <table class="pdf-table pdf-table-compact">
+        <thead>
+            <tr>
+                <th>{{ lr.t.cascade_col_tier }}</th>
+                <th>{{ lr.t.cascade_col_anchor }}</th>
+                <th class="pdf-num">{{ lr.t.cascade_col_claim }}</th>
+                <th class="pdf-num">{{ lr.t.cascade_col_recovery }}</th>
+                <th class="pdf-num">{{ lr.t.cascade_col_recovery_rate }}</th>
+                <th class="pdf-num">{{ lr.t.cascade_col_shortfall }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tier in cf.tiers %}
+            {% if (tier.claim_amount|float) > 0 %}
+            <tr>
+                <td>{{ tier.label }}</td>
+                <td class="pdf-anchor">{{ tier.statutory_anchor }}</td>
+                <td class="pdf-num">€{{ tier.claim_amount|format_eur_amount }}</td>
+                <td class="pdf-num">€{{ tier.recovery_amount|format_eur_amount }}</td>
+                <td class="pdf-num">{{ tier.recovery_rate|format_factor_pct(1) }}</td>
+                <td class="pdf-num">€{{ tier.shortfall|format_eur_amount }}</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+            <tr class="pdf-row-total">
+                <td colspan="5">{{ lr.t.cascade_equity_to_shareholders }}</td>
+                <td class="pdf-num">€{{ cf.equity_to_shareholders|format_eur_amount }}</td>
+            </tr>
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if co.sources %}
+    <div class="pdf-sources">{{ lr.t.sources_label }}: {{ co.sources|join(' · ') }}</div>
+    {% endif %}
+</section>
+{% endif %}

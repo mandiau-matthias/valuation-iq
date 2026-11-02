@@ -1,0 +1,133 @@
+{#
+    SDE (Seller's Discretionary Earnings) VALUATION — screen version
+    ========================================================================
+    Screen twin of `main_report_pdf/pages/sde_valuation.html`.
+
+    Same gating contract: rendered only when `has_sde_page` is True.
+    Aurora design tokens (`var(--space-*)`, `var(--report-*)`) replace
+    the PDF's hardcoded HSL.  Mirrors the rhythm of the existing screen
+    twin `ebitda_multiple_valuation.html` so the SME track shows
+    SDE / EV-EBITDA / Adjusted-NAV / DCF as four consistent dossiers.
+
+    Migrated 2026-05-15 to use the shared `method_section` macro so
+    the wrapper (page header, section title, citations rail, footer)
+    is defined once across all method pages × both trees.  The
+    pre-migration screen template silently omitted the page footer
+    (the macro now adds it automatically — small bug fix bundled with
+    the migration).
+
+    Context variables consumed (mirror of PDF twin):
+      has_sde_page (bool)
+      sde_section_number (str — set by pagination)
+      sde_page_number (int — set by pagination)
+      sde_method (MethodResult — hoisted from engine in aggregator)
+      sde_value (float — from method_details.sde)
+      sde_base_multiple, sde_multiple, sde_multiple_p25, sde_multiple_p75 (floats)
+      sde_business_size, sde_country_code (classification)
+      ev_sde_enterprise_value (engine output for SDE × multiple)
+      sde_bridge (list of {label, amount, running_total, kind})
+      sde_sensitivity_matrix_2d / sde_sensitivity_metric / sde_sensitivity_multiple
+#}
+
+{% from "shared/macros/method_section.html" import method_section with context %}
+
+{% call method_section(
+    method_key='sde_multiple',
+    section_number=sde_section_number|default('S'),
+    title=t.sde_dedicated_page_title,
+    subtitle=t.calib_sde_intro,
+    badge_label=t.calib_sde_badge,
+    tree_root='main_report',
+    page_number=sde_page_number,
+    total_pages=total_pages,
+    method=sde_method
+) %}
+
+    {# Methodology intro — owner-operator narrative.  Acknowledges both
+       the net-income decomposition path and the normalized-EBITDA path
+       so the copy never overpromises a 5-line walk on a 2-line bridge. #}
+    <div style="margin-top: var(--space-2); margin-bottom: var(--space-4); padding: var(--space-3); border-radius: 6pt; border: 1pt solid hsl(var(--report-slate-200)); background: hsl(var(--report-cream)); page-break-inside: avoid; break-inside: avoid;">
+        <p style="margin: 0; font-size: var(--font-size-sm); color: hsl(var(--report-slate-700)); line-height: 1.55;">
+            {{ t.sde_methodology_intro }}
+        </p>
+    </div>
+
+    {# Reported earnings → SDE bridge ladder.  Screen partial may not
+       exist yet (PDF-only at audit time); `ignore missing` lets it
+       skip gracefully until a screen twin is added. #}
+    {% include "main_report/components/_sde_bridge_ladder.html" ignore missing %}
+
+    {# NOTE: _calibration_ledger.html intentionally NOT included here.
+       Consolidated multi-method ledger is owned by the calibration
+       page (renders directly after this dossier). Dedupe-2026-05-03. #}
+
+    {# SDE summary card — same visual rhythm as DCF EV card. #}
+    {% if sde_value and sde_value|float > 0 %}
+    <div style="margin-top: var(--space-4); padding: var(--space-3); border: 1pt solid hsl(var(--report-slate-200)); border-left: 3pt solid hsl({{ teal_hsl }}); border-radius: 6pt; page-break-inside: avoid; break-inside: avoid;">
+        <h4 style="font-size: 9.5pt; margin: 0 0 var(--space-2) 0; color: hsl(var(--report-slate-900));">{{ t.sde_summary_title }}</h4>
+
+        <table style="width: 100%; font-size: var(--font-size-sm); border-collapse: collapse;">
+            <tr style="border-bottom: 1pt solid hsl(var(--report-slate-100));">
+                <td style="padding: 3pt 0; color: hsl(var(--report-text-muted)); border: none;">{{ t.sde_summary_row_sde }}</td>
+                <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: hsl(var(--report-slate-900)); border: none;">{{ sde_value|format_currency }}</td>
+            </tr>
+            {% set _multiple_for_summary = sde_multiple|default(sde_base_multiple|default(0)) %}
+            <tr style="border-bottom: 1pt solid hsl(var(--report-slate-100));">
+                <td style="padding: 3pt 0; color: hsl(var(--report-text-muted)); border: none;">× {{ t.sde_summary_row_multiple }}</td>
+                <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: hsl(var(--report-slate-900)); border: none;">{{ _multiple_for_summary|safe_round(1) }}×</td>
+            </tr>
+            {% set _ev_for_summary = ev_sde_enterprise_value|default(enterprise_value_mid|default(valuation|default(0))) %}
+            {% if _ev_for_summary and _ev_for_summary|float > 0 %}
+            <tr>
+                <td style="padding: var(--space-1) 0; font-weight: 700; font-size: 9pt; color: hsl({{ teal_hsl }}); border: none;">= {{ t.sde_enterprise_value_label }}</td>
+                <td style="padding: var(--space-1) 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 9pt; color: hsl({{ teal_hsl }}); border: none;">{{ _ev_for_summary|format_currency }}</td>
+            </tr>
+            {% endif %}
+        </table>
+
+        {% if sde_multiple_p25 and sde_multiple_p75 %}
+        <p style="margin: var(--space-2) 0 0 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">
+            {{ t.sde_p25_p75_band_label }}: <strong style="color: hsl(var(--report-slate-900));">{{ sde_multiple_p25|safe_round(1) }}× — {{ sde_multiple_p75|safe_round(1) }}×</strong>
+            {% if sde_business_size %}
+            · {{ t.sde_size_band_label }}: <strong style="color: hsl(var(--report-slate-900));">{{ sde_business_size|replace('_', ' ')|title }}</strong>
+            {% endif %}
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {# SDE × multiple sensitivity matrix — screen partial may not exist
+       yet; `ignore missing` lets it skip gracefully. #}
+    {% with multiple_sensitivity_matrix_2d=sde_sensitivity_matrix_2d,
+            multiple_sensitivity_metric=sde_sensitivity_metric,
+            multiple_sensitivity_multiple=sde_sensitivity_multiple,
+            metric_base=sde_value,
+            multiple_base=sde_base_multiple,
+            metric_label='SDE',
+            multiple_axis_label=t.sde_summary_row_multiple %}
+    {% include "main_report/components/_multiple_sensitivity_matrix.html" ignore missing %}
+    {% endwith %}
+
+    {# Business-size band callout — visualises which P25-P75 band the
+       business sits in.  Drives the buyer-comparable multiple selection. #}
+    {% if sde_business_size %}
+    <div style="margin-top: var(--space-3); padding: var(--space-3); border-radius: 6pt; border: 1pt solid hsl(var(--report-slate-200)); background: hsla({{ teal_hsl }}, 0.04); page-break-inside: avoid; break-inside: avoid;">
+        <p style="margin: 0 0 var(--space-1) 0; font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-text-muted));">
+            {{ t.sde_business_size_label }}
+        </p>
+        <p style="margin: 0; font-size: var(--font-size-sm); color: hsl(var(--report-slate-700)); line-height: 1.5;">
+            {{ t.sde_business_size_intro }}
+            <strong style="color: hsl(var(--report-slate-900));">{{ sde_business_size|replace('_', ' ')|title }}</strong>
+            {% if sde_country_code %} · <span style="color: hsl(var(--report-text-muted));">{{ sde_country_code|upper }} {{ t.sde_buyer_pool_label }}</span>{% endif %}
+        </p>
+    </div>
+    {% endif %}
+
+    {# Assumptions / sources footnote. #}
+    <div style="margin-top: var(--space-4); padding: var(--space-3); border-radius: 6pt; border: 1pt solid hsl(var(--report-slate-200)); background: hsl(var(--report-cream)); page-break-inside: avoid; break-inside: avoid;">
+        <p style="margin: 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.5;">
+            {{ t.sde_assumptions_note }}
+        </p>
+    </div>
+
+{% endcall %}

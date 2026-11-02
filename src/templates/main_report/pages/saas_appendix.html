@@ -1,0 +1,163 @@
+{# 
+    SAAS ANALYSIS PAGE
+    First-class section for ARR-based SaaS valuation context.
+    Positioned right after Executive Summary (page 2b).
+#}
+
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div class="section-header">
+        <span class="section-number">{{ saas_appendix_section_number }}</span>
+        <h1 class="section-title">{{ t.saas_appendix_title }}</h1>
+    </div>
+
+    <p style="margin: 0 0 10pt 0; font-size: 8.5pt; color: hsl(var(--report-text-muted)); line-height: 1.6;">
+        {{ t.saas_appendix_intro }}
+    </p>
+
+    {# SaaS Quality Score Banner #}
+    {% if saas_quality_label %}
+    {% set quality_colors = {
+        'strong': 'hsl(143, 40%, 42%)',
+        'healthy': 'hsl(210, 60%, 50%)',
+        'developing': 'hsl(37, 65%, 55%)',
+        'at_risk': 'hsl(0, 55%, 50%)'
+    } %}
+    {% set quality_bg_colors = {
+        'strong': 'hsla(143, 40%, 42%, 0.08)',
+        'healthy': 'hsla(210, 60%, 50%, 0.08)',
+        'developing': 'hsla(37, 65%, 55%, 0.08)',
+        'at_risk': 'hsla(0, 55%, 50%, 0.08)'
+    } %}
+    {% set quality_labels = {
+        'strong': t.saas_quality_strong,
+        'healthy': t.saas_quality_healthy,
+        'developing': t.saas_quality_developing,
+        'at_risk': t.saas_quality_at_risk
+    } %}
+    {% set _qc = quality_colors.get(saas_quality_label, 'hsl(210, 10%, 50%)') %}
+    {% set _qbg = quality_bg_colors.get(saas_quality_label, 'hsla(210, 10%, 50%, 0.08)') %}
+    {% set _ql = quality_labels.get(saas_quality_label, saas_quality_label) %}
+    <div style="margin-bottom: 10pt; padding: 8pt 12pt; border-radius: 6pt; border-left: 3pt solid {{ _qc }}; background: {{ _qbg }};">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <span style="font-size: 7pt; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-text-muted));">{{ t.saas_quality_score_label }}</span>
+                <span style="font-size: 10pt; font-weight: 700; color: {{ _qc }}; margin-left: 6pt;">
+                    {{ _ql }}
+                </span>
+            </div>
+            {% if saas_quality_score is not none %}
+            <span style="font-size: 9pt; font-weight: 600; color: {{ _qc }};">
+                {{ saas_quality_score|safe_round(0) }}%
+            </span>
+            {% endif %}
+        </div>
+        {# B6 — methodology disclosure so investors know what the
+           composite is built from instead of trusting an opaque
+           "Healthy 65%" pill. #}
+        <p style="margin: 4pt 0 0 0; font-size: 7pt; color: hsl(var(--report-text-muted)); line-height: 1.45;">
+            {{ t.saas_quality_score_caption }}
+        </p>
+    </div>
+    {% endif %}
+
+    {# EV/ARR Hero #}
+    {% if show_saas_formula %}
+    <div class="value-hero" style="margin-bottom: 10pt;">
+        <p class="value-hero-label">{{ t.exec_saas_anchor_label }}</p>
+        <p class="value-hero-amount">{{ saas_enterprise_value|format_currency_compact }}</p>
+        <p class="value-hero-range">
+            {{ saas_arr|format_currency_compact }} &times; {{ saas_arr_multiple|safe_round(1) }}&times;
+        </p>
+        {# B10 — EBITDA × applied-multiple cross-check so the SaaS
+           appendix renders as the M&A-grade triangulation page it
+           promises (EV/ARR vs EV/EBITDA), not a single-lens output. #}
+        {% if sustainable_ebitda and applied_multiple and enterprise_value_mid %}
+        {% set _ebitda_crosscheck_ev = sustainable_ebitda|float * applied_multiple|float %}
+        <p class="value-hero-range" style="margin-top: 4pt; font-size: 7.5pt; color: hsl(var(--report-text-muted));">
+            {{ t.saas_appendix_ebitda_crosscheck_label }}: {{ sustainable_ebitda|format_currency_compact }} &times; {{ applied_multiple|safe_round(1) }}&times; = {{ _ebitda_crosscheck_ev|format_currency_compact }}
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {# SaaS Metrics Grid with health indicators #}
+    <h3 style="margin: 0 0 6pt 0; font-size: 9pt;">{{ t.saas_appendix_metrics_title }}</h3>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); margin-bottom: 10pt;">
+        {% macro metric_card(label, value, suffix='', health=none) %}
+        {% set health_colors = {'excellent': 'hsl(143, 40%, 42%)', 'good': 'hsl(210, 60%, 50%)', 'warning': 'hsl(37, 65%, 55%)', 'poor': 'hsl(0, 55%, 50%)'} %}
+        <div class="stat-card">
+            <p class="stat-card-label">{{ label }}</p>
+            <div style="display: flex; align-items: center; gap: 4pt;">
+                <p class="stat-card-value tabular" {% if health %}style="color: {{ health_colors[health] }};"{% endif %}>
+                    {{ value }}{{ suffix }}
+                </p>
+                {% if health %}
+                <span style="display: inline-block; width: 6pt; height: 6pt; border-radius: 50%; background: {{ health_colors[health] }};"></span>
+                {% endif %}
+            </div>
+        </div>
+        {% endmacro %}
+
+        {# Row 1: ARR, NRR, Rule of 40 #}
+        {{ metric_card(t.saas_appendix_arr_label, saas_arr|format_currency if saas_arr is not none else '—') }}
+        {% set nrr_health = 'excellent' if saas_nrr_pct is not none and saas_nrr_pct >= 120 else ('good' if saas_nrr_pct is not none and saas_nrr_pct >= 110 else ('warning' if saas_nrr_pct is not none and saas_nrr_pct >= 100 else ('poor' if saas_nrr_pct is not none else none))) %}
+        {{ metric_card(t.exec_saas_nrr_label, saas_nrr_pct|safe_round(0) if saas_nrr_pct is not none else '—', '%' if saas_nrr_pct is not none else '', nrr_health) }}
+        {% set ro40_health = 'excellent' if saas_rule_of_40 is not none and saas_rule_of_40 >= 40 else ('good' if saas_rule_of_40 is not none and saas_rule_of_40 >= 25 else ('warning' if saas_rule_of_40 is not none and saas_rule_of_40 >= 10 else ('poor' if saas_rule_of_40 is not none else none))) %}
+        {{ metric_card(t.exec_saas_rule_of_40_label, saas_rule_of_40|safe_round(0) if saas_rule_of_40 is not none else '—', '%' if saas_rule_of_40 is not none else '', ro40_health) }}
+
+        {# Row 2: Churn, Customer Churn, LTV/CAC #}
+        {% set churn_health = 'excellent' if saas_gross_revenue_churn_pct is not none and saas_gross_revenue_churn_pct <= 5 else ('good' if saas_gross_revenue_churn_pct is not none and saas_gross_revenue_churn_pct <= 10 else ('warning' if saas_gross_revenue_churn_pct is not none and saas_gross_revenue_churn_pct <= 15 else ('poor' if saas_gross_revenue_churn_pct is not none else none))) %}
+        {{ metric_card(t.exec_saas_churn_label, saas_gross_revenue_churn_pct|safe_round(0) if saas_gross_revenue_churn_pct is not none else '—', '%' if saas_gross_revenue_churn_pct is not none else '', churn_health) }}
+        {{ metric_card(t.saas_appendix_customer_churn_label, saas_customer_churn_pct|safe_round(0) if saas_customer_churn_pct is not none else '—', '%' if saas_customer_churn_pct is not none else '') }}
+        {% set ltv_health = 'excellent' if saas_ltv_cac is not none and saas_ltv_cac >= 3 else ('good' if saas_ltv_cac is not none and saas_ltv_cac >= 2 else ('warning' if saas_ltv_cac is not none and saas_ltv_cac >= 1 else ('poor' if saas_ltv_cac is not none else none))) %}
+        {{ metric_card(t.saas_appendix_ltv_cac_label, saas_ltv_cac|safe_round(1) if saas_ltv_cac is not none else '—', '×' if saas_ltv_cac is not none else '', ltv_health) }}
+
+        {# Row 3: Magic Number, ARR Growth, Gross Margin #}
+        {% set magic_health = 'excellent' if saas_magic_number is not none and saas_magic_number >= 1 else ('good' if saas_magic_number is not none and saas_magic_number >= 0.75 else ('warning' if saas_magic_number is not none and saas_magic_number >= 0.5 else ('poor' if saas_magic_number is not none else none))) %}
+        {{ metric_card(t.saas_appendix_magic_number_label, saas_magic_number|safe_round(2) if saas_magic_number is not none else '—', '', magic_health) }}
+        {{ metric_card(t.saas_appendix_arr_growth_label, saas_arr_growth_pct|safe_round(0) if saas_arr_growth_pct is not none else '—', '%' if saas_arr_growth_pct is not none else '') }}
+        {{ metric_card(t.saas_appendix_gross_margin_label, saas_gross_margin_pct|safe_round(0) if saas_gross_margin_pct is not none else '—', '%' if saas_gross_margin_pct is not none else '') }}
+
+        {# Row 4: Customer Concentration, CAC Payback, Expansion Revenue #}
+        {{ metric_card(t.saas_appendix_customer_concentration_label, saas_customer_concentration_pct|safe_round(0) if saas_customer_concentration_pct is not none else '—', '%' if saas_customer_concentration_pct is not none else '') }}
+        {% set payback_health = 'excellent' if saas_cac_payback_months is not none and saas_cac_payback_months <= 12 else ('good' if saas_cac_payback_months is not none and saas_cac_payback_months <= 18 else ('warning' if saas_cac_payback_months is not none and saas_cac_payback_months <= 24 else ('poor' if saas_cac_payback_months is not none else none))) %}
+        {{ metric_card(t.saas_appendix_cac_payback_label, saas_cac_payback_months|safe_round(1) if saas_cac_payback_months is not none else '—', '', payback_health) }}
+        {{ metric_card(t.saas_expansion_revenue_label, saas_expansion_revenue_pct|safe_round(0) if saas_expansion_revenue_pct is not none else '—', '%' if saas_expansion_revenue_pct is not none else '') }}
+    </div>
+
+    {# EV/ARR Multiple Waterfall #}
+    <h3 style="margin: 0 0 6pt 0; font-size: 9pt;">{{ t.saas_waterfall_title }}</h3>
+    {% if saas_adjustment_breakdown %}
+    <table style="width: 100%; border-collapse: collapse; font-size: 8pt; margin-bottom: 10pt;">
+        <tr style="border-bottom: 2pt solid hsl(var(--report-teal));">
+            <td style="padding: 6pt; font-weight: 700; color: hsl(var(--report-text));">{{ t.saas_waterfall_base }}</td>
+            <td style="padding: 6pt; text-align: right; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-text));">{{ (saas_base_multiple|default(5.0))|safe_round(1) }}&times;</td>
+            <td style="padding: 6pt; color: hsl(var(--report-text-muted)); font-size: 7pt;">{{ t.saas_waterfall_benchmark_note }}</td>
+        </tr>
+        {% for adjustment in saas_adjustment_breakdown %}
+        <tr style="border-bottom: 1pt solid hsl(var(--report-slate-200));">
+            <td style="padding: 6pt;">{{ adjustment.factor_display|default(adjustment.factor|replace('_', ' ')|title) }}</td>
+            <td style="padding: 6pt; text-align: right; font-family: 'JetBrains Mono', monospace; color: {% if adjustment.change is not none and adjustment.change > 0 %}hsl(var(--report-success)){% elif adjustment.change is not none and adjustment.change < 0 %}hsl(var(--report-danger)){% else %}hsl(var(--report-text)){% endif %};">
+                {% if adjustment.change is not none and adjustment.change > 0 %}+{% endif %}{{ adjustment.change|safe_round(2) if adjustment.change is not none else '—' }}&times;
+            </td>
+            <td style="padding: 6pt; font-size: 7pt; color: hsl(var(--report-text-muted));">{{ adjustment.note_display|default(adjustment.note) or '—' }}</td>
+        </tr>
+        {% endfor %}
+        {% if saas_arr_multiple is not none %}
+        <tr style="border-top: 2pt solid hsl(var(--report-teal));">
+            <td style="padding: 6pt; font-weight: 700; color: hsl(var(--report-text));">{{ t.saas_waterfall_final }}</td>
+            <td style="padding: 6pt; text-align: right; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-teal));">{{ saas_arr_multiple|safe_round(1) }}&times;</td>
+            <td style="padding: 6pt; font-size: 7pt; color: hsl(var(--report-text-muted));">{{ t.saas_waterfall_clamp_note }}</td>
+        </tr>
+        {% endif %}
+    </table>
+    {% else %}
+    <p style="margin: 0 0 10pt 0; font-size: 8pt; color: hsl(var(--report-text-muted));">{{ t.saas_appendix_no_adjustments }}</p>
+    {% endif %}
+
+    {% with page_number=total_pages, total_pages=total_pages %}
+    {% include "main_report/partials/_footer.html" %}
+    {% endwith %}
+</div>

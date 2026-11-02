@@ -1,0 +1,338 @@
+{#
+    MULTIPLE & DISCOUNT EVIDENCE APPENDIX
+
+    Conditional appendix fed by `advisor_multiple_transparency`, which is built
+    from the canonical multiple_build_up / discount_build_up / segment_valuation
+    response fields. Legacy reports skip this page entirely.
+#}
+
+{% set amt = advisor_multiple_transparency %}
+{% set _is_en_amt = (locale|default('nl'))|lower == 'en' %}
+{% set _is_fr_amt = (locale|default('nl'))|lower == 'fr' %}
+
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div class="section-header">
+        <span class="section-number">{{ advisor_multiple_transparency_section_number|default('A') }}</span>
+        <h1 class="section-title">{% if is_governed_external_market_reference|default(false) %}Externe marktreferentie en rekencontrole{% elif canonical_fallback_disclosure|default(false) %}{% if _is_fr_amt %}Hypothèses et calcul{% elif _is_en_amt %}Assumptions and calculation{% else %}Aannames en berekening{% endif %}{% elif is_disclosed_external_market_fallback|default(false) %}Bron en rekencontrole{% elif _is_fr_amt %}Justification des multiples et décotes{% elif _is_en_amt %}Multiple and discount evidence{% else %}Bewijs van multiples en kortingen{% endif %}</h1>
+    </div>
+
+    {% if amt.unpriced_reference_tables_excluded|default(false) %}<p style="font-size: 7pt; line-height: 1.5;">{% if locale == 'fr' %}Les tables de combinaison de références et de segments antérieures aux ajustements sont exclues de la synthèse publiée : elles ne constituent pas la conclusion sauvegardée. Les contributions admises sont présentées dans le dossier de méthode sauvegardé.{% elif locale == 'en' %}Pre-adjustment reference-mix and segment tables are excluded from the published synthesis: they are not the saved conclusion. Admitted contributions are disclosed in the saved method dossier.{% else %}Referentiemix- en segmenttabellen vóór aanpassingen zijn uitgesloten van de gepubliceerde synthese: zij zijn niet de opgeslagen conclusie. Toegelaten bijdragen staan in het opgeslagen methodedossier.{% endif %}</p>{% endif %}
+
+    <p style="margin: 0 0 14pt 0; font-size: 8pt; line-height: 1.55; color: hsl(var(--report-text-muted));">
+        {% if is_governed_external_market_reference|default(false) %}{% if _is_fr_amt %}Cette annexe présente uniquement les hypothèses et valeurs contenues dans le contrat de marché externe scellé. Les percentiles et pondérations absents restent explicitement indisponibles et ne sont jamais inventés dans le rapport ; lorsque la source publie partiellement son échantillon, cette divulgation est reprise telle quelle (les effectifs par cellule restent non publiés).{% elif _is_en_amt %}This appendix presents only assumptions and values contained in the sealed external-market contract. Missing percentiles and weights remain explicitly unavailable and are never invented by the report; where the source partially publishes its sample, that disclosure is quoted verbatim (cell-specific counts remain unpublished).{% else %}Deze appendix toont uitsluitend aannames en waarden uit het verzegelde externe marktcontract. Ontbrekende percentielen en wegingen blijven expliciet niet beschikbaar en worden nooit door het rapport verzonnen; waar de bron haar steekproef gedeeltelijk publiceert, wordt die bekendmaking letterlijk hernomen (celspecifieke aantallen blijven ongepubliceerd).{% endif %}{% elif canonical_fallback_disclosure|default(false) %}{{ canonical_fallback_disclosure }}{% elif is_disclosed_external_market_fallback|default(false) %}Deze appendix toont de externe bronstatus, de gerapporteerde resultaatsbasis, de ongewijzigde multiple en de illustratieve EV-naar-equitybrug. De getoonde referentierange is een door de adviseur gedefinieerde externe range, geen empirische percentielverdeling, benchmark, korting, adviseursweging of segmentweging.{% elif _is_fr_amt %}Cette annexe reprend le calcul structure qui alimente la valeur: base de resultat, multiple de reference, decotes, pondérations conseillees et segmentation eventuelle. Les valeurs manquantes restent explicitement vides.{% elif _is_en_amt %}This appendix shows the structured build-up behind the value: earnings basis, reference multiple, discounts, advisor weights, and any segment valuation. Missing inputs remain explicit instead of being inferred in the report layer.{% else %}Deze appendix toont de gestructureerde opbouw achter de waarde: resultaatsbasis, referentiemultiple, kortingen, adviseurswegingen en eventuele segmentwaardering. Ontbrekende inputs blijven expliciet leeg in plaats van in de rapportlaag te worden afgeleid.{% endif %}
+    </p>
+
+    {% if not is_disclosed_external_market_fallback|default(false) and not is_governed_external_market_reference|default(false) %}
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8pt; margin-bottom: 14pt;">
+        <div style="border: 1px solid hsl(var(--report-border)); border-radius: 6pt; padding: 8pt; background: hsl(var(--report-surface));">
+            <div style="font-size: 6pt; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-text-muted)); font-weight: 700;">{% if _is_fr_amt %}Base{% elif _is_en_amt %}Basis{% else %}Basis{% endif %}</div>
+            <div style="font-size: 12pt; color: hsl(var(--report-foreground)); font-weight: 700;">{{ amt.earnings_basis or '—' }}</div>
+        </div>
+        <div style="border: 1px solid hsl(var(--report-border)); border-radius: 6pt; padding: 8pt; background: hsl(var(--report-surface));">
+            <div style="font-size: 6pt; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-text-muted)); font-weight: 700;">{% if _is_fr_amt %}Risque{% elif _is_en_amt %}Risk layer{% else %}Risicolaag{% endif %}</div>
+            <div style="font-size: 12pt; color: hsl(var(--report-foreground)); font-weight: 700;">{% if amt.risk_analysis_enabled is sameas false %}{% if _is_fr_amt %}Désactivé{% elif _is_en_amt %}Off{% else %}Uit{% endif %}{% elif amt.risk_analysis_enabled is sameas true %}{% if _is_fr_amt %}Activé{% elif _is_en_amt %}On{% else %}Aan{% endif %}{% else %}—{% endif %}</div>
+        </div>
+        <div style="border: 1px solid hsl(var(--report-border)); border-radius: 6pt; padding: 8pt; background: hsl(var(--report-surface));">
+            <div style="font-size: 6pt; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-text-muted)); font-weight: 700;">{% if _is_fr_amt %}Plancher{% elif _is_en_amt %}Floor{% else %}Vloer{% endif %}</div>
+            <div style="font-size: 12pt; color: hsl(var(--report-foreground)); font-weight: 700;">{% if amt.discount_floor_factor_percent is not none %}{{ amt.discount_floor_factor_percent|safe_round(0) }}%{% else %}—{% endif %}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if amt.benchmark_evidence %}
+    {% set be = amt.benchmark_evidence %}
+    {% if be.status|default('') == 'unavailable' %}<p>{% if locale == 'fr' %}Preuves de marché indisponibles : aucune distribution de comparables établie.{% elif locale == 'en' %}Market evidence unavailable: no comparable distribution established.{% else %}Marktbewijs niet beschikbaar: geen verdeling van vergelijkbare waarnemingen vastgesteld.{% endif %}</p>{% endif %}
+    <h3 style="margin: 12pt 0 5pt 0; font-size: 9pt;">{% if is_governed_external_market_reference|default(false) %}Verzegeld extern marktcontract{% elif canonical_fallback_disclosure|default(false) %}{% if _is_fr_amt %}Statut des sources{% elif _is_en_amt %}Source status{% else %}Bronstatus{% endif %}{% elif is_disclosed_external_market_fallback|default(false) %}Bronstatus{% elif _is_fr_amt %}Données de marché{% elif _is_en_amt %}Market evidence{% else %}Marktbewijs{% endif %}</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 8pt; margin-bottom: 12pt;">
+        <tbody>
+            {% if be.business_type_title or be.nace_code %}
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <td style="padding: 5pt; color: hsl(var(--report-text-muted));">{% if _is_fr_amt %}Entreprise évaluée{% elif _is_en_amt %}Subject company{% else %}Onderneming{% endif %}</td>
+                <td style="padding: 5pt; text-align: right; font-weight: 600;">{{ be.business_type_title or '' }}{% if be.nace_code %} · NACE {{ be.nace_code }}{% endif %}</td>
+            </tr>
+            {% endif %}
+            {% if be.basis_label %}
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <td style="padding: 5pt; color: hsl(var(--report-text-muted));">{% if _is_fr_amt %}Ancrage de marché externe{% elif _is_en_amt %}External market anchor{% else %}Externe marktanker{% endif %}</td>
+                <td style="padding: 5pt; text-align: right; font-weight: 600;">{{ be.basis_label }}</td>
+            </tr>
+            {% endif %}
+            {% if be.low is not none or be.mid is not none or be.high is not none %}
+            {# When the corridor is size-matched (mid == high) a "low / mid /
+               high" triple prints the same number twice, which reads as a
+               system error — name the applied reference and the corridor
+               separately instead. #}
+            {% set _be_mid_is_high = be.mid is not none and be.high is not none and (be.mid|float) == (be.high|float) %}
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <td style="padding: 5pt; color: hsl(var(--report-text-muted));">{% if be.range_type == 'advisor_defined_external_reference_range' %}{% if _be_mid_is_high %}{% if _is_fr_amt %}Référence appliquée / corridor (pas des percentiles){% elif _is_en_amt %}Applied reference / corridor (not percentiles){% else %}Toegepaste referentie / corridor (geen percentielen){% endif %}{% else %}Externe referentierange (geen percentielen){% endif %}{% elif _is_fr_amt %}Bande{% elif _is_en_amt %}Band{% else %}Bandbreedte{% endif %}</td>
+                <td style="padding: 5pt; text-align: right; font-weight: 600;">{% if _be_mid_is_high %}{{ be.mid|safe_round(2) }}x · corridor {{ be.low|safe_round(2) }}x–{{ be.high|safe_round(2) }}x{% else %}{% if be.low is not none %}{{ be.low|safe_round(2) }}x{% else %}—{% endif %} / {% if be.mid is not none %}{{ be.mid|safe_round(2) }}x{% else %}—{% endif %} / {% if be.high is not none %}{{ be.high|safe_round(2) }}x{% else %}—{% endif %}{% endif %}</td>
+            </tr>
+            {% endif %}
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <td style="padding: 5pt; color: hsl(var(--report-text-muted));">{% if _is_fr_amt %}Source / échantillon{% elif _is_en_amt %}Source / sample{% else %}Bron / steekproef{% endif %}</td>
+                <td style="padding: 5pt; text-align: right; font-weight: 600;">{{ be.data_source or '—' }}{% if be.sample_size %} · n={{ be.sample_size }}{% endif %}{% if be.as_of %} · {{ be.as_of }}{% endif %}</td>
+            </tr>
+            {% if be.region or be.tier or be.scope_stage %}
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <td style="padding: 5pt; color: hsl(var(--report-text-muted));">{% if _is_fr_amt %}Portée{% elif _is_en_amt %}Scope{% else %}Scope{% endif %}</td>
+                <td style="padding: 5pt; text-align: right; font-weight: 600;">{% if be.region %}{{ be.region }}{% endif %}{% if be.tier %} · {{ be.tier }}{% endif %}{% if be.scope_stage %} · {{ be.scope_stage }}{% endif %}</td>
+            </tr>
+            {% endif %}
+            {% if be.evidence_summary %}
+            <tr>
+                <td style="padding: 5pt; color: hsl(var(--report-text-muted));">{% if _is_fr_amt %}Résumé{% elif _is_en_amt %}Summary{% else %}Samenvatting{% endif %}</td>
+                <td style="padding: 5pt; text-align: right; font-weight: 600;">{% if be.evidence_summary is mapping %}{% if be.evidence_summary.get('fallback_reason') %}{% if _is_fr_amt %}Référence par pays (pas de comparables sectoriels publiés){% elif _is_en_amt %}Country-level reference (no sector-specific comparables published){% else %}Landgebaseerde referentie (geen sectorspecifieke transacties gepubliceerd){% endif %}{% elif be.evidence_summary.get('note') %}{{ be.evidence_summary.get('note') }}{% else %}&#8212;{% endif %}{% else %}{{ be.evidence_summary }}{% endif %}</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+    {% endif %}
+
+
+    {# ── Corroborating and deliberately-unapplied references ──────────────
+       The sealed contract may carry more than one observation; until now the
+       appendix rendered only ``sources[0]``. A reader who is told "5.70x" and
+       is never shown the sector-specific observation the advisor also weighed
+       cannot judge the conclusion, and a counterparty who finds that source
+       independently reads the omission as selective disclosure. Applied vs
+       corroborative is derived from the contract itself: the source whose
+       observed value equals the applied multiple is the one that priced. #}
+    {% set _emrc = external_market_reference_contract|default({}) %}
+    {% set _emrc_sources = _emrc.get('sources') if _emrc is mapping else [] %}
+    {% if is_governed_external_market_reference|default(false) and _emrc_sources and _emrc_sources|length > 1 %}
+    <h3 style="margin: 12pt 0 5pt 0; font-size: 9pt;">{% if _is_fr_amt %}Références corroborantes{% elif _is_en_amt %}Corroborating references{% else %}Corroborerende referenties{% endif %}</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 7pt; margin-bottom: 6pt;">
+        <thead>
+            <tr style="border-bottom: 0.75pt solid hsl(224, 25%, 12%);">
+                <th style="padding: 3pt 4pt; text-align: left; color: hsl(224, 10%, 45%); font-weight: 700;">{% if _is_fr_amt %}Source{% elif _is_en_amt %}Source{% else %}Bron{% endif %}</th>
+                <th style="padding: 3pt 4pt; text-align: right; color: hsl(224, 10%, 45%); font-weight: 700;">{% if _is_fr_amt %}Observation{% elif _is_en_amt %}Observation{% else %}Waarneming{% endif %}</th>
+                <th style="padding: 3pt 4pt; text-align: right; color: hsl(224, 10%, 45%); font-weight: 700;">{% if _is_fr_amt %}Usage{% elif _is_en_amt %}Use{% else %}Gebruik{% endif %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for _src in _emrc_sources %}
+            {% set _obs = _src.get('observed_value') %}
+            {% set _applied = (_obs is not none and _emrc.get('applied_multiple') is not none and (_obs|float) == (_emrc.get('applied_multiple')|float)) %}
+            <tr style="border-bottom: 0.5pt solid hsl(224, 15%, 92%);">
+                <td style="padding: 4pt; font-weight: 600;">{{ _src.get('source_title') or '&#8212;' }}{% if _src.get('published_on') %}<br><span style="color: hsl(224, 10%, 55%); font-weight: 400;">{{ _src.get('published_on') }}</span>{% endif %}</td>
+                <td style="padding: 4pt; text-align: right; font-weight: 700; white-space: nowrap;">{% if _obs is not none %}{{ _obs|safe_round(2) }}x{% else %}&#8212;{% endif %}</td>
+                <td style="padding: 4pt; text-align: right; font-weight: 600; white-space: nowrap;">{% if _applied %}<span style="color: hsl(168, 52%, 30%);">{% if _is_fr_amt %}Appliquée{% elif _is_en_amt %}Applied{% else %}Toegepast{% endif %}</span>{% else %}<span style="color: hsl(37, 65%, 38%);">{% if _is_fr_amt %}Contrôle{% elif _is_en_amt %}Cross-check{% else %}Toets{% endif %}</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {# The sealed contract's own prose is governance text written for an auditor
+       and is not translated per report locale. Echoing it verbatim would put
+       untranslated copy in a client deliverable, so the appendix states the
+       role of each observation in the report language and leaves the contract
+       wording to the restricted evidence bundle. #}
+    <p style="font-size: 6.5pt; color: hsl(224, 10%, 45%); margin: 0 0 10pt 0; line-height: 1.45;">
+        {% if _is_fr_amt %}Seule l'observation appliquée détermine la valeur. Les autres références sont des contrôles de vraisemblance : elles reposent sur une base de résultat ou une période différente et ne sont donc pas transposables telles quelles à la base retenue ici.{% elif _is_en_amt %}Only the applied observation drives value. The other references are reasonableness checks: they rest on a different earnings basis or period and therefore do not transfer unchanged to the basis priced here.{% else %}Uitsluitend de toegepaste waarneming bepaalt de waarde. De overige referenties zijn redelijkheidstoetsen: zij berusten op een andere resultaatsbasis of periode en zijn daarom niet ongewijzigd overdraagbaar naar de hier gehanteerde basis.{% endif %}
+    </p>
+    {% endif %}
+
+    {% if amt.add_back_rows or (amt.reported_earnings is not none and amt.adjusted_earnings is not none) %}
+    {% set _amt_has_adjustments = (amt.add_back_rows|length > 0) or (amt.reported_earnings is not none and amt.adjusted_earnings is not none and amt.reported_earnings != amt.adjusted_earnings) %}
+    <h3 style="margin: 12pt 0 5pt 0; font-size: 9pt;">{% if _amt_has_adjustments %}{% if _is_fr_amt %}EBITDA ajusté (normalisations){% elif _is_en_amt %}Adjusted / maintainable EBITDA{% else %}Genormaliseerde EBITDA{% endif %}{% else %}{% if _is_fr_amt %}Base de résultat{% elif _is_en_amt %}Earnings basis{% else %}Resultaatsbasis{% endif %}{% endif %}</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 8pt; margin-bottom: 12pt;">
+        <tbody>
+            {% if amt.reported_earnings is not none %}
+            <tr style="border-bottom: 0.5pt solid hsl(224, 15%, 92%);">
+                <td style="padding: 4pt; color: hsl(224, 10%, 45%);">{% if _is_fr_amt %}EBITDA déclaré{% elif _is_en_amt %}Reported EBITDA{% else %}Gerapporteerde EBITDA{% endif %}</td>
+                <td style="padding: 4pt; text-align: right; font-weight: 600;">{{ amt.reported_earnings|format_currency }}</td>
+            </tr>
+            {% endif %}
+            {% for row in amt.add_back_rows %}
+            <tr style="border-bottom: 0.5pt solid hsl(224, 15%, 92%);">
+                <td style="padding: 4pt; font-weight: 600;">
+                    {{ row.label }}{% if not row.applied %} <span style="font-weight: 400; color: hsl(224, 10%, 55%);">({% if _is_fr_amt %}en attente{% elif _is_en_amt %}pending{% else %}in afwachting{% endif %})</span>{% endif %}
+                    {% if row.rationale or row.source %}
+                    <div style="margin-top: 2pt; font-size: 6.5pt; font-weight: 400; line-height: 1.35; color: hsl(224, 10%, 45%);">{{ row.rationale or '' }}{% if row.source %}{% if row.rationale %} · {% endif %}{{ row.source }}{% endif %}</div>
+                    {% endif %}
+                </td>
+                <td style="padding: 4pt; text-align: right;">{% if row.amount is not none %}{{ row.amount|format_currency }}{% else %}&#8212;{% endif %}</td>
+            </tr>
+            {% endfor %}
+            {% if _amt_has_adjustments and amt.adjusted_earnings is not none %}
+            <tr style="border-top: 0.8pt solid hsl(224, 15%, 88%);">
+                <td style="padding: 4pt; font-weight: 700;">{% if _is_fr_amt %}EBITDA ajusté / soutenable{% elif _is_en_amt %}Adjusted / maintainable EBITDA{% else %}Genormaliseerde / haalbare EBITDA{% endif %}</td>
+                <td style="padding: 4pt; text-align: right; font-weight: 700;">{{ amt.adjusted_earnings|format_currency }}</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if amt.multiple_rows %}
+    <h3 style="margin: 12pt 0 5pt 0; font-size: 9pt;">{% if _is_fr_amt %}Décomposition du multiple{% elif _is_en_amt %}Multiple build-up{% else %}Multiple-opbouw{% endif %}</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 8pt; margin-bottom: 12pt;">
+        <thead>
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <th style="text-align: left; padding: 5pt;">{% if _is_fr_amt %}Étape{% elif _is_en_amt %}Step{% else %}Stap{% endif %}</th>
+                <th style="text-align: right; padding: 5pt;">Multiple</th>
+                <th style="text-align: right; padding: 5pt;">{% if _is_fr_amt %}Impact{% elif _is_en_amt %}Impact{% else %}Impact{% endif %}</th>
+                <th style="text-align: right; padding: 5pt;">EV</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in amt.multiple_rows %}
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <td style="padding: 5pt; font-weight: 600;">
+                    {{ row.display_label|default(row.label, true) }}
+                    {% set _advisor_multiple = row.advisor_multiple|float if row.advisor_multiple is defined and row.advisor_multiple is not none else 0 %}
+                    {% set _model_multiple = row.model_multiple|float if row.model_multiple is defined and row.model_multiple is not none else 0 %}
+                    {% if row.override_note or _advisor_multiple != 0 or row.rationale or row.source %}
+                    <div style="margin-top: 2pt; font-size: 6.5pt; font-weight: 400; line-height: 1.35; color: hsl(var(--report-text-muted));">
+                        {# Only surface the advisor-adjusted line for a REAL override (non-zero);
+                           a 0×-vs-0× default is not an adjustment and prints as noise. #}
+                        {% if _advisor_multiple != 0 %}{% if _is_fr_amt %}Ajusté par le conseiller{% elif _is_en_amt %}Advisor-adjusted{% else %}Adviseur aangepast{% endif %}: {{ _advisor_multiple|safe_round(2) }}x{% if _model_multiple != 0 %} vs {{ _model_multiple|safe_round(2) }}x{% endif %}. {% endif %}
+                        {{ row.override_note or row.rationale or row.source }}
+                    </div>
+                    {% endif %}
+                </td>
+                <td style="padding: 5pt; text-align: right;">{% if row.multiple is not none %}{{ row.multiple|safe_round(2) }}x{% else %}—{% endif %}</td>
+                <td style="padding: 5pt; text-align: right;">{% if row.adjustment is not none %}{{ row.adjustment|safe_round(2) }}x{% else %}—{% endif %}</td>
+                <td style="padding: 5pt; text-align: right;">{% if row.enterprise_value is not none %}{{ row.enterprise_value|format_currency }}{% else %}—{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {# The applied multiple above is the EBITDA-leg multiple (pre-blend); restate
+       the bridge so the build-up reconciles to the blended headline. See PDF twin. #}
+    {% if sde_blend_applied|default(false) and sde_blend_leg_ev and ebitda_blend_leg_ev %}
+    <p style="margin: 0 0 10pt 0; padding: 6pt 9pt; border-radius: 4pt; background: hsl(224, 15%, 97%); border-left: 3pt solid hsl({{ teal_hsl }}); font-size: 7pt; line-height: 1.5; color: hsl(var(--report-slate-700));">
+        <strong>{% if _is_fr_amt %}Réconciliation du mélange{% elif _is_en_amt %}Blend reconciliation{% else %}Blend-reconciliatie{% endif %}:</strong>
+        {% if _is_fr_amt %}le multiple appliqué ci-dessus est la jambe EBITDA (pré-mélange) ; le moteur la combine avec la jambe SDE :{% elif _is_en_amt %}the applied multiple above is the EBITDA leg (pre-blend); the engine combines it with the SDE leg:{% else %}de toegepaste multiple hierboven is de EBITDA-leg (vóór blend); de engine combineert deze met de SDE-leg:{% endif %}
+        {{ ebitda_blend_leg_ev|format_currency }} (EBITDA, {{ ebitda_blend_weight_pct }}%) + {{ sde_blend_leg_ev|format_currency }} (SDE, {{ sde_blend_weight_pct }}%) = <strong style="color: hsl({{ teal_hsl }});">{{ sde_blend_headline_ev|format_currency }}</strong>{% if applied_multiple %} ({% if _is_fr_amt %}multiple de la branche EBITDA{% elif _is_en_amt %}EBITDA leg multiple{% else %}multiple van de EBITDA-component{% endif %} {{ applied_multiple|safe_round(2) }}×){% endif %}.
+    </p>
+    {% endif %}
+    {% endif %}
+
+    {% if amt.discount_rows %}
+    <h3 style="margin: 12pt 0 5pt 0; font-size: 9pt;">{% if _is_fr_amt %}Décotes et pondérations{% elif _is_en_amt %}Discounts and weights{% else %}Kortingen en wegingen{% endif %}</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 8pt; margin-bottom: 12pt;">
+        <thead>
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <th style="text-align: left; padding: 5pt;">{% if _is_fr_amt %}Facteur{% elif _is_en_amt %}Factor{% else %}Factor{% endif %}</th>
+                <th style="text-align: right; padding: 5pt;">{% if _is_fr_amt %}Modèle{% elif _is_en_amt %}Model{% else %}Model{% endif %}</th>
+                <th style="text-align: right; padding: 5pt;">{% if _is_fr_amt %}Poids conseiller{% elif _is_en_amt %}Advisor weight{% else %}Adviseursweging{% endif %}</th>
+                <th style="text-align: right; padding: 5pt;">{% if _is_fr_amt %}Effectif{% elif _is_en_amt %}Effective{% else %}Effectief{% endif %}</th>
+                <th style="text-align: right; padding: 5pt;">{% if _is_fr_amt %}Impact EUR{% elif _is_en_amt %}EUR impact{% else %}EUR-impact{% endif %}</th>
+                <th style="text-align: left; padding: 5pt;">{% if _is_fr_amt %}Raison / source{% elif _is_en_amt %}Rationale / source{% else %}Reden / bron{% endif %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in amt.discount_rows %}
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <td style="padding: 5pt; font-weight: 600;">{{ row.label }}</td>
+                <td style="padding: 5pt; text-align: right;">{% if row.model_adjustment_percent is not none %}{{ row.model_adjustment_percent|safe_round(1) }}%{% else %}—{% endif %}</td>
+                <td style="padding: 5pt; text-align: right;">{% if row.advisor_weight_percent is not none %}{{ row.advisor_weight_percent|safe_round(0) }}%{% else %}—{% endif %}</td>
+                <td style="padding: 5pt; text-align: right;">{% if row.effective_adjustment_percent is not none %}{{ row.effective_adjustment_percent|safe_round(1) }}%{% else %}—{% endif %}</td>
+                {% set _euro_impact = row.euro_impact|float if row.euro_impact is not none and not amt.unbound_discount_impacts_excluded|default(false) else none %}
+                <td style="padding: 5pt; text-align: right;">{% if _euro_impact is not none %}{% if _euro_impact > 0 %}+{% elif _euro_impact < 0 %}-{% endif %}{{ _euro_impact|abs|format_currency }}{% else %}—{% endif %}</td>
+                <td style="padding: 5pt;">
+                    {{ row.rationale or row.source or '—' }}
+                    {% if row.strength_factor_evidence_count %}
+                    <div style="margin-top: 3pt; font-size: 7pt; line-height: 1.4; color: hsl(var(--report-slate-600));">
+                        <strong>{% if _is_fr_amt %}Facteurs{% elif _is_en_amt %}Strength factors{% else %}Sterktefactoren{% endif %}:</strong>
+                        {% if row.strength_factor_keys %}{{ row.strength_factor_keys|join(', ') }}{% elif row.multiple_discount_key %}{{ row.multiple_discount_key }}{% endif %}
+                        {% if row.multiple_discount_key %}
+                        <br><strong>{% if _is_fr_amt %}Décote sur le multiple{% elif _is_en_amt %}Multiple discount{% else %}Multiplekorting{% endif %}:</strong>
+                        {{ row.multiple_discount_key }}
+                        {% endif %}
+                        {% if row.strength_factor_data_point_ids %}
+                        <br><strong>{% if _is_fr_amt %}Points de données{% elif _is_en_amt %}Data points{% else %}Datapunten{% endif %}:</strong>
+                        {{ row.strength_factor_data_point_ids|join(', ') }}
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if amt.unbound_discount_impacts_excluded|default(false) %}
+    <p data-discount-impact-status="unavailable" style="font-size: 8pt; line-height: 1.5;">{% if _is_fr_amt %}Impacts monétaires indisponibles : aucune base avant ajustements liée au calcul sauvegardé n’a été admise. Les ajustements intégrés au prix sont indiqués dans le registre scellé.{% elif _is_en_amt %}Monetary impacts unavailable: no pre-adjustment base bound to the saved calculation was admitted. Priced adjustments are disclosed in the sealed register.{% else %}Monetaire impact niet beschikbaar: geen basis vóór aanpassingen gekoppeld aan de opgeslagen berekening is toegelaten. Geprijsde aanpassingen staan in het verzegelde register.{% endif %}</p>
+    {% endif %}
+    {% endif %}
+
+    {% if amt.blend_rows and not amt.unpriced_reference_tables_excluded|default(false) %}
+    <h3 style="margin: 12pt 0 5pt 0; font-size: 9pt;">{% if _is_fr_amt %}Pondération des types de multiples{% elif _is_en_amt %}Multiple-type blend{% else %}Multiple-type weging{% endif %}</h3>
+    <table data-legacy-reference-mix="true" style="width: 100%; border-collapse: collapse; font-size: 8pt; margin-bottom: 12pt;">
+        <thead>
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <th style="text-align: left; padding: 5pt;">{% if _is_fr_amt %}Méthode{% elif _is_en_amt %}Method{% else %}Methode{% endif %}</th>
+                <th style="text-align: right; padding: 5pt;">{% if _is_fr_amt %}Poids{% elif _is_en_amt %}Weight{% else %}Weging{% endif %}</th>
+                <th style="text-align: right; padding: 5pt;">EV</th>
+                <th style="text-align: right; padding: 5pt;">{% if _is_fr_amt %}Contribution{% elif _is_en_amt %}Contribution{% else %}Bijdrage{% endif %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in amt.blend_rows %}
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <td style="padding: 5pt; font-weight: 600;">{{ row.label }}</td>
+                <td style="padding: 5pt; text-align: right;">{% if row.weight_percent is not none %}{{ row.weight_percent|safe_round(0) }}%{% else %}—{% endif %}</td>
+                <td style="padding: 5pt; text-align: right;">{% if row.enterprise_value is not none %}{{ row.enterprise_value|format_currency }}{% else %}—{% endif %}</td>
+                <td style="padding: 5pt; text-align: right;">{% if row.contribution is not none %}{{ row.contribution|format_currency }}{% else %}—{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if amt.segment_rows and not amt.unpriced_reference_tables_excluded|default(false) %}
+    <h3 style="margin: 12pt 0 5pt 0; font-size: 9pt;">{% if _is_fr_amt %}Segments{% elif _is_en_amt %}Segments{% else %}Segmenten{% endif %}</h3>
+    <table data-legacy-reference-segments="true" style="width: 100%; border-collapse: collapse; font-size: 8pt;">
+        <thead>
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <th style="text-align: left; padding: 5pt;">Segment</th>
+                <th style="text-align: right; padding: 5pt;">{% if _is_fr_amt %}Base{% elif _is_en_amt %}Basis{% else %}Basis{% endif %}</th>
+                <th style="text-align: right; padding: 5pt;">{% if _is_fr_amt %}Résultat{% elif _is_en_amt %}Earnings{% else %}Resultaat{% endif %}</th>
+                <th style="text-align: right; padding: 5pt;">Multiple</th>
+                <th style="text-align: right; padding: 5pt;">EV</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in amt.segment_rows %}
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <td style="padding: 5pt; font-weight: 600;">{{ row.label }}</td>
+                <td style="padding: 5pt; text-align: right;">{{ row.basis or '—' }}</td>
+                <td style="padding: 5pt; text-align: right;">{% if row.earnings is not none %}{{ row.earnings|format_currency }}{% else %}—{% endif %}</td>
+                <td style="padding: 5pt; text-align: right;">{% if row.multiple is not none %}{{ row.multiple|safe_round(2) }}x{% else %}—{% endif %}</td>
+                <td style="padding: 5pt; text-align: right;">{% if row.enterprise_value is not none %}{{ row.enterprise_value|format_currency }}{% else %}—{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if amt.equity_bridge %}
+    {% set eb = amt.equity_bridge %}
+    <h3 style="margin: 12pt 0 5pt 0; font-size: 9pt;">{% if _is_fr_amt %}Passage de la valeur d’entreprise aux capitaux propres{% elif _is_en_amt %}EV to equity bridge{% else %}EV naar eigen vermogen{% endif %}</h3>
+    {% if eb.rows %}
+    <table style="width: 100%; border-collapse: collapse; font-size: 8pt; margin-bottom: 8pt;">
+        <thead>
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <th style="text-align: left; padding: 5pt;">{% if _is_fr_amt %}Élément{% elif _is_en_amt %}Item{% else %}Item{% endif %}</th>
+                <th style="text-align: right; padding: 5pt;">{% if _is_fr_amt %}Montant{% elif _is_en_amt %}Amount{% else %}Bedrag{% endif %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in eb.rows %}
+            <tr style="border-bottom: 1px solid hsl(var(--report-border)); {% if row.operator == '=' %}font-weight: 700; color: hsl(var(--report-teal));{% endif %}">
+                <td style="padding: 5pt; font-weight: 600;">{% if row.operator %}{{ row.operator }} {% endif %}{{ row.label }}</td>
+                <td style="padding: 5pt; text-align: right;">{% if row.amount is not none %}{{ row.amount|format_currency }}{% else %}—{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+    {% if eb.disclosures %}
+    <p style="margin: 0; font-size: 7pt; line-height: 1.45; color: hsl(var(--report-text-muted));">
+        {{ eb.disclosures|join(' ') }}
+    </p>
+    {% endif %}
+    {% endif %}
+</div>

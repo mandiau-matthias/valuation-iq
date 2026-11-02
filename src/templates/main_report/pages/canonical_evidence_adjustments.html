@@ -1,0 +1,11 @@
+{% set _cea_locale = (locale|default('nl'))|lower %}
+<div class="a4-page">
+  {% include "main_report/partials/_page_header.html" %}
+  <div class="section-header">
+    <span class="section-number">{{ canonical_evidence_adjustments_section_number|default('A') }}</span>
+    <h1 class="section-title">{% if _cea_locale == 'fr' %}Registre des preuves intégrées au prix{% elif _cea_locale == 'en' %}Priced evidence register{% else %}Register van geprijsd bewijs{% endif %}</h1>
+  </div>
+  {% set canonical_projection_show_register = true %}
+  {% set canonical_projection_show_adjustments = false %}
+  {% include "shared/components/_canonical_evidence_adjustments_body.html" %}
+</div>

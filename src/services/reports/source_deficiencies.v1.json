@@ -1,0 +1,62 @@
+{
+  "SOURCE_CHART_UNSUPPORTED": {
+    "en": "Provide a source chart of accounts with verified mappings before valuation.",
+    "nl": "Bezorg het bronrekeningschema met geverifieerde koppelingen vóór de waardering.",
+    "fr": "Fournissez le plan comptable source avec des correspondances vérifiées avant la valorisation."
+  },
+  "SOURCE_CURRENCY_UNSUPPORTED": {
+    "en": "Provide source evidence of a supported reporting currency.",
+    "nl": "Bezorg bronbewijs van een ondersteunde rapporteringsvaluta.",
+    "fr": "Fournissez une preuve de la devise de présentation prise en charge."
+  },
+  "SOURCE_CURRENCY_UNPROVEN": {
+    "en": "Confirm the reporting currency in the accounting source.",
+    "nl": "Bevestig de rapporteringsvaluta in de boekhoudbron.",
+    "fr": "Confirmez la devise de présentation dans la source comptable."
+  },
+  "ACCOUNTING_CLASSIFICATION_UNRESOLVED": {
+    "en": "Provide account detail separating D&A, impairments and provisions.",
+    "nl": "Bezorg rekeningdetails die afschrijvingen, waardeverminderingen en voorzieningen onderscheiden.",
+    "fr": "Fournissez le détail séparant amortissements, réductions de valeur et provisions."
+  },
+  "SOURCE_PERIOD_NOT_CLOSED": {
+    "en": "Provide confirmation that the accounting period is closed.",
+    "nl": "Bezorg een bevestiging dat de boekhoudperiode is afgesloten.",
+    "fr": "Fournissez la confirmation de clôture de la période comptable."
+  },
+  "SOURCE_COMPLETENESS_UNPROVEN": {
+    "en": "Provide a complete trial balance and confirm that all accounts are included.",
+    "nl": "Bezorg een volledige proef- en saldibalans en bevestig dat alle rekeningen zijn opgenomen.",
+    "fr": "Fournissez une balance complète et confirmez que tous les comptes sont inclus."
+  },
+  "SOURCE_PERIOD_BOUNDARIES_MISSING": {
+    "en": "Provide the start and end dates of the source financial period.",
+    "nl": "Bezorg de begin- en einddatum van de financiële bronperiode.",
+    "fr": "Fournissez les dates de début et de fin de la période financière source."
+  },
+  "SOURCE_MIXING_REQUIRES_RECONCILIATION": {
+    "en": "Reconcile the selected financial facts to their source documents.",
+    "nl": "Sluit de geselecteerde financiële gegevens aan op hun brondocumenten.",
+    "fr": "Rapprochez les données financières sélectionnées de leurs documents sources."
+  },
+  "FORECAST_EVIDENCE_MISSING": {
+    "en": "DCF requires a verified company forecast or cash-flow schedule with source documents.",
+    "nl": "DCF vereist een geverifieerde bedrijfsprognose of kasstroomschema met brondocumenten.",
+    "fr": "Le DCF nécessite des prévisions de l’entreprise ou un tableau de flux de trésorerie vérifiés, avec les documents sources."
+  },
+  "REVENUE_BASIS_MISMATCH": {
+    "en": "Confirm that the revenue definition matches the benchmark cohort.",
+    "nl": "Bevestig dat de omzetdefinitie overeenkomt met de benchmarkgroep.",
+    "fr": "Confirmez que la définition du chiffre d’affaires correspond au groupe de référence."
+  },
+  "EQUITY_BRIDGE_INCOMPLETE": {
+    "en": "Equity value is unavailable until cash, debt and completion-account inputs are verified.",
+    "nl": "De aandelenwaarde is niet beschikbaar totdat cash, schulden en overdrachtsbalansgegevens zijn geverifieerd.",
+    "fr": "La valeur des capitaux propres est indisponible tant que la trésorerie, les dettes et les données de clôture ne sont pas vérifiées."
+  },
+  "CALIBRATION_UNVERIFIED": {
+    "en": "Pricing accuracy and range coverage have not been validated against completed transactions.",
+    "nl": "Prijsnauwkeurigheid en dekking van de bandbreedte zijn nog niet getoetst aan afgeronde transacties.",
+    "fr": "La précision des prix et la couverture des fourchettes n’ont pas été validées sur des transactions réalisées."
+  }
+}

@@ -1,0 +1,199 @@
+{#
+    STARTUP VALUATION — CAP TABLE & DILUTION (Screen/Browser version)
+
+    Renders the founder-supplied cap table summary (option pool, SAFE notes,
+    last round) and the next-round dilution scenario derived from
+    ``startup_report.dilution_scenario``.
+
+    The cap-table simulator card itself is intentionally NOT rendered here.
+    The same simulator block already appears on ``startup_one_pager.html``
+    (the founder hand-out page), and showing it twice was confusing during
+    QA — readers thought the numbers were inconsistent ("which one is the
+    real one?") even though they were identical.  Single-source-of-truth
+    for the simulator is the one-pager; this page is the deeper cap-table
+    breakdown (SAFEs, option pool, last round) the simulator references.
+
+    PDF twin: main_report_pdf/pages/startup_cap_table.html
+#}
+{% set ct = startup_report.cap_table %}
+{% set di = startup_report.dilution_scenario %}
+
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div class="section-header">
+        {# B11 — section badge bound to context (renumbers automatically
+           if a new page is inserted between method_breakdown and cap_table). #}
+        <span class="section-number">{{ startup_cap_table_section_number|default('04') }}</span>
+        <h1 class="section-title" style="margin: 0;">{{ startup_report.t.cap_table_and_dilution }}</h1>
+    </div>
+
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-3) 0 var(--space-2);">{{ startup_report.t.cap_table_summary }}</h2>
+    {# B15 — suppress empty rows so a founder who only typed a few of
+       the optional fields doesn't read a wall of em-dashes. Pre-money
+       target + option-pool % render unconditionally because they are
+       the load-bearing assumptions for the next-round dilution
+       scenario below; the last-round trio is optional historical
+       context that becomes visual noise when missing. #}
+    <table class="data-table" style="width: 100%; font-size: var(--font-size-sm); margin-bottom: var(--space-4);">
+        <tbody>
+            <tr>
+                <td>{{ startup_report.t.next_round_pre_money_target }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">
+                    {% if ct.pre_money_target %}{{ ct.pre_money_target|format_currency }}{% else %}—{% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td>{{ startup_report.t.option_pool_reserved }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ ct.option_pool_pct|safe_round_or_dash(1) }}%</td>
+            </tr>
+            {% if ct.last_round_amount %}
+            <tr>
+                <td>{{ startup_report.t.last_round_amount }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ ct.last_round_amount|format_currency }}</td>
+            </tr>
+            {% endif %}
+            {% if ct.last_round_post_money %}
+            <tr>
+                <td>{{ startup_report.t.last_round_post_money }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ ct.last_round_post_money|format_currency }}</td>
+            </tr>
+            {% endif %}
+            {% if ct.last_round_date %}
+            <tr>
+                <td>{{ startup_report.t.last_round_date }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ ct.last_round_date }}</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    {# Visual share-distribution bar — same 4-segment split the founder
+       saw in the Venus wizard. Renders below the summary table so the
+       eye sees the picture before the SAFE / dilution tables that
+       follow. #}
+    {% include "main_report/partials/_startup_share_distribution_bar.html" ignore missing %}
+
+    {% if ct.safe_notes and ct.safe_notes|length > 0 %}
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-3) 0 var(--space-2);">{{ startup_report.t.safe_notes_and_convertibles }}</h2>
+    <table class="data-table" style="width: 100%; font-size: var(--font-size-sm); margin-bottom: var(--space-4);">
+        <thead>
+            <tr>
+                <th style="text-align: left;">{{ startup_report.t.holder }}</th>
+                <th style="text-align: right;">{{ startup_report.t.amount }}</th>
+                <th style="text-align: right;">{{ startup_report.t.discount }}</th>
+                <th style="text-align: right;">{{ startup_report.t.cap }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in ct.safe_notes %}
+            <tr>
+                <td>{{ s.holder_label or '—' }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ s.amount|format_currency }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{% if s.discount_pct %}{{ s.discount_pct|safe_round(0) }}%{% else %}—{% endif %}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{% if s.valuation_cap %}{{ s.valuation_cap|format_currency }}{% else %}—{% endif %}</td>
+            </tr>
+            {% endfor %}
+            <tr style="font-weight: 600;">
+                <td>{{ startup_report.t.total }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ ct.safe_notes_total|format_currency }}</td>
+                <td colspan="2"></td>
+            </tr>
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if di and (di.post_money or 0) > 0 %}
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-3) 0 var(--space-2);">{{ startup_report.t.next_round_dilution_scenario }}</h2>
+    <p style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted)); margin-bottom: var(--space-2);">
+        {{ startup_report.t.indicative_dilution_caption }}
+    </p>
+    <table class="data-table" style="width: 100%; font-size: var(--font-size-sm);">
+        <tbody>
+            <tr>
+                <td>{{ startup_report.t.expected_post_money_with_safes }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ di.post_money|format_currency }}</td>
+            </tr>
+            <tr>
+                <td>{{ startup_report.t.safe_dilution }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ di.safe_dilution_amount|format_currency }}</td>
+            </tr>
+            <tr>
+                <td>{{ startup_report.t.option_pool }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ di.option_pool_pct|safe_round(1) }}%</td>
+            </tr>
+            <tr style="font-weight: 600;">
+                <td>{{ startup_report.t.total_founder_dilution }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ di.founder_dilution_pct|safe_round(1) }}%</td>
+            </tr>
+        </tbody>
+    </table>
+
+    {# Founder-floor advisory — relocated from the Venus left panel
+       2026-05-10. Fires only when this priced close lands founders
+       below ~30% post-money, which is the empirical floor most
+       seed / Series A funds want to see before underwriting a next
+       round. See ``startup_report_context.py`` for the gate (no
+       SAFEs, populated raise, founders < 30%). The block renders a
+       title + diagnostic + 3-lever action so the founder reading
+       the report knows the consequence and the levers they can
+       pull, without the input panel surfacing analysis. #}
+    {% set ff = startup_report.founder_floor_advisory %}
+    {% if ff %}
+    <div class="card" style="margin-top: var(--space-3); padding: var(--space-4); border: 1pt solid hsl(355, 75%, 55%); background: hsl(355, 75%, 96%);">
+        <div style="font-size: var(--font-size-sm); font-weight: 600; color: hsl(355, 70%, 32%); margin-bottom: var(--space-1);">
+            {{ startup_report.t.founder_floor_advisory_title }}
+        </div>
+        <p style="font-size: var(--font-size-xs); line-height: 1.55; margin: 0 0 var(--space-2); color: hsl(var(--report-text));">
+            {{ startup_report.t.founder_floor_advisory_body.replace('{foundersPct}', ff.founders_pct|safe_round(0)|string) }}
+        </p>
+        <p style="font-size: var(--font-size-xs); line-height: 1.55; margin: 0; color: hsl(var(--report-text-muted));">
+            {{ startup_report.t.founder_floor_advisory_action }}
+        </p>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    {# Dilution scenarios — negotiation aid table. Renders OUTSIDE the
+       legacy ``dilution_scenario`` (singular) guard above because the
+       4-row scenarios block is independent of whether the legacy
+       SAFE-dilution scenario is populated. Fires whenever
+       ``cap_table_simulator`` produced a raise (founder entered a
+       round size in the wizard). The "current" row is highlighted so
+       the founder sees their baseline + three negotiation alternates
+       without losing track of where they are. #}
+    {% set ds = startup_report.dilution_scenarios %}
+    {% if ds and ds|length > 0 %}
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-4) 0 var(--space-2);">{{ startup_report.t.dilution_scenarios_title }}</h2>
+    <p style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted)); margin-bottom: var(--space-2);">
+        {{ startup_report.t.dilution_scenarios_caption }}
+    </p>
+    <table class="data-table" style="width: 100%; font-size: var(--font-size-sm);">
+        <thead>
+            <tr>
+                <th style="text-align: left;">{{ startup_report.t.scenario_label_current.replace(' — as entered', '').replace(' — zoals je het hebt ingegeven', '') }}</th>
+                <th style="text-align: right;">{{ startup_report.t.scenario_col_pre_money }}</th>
+                <th style="text-align: right;">{{ startup_report.t.scenario_col_raise }}</th>
+                <th style="text-align: right;">{{ startup_report.t.scenario_col_pool }}</th>
+                <th style="text-align: right;">{{ startup_report.t.scenario_col_new_investor }}</th>
+                <th style="text-align: right; font-weight: 700;">{{ startup_report.t.scenario_col_founders_remaining }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in ds %}
+            {% set is_current = row.label_key == 'scenario_current' %}
+            <tr style="{% if is_current %}background: hsl(var(--report-primary) / 0.06); font-weight: 600;{% endif %}">
+                <td>{{ startup_report.t['scenario_label_' + row.label_key.replace('scenario_', '')] }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ row.pre_money|format_currency }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ row.investment_amount|format_currency }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ row.option_pool_pct|safe_round(0) }}%</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ row.investor_dilution_pct|safe_round(1) }}%</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-primary));">{{ row.founders_remaining_pct|safe_round(1) }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% include "main_report/partials/_footer.html" ignore missing %}
+</div>

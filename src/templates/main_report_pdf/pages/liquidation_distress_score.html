@@ -1,0 +1,77 @@
+{#
+    LIQUIDATION ANALYSIS — PAGE: DISTRESS PROBABILITY (PDF version)
+
+    PDF twin of main_report/pages/liquidation_distress_score.html.
+    Phase 1 §2 — Altman Z'' (2000) private-firm score, zone, P(distress),
+    and the X1..X4 input ratios.
+#}
+{% set lr = liquidation_report %}
+{% if lr.distress %}
+{% set d = lr.distress %}
+<section class="pdf-page liquidation-page">
+    <header class="pdf-section-header">
+        <span class="pdf-section-number">03</span>
+        <h1 class="pdf-section-title">{{ lr.t.distress_section_title }}</h1>
+        <span class="pdf-badge">{{ lr.t.distress_section_subtitle }}</span>
+    </header>
+
+    {% if d.available %}
+    <div class="pdf-grid pdf-grid-3">
+        <div class="pdf-card pdf-card-primary">
+            <div class="pdf-card-eyebrow">{{ lr.t.distress_z_label }}</div>
+            <div class="pdf-card-headline">{{ d.z_double_prime|float|safe_round(2) }}</div>
+        </div>
+        <div class="pdf-card">
+            <div class="pdf-card-eyebrow">{{ lr.t.distress_zone_label }}</div>
+            <div class="pdf-card-subheadline">{{ d.zone_label }}</div>
+            {# Inline Altman band legend — current zone bolded so the
+               reader doesn't have to memorise cutoffs (audit P1 #9). #}
+            <div class="pdf-zone-legend">
+                <div{% if d.zone_code == 'safe' %} class="is-active"{% endif %}>{{ lr.t.distress_zone_safe }}</div>
+                <div{% if d.zone_code == 'grey' %} class="is-active"{% endif %}>{{ lr.t.distress_zone_grey }}</div>
+                <div{% if d.zone_code == 'distress' %} class="is-active"{% endif %}>{{ lr.t.distress_zone_distress }}</div>
+            </div>
+        </div>
+        <div class="pdf-card">
+            <div class="pdf-card-eyebrow">{{ lr.t.distress_probability_label }}</div>
+            <div class="pdf-card-subheadline">{{ lr.t.distress_probability_unavailable }}</div>
+        </div>
+    </div>
+
+    <div class="pdf-card pdf-card-muted">
+        <div class="pdf-card-eyebrow">{{ lr.t.distress_formula_label }}</div>
+    </div>
+
+    <table class="pdf-table">
+        <tbody>
+            <tr><td>{{ lr.t.distress_ratio_x1 }}</td><td class="pdf-num">{{ d.ratios.x1_working_capital_ratio|float|safe_round(2) }}</td></tr>
+            <tr><td>{{ lr.t.distress_ratio_x2 }}</td><td class="pdf-num">{{ d.ratios.x2_retained_earnings_ratio|float|safe_round(2) }}</td></tr>
+            <tr><td>{{ lr.t.distress_ratio_x3 }}</td><td class="pdf-num">{{ d.ratios.x3_ebit_ratio|float|safe_round(2) }}</td></tr>
+            <tr><td>{{ lr.t.distress_ratio_x4 }}</td><td class="pdf-num">{{ d.ratios.x4_equity_to_liabilities|float|safe_round(2) }}</td></tr>
+        </tbody>
+    </table>
+
+    {% if d.warnings %}
+    <div class="pdf-card pdf-card-warning">
+        {% for w in d.warnings %}<div>{{ w }}</div>{% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="pdf-card pdf-card-muted">
+        <div class="pdf-prose">{{ d.rationale }}</div>
+    </div>
+
+    {% else %}
+    <div class="pdf-card pdf-card-warning">
+        <div class="pdf-card-eyebrow">{{ lr.t.distress_unavailable_title }}</div>
+        <div class="pdf-prose">{{ d.rationale }}</div>
+    </div>
+    {% endif %}
+
+    {% if d.sources %}
+    <div class="pdf-sources">
+        {{ lr.t.sources_label }}: {{ d.sources|join(' · ') }}
+    </div>
+    {% endif %}
+</section>
+{% endif %}

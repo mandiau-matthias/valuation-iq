@@ -1,0 +1,33 @@
+{% for method in sealed_memorandum.method_pages %}
+<div class="a4-page sealed-method-page" style="page-break-before:always;">
+    <div class="section-header"><span class="section-number">07</span><h1 class="section-title">{{ method.title }}</h1></div>
+    <div class="callout callout-info"><h4>{{ sealed_memorandum.labels.why_eligible }}</h4><p>{{ method.eligibility_reason }}</p></div>
+    <h2>{{ sealed_memorandum.labels.calculation }}</h2>
+    <table><tbody>{% for field in method.rows %}<tr><td>{{ field.label }}</td><td class="text-right" data-sealed-field-id="{{ field.field_id }}">{{ field.display }}</td></tr>{% endfor %}</tbody></table>
+    {% if method.benchmark_rows %}
+    <h2>{{ sealed_memorandum.labels.benchmark }}</h2>
+    <p class="pdf-prose"><strong>{{ method.benchmark_classification }}</strong>{% if method.provenance %} · {{ method.provenance }}{% endif %}</p>
+    <table><tbody>{% for field in method.benchmark_rows %}<tr><td>{{ field.label }}</td><td class="text-right" data-sealed-field-id="{{ field.field_id }}">{{ field.display }}</td></tr>{% endfor %}</tbody></table>
+    {% if method.method_id == 'market' and sealed_memorandum.benchmark_chart %}<div class="sealed-chart" data-chart-id="benchmark_distribution"><svg viewBox="{{ sealed_memorandum.benchmark_chart.view_box }}" role="img" aria-label="{{ sealed_memorandum.labels.benchmark }}" xmlns="http://www.w3.org/2000/svg"><line x1="56" y1="48" x2="464" y2="48" stroke="#dfe2e7" stroke-width="1"></line><rect x="{{ sealed_memorandum.benchmark_chart.range_x }}" y="41" width="{{ sealed_memorandum.benchmark_chart.range_width }}" height="14" rx="7" fill="#e4f5f2"></rect>{% for marker in sealed_memorandum.benchmark_chart.markers %}<line x1="{{ marker.x }}" y1="31" x2="{{ marker.x }}" y2="65" stroke="#2ba899" stroke-width="2"></line><text x="{{ marker.x }}" y="79" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#737985">{{ marker.id|upper }} {{ marker.display }}</text>{% endfor %}{% if sealed_memorandum.benchmark_chart.selected %}<circle cx="{{ sealed_memorandum.benchmark_chart.selected.x }}" cy="48" r="6" fill="#c87f63" data-sealed-field-id="{{ sealed_memorandum.benchmark_chart.selected.field_id }}"></circle><text x="{{ sealed_memorandum.benchmark_chart.selected.x }}" y="18" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#737985">{{ sealed_memorandum.labels.multiple }} {{ sealed_memorandum.benchmark_chart.selected.display }}</text>{% endif %}</svg></div>{% endif %}
+    {% if method.chart %}<div class="sealed-chart sealed-method-value-chart" data-chart-id="{{ method.chart.chart_id }}"><svg viewBox="{{ method.chart.view_box }}" role="img" aria-label="{{ method.title }}" xmlns="http://www.w3.org/2000/svg"><path d="M28 112H492" stroke="#dfe2e7" stroke-width="1"></path>{% for bar in method.chart.bars %}<rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" rx="4" fill="{{ '#c87f63' if bar.tone == 'negative' else '#2ba899' }}" data-sealed-field-id="{{ bar.field_id }}"></rect><text x="{{ bar.label_x }}" y="128" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#737985">{{ bar.label }}</text><text x="{{ bar.label_x }}" y="141" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#737985">{{ bar.display }}</text>{% endfor %}</svg></div>{% endif %}
+    {% endif %}
+    {% if method.projection_rows %}
+    <h2>{{ sealed_memorandum.labels.forecast }}</h2>
+    <table><thead><tr><th>{{ sealed_memorandum.labels.year }}</th><th class="text-right">{{ sealed_memorandum.labels.revenue_short }}</th><th class="text-right">EBITDA</th><th class="text-right">FCFF</th><th class="text-right">PV FCFF</th></tr></thead><tbody>
+    {% for row in method.projection_rows %}<tr><td>{{ row.year }}</td><td class="text-right" data-sealed-field-id="{{ row.field_ids.revenue }}">{{ row.revenue }}</td><td class="text-right" data-sealed-field-id="{{ row.field_ids.ebitda }}">{{ row.ebitda }}</td><td class="text-right" data-sealed-field-id="{{ row.field_ids.fcff }}">{{ row.fcff }}</td><td class="text-right" data-sealed-field-id="{{ row.field_ids.pv_fcff }}">{{ row.pv_fcff }}</td></tr>{% endfor %}
+    </tbody></table>
+    {% endif %}
+    {% for detail in method.detail_tables|default([]) %}
+    <div style="page-break-inside: avoid;">
+        <h2>{{ detail.title }}</h2>
+        <table>
+            <thead><tr>{% for header in detail.headers %}<th{% if not loop.first %} class="text-right"{% endif %}>{{ header }}</th>{% endfor %}</tr></thead>
+            <tbody>
+            {% for row in detail.rows %}<tr>{% for cell in row %}<td{% if not loop.first %} class="text-right"{% endif %} data-sealed-field-id="{{ cell.field_id }}">{{ cell.display }}</td>{% endfor %}</tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+    {% if method.notes %}<ul>{% for note in method.notes %}<li>{{ note }}</li>{% endfor %}</ul>{% endif %}
+</div>
+{% endfor %}

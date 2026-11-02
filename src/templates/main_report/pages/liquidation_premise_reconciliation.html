@@ -1,0 +1,90 @@
+{#
+    LIQUIDATION ANALYSIS — PAGE: PREMISE RECONCILIATION (Section 09b)
+
+    Phase 3 — IVS 104 §80 closure: is going-concern still defensible?
+    LV vs Adj-NAV vs DCF vs multiples table + recommendation.
+
+    Renders only when ``premise_reconciliation`` is present.
+
+    PDF twin: main_report_pdf/pages/liquidation_premise_reconciliation.html
+#}
+{% set lr = liquidation_report %}
+{% if lr.premise_reconciliation %}
+{% set r = lr.premise_reconciliation %}
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div class="section-header">
+        <span class="section-number">09b</span>
+        <h1 class="section-title" style="margin: 0; flex: 1;">{{ lr.t.reconciliation_section_title }}</h1>
+        <div style="text-align: right;">
+            <span class="badge badge-primary" style="font-size: var(--font-size-xs);">
+                {{ lr.t.reconciliation_section_subtitle }}
+            </span>
+        </div>
+    </div>
+
+    {# Reconciliation comparison table — every row is a premise lens
+       paired with its equity value.  Headers added so the second column
+       is labeled (was unlabeled — reader had to infer from row content).
+       Audit round-2 observation. #}
+    <table style="width: 100%; font-size: var(--font-size-sm); border-collapse: collapse; margin-bottom: var(--space-3);">
+        <thead>
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <th style="text-align: left; padding: var(--space-2) var(--space-1); font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); text-transform: uppercase; letter-spacing: 0.04em;">
+                    {% if lr.locale == 'fr' %}Angle de prémisse{% elif lr.locale == 'en' %}Premise lens{% else %}Premissewaarde{% endif %}
+                </th>
+                <th style="text-align: right; padding: var(--space-2) var(--space-1); font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); text-transform: uppercase; letter-spacing: 0.04em;">
+                    {% if lr.locale == 'fr' %}Valeur des capitaux propres{% elif lr.locale == 'en' %}Equity value{% else %}Eigen vermogen{% endif %}
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <td style="padding: var(--space-2) var(--space-1);">{{ lr.t.reconciliation_lv }}</td>
+                <td style="text-align: right; padding: var(--space-2) var(--space-1);">€{{ r.liquidation_value|format_eur_amount }}</td>
+            </tr>
+            {% if r.adjusted_nav is not none %}
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <td style="padding: var(--space-2) var(--space-1);">{{ lr.t.reconciliation_nav }}</td>
+                <td style="text-align: right;">€{{ r.adjusted_nav|format_eur_amount }}</td>
+            </tr>
+            {% endif %}
+            {% if r.dcf_value is not none %}
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <td style="padding: var(--space-2) var(--space-1);">{{ lr.t.reconciliation_dcf }}</td>
+                <td style="text-align: right;">€{{ r.dcf_value|format_eur_amount }}</td>
+            </tr>
+            {% endif %}
+            {% if r.multiples_value is not none %}
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <td style="padding: var(--space-2) var(--space-1);">{{ lr.t.reconciliation_multiples }}</td>
+                <td style="text-align: right;">€{{ r.multiples_value|format_eur_amount }}</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    {# Going-concern defensibility chip #}
+    <div class="card" style="padding: var(--space-3); margin-bottom: var(--space-3); {% if r.going_concern_defensible %}border-left: 3px solid hsl(var(--report-success, var(--report-primary)));{% else %}border-left: 3px solid hsl(var(--report-warning));{% endif %}">
+        <div style="font-size: var(--font-size-sm); font-weight: 600; margin-bottom: var(--space-1);">
+            {{ r.defensible_label }}
+        </div>
+        <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">
+            <strong>{{ lr.t.reconciliation_recommendation_label }}:</strong> {{ r.recommendation_label }}
+        </div>
+    </div>
+
+    <div class="card" style="padding: var(--space-3); margin-bottom: var(--space-3);">
+        <div style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted)); line-height: 1.5;">
+            {{ r.rationale }}
+        </div>
+    </div>
+
+    {% if r.sources %}
+    <div style="margin-top: var(--space-3); font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">
+        {{ lr.t.sources_label }}: {{ r.sources|join(' · ') }}
+    </div>
+    {% endif %}
+</div>
+{% endif %}

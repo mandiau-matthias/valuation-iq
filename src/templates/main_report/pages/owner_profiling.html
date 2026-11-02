@@ -1,0 +1,543 @@
+{#
+    OWNER PROFILING SECTION (Screen + PDF)
+    Conditional page — only when show_owner_profiling_section is true.
+
+    Three render modes (driven by `owner_profiling.state`):
+      • "skipped"      — assessment never completed; renders watermark CTA.
+      • "pass_through" — model adjustment within MVP cap band; one figure shown.
+      • "capped"       — raw exceeded floor; cap chip held back, headline shows clamped value.
+
+    SPIKE-1 §5.4 R8: the raw figure is NEVER displayed without the
+    `cap_chip_text` framing. Renderer enforces this by only showing
+    `raw_adjustment_pct` inside the `was_capped` branch.
+
+    Context: t (ReportTranslations), owner_profiling: {state, overall_score,
+    transferability_index, risk_level_raw, risk_level_label, risk_band,
+    adjustment_pct, raw_adjustment_pct, was_capped, cap_floor_pct,
+    cap_chip_text, explanation, key_risks, recommendations}
+#}
+
+<div class="a4-page">
+    {# Page header — keep visual parity with executive_summary, ebitda_normalization,
+       and the rest of the SME track. Pre-Pass-9 this page used a bespoke
+       `report-page` wrapper with custom inner padding, which made it render
+       *between* page containers in the screen layout instead of inside one. #}
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div style="max-width: 760px; margin: 0 auto;">
+        {# ── Header ── #}
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+            <span style="background: hsl(var(--primary)); color: white; font-size: 11px; font-weight: 700; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                OP
+            </span>
+            <div>
+                <h2 style="font-size: 18px; font-weight: 700; color: hsl(var(--foreground)); margin: 0;">
+                    {{ t.owner_profiling_section_title }}
+                </h2>
+                <p style="font-size: 13px; color: hsl(var(--muted-foreground)); margin: 4px 0 0 0;">
+                    {{ t.owner_profiling_section_subtitle }}
+                </p>
+            </div>
+        </div>
+
+        {% if owner_profiling.state == 'skipped' %}
+        {# ── Skipped state — advisor CTA, M&A-grade.
+
+           When the 9-question profile has not been completed the page-4
+           multiple waterfall carries only the structural FTE-based row.
+           A buyer's diligence team WILL re-derive the behavioural
+           transferability discount on the equity bridge — so the report
+           pre-empts that with a concrete advisor action.
+
+           `cta_action` is the canonical action key
+           ("send_owner_profiling_invite") that the Mercury renderer
+           wires to the existing remind-owner-to-complete-profile
+           endpoint. PDF rendering will simply omit the button (no
+           clickable surface), so `data-action` carries the same
+           identifier for static-export auditors.
+        #}
+        <div style="background: hsl(35, 90%, 96%); border: 1px dashed hsl(35, 70%, 75%); border-radius: 12px; padding: 24px;">
+            <p style="font-size: 13px; font-weight: 700; color: hsl(35, 50%, 30%); margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.05em; text-align: center;">
+                {{ t.owner_profiling_skipped_title }}
+            </p>
+            <p style="font-size: 13px; line-height: 1.6; color: hsl(35, 50%, 22%); margin: 0 0 16px 0; text-align: center;">
+                {{ t.owner_profiling_skipped_body }}
+            </p>
+            <div style="text-align: center; padding-top: 12px; border-top: 1px dashed hsl(35, 70%, 75%);">
+                <button type="button"
+                        data-action="{{ t.owner_profiling_skipped_cta_action }}"
+                        style="background: hsl(35, 65%, 45%); color: white; font-size: 12px; font-weight: 700; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em;">
+                    {{ t.owner_profiling_skipped_cta_label }}
+                </button>
+                <p style="font-size: 11px; color: hsl(35, 50%, 35%); margin: 10px 0 0 0; font-style: italic; line-height: 1.5;">
+                    {{ t.owner_profiling_skipped_cta_subtext }}
+                </p>
+            </div>
+        </div>
+
+        {% else %}
+        {# ── Headline metrics: 3-up grid ── #}
+        {% set band_color = 'hsl(143, 40%, 42%)' if owner_profiling.risk_band == 'good'
+            else ('hsl(37, 65%, 55%)' if owner_profiling.risk_band == 'caution'
+            else ('hsl(6, 55%, 50%)' if owner_profiling.risk_band == 'warn'
+            else 'hsl(var(--primary))')) %}
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+            <div style="background: hsl(var(--primary) / 0.06); border: 1px solid hsl(var(--primary) / 0.18); border-radius: 12px; padding: 18px; text-align: center;">
+                <p style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: hsl(var(--primary)); margin: 0 0 6px 0; font-weight: 600;">
+                    {{ t.owner_profiling_score_label }}
+                </p>
+                <p style="font-size: 26px; font-weight: 800; color: hsl(var(--primary)); margin: 0; font-variant-numeric: tabular-nums;">
+                    {{ owner_profiling.overall_score }}<span style="font-size: 14px; font-weight: 600; color: hsl(var(--muted-foreground));">/100</span>
+                </p>
+            </div>
+            <div style="background: hsl(var(--muted)); border-radius: 12px; padding: 18px; text-align: center;">
+                <p style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: hsl(var(--muted-foreground)); margin: 0 0 6px 0; font-weight: 600;">
+                    {{ t.owner_profiling_transferability_label }}
+                </p>
+                <p style="font-size: 26px; font-weight: 800; color: hsl(var(--foreground)); margin: 0; font-variant-numeric: tabular-nums;">
+                    {{ owner_profiling.transferability_index }}<span style="font-size: 14px; font-weight: 600; color: hsl(var(--muted-foreground));">/100</span>
+                </p>
+            </div>
+            <div style="background: hsl(var(--muted)); border-radius: 12px; padding: 18px; text-align: center;">
+                <p style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: hsl(var(--muted-foreground)); margin: 0 0 6px 0; font-weight: 600;">
+                    {{ t.owner_profiling_risk_label }}
+                </p>
+                <p style="font-size: 18px; font-weight: 800; margin: 0; color: {{ band_color }};">
+                    {{ owner_profiling.risk_level_label }}
+                </p>
+            </div>
+        </div>
+
+        {# ── Adjustment row + cap chip ── #}
+        <div style="background: hsl(var(--primary) / 0.04); border: 1px solid hsl(var(--primary) / 0.12); border-radius: 10px; padding: 16px; margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+                <div>
+                    <p style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: hsl(var(--muted-foreground)); margin: 0 0 4px 0; font-weight: 600;">
+                        {{ t.owner_profiling_adjustment_label }}
+                    </p>
+                    <p style="font-size: 22px; font-weight: 800; color: hsl(var(--foreground)); margin: 0; font-variant-numeric: tabular-nums;">
+                        {{ '%.1f'|format(owner_profiling.adjustment_pct) }}%
+                    </p>
+                </div>
+                {% if owner_profiling.was_capped %}
+                <div style="text-align: right;">
+                    <span style="display: inline-block; background: hsl(37, 65%, 92%); color: hsl(37, 65%, 28%); font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em;">
+                        {{ owner_profiling.cap_chip_text }}
+                    </span>
+                    <p style="font-size: 11px; color: hsl(var(--muted-foreground)); margin: 6px 0 0 0;">
+                        <span style="font-weight: 600;">{{ t.owner_profiling_raw_adjustment_label }}:</span>
+                        <span style="font-variant-numeric: tabular-nums;">{{ '%.1f'|format(owner_profiling.raw_adjustment_pct) }}%</span>
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# ── Explanation ── #}
+        {% if owner_profiling.explanation %}
+        <div style="margin-bottom: 24px;">
+            <h3 style="font-size: 13px; font-weight: 700; color: hsl(var(--foreground)); margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.04em;">
+                {{ t.owner_profiling_explanation_title }}
+            </h3>
+            <div style="background: hsl(var(--muted)); border-radius: 8px; padding: 16px; font-size: 13px; color: hsl(var(--foreground)); line-height: 1.65;">
+                <p style="margin: 0;">{{ owner_profiling.explanation }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        {# ── Transferability v2 — decomposed (BET-180 follow-up) ── #}
+        {% if owner_profiling.transferability_v2 %}
+        {% set tv2 = owner_profiling.transferability_v2 %}
+        {% set sev_label_map = {
+            'minimal': t.owner_profiling_severity_minimal,
+            'moderate': t.owner_profiling_severity_moderate,
+            'severe': t.owner_profiling_severity_severe,
+            'extreme': t.owner_profiling_severity_extreme
+        } %}
+        {% set sev_band_map = {
+            'minimal': 'good',
+            'moderate': 'caution',
+            'severe': 'warn',
+            'extreme': 'warn'
+        } %}
+        {% set conf_label_map = {
+            'high': t.owner_profiling_confidence_high,
+            'medium': t.owner_profiling_confidence_medium,
+            'low': t.owner_profiling_confidence_low
+        } %}
+
+        {# ── HERO CASCADE CARD — the load-bearing visual the advisor reads first ── #}
+        {% if tv2.narrative_cascade %}
+        {% set sev = tv2.gap.severity or 'minimal' %}
+        {% set sev_band = sev_band_map.get(sev, 'neutral') %}
+        {% set sev_color = op_band_color(sev_band) %}
+        <div style="position: relative; background: linear-gradient(135deg, hsl(var(--primary) / 0.06) 0%, hsl(var(--primary) / 0.02) 100%); border: 1px solid hsl(var(--primary) / 0.2); border-radius: 14px; padding: 22px 24px; margin-bottom: 24px;">
+            {# Kicker + severity badge row #}
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px;">
+                <div style="flex: 1 1 240px; min-width: 0;">
+                    <p style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: hsl(var(--primary)); margin: 0 0 2px 0; font-weight: 700;">
+                        {{ t.owner_profiling_hero_kicker }}
+                    </p>
+                    <p style="font-size: 12px; color: hsl(var(--muted-foreground)); margin: 0; line-height: 1.5;">
+                        {{ t.owner_profiling_hero_subtitle }}
+                    </p>
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
+                    {# Severity badge — Tier N / 4 + label #}
+                    <span style="display: inline-flex; flex-direction: column; align-items: flex-end; padding: 6px 12px; border-radius: 999px; background: {{ op_band_color(sev_band, 0.15) }}; border: 1px solid {{ op_band_color(sev_band, 0.4) }};">
+                        <span style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: {{ sev_color }}; font-weight: 700; line-height: 1;">{{ t.owner_profiling_severity_tier_label.format(tier=tv2.gap.severity_tier or 1) }}</span>
+                        <span style="font-size: 13px; font-weight: 800; color: {{ sev_color }}; line-height: 1.2;">{{ sev_label_map.get(sev, sev|capitalize) }}</span>
+                    </span>
+                    {# Confidence chip — high / medium / low #}
+                    {% if tv2.confidence and tv2.confidence.tier %}
+                    {% set conf_band = tv2.confidence.band or 'neutral' %}
+                    <span style="display: inline-flex; flex-direction: column; align-items: flex-end; padding: 6px 12px; border-radius: 999px; background: {{ op_band_color(conf_band, 0.12) }}; border: 1px solid {{ op_band_color(conf_band, 0.35) }};">
+                        <span style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: {{ op_band_color(conf_band) }}; font-weight: 700; line-height: 1;">{{ t.owner_profiling_confidence_label }}</span>
+                        <span style="font-size: 13px; font-weight: 800; color: {{ op_band_color(conf_band) }}; line-height: 1.2;">{{ conf_label_map.get(tv2.confidence.tier, tv2.confidence.tier|capitalize) }}</span>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# 4-line narrative cascade — typographically prominent #}
+            <ol style="margin: 8px 0 0 0; padding-left: 22px; font-size: 13px; line-height: 1.7; color: hsl(var(--foreground)); counter-reset: cascade-counter;">
+                {% for line in tv2.narrative_cascade %}
+                <li style="margin-bottom: 8px; padding-left: 4px;">
+                    <span>{{ line }}</span>
+                </li>
+                {% endfor %}
+            </ol>
+
+            {# Confidence rationale — small print under the cascade #}
+            {% if tv2.confidence and tv2.confidence.rationale %}
+            <p style="font-size: 11px; color: hsl(var(--muted-foreground)); margin: 14px 0 0 0; padding-top: 12px; border-top: 1px dashed hsl(var(--muted-foreground) / 0.25); line-height: 1.55; font-style: italic;">
+                {{ tv2.confidence.rationale }}
+            </p>
+            {% endif %}
+
+            {# Applied pill — eye-locking headline figure at the bottom
+               of the hero card. Shows the capped headline percentage
+               + the blended-across-methods effective figure side by
+               side so the reader sees both the official number and
+               its real-world weight. #}
+            {% set headline_pct = owner_profiling.adjustment_pct %}
+            <div style="display: flex; gap: 10px; align-items: stretch; margin-top: 14px; flex-wrap: wrap;">
+                <div style="flex: 1 1 180px; min-width: 0; background: hsl(var(--primary)); border-radius: 10px; padding: 12px 16px; color: white; box-shadow: 0 1px 3px hsl(var(--primary) / 0.25);">
+                    <p style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 4px 0; font-weight: 700; opacity: 0.85;">
+                        {{ t.owner_profiling_hero_applied_label }}
+                    </p>
+                    <p style="font-size: 24px; font-weight: 800; margin: 0; font-variant-numeric: tabular-nums; line-height: 1.1;">
+                        {{ '%.1f'|format(headline_pct) }}%
+                    </p>
+                </div>
+                <div style="flex: 1 1 180px; min-width: 0; background: hsl(var(--muted)); border-radius: 10px; padding: 12px 16px;">
+                    <p style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: hsl(var(--muted-foreground)); margin: 0 0 4px 0; font-weight: 700;">
+                        {{ t.owner_profiling_hero_blended_label }}
+                    </p>
+                    <p style="font-size: 24px; font-weight: 800; color: hsl(var(--foreground)); margin: 0; font-variant-numeric: tabular-nums; line-height: 1.1;">
+                        {{ '%.1f'|format(tv2.blended_applied_pct) }}%
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {# ── 5 sub-factor decomposition bars ── #}
+        {% if tv2.decomposition.sub_factors %}
+        <div style="margin-bottom: 24px;">
+            <h3 style="font-size: 13px; font-weight: 700; color: hsl(var(--foreground)); margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 0.04em;">
+                {{ t.owner_profiling_transferability_v2_title }}
+            </h3>
+            <p style="font-size: 12px; color: hsl(var(--muted-foreground)); margin: 0 0 14px 0;">
+                {{ t.owner_profiling_transferability_v2_subtitle }}
+            </p>
+            <div style="background: hsl(var(--muted) / 0.5); border-radius: 10px; padding: 16px;">
+                {% for sf in tv2.decomposition.sub_factors %}
+                {% set sf_color = op_band_color(sf.band) %}
+                <div style="display: grid; grid-template-columns: 220px 1fr 48px; align-items: center; gap: 12px; margin-bottom: {{ '0' if loop.last else '10px' }};">
+                    <div style="font-size: 12px; color: hsl(var(--foreground)); font-weight: 600;">
+                        {{ sf.label }}
+                        {% if sf.key == tv2.decomposition.weakest_key %}
+                        <span style="display: inline-block; margin-left: 4px; padding: 1px 6px; background: {{ op_band_color('warn', 0.15) }}; color: {{ op_band_color('warn') }}; font-size: 9px; font-weight: 700; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; vertical-align: middle;">{{ t.owner_profiling_weakest_pill }}</span>
+                        {% elif sf.key == tv2.decomposition.strongest_key %}
+                        <span style="display: inline-block; margin-left: 4px; padding: 1px 6px; background: {{ op_band_color('good', 0.15) }}; color: {{ op_band_color('good') }}; font-size: 9px; font-weight: 700; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; vertical-align: middle;">{{ t.owner_profiling_strongest_pill }}</span>
+                        {% endif %}
+                    </div>
+                    <div style="position: relative; height: 8px; background: hsl(var(--muted)); border-radius: 999px; overflow: hidden;">
+                        <div style="position: absolute; left: 0; top: 0; height: 100%; width: {{ sf.score }}%; background: {{ sf_color }}; border-radius: 999px;"></div>
+                    </div>
+                    <div style="font-size: 12px; font-weight: 700; color: {{ sf_color }}; text-align: right; font-variant-numeric: tabular-nums;">{{ sf.score }}/100</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {# ── Buyer profile + transferability gap pair ── #}
+        {% if tv2.buyer_profile.archetype %}
+        {% set gap_band = sev_band_map.get(tv2.gap.severity or 'minimal', 'good') %}
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+            <div style="background: hsl(var(--muted)); border-radius: 10px; padding: 14px 16px;">
+                <p style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: hsl(var(--muted-foreground)); margin: 0 0 6px 0; font-weight: 600;">
+                    {{ t.owner_profiling_buyer_block_title }}
+                </p>
+                <p style="font-size: 14px; font-weight: 700; color: hsl(var(--foreground)); margin: 0 0 6px 0;">
+                    {{ tv2.buyer_profile.archetype_label }}
+                </p>
+                {% if tv2.buyer_profile.eu_sme_segment %}
+                <p style="font-size: 10px; color: hsl(var(--muted-foreground)); margin: 0 0 6px 0; line-height: 1.4;">
+                    <span style="font-weight: 600; color: hsl(var(--foreground));">{{ t.owner_profiling_sme_segment_label }}:</span>
+                    {{ tv2.buyer_profile.eu_sme_segment }}
+                </p>
+                {% endif %}
+                <p style="font-size: 11px; color: hsl(var(--muted-foreground)); margin: 0 0 6px 0; line-height: 1.5;">
+                    {{ tv2.buyer_profile.rationale }}
+                </p>
+                <div style="display: flex; gap: 12px; margin-top: 8px;">
+                    <span style="font-size: 11px; color: hsl(var(--foreground));">
+                        <span style="color: hsl(var(--muted-foreground));">{{ t.owner_profiling_buyer_hours_label }}:</span>
+                        <strong style="font-variant-numeric: tabular-nums;">{{ tv2.buyer_profile.expected_hours_per_week }} {{ t.owner_profiling_hours_per_week_unit }}</strong>
+                    </span>
+                    <span style="font-size: 11px; color: hsl(var(--foreground));">
+                        <span style="color: hsl(var(--muted-foreground));">{{ t.owner_profiling_buyer_skill_label }}:</span>
+                        <strong style="font-variant-numeric: tabular-nums;">{{ tv2.buyer_profile.expected_skill_match }}/100</strong>
+                    </span>
+                </div>
+            </div>
+            <div style="background: {{ op_band_color(gap_band, 0.1) }}; border: 1px solid {{ op_band_color(gap_band, 0.25) }}; border-radius: 10px; padding: 14px 16px;">
+                <p style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: hsl(var(--muted-foreground)); margin: 0 0 6px 0; font-weight: 600;">
+                    {{ t.owner_profiling_gap_inline_title }}
+                </p>
+                <p style="font-size: 14px; font-weight: 700; color: {{ op_band_color(gap_band) }}; margin: 0 0 6px 0;">
+                    {{ sev_label_map.get(tv2.gap.severity, tv2.gap.severity|capitalize) }}
+                    <span style="font-size: 10px; font-weight: 600; color: hsl(var(--muted-foreground)); margin-left: 4px;">· {{ t.owner_profiling_severity_tier_label.format(tier=tv2.gap.severity_tier or 1) }}</span>
+                </p>
+                <p style="font-size: 11px; color: hsl(var(--foreground)); margin: 0; line-height: 1.5;">
+                    {{ tv2.gap.summary }}
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
+        {# ── Per-method incidence table ── #}
+        {% if tv2.method_incidence %}
+        <div style="margin-bottom: 24px;">
+            <h3 style="font-size: 13px; font-weight: 700; color: hsl(var(--foreground)); margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 0.04em;">
+                {{ t.owner_profiling_method_incidence_title }}
+            </h3>
+            <p style="font-size: 12px; color: hsl(var(--muted-foreground)); margin: 0 0 12px 0;">
+                {{ t.owner_profiling_method_incidence_subtitle }}
+            </p>
+            <table style="width: 100%; border-collapse: collapse; font-size: 12px; color: hsl(var(--foreground));">
+                <thead>
+                    <tr style="border-bottom: 1px solid hsl(var(--muted-foreground) / 0.2);">
+                        <th style="text-align: left; padding: 8px 4px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--muted-foreground)); font-weight: 600;">{{ t.owner_profiling_method_col_method }}</th>
+                        <th style="text-align: right; padding: 8px 4px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--muted-foreground)); font-weight: 600;">{{ t.owner_profiling_method_col_coefficient }}</th>
+                        <th style="text-align: right; padding: 8px 4px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--muted-foreground)); font-weight: 600;">{{ t.owner_profiling_method_col_applied }}</th>
+                        <th style="text-align: left; padding: 8px 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--muted-foreground)); font-weight: 600;">{{ t.owner_profiling_method_col_rationale }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in tv2.method_incidence %}
+                    <tr style="border-bottom: 1px solid hsl(var(--muted-foreground) / 0.08); {% if row.skips %}opacity: 0.55;{% endif %}">
+                        <td style="padding: 8px 4px; font-weight: 600;">
+                            {{ row.label }}
+                            {% if row.citation_markers %}
+                            <sup style="font-size: 9px; font-weight: 600; color: hsl(var(--primary)); margin-left: 2px;">{{ row.citation_markers|join(',') }}</sup>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 8px 4px; text-align: right; font-variant-numeric: tabular-nums;">{{ '%.2f'|format(row.coefficient) }}×</td>
+                        <td style="padding: 8px 4px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600;">
+                            {% if row.skips %}{{ t.owner_profiling_method_skips_label }}{% else %}{{ '%.1f'|format(row.applied_pct) }}%{% endif %}
+                        </td>
+                        <td style="padding: 8px 8px; color: hsl(var(--muted-foreground)); font-size: 11px; line-height: 1.45;">{{ row.rationale }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div style="display: flex; justify-content: flex-end; margin-top: 10px; padding: 8px 12px; background: hsl(var(--primary) / 0.06); border-radius: 6px;">
+                <span style="font-size: 11px; color: hsl(var(--muted-foreground)); margin-right: 8px;">{{ t.owner_profiling_blended_label }}:</span>
+                <span style="font-size: 12px; font-weight: 700; color: hsl(var(--foreground)); font-variant-numeric: tabular-nums;">{{ '%.1f'|format(tv2.blended_applied_pct) }}%</span>
+            </div>
+        </div>
+        {% endif %}
+
+        {# ── Methodology footnote — academic backing for the v2 model ── #}
+        {% if tv2.methodology_citation_groups %}
+        <div style="margin-bottom: 24px; padding: 16px; background: hsl(var(--muted) / 0.4); border-left: 3px solid hsl(var(--primary)); border-radius: 0 8px 8px 0;">
+            <h3 style="font-size: 12px; font-weight: 700; color: hsl(var(--foreground)); margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 0.04em;">
+                {{ t.owner_profiling_methodology_title }}
+            </h3>
+            <p style="font-size: 11px; color: hsl(var(--muted-foreground)); margin: 0 0 12px 0; line-height: 1.5;">
+                {{ t.owner_profiling_methodology_subtitle }}
+            </p>
+            {% for group in tv2.methodology_citation_groups %}
+            <div style="margin-bottom: {{ '0' if loop.last else '10px' }};">
+                <p style="font-size: 10px; font-weight: 700; color: hsl(var(--primary)); margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 0.04em;">
+                    {{ group.label }}
+                </p>
+                {% for c in group.citations %}
+                <p style="font-size: 11px; color: hsl(var(--foreground)); margin: 0 0 3px 0; line-height: 1.5;">
+                    {% if c.marker %}<sup style="color: hsl(var(--primary)); font-weight: 700; margin-right: 3px;">{{ c.marker }}</sup>{% endif %}
+                    <strong>{{ c.citation }}</strong>
+                    <span style="color: hsl(var(--muted-foreground));"> — {{ c.application }}</span>
+                </p>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            <p style="font-size: 10px; color: hsl(var(--muted-foreground)); margin: 12px 0 0 0; padding-top: 8px; border-top: 1px dashed hsl(var(--muted-foreground) / 0.2); line-height: 1.5; font-style: italic;">
+                {{ t.owner_profiling_methodology_source_language_note }}
+            </p>
+        </div>
+        {% endif %}
+        {% endif %}{# transferability_v2 #}
+
+        {# ── Two-column: key risks + recommendations ── #}
+        {% if owner_profiling.key_risks or owner_profiling.recommendations %}
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+            {% if owner_profiling.key_risks %}
+            <div>
+                <h3 style="font-size: 12px; font-weight: 700; color: hsl(var(--foreground)); margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.04em;">
+                    {{ t.owner_profiling_key_risks_title }}
+                </h3>
+                <ul style="margin: 0; padding-left: 18px; font-size: 12px; line-height: 1.55; color: hsl(var(--foreground));">
+                    {% for risk in owner_profiling.key_risks %}
+                    <li style="margin-bottom: 6px;">{{ risk }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            {% if owner_profiling.recommendations %}
+            <div>
+                <h3 style="font-size: 12px; font-weight: 700; color: hsl(var(--primary)); margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.04em;">
+                    {{ t.owner_profiling_recommendations_title }}
+                </h3>
+                <ul style="margin: 0; padding-left: 18px; font-size: 12px; line-height: 1.55; color: hsl(var(--foreground));">
+                    {% for rec in owner_profiling.recommendations %}
+                    <li style="margin-bottom: 6px;">{{ rec }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {# ── Post-Deal Equity Swap (OWNER-PROFILING-2) ── #}
+        {% if owner_profiling.post_deal_swap %}
+        {% set swap = owner_profiling.post_deal_swap %}
+
+        {% if swap.state == 'not_applicable' %}
+        {# Round 5: NAV / startup methods don't have an SDE owner-comp
+           dimension. Render a short callout instead of the breakdown so
+           the report explicitly tells the buyer/accountant the swap was
+           not skipped silently. #}
+        <div style="margin-top: 32px; margin-bottom: 24px; padding-top: 20px; border-top: 1px solid hsl(var(--muted-foreground) / 0.15);">
+            <h3 style="font-size: 13px; font-weight: 700; color: hsl(var(--foreground)); margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 0.04em;">
+                {{ t.owner_profiling_post_deal_not_applicable_title }}
+            </h3>
+            <div style="background: hsl(var(--muted)); border-radius: 8px; padding: 14px 16px; margin-top: 8px;">
+                <p style="font-size: 12px; line-height: 1.55; color: hsl(var(--foreground)); margin: 0;">
+                    {{ t.owner_profiling_post_deal_not_applicable_body }}
+                </p>
+            </div>
+        </div>
+        {% else %}
+        {% set delta_color = 'hsl(143, 40%, 42%)' if swap.equity_delta >= 0 else 'hsl(6, 55%, 50%)' %}
+        <div style="margin-top: 32px; margin-bottom: 24px; padding-top: 20px; border-top: 1px solid hsl(var(--muted-foreground) / 0.15);">
+            <h3 style="font-size: 13px; font-weight: 700; color: hsl(var(--foreground)); margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 0.04em;">
+                {{ t.owner_profiling_post_deal_section_title }}
+            </h3>
+            <p style="font-size: 12px; color: hsl(var(--muted-foreground)); margin: 0 0 14px 0;">
+                {{ t.owner_profiling_post_deal_section_subtitle }}
+            </p>
+
+            {# Pre / Post / Delta — three-up grid mirroring the headline metrics row above. #}
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div style="background: hsl(var(--muted)); border-radius: 12px; padding: 16px; text-align: center;">
+                    <p style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: hsl(var(--muted-foreground)); margin: 0 0 6px 0; font-weight: 600;">
+                        {{ t.owner_profiling_post_deal_pre_label }}
+                    </p>
+                    <p style="font-size: 20px; font-weight: 800; color: hsl(var(--foreground)); margin: 0; font-variant-numeric: tabular-nums;">
+                        €{{ '{:,.0f}'.format(swap.pre_deal_equity_value or 0) }}
+                    </p>
+                </div>
+                <div style="background: hsl(var(--primary) / 0.06); border: 1px solid hsl(var(--primary) / 0.18); border-radius: 12px; padding: 16px; text-align: center;">
+                    <p style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: hsl(var(--primary)); margin: 0 0 6px 0; font-weight: 600;">
+                        {{ t.owner_profiling_post_deal_post_label }}
+                    </p>
+                    <p style="font-size: 20px; font-weight: 800; color: hsl(var(--primary)); margin: 0; font-variant-numeric: tabular-nums;">
+                        €{{ '{:,.0f}'.format(swap.post_deal_equity_value or 0) }}
+                    </p>
+                </div>
+                <div style="background: hsl(var(--muted)); border-radius: 12px; padding: 16px; text-align: center;">
+                    <p style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: hsl(var(--muted-foreground)); margin: 0 0 6px 0; font-weight: 600;">
+                        {{ t.owner_profiling_post_deal_delta_label }}
+                    </p>
+                    <p style="font-size: 20px; font-weight: 800; color: {{ delta_color }}; margin: 0; font-variant-numeric: tabular-nums;">
+                        {% if swap.equity_delta >= 0 %}+{% else %}−{% endif %}€{{ '{:,.0f}'.format(swap.equity_delta|abs) }}
+                    </p>
+                </div>
+            </div>
+
+            {# Per-input breakdown row. The renderer omits any line whose
+               source value is missing — happens when the engine had to
+               estimate but didn't carry the metadata through. #}
+            <div style="background: hsl(var(--muted)); border-radius: 8px; padding: 12px 16px; margin-bottom: 12px;">
+                <table style="width: 100%; font-size: 12px; color: hsl(var(--foreground)); border-collapse: collapse;">
+                    {% if swap.owner_compensation_actual is not none %}
+                    <tr>
+                        <td style="padding: 4px 0; color: hsl(var(--muted-foreground));">{{ t.owner_profiling_post_deal_owner_comp_label }}</td>
+                        <td style="padding: 4px 0; text-align: right; font-variant-numeric: tabular-nums;">€{{ '{:,.0f}'.format(swap.owner_compensation_actual) }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if swap.market_replacement_cost is not none %}
+                    <tr>
+                        <td style="padding: 4px 0; color: hsl(var(--muted-foreground));">{{ t.owner_profiling_post_deal_market_label }}</td>
+                        <td style="padding: 4px 0; text-align: right; font-variant-numeric: tabular-nums;">€{{ '{:,.0f}'.format(swap.market_replacement_cost) }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if swap.effective_multiple is not none %}
+                    <tr>
+                        <td style="padding: 4px 0; color: hsl(var(--muted-foreground));">{{ t.owner_profiling_post_deal_multiple_label }}</td>
+                        <td style="padding: 4px 0; text-align: right; font-variant-numeric: tabular-nums;">{{ '%.2f'|format(swap.effective_multiple) }}×</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+
+            {# Engine-emitted rationale sentence. Carries the exact computed
+               numbers (delta, multiple) — kept as a single line so it stays
+               legible alongside the data-quality caveat. #}
+            {% if swap.rationale %}
+            <p style="font-size: 12px; color: hsl(var(--foreground)); line-height: 1.55; margin: 0 0 8px 0;">
+                {{ swap.rationale }}
+            </p>
+            {% endif %}
+
+            {% if swap.data_quality == 'estimated' %}
+            <p style="font-size: 11px; font-style: italic; color: hsl(var(--muted-foreground)); line-height: 1.5; margin: 8px 0 0 0;">
+                {{ t.owner_profiling_post_deal_estimated_caveat }}
+            </p>
+            {% endif %}
+        </div>
+        {% endif %}{# state == 'not_applicable' / else (applied) branch #}
+        {% endif %}{# owner_profiling.post_deal_swap is truthy #}
+
+        {# ── Disclaimer ── #}
+        <div style="background: hsl(170, 40%, 96%); border-radius: 8px; padding: 12px 16px;">
+            <p style="font-size: 11px; line-height: 1.5; color: hsl(170, 30%, 30%); margin: 0;">
+                {{ t.owner_profiling_disclaimer }}
+            </p>
+        </div>
+
+        {# Pipeline steps + academic citations — Aurora-tokened screen
+           twin (created 2026-05-10).  This page IS the Owner-Adaptive
+           (Damodaran 12-factor) method surface; the registry maps the
+           method_key to the right citation set. #}
+        {% with method_key='owner_adaptive' %}
+        {% include "main_report/components/_method_citations.html" %}
+        {% endwith %}
+        {% endif %}
+    </div>
+</div>

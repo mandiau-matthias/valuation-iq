@@ -1,0 +1,88 @@
+{#
+    STARTUP — INVITE MY ACCOUNTANT CTA (Screen version)
+
+    The viral hook prescribed by the consortium: bridges the founder's
+    self-service valuation to the paid advisor flow.  Rendered as the
+    last page of the startup track (right before disclaimers).
+
+    PDF twin: main_report_pdf/partials/_startup_advisor_cta.html
+
+    Required context:
+    - ``startup_report.equity_value_mid``  (already required by exec summary)
+    - ``startup_report.contributors`` (used to nuance copy)
+
+    Optional override: ``startup_report.advisor_cta_url`` — defaults to the
+    canonical Mercury invite-accountant deep-link.
+#}
+{# CTA URL — the report context now resolves a locale-aware default
+   when Mercury didn't thread one through, so a missing override never
+   silently lands an EN founder on the NL dashboard.  Override path
+   stays the same: ``request.metadata.startup_advisor_cta_url``. #}
+{% set advisor_url = startup_report.advisor_cta_url %}
+
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div class="section-header">
+        {# Section number bound to context — closes the deck, so it
+           shifts to ``05`` when the risks page is empty (no findings)
+           instead of leaving a numbering gap.  Audit issue D6. #}
+        <span class="section-number">{{ startup_advisor_cta_section_number|default('06') }}</span>
+        <h1 class="section-title" style="margin: 0;">{{ startup_report.t.advisor_cta_section_title }}</h1>
+    </div>
+
+    <div class="card" style="padding: var(--space-5); border: 1pt solid hsl(var(--report-primary)); background: rgba(244, 99, 35, 0.04); margin-bottom: var(--space-4);">
+        <p style="font-size: var(--font-size-md); line-height: 1.55; margin: 0 0 var(--space-3); max-width: 56rem;">
+            {% set _saas_suffix = startup_report.t.advisor_cta_with_saas_suffix if 'saas_forward' in (startup_report.contributors or []) else '' %}
+            {% set _p1 = startup_report.t.advisor_cta_lead_p1 %}
+            {{ _p1.replace('{saas}', _saas_suffix) }}
+        </p>
+        <p style="font-size: var(--font-size-md); line-height: 1.55; margin: 0 0 var(--space-4); max-width: 56rem;">
+            {{ startup_report.t.advisor_cta_lead_p2|safe }}
+        </p>
+
+        <div style="display: flex; gap: var(--space-3); align-items: center;">
+            <a href="{{ advisor_url }}" style="display: inline-block; background: hsl(var(--report-primary)); color: white; padding: 12pt 20pt; border-radius: 6pt; font-weight: 600; text-decoration: none; font-size: var(--font-size-md);">
+                {{ startup_report.t.advisor_cta_button }}
+            </a>
+            <span style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted));">
+                {{ startup_report.t.advisor_cta_footnote }}
+            </span>
+        </div>
+    </div>
+
+    {# Inception-lens recommendation — relocated from the Venus
+       useStudioIssues nudge surface 2026-05-10. The lens picker
+       itself is in the input panel; the recommendation of which
+       lens to flip on is analytical advisory and lives here. The
+       block fires only when the founder's profile fits a documented
+       under-pricing pattern AND they haven't already opted into a
+       non-default lens — see startup_report_context.py for the
+       gate. #}
+    {% set ila = startup_report.inception_lens_advisory %}
+    {% if ila %}
+    <div class="card" style="padding: var(--space-4); border: 1pt dashed hsl(var(--report-primary)); background: rgba(244, 99, 35, 0.03); margin: var(--space-3) 0 var(--space-4);">
+        <div style="font-size: var(--font-size-sm); font-weight: 600; color: hsl(var(--report-primary)); margin-bottom: var(--space-1);">
+            {% if ila.kind == 'bet' %}{{ startup_report.t.inception_lens_advisory_bet_title }}
+            {% else %}{{ startup_report.t.inception_lens_advisory_momentum_title }}{% endif %}
+        </div>
+        <p style="font-size: var(--font-size-xs); line-height: 1.55; margin: 0 0 var(--space-2); color: hsl(var(--report-text));">
+            {% if ila.kind == 'bet' %}{{ startup_report.t.inception_lens_advisory_bet_body }}
+            {% else %}{{ startup_report.t.inception_lens_advisory_momentum_body }}{% endif %}
+        </p>
+        <p style="font-size: var(--font-size-xs); line-height: 1.55; margin: 0; color: hsl(var(--report-text-muted));">
+            {{ startup_report.t.inception_lens_advisory_action }}
+        </p>
+    </div>
+    {% endif %}
+
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-3) 0 var(--space-2);">{{ startup_report.t.advisor_cta_what_title }}</h2>
+    <ul style="font-size: var(--font-size-sm); line-height: 1.7; padding-left: var(--space-5); max-width: 52rem;">
+        <li>{{ startup_report.t.advisor_cta_li_1 }}</li>
+        <li>{{ startup_report.t.advisor_cta_li_2 }}</li>
+        <li>{{ startup_report.t.advisor_cta_li_3 }}</li>
+        <li>{{ startup_report.t.advisor_cta_li_4 }}</li>
+    </ul>
+
+    {% include "main_report/partials/_footer.html" ignore missing %}
+</div>

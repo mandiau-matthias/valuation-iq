@@ -1,0 +1,124 @@
+{#
+    BUSINESS GROWTH MATURITY ROADMAP.
+
+    Conditional page driven by business_growth_maturity.*. The context is built
+    from current revenue and team-size evidence, then mapped to the
+    garage/family/village/town/city/metropolis operating stages.
+#}
+
+{% set bgm = business_growth_maturity or {} %}
+{% set _is_en = locale|default('nl') == 'en' %}
+{% set _is_fr = locale|default('nl') == 'fr' %}
+{% set _not_provided = 'Non renseigné' if _is_fr else ('Not provided' if _is_en else 'Niet ingevuld') %}
+{% set _team_not_provided = 'Effectif non renseigné' if _is_fr else ('Team size not provided' if _is_en else 'Teamgrootte niet ingevuld') %}
+{% set _revenue_not_provided = 'Chiffre d’affaires non renseigné' if _is_fr else ('Revenue not provided' if _is_en else 'Omzet niet ingevuld') %}
+{% set _unknown = 'Inconnu' if _is_fr else ('Unknown' if _is_en else 'Onbekend') %}
+
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div style="max-width: 760px; margin: 0 auto;">
+        <div class="section-header">
+            <span class="section-number">{{ business_growth_maturity_section_number|default('') }}</span>
+            <h1 class="section-title" style="margin: 0; flex: 1;">
+                {% if _is_fr %}Feuille de route de maturité de croissance{% elif _is_en %}Growth Maturity Roadmap{% else %}Groeimaturitéitsroadmap{% endif %}
+            </h1>
+        </div>
+
+        <p style="font-size: 10pt; line-height: 1.65; color: hsl(var(--report-slate-600)); margin: 0 0 var(--space-5) 0;">
+            {% if _is_fr %}
+            Ce plan traduit le chiffre d'affaires et la taille de l’équipe en priorites operationnelles pour le dirigeant et le conseiller.
+            {% elif _is_en %}
+            This roadmap translates revenue and team-size evidence into operating priorities for the owner and advisor.
+            {% else %}
+            Deze roadmap vertaalt omzet- en teamgroottebewijzen naar operationele prioriteiten voor de eigenaar en adviseur.
+            {% endif %}
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1.25fr 0.9fr; gap: 12pt; margin-bottom: var(--space-5);">
+            <div style="background: hsl(var(--report-card)); border: 1px solid hsl(var(--report-border)); border-radius: 10px; padding: 15pt 16pt;">
+                <p style="font-size: 8pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-slate-500)); margin: 0 0 6pt 0;">
+                    {% if _is_fr %}Stade opérationnel{% elif _is_en %}Operating Stage{% else %}Operationele fase{% endif %}
+                </p>
+                <p style="font-size: 24pt; line-height: 1.1; font-weight: 800; color: hsl(var(--report-text)); margin: 0 0 6pt 0;">
+                    {{ bgm.effective_stage_label|default(_unknown, true) }}
+                </p>
+                <p style="font-size: 8.5pt; line-height: 1.5; color: hsl(var(--report-slate-600)); margin: 0;">
+                    {{ bgm.alignment_summary|default('', true) }}
+                </p>
+            </div>
+            <div style="background: hsl(37, 80%, 96%); border: 1px solid hsl(37, 55%, 78%); border-radius: 10px; padding: 15pt 16pt;">
+                <p style="font-size: 8pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(37, 65%, 28%); margin: 0 0 6pt 0;">
+                    {% if _is_fr %}Prochaine priorite{% elif _is_en %}Next Priority{% else %}Volgende prioriteit{% endif %}
+                </p>
+                <p style="font-size: 16pt; line-height: 1.15; font-weight: 800; color: hsl(var(--report-text)); margin: 0 0 6pt 0;">
+                    {{ bgm.next_stage_label|default(bgm.effective_stage_label|default('—', true), true) }}
+                </p>
+                <p style="font-size: 8.5pt; line-height: 1.45; color: hsl(37, 65%, 24%); margin: 0;">
+                    {{ bgm.alignment_label|default('Maturity alignment', true) }}
+                </p>
+            </div>
+        </div>
+
+        {% if bgm.stage_ladder %}
+        <p style="font-size: 8pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-slate-500)); margin: 0 0 6pt 0;">
+            {% if _is_fr %}Echelle de croissance{% elif _is_en %}Growth Ladder{% else %}Groeiladder{% endif %}
+        </p>
+        <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6pt; margin-bottom: var(--space-5);">
+            {% for stage in bgm.stage_ladder %}
+            {% set _active = stage.is_effective_stage %}
+            {% set _next = stage.is_next_stage %}
+            <div style="border: 1px solid {{ 'hsl(var(--report-teal))' if _active else 'hsl(var(--report-border))' }}; background: {{ 'hsl(var(--report-teal) / 0.08)' if _active else ('hsl(37, 80%, 96%)' if _next else 'hsl(var(--report-muted))') }}; border-radius: 8px; padding: 8pt 6pt; min-height: 46pt;">
+                <p style="font-size: 8pt; font-weight: 800; color: hsl(var(--report-text)); margin: 0;">
+                    {{ stage.display_label|default(stage.label, true) }}
+                </p>
+                {% if stage.role_labels %}
+                <p style="font-size: 6.8pt; line-height: 1.35; color: {{ 'hsl(var(--report-teal))' if _active else 'hsl(var(--report-slate-500))' }}; margin: 4pt 0 0 0; font-weight: 700;">
+                    {{ stage.role_labels|join(' / ') }}
+                </p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12pt; margin-bottom: var(--space-5);">
+            <div style="border: 1px solid hsl(var(--report-border)); border-radius: 10px; padding: 12pt;">
+                <p style="font-size: 8pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-slate-500)); margin: 0 0 5pt 0;">
+                    {% if _is_fr %}Niveau chiffre d'affaires{% elif _is_en %}Revenue Level{% else %}Omzetniveau{% endif %}
+                </p>
+                <p style="font-size: 12pt; font-weight: 800; color: hsl(var(--report-text)); margin: 0;">{{ bgm.revenue_stage_label|default(_not_provided, true) }}</p>
+                <p style="font-size: 8pt; line-height: 1.4; color: hsl(var(--report-slate-600)); margin: 4pt 0 0 0;">{{ bgm.revenue_band_label|default(_revenue_not_provided, true) }}</p>
+                {% if bgm.revenue is not none %}
+                <p style="font-size: 8pt; color: hsl(var(--report-slate-500)); margin: 4pt 0 0 0;">{{ bgm.revenue|format_currency_compact }}</p>
+                {% endif %}
+            </div>
+            <div style="border: 1px solid hsl(var(--report-border)); border-radius: 10px; padding: 12pt;">
+                <p style="font-size: 8pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-slate-500)); margin: 0 0 5pt 0;">
+                    {% if _is_fr %}Capacité de l’équipe{% elif _is_en %}Team Capacity{% else %}Teamcapaciteit{% endif %}
+                </p>
+                <p style="font-size: 12pt; font-weight: 800; color: hsl(var(--report-text)); margin: 0;">{{ bgm.team_stage_label|default(_not_provided, true) }}</p>
+                <p style="font-size: 8pt; line-height: 1.4; color: hsl(var(--report-slate-600)); margin: 4pt 0 0 0;">{{ bgm.team_band_label|default(_team_not_provided, true) }}</p>
+                {% if bgm.team_size is not none %}
+                <p style="font-size: 8pt; color: hsl(var(--report-slate-500)); margin: 4pt 0 0 0;">{{ bgm.team_size }} FTE</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if bgm.guidance_cards %}
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10pt;">
+            {% for item in bgm.guidance_cards %}
+            <div style="border: 1px solid hsl(var(--report-border)); border-radius: 10px; padding: 10pt 12pt; background: hsl(var(--report-card));">
+                <p style="font-size: 8pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-slate-500)); margin: 0 0 4pt 0;">
+                    {% if _is_fr %}Priorite{% elif _is_en %}Advisor Focus{% else %}Adviesfocus{% endif %}
+                </p>
+                <p style="font-size: 9pt; line-height: 1.45; font-weight: 700; color: hsl(var(--report-text)); margin: 0 0 6pt 0;">{{ item.title }}</p>
+                <p style="font-size: 8.5pt; line-height: 1.45; color: hsl(var(--report-slate-600)); margin: 0;">
+                    {{ item.body }}
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>

@@ -1,0 +1,14 @@
+{# Render only the persisted decision; historical reports gain no new assertion. #}
+{% set sensitivity_scope = dcf_sensitivity_range_policy|default(none) %}
+{% if sensitivity_scope and sensitivity_scope.policy_version == 'advisor_dcf_three_driver.v2' and sensitivity_scope.status == 'excluded' %}
+{% set sensitivity_locale = (locale|default('nl'))[:2] %}
+<p data-dcf-sensitivity-scope="{{ sensitivity_scope.reason }}" style="font-size: 8pt; line-height: 1.45; color: #525d70; margin: 8pt 0 0; break-inside: avoid;">
+{% if sensitivity_locale == 'fr' %}
+L'analyse de sensibilité utilise les flux de trésorerie et la méthode de valeur terminale de cette évaluation. La fourchette facultative fondée sur la marge et la croissance perpétuelle n'est pas présentée, car sa base de calcul ne concorde pas avec ce modèle.
+{% elif sensitivity_locale == 'en' %}
+Sensitivity uses this valuation's cash flows and terminal-value method. The optional margin and perpetuity-growth range is not shown because its calculation basis does not reconcile with this model.
+{% else %}
+De gevoeligheidsanalyse gebruikt de kasstromen en eindwaardemethode van deze waardering. De optionele bandbreedte op basis van marge en eeuwigdurende groei wordt niet getoond omdat de berekeningsbasis niet aansluit bij dit model.
+{% endif %}
+</p>
+{% endif %}

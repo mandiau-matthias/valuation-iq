@@ -1,0 +1,114 @@
+<div class="page">
+    <table style="width: 100%; border-collapse: collapse; border: none; border-top: none;">
+        <tbody>
+            <tr>
+                <td colspan="2" style="padding: 0; border: none; vertical-align: middle;">
+                    <h1 id="section-1" style="margin: 0 0 32pt 0;">{{ t.accountant_section_executive_summary }}</h1>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Purpose and Scope -->
+    <div class="report-section" data-streaming="true" style="margin-bottom: 32pt;">
+        <p style="font-size: 12pt; line-height: 1.6; color: #334155; margin-top: 0;">
+            {{ t.accountant_exec_intro.format(company_name=company_name, valuation_date=(valuation_date | format_date)) | safe }}
+        </p>
+    </div>
+
+    <!-- Executive Summary Box for SME Owners - Clear & Accessible -->
+    <div style="background-color: #f4f1ea; border-radius: 8px; padding: 24pt; margin-bottom: 32pt; page-break-inside: avoid;">
+        <h2 style="font-family: 'Inter', sans-serif; font-size: 16pt; font-weight: 700; color: #2b303a; margin: 0 0 16pt 0; text-transform: uppercase; letter-spacing: 0.05em;">{{ t.accountant_exec_box_title }}</h2>
+        
+        <div style="display: table; width: 100%; margin-bottom: 20pt;">
+            <div style="display: table-row;">
+                <div style="display: table-cell; width: 50%; padding-right: 20pt; vertical-align: top;">
+                    <p style="font-size: 10pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #64748B; margin: 0 0 6pt 0;">{{ t.accountant_exec_business_value_label }}</p>
+                    <p style="font-size: 32pt; font-weight: 800; color: #2b303a; margin: 0; line-height: 1;">{{ valuation_range.mid | format_currency }}</p>
+                    <p style="font-size: 10pt; color: #64748B; margin: 8pt 0 0 0;">{{ t.accountant_exec_range_label }}: {{ valuation_range.low | format_currency }} — {{ valuation_range.high | format_currency }}</p>
+                </div>
+                <div style="display: table-cell; width: 50%; padding-left: 20pt; vertical-align: top; border-left: 1pt solid #cbd5e1;">
+                    <p style="font-size: 10pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #64748B; margin: 0 0 6pt 0;">{{ t.accountant_exec_valuation_basis_label }}</p>
+                    {% set _ebitda_val = current_year_data.ebitda or ebitda %}
+                    <p style="font-size: 12pt; font-weight: 600; color: #2b303a; margin: 0 0 12pt 0;">{{ _ebitda_val | format_currency }} EBITDA × {{ ((valuation_range.mid / _ebitda_val) if _ebitda_val and _ebitda_val != 0 else 0) | round(2) }}× {{ t.accountant_wf_col_multiple }}</p>
+                    <p style="font-size: 10pt; color: #475569; margin: 0; line-height: 1.5;">{{ t.accountant_exec_basis_explanation }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div style="border-top: 1pt solid #cbd5e1; padding-top: 16pt;">
+            <p style="font-size: 11pt; line-height: 1.6; color: #334155; margin: 0;"><strong>{{ t.accountant_exec_plain_language_label }}</strong> {{ t.accountant_exec_plain_language_text.format(company_name=company_name, value=(valuation_range.mid | format_currency)) }}</p>
+        </div>
+    </div>
+
+    <!-- Modern hero card for valuation - professional treatment -->
+    <div style="background-color: #1E293B; color: #FFFFFF; padding: 40pt 32pt; margin: 32pt 0; position: relative; overflow: hidden; border-radius: 12px; max-height: 550pt; page-break-inside: avoid; break-inside: avoid;">
+        <!-- Abstract decorative circle -->
+        <div style="position: absolute; top: -150pt; right: -30pt; width: 300pt; height: 300pt; border-radius: 50%; background-color: #1E293B; opacity: 0.5;"></div>
+        
+        {# VISUALIZATION: Valuation Range Chart #}
+        {% if valuation_range_chart %}
+        <div class="chart-container" style="margin-bottom: 24pt; padding: 12pt; background-color: rgba(255,255,255,0.95); border-radius: 8px; position: relative; z-index: 20;">
+            <h4 style="font-family: 'Inter', sans-serif; font-size: 13pt; font-weight: 700; color: var(--upswitch-navy); margin: 0 0 6pt 0; text-align: center;">{{ t.accountant_exec_range_chart_title }}</h4>
+            {{ valuation_range_chart | safe }}
+        </div>
+        {% endif %}
+
+        <div style="text-align: left; position: relative; z-index: 10;">
+            <!-- Robust Header Table (FMV Label vs Trust Node) -->
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 12pt; border: none; border-top: none;">
+                <tr>
+                    <td style="padding: 0; border: none; vertical-align: middle;">
+                        <p style="font-family: 'Inter', sans-serif; font-size: 10pt; font-weight: 600; text-transform: uppercase; letter-spacing: 2pt; opacity: 0.8; margin: 0; color: #94A3B8;">{{ t.accountant_exec_estimated_fmv_label }}</p>
+                    </td>
+                    <td style="padding: 0; border: none; text-align: right; vertical-align: middle;">
+                    </td>
+                </tr>
+            </table>
+            
+            <div style="font-family: 'Inter', sans-serif; font-size: 56pt; font-weight: 800; margin-bottom: 8pt; letter-spacing: -0.03em; color: #FFFFFF; line-height: 1; text-align: left;">
+                {{ valuation_range.mid | format_currency }}
+            </div>
+
+            {% if recommended_asking_price %}
+            <!-- Suggested Listing Price Table -->
+            <table style="margin-bottom: 48pt; border-collapse: collapse; border: none; width: auto; border-top: none;">
+                <tr>
+                    <td style="padding: 0; border: none; vertical-align: middle;">
+                        <span style="font-size: 13pt; color: #94A3B8; font-weight: 500;">{{ t.accountant_exec_suggested_listing_price_label }}</span>
+                    </td>
+                    <td style="padding: 0 16pt; border: none; vertical-align: middle;">
+                        <span style="font-size: 20pt; color: #6EE7B7; font-weight: 700;">{{ recommended_asking_price | format_currency }}</span>
+                    </td>
+                    <td style="padding: 0; border: none; vertical-align: middle;">
+                        <span style="font-size: 10pt; color: #94A3B8; font-style: italic; background: rgba(255,255,255,0.05); padding: 3pt 10pt; border-radius: 4px; white-space: nowrap;">{{ t.accountant_exec_strategic_buffer }}</span>
+                    </td>
+                </tr>
+            </table>
+            {% else %}
+            <div style="margin-bottom: 48pt;"></div>
+            {% endif %}
+        
+            <!-- Compact Hero Metrics -->
+            <table style="width: 100%; margin-top: 24pt; border-collapse: collapse; border: none;">
+                <tr>
+                    <td style="width: 33%; vertical-align: top; border: none;">
+                        <p style="font-size: 8pt; font-weight: 600; text-transform: uppercase; letter-spacing: 1pt; opacity: 0.6; margin-bottom: 4pt; color: #94A3B8;">{{ t.accountant_exec_range_label }}</p>
+                        <p style="font-size: 11pt; font-weight: 600; color: #FFFFFF; margin: 0;">{{ valuation_range.low | format_currency }} — {{ valuation_range.high | format_currency }}</p>
+                    </td>
+                    <td style="width: 33%; text-align: center; vertical-align: top; border: none;">
+                        <p style="font-size: 8pt; font-weight: 600; text-transform: uppercase; letter-spacing: 1pt; opacity: 0.6; margin-bottom: 4pt; color: #94A3B8;">{{ t.accountant_exec_implied_multiple_label }}</p>
+                        {% set ebitda_value = current_year_data.ebitda if current_year_data and current_year_data.ebitda else (multiples_valuation.adjusted_ebitda if multiples_valuation and hasattr(multiples_valuation, 'adjusted_ebitda') and multiples_valuation.adjusted_ebitda else None) %}
+                        {% set implied_multiple = (valuation_range.mid / ebitda_value) if (valuation_range and valuation_range.mid and ebitda_value and ebitda_value > 0) else 0 %}
+                        <p style="font-size: 11pt; font-weight: 600; color: #FFFFFF; margin: 0;">{{ implied_multiple | round(2) }}× <span style="font-size: 8pt; opacity: 0.6; font-weight: 400;">EBITDA</span></p>
+                    </td>
+                    <td style="width: 33%; text-align: right; vertical-align: top; border: none;">
+                        <p style="font-size: 8pt; font-weight: 600; text-transform: uppercase; letter-spacing: 1pt; opacity: 0.6; margin-bottom: 4pt; color: #94A3B8;">{{ t.accountant_exec_valuation_basis_label }}</p>
+                        <p style="font-size: 11pt; font-weight: 600; color: #FFFFFF; margin: 0;">{{ t.accountant_exec_fair_market_value_label }}</p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+</div>

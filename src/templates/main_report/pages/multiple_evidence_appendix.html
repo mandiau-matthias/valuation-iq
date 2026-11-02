@@ -1,0 +1,11 @@
+{# MULTIPLE SOURCING & EVIDENCE APPENDIX (screen) — see shared body. #}
+{% set _is_en_mep = (locale|default('nl'))|lower == 'en' %}
+{% set _is_fr_mep = (locale|default('nl'))|lower == 'fr' %}
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+    <div class="section-header">
+        <span class="section-number">{{ multiple_evidence_appendix_section_number|default('A') }}</span>
+        <h1 class="section-title">{% if _is_fr_mep %}Origine et preuves du multiple{% elif _is_en_mep %}Multiple sourcing and evidence{% else %}Herkomst en bewijs van de multiple{% endif %}</h1>
+    </div>
+    {% include "main_report/components/_multiple_evidence_body.html" %}
+</div>

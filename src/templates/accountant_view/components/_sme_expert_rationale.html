@@ -1,0 +1,249 @@
+{#
+WORLD-CLASS SME EXPERT: Expert Rationale Component
+
+Displays SME expert-level explanations for business type-specific logic and adjustments.
+This component provides academic-level expert explanations aligned with International Valuation Standards (IVS 2017).
+
+Usage:
+    {% include "accountant_view/components/_sme_expert_rationale.html" with
+        business_type=step.outputs.business_type
+        business_type_id=step.inputs.business_type_id
+        growth_stage=step.outputs.sme_calibration.ebitda_multiple.growth_stage
+        owner_dependency_impact=step.outputs.business_type_characteristics.owner_dependency_impact
+        adjustment_breakdown=step.outputs.sme_calibration.ebitda_multiple.adjustment_breakdown
+        revenue=step.inputs.revenue
+        industry=step.inputs.industry
+    %}
+
+Author: Upswitch CTO Team
+Date: December 2, 2025
+Status: Production Ready - World-Class SME Expert Level
+#}
+
+{% if business_type or business_type_id or growth_stage or owner_dependency_impact %}
+<div style="background-color: #FFFFFF; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18pt; margin: 18pt 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 12pt; border: none; border-top: none;">
+        <tr>
+            <td style="padding: 0; border: none; vertical-align: middle; width: 36pt;">
+                <div style="width: 24pt; height: 24pt; background-color: #2b303a; border-radius: 50%; text-align: center; line-height: 24pt; color: #FFFFFF; font-weight: bold; font-family: 'Inter', sans-serif; font-size: 12pt;">
+                    i
+                </div>
+            </td>
+            <td style="padding: 0; border: none; vertical-align: middle;">
+                <h4 style="font-family: 'Inter', sans-serif; font-size: 14pt; font-weight: 700; color: #2b303a; margin: 0;">
+                    {{ t.accountant_sme_title }}
+                </h4>
+            </td>
+        </tr>
+    </table>
+
+    {# Business Type Identification #}
+    {% if business_type or business_type_id %}
+    <div style="background-color: #f4f1ea; border-radius: 6px; padding: 12pt; border: 1px solid #e2e8f0; margin-bottom: 12pt;">
+        <p style="font-family: 'Inter', sans-serif; font-size: 10pt; font-weight: 600; color: #2b303a; text-transform: uppercase; margin-bottom: 8pt;">
+            {{ t.accountant_sme_business_type_classification }}
+        </p>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 8pt; border: none; border-top: none;">
+            <tr>
+                {% if business_type %}
+                <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                    <p style="font-family: 'Inter', sans-serif; font-size: 9pt; color: #6b7280; margin-bottom: 2pt;">{{ t.accountant_sme_business_type_label }}</p>
+                    <p style="font-family: 'Inter', sans-serif; font-size: 13pt; font-weight: 700; color: #2b303a; margin: 0; text-transform: capitalize;">
+                        {{ business_type }}
+                    </p>
+                </td>
+                {% elif business_type_id %}
+                <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                    <p style="font-family: 'Inter', sans-serif; font-size: 9pt; color: #6b7280; margin-bottom: 2pt;">{{ t.accountant_sme_business_type_id_label }}</p>
+                    <p style="font-family: 'Inter', sans-serif; font-size: 13pt; font-weight: 700; color: #2b303a; margin: 0;">
+                        {{ business_type_id }}
+                    </p>
+                </td>
+                {% endif %}
+
+                <td style="width: 4%; border: none;"></td>
+
+                {% if industry %}
+                <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                    <p style="font-family: 'Inter', sans-serif; font-size: 9pt; color: #6b7280; margin-bottom: 2pt;">{{ t.accountant_sme_industry_label }}</p>
+                    <p style="font-family: 'Inter', sans-serif; font-size: 13pt; font-weight: 600; color: #4b5563; margin: 0; text-transform: capitalize;">
+                        {{ industry }}
+                    </p>
+                </td>
+                {% endif %}
+            </tr>
+        </table>
+
+        {# SME Expert Explanation #}
+        <div style="margin-top: 10pt; padding-top: 10pt; border-top: 1px solid #e2e8f0;">
+            <p style="font-family: 'Inter', sans-serif; font-size: 9pt; color: #2b303a; font-weight: 600; margin-bottom: 6pt;">{{ t.accountant_sme_insight_classification }}</p>
+            <p style="font-family: 'Inter', sans-serif; font-size: 10pt; color: #4b5563; line-height: 1.6; margin: 0;">
+                {% if business_type %}
+                    {{ t.accountant_sme_insight_with_type.format(type=business_type) | safe }}
+                {% else %}
+                    {{ t.accountant_sme_insight_no_type | safe }}
+                {% endif %}
+                <br><br>
+                <strong style="color: #2b303a;">{{ t.accountant_sme_how_label }}</strong>
+                <br>
+                • <strong>{{ t.accountant_sme_multiple_selection }}</strong>
+                {% if step_2_result and step_2_result.get('data_source_display') %}
+                    {{ step_2_result.data_source_display }}
+                    {% if step_2_result.get('data_source_academic_citations') %}
+                        ({{ step_2_result.data_source_academic_citations }})
+                    {% endif %}
+                {% elif step_2_result and step_2_result.get('data_source') == 'business_type_db' %}
+                    {{ t.accountant_sme_multiple_db_default }}
+                {% else %}
+                    {{ t.accountant_sme_multiple_other_default }}
+                {% endif %}
+                {{ t.accountant_sme_multiple_suffix }}
+                <br><br>
+                • <strong>{{ t.accountant_sme_owner_dep_label }}</strong> {{ t.accountant_sme_owner_dep_body }}
+                <br><br>
+                • <strong>{{ t.accountant_sme_margin_label }}</strong> {{ t.accountant_sme_margin_body }}
+                <br><br>
+                • <strong>{{ t.accountant_sme_methodology_sel_label }}</strong> {{ t.accountant_sme_methodology_sel_body }}
+                <br><br>
+                <strong style="color: #2b303a;">{{ t.accountant_sme_academic_basis }}</strong> {{ t.accountant_sme_academic_body | safe }}
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    {# Growth Stage Analysis #}
+    {% if growth_stage %}
+    <div style="background-color: #f4f1ea; border-radius: 6px; padding: 12pt; border: 1px solid #e2e8f0; margin-bottom: 12pt;">
+        <p style="font-family: 'Inter', sans-serif; font-size: 10pt; font-weight: 600; color: #2b303a; text-transform: uppercase; margin-bottom: 8pt;">
+            {{ t.accountant_sme_growth_stage_title }}
+        </p>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 8pt; border: none; border-top: none;">
+            <tr>
+                <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                    <p style="font-family: 'Inter', sans-serif; font-size: 9pt; color: #6b7280; margin-bottom: 2pt;">{{ t.accountant_sme_growth_stage_label }}</p>
+                    <p style="font-family: 'Inter', sans-serif; font-size: 13pt; font-weight: 700; color: #2b303a; margin: 0; text-transform: capitalize;">
+                        {{ growth_stage }}
+                    </p>
+                </td>
+                <td style="width: 4%; border: none;"></td>
+                <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                    {% if growth_stage == 'startup' %}
+                    <div style="padding: 8pt; background-color: #f5ebea; border-left: 3px solid #b85c56; border-radius: 2pt;">
+                        <p style="font-family: 'Inter', sans-serif; font-size: 9pt; color: #b85c56; font-weight: 600; margin-bottom: 2pt;">{{ t.accountant_sme_risk_adj_label }}</p>
+                        <p style="font-family: 'Inter', sans-serif; font-size: 10pt; color: #2b303a; margin: 0;">{{ t.accountant_sme_startup_adj }}</p>
+                    </div>
+                    {% elif growth_stage == 'growth' %}
+                    <div style="padding: 8pt; background-color: #e9f0eb; border-left: 3px solid #6b8e72; border-radius: 2pt;">
+                        <p style="font-family: 'Inter', sans-serif; font-size: 9pt; color: #4a5d4f; font-weight: 600; margin-bottom: 2pt;">{{ t.accountant_sme_stable_stage }}</p>
+                        <p style="font-family: 'Inter', sans-serif; font-size: 10pt; color: #2b303a; margin: 0;">{{ t.accountant_sme_stable_no_adj }}</p>
+                    </div>
+                    {% else %}
+                    <div style="padding: 8pt; background-color: #f4f1ea; border-left: 3px solid #4a5d4f; border-radius: 2pt;">
+                        <p style="font-family: 'Inter', sans-serif; font-size: 9pt; color: #4a5d4f; font-weight: 600; margin-bottom: 2pt;">{{ t.accountant_sme_mature_stage }}</p>
+                        <p style="font-family: 'Inter', sans-serif; font-size: 10pt; color: #2b303a; margin: 0;">{{ t.accountant_sme_mature_lower_risk }}</p>
+                    </div>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+
+        {# SME Expert Explanation #}
+        <div style="margin-top: 10pt; padding-top: 10pt; border-top: 1px solid #e2e8f0;">
+            <p style="font-family: 'Inter', sans-serif; font-size: 9pt; color: #2b303a; font-weight: 600; margin-bottom: 4pt;">{{ t.accountant_sme_insight_label }}</p>
+            <p style="font-family: 'Inter', sans-serif; font-size: 10pt; color: #4b5563; line-height: 1.6; margin: 0;">
+                {% if growth_stage == 'startup' %}
+                    {{ t.accountant_sme_startup_body.format(stage=growth_stage) | safe }}
+                {% elif growth_stage == 'growth' %}
+                    {{ t.accountant_sme_growth_body.format(stage=growth_stage) | safe }}
+                {% else %}
+                    {{ t.accountant_sme_mature_body.format(stage=growth_stage) | safe }}
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    {# Owner Dependency Impact #}
+    {% if owner_dependency_impact is not none %}
+    <div style="background-color: #f4f1ea; border-radius: 6px; padding: 12pt; border: 1px solid #e2e8f0; margin-bottom: 12pt;">
+        <p style="font-family: 'Inter', sans-serif; font-size: 10pt; font-weight: 600; color: #2b303a; text-transform: uppercase; margin-bottom: 8pt;">
+            {{ t.accountant_sme_owner_dep_title }}
+        </p>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 8pt; border: none; border-top: none;">
+            <tr>
+                <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                    <p style="font-family: 'Inter', sans-serif; font-size: 9pt; color: #6b7280; margin-bottom: 2pt;">{{ t.accountant_sme_owner_dep_impact_label }}</p>
+                    <p style="font-family: 'Inter', sans-serif; font-size: 14pt; font-weight: 700; color: #2b303a; margin: 0;">
+                        {{ (owner_dependency_impact * 100) | safe_round(1) }}%
+                    </p>
+                </td>
+                <td style="width: 4%; border: none;"></td>
+                <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                    <div style="padding: 8pt; background-color: #FFFFFF; border-left: 3px solid {% if owner_dependency_impact >= 0.7 %}#b85c56{% elif owner_dependency_impact >= 0.4 %}#d9a558{% else %}#6b8e72{% endif %};">
+                        <p style="font-family: 'Inter', sans-serif; font-size: 9pt; font-weight: 600; margin-bottom: 2pt; color: {% if owner_dependency_impact >= 0.7 %}#b85c56{% elif owner_dependency_impact >= 0.4 %}#d9a558{% else %}#6b8e72{% endif %};">
+                            {% if owner_dependency_impact >= 0.7 %}{{ t.accountant_sme_high_risk }}{% elif owner_dependency_impact >= 0.4 %}{{ t.accountant_sme_medium_risk }}{% else %}{{ t.accountant_sme_low_risk }}{% endif %}
+                        </p>
+                        <p style="font-family: 'Inter', sans-serif; font-size: 9pt; color: var(--text-body); margin: 0;">
+                            {% if owner_dependency_impact >= 0.7 %}
+                                {{ t.accountant_sme_high_dep_caption }}
+                            {% elif owner_dependency_impact >= 0.4 %}
+                                {{ t.accountant_sme_med_dep_caption }}
+                            {% else %}
+                                {{ t.accountant_sme_low_dep_caption }}
+                            {% endif %}
+                        </p>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        {# SME Expert Explanation #}
+        <div style="margin-top: 10pt; padding-top: 10pt; border-top: 1px solid #e2e8f0;">
+            <p style="font-family: 'Inter', sans-serif; font-size: 9pt; color: #2b303a; font-weight: 600; margin-bottom: 4pt;">{{ t.accountant_sme_insight_label }}</p>
+            <p style="font-family: 'Inter', sans-serif; font-size: 10pt; color: #4b5563; line-height: 1.6; margin: 0;">
+                {{ t.accountant_sme_owner_dep_intro }} <strong>{{ (owner_dependency_impact * 100) | safe_round(1) }}%</strong> {{ t.accountant_sme_owner_dep_intro_suffix }}
+                {% if owner_dependency_impact >= 0.7 %}
+                    {{ t.accountant_sme_owner_dep_high | safe }}
+                {% elif owner_dependency_impact >= 0.4 %}
+                    {{ t.accountant_sme_owner_dep_medium | safe }}
+                {% else %}
+                    {{ t.accountant_sme_owner_dep_low | safe }}
+                {% endif %}
+                {{ t.accountant_sme_owner_dep_footer }}
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    {# Adjustment Breakdown #}
+    {% if adjustment_breakdown and adjustment_breakdown | length > 0 %}
+    <div style="background-color: #F8FAFC; border-radius: 6px; padding: 12pt; border: 1px solid #e2e8f0;">
+        <p style="font-family: 'Inter', sans-serif; font-size: 10pt; font-weight: 600; color: #2b303a; text-transform: uppercase; margin-bottom: 8pt;">
+            {{ t.accountant_sme_adj_breakdown_title }}
+        </p>
+        <div style="background-color: #FFFFFF; border-radius: 4px; padding: 10pt; border: 1px solid #e2e8f0;">
+            <ul style="margin: 0; padding-left: 16pt; font-family: 'Inter', sans-serif; font-size: 10pt; color: #4b5563; line-height: 1.8;">
+                {% for adjustment in adjustment_breakdown %}
+                <li style="margin-bottom: 6pt;">
+                    <span style="font-weight: 600; color: #2b303a;">{{ adjustment }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        {# SME Expert Explanation #}
+        <div style="margin-top: 10pt; padding-top: 10pt; border-top: 1px solid #e2e8f0;">
+            <p style="font-family: 'Inter', sans-serif; font-size: 9pt; color: #2b303a; font-weight: 600; margin-bottom: 4pt;">{{ t.accountant_sme_insight_label }}</p>
+            <p style="font-family: 'Inter', sans-serif; font-size: 10pt; color: #4b5563; line-height: 1.6; margin: 0;">
+                {{ t.accountant_sme_adj_breakdown_intro | safe }}
+                (1) {{ t.accountant_sme_adj_size | safe }}
+                (2) {{ t.accountant_sme_adj_type | safe }}
+                (3) {{ t.accountant_sme_adj_growth | safe }}
+                (4) {{ t.accountant_sme_adj_market | safe }}
+                {{ t.accountant_sme_adj_academic | safe }}
+            </p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}

@@ -1,0 +1,131 @@
+{#
+    LIQUIDATION ANALYSIS — EXECUTIVE SUMMARY (PDF version)
+
+    PDF twin of main_report/pages/liquidation_executive_summary.html.
+    Same content, PDF-specific surface (the master_report_pdf base
+    handles page chrome, fonts, and pagination breaks via WeasyPrint).
+#}
+{% set lr = liquidation_report %}
+{# When the Phase 2-4 chain ran, the headline is the *net* figure (post
+   cascade + tax + wind-down) — what the owner actually pockets. Falls
+   back to gross orderly equity for legacy payloads pre-Phase-2.  Kept
+   in lock-step with main_report/pages/liquidation_executive_summary.html
+   so screen and PDF surface identical headline numbers (audit P0 #1). #}
+{% set net_orderly_eq = lr.net_equity_to_shareholders_orderly if lr.net_equity_to_shareholders_orderly is not none else (lr.orderly.equity_value|default(0)|float) %}
+{% set net_forced_eq = lr.net_equity_to_shareholders_forced if lr.net_equity_to_shareholders_forced is not none else (lr.forced.equity_value|default(0)|float) %}
+{% set orderly_eq = lr.orderly.equity_value|default(0)|float %}
+{% set forced_eq = lr.forced.equity_value|default(0)|float %}
+{% set book_eq = lr.book_equity|default(0)|float %}
+
+<section class="pdf-page liquidation-page">
+{% if lr.net_equity_to_shareholders_orderly is none or lr.net_equity_to_shareholders_forced is none %}
+<p data-tax-status="not_assessed">{{ lr.t.tax_not_assessed }}</p>
+{% endif %}
+<p data-buyer-range-status="not_assessed">{{ lr.t.buyer_range_not_assessed }}</p>
+    <header class="pdf-section-header">
+        <span class="pdf-section-number">01</span>
+        <h1 class="pdf-section-title">{{ lr.t.headline_section_title }}</h1>
+        <span class="pdf-badge">{{ lr.t.headline_subtitle }}</span>
+    </header>
+
+    {# Three-scenario hero — NET to shareholder is the headline (post
+       cascade + tax + wind-down). Forced + book equity surface as
+       references. The naive gross orderly figure is shown beneath the
+       headline so the reader can see how much of the bridge is creditor
+       cascade + tax leakage. Mirrors the screen template. #}
+    <div class="pdf-grid pdf-grid-3">
+        <div class="pdf-card pdf-card-primary">
+            <div class="pdf-card-eyebrow">
+                {% if lr.net_equity_to_shareholders_orderly is not none %}{{ lr.t.net_headline_label }}{% else %}{{ lr.t.scenario_orderly }}{% endif %}
+            </div>
+            <div class="pdf-card-headline">€{{ net_orderly_eq|format_eur_amount }}</div>
+            {% if lr.net_equity_to_shareholders_orderly is not none %}
+            <div class="pdf-card-meta">
+                {{ lr.t.scenario_orderly }}: €{{ orderly_eq|format_eur_amount }} {{ lr.t.headline_gross_caption }}
+            </div>
+            {% elif lr.value_low is not none and lr.value_high is not none %}
+            <div class="pdf-card-meta">
+                {{ lr.t.label_value_low }}–{{ lr.t.label_value_high }}: €{{ lr.value_low|format_eur_amount }} — €{{ lr.value_high|format_eur_amount }}
+            </div>
+            {% endif %}
+            <div class="pdf-card-meta">{{ lr.t.label_equity_to_owner }}</div>
+        </div>
+        <div class="pdf-card">
+            <div class="pdf-card-eyebrow">{{ lr.t.scenario_forced }}</div>
+            <div class="pdf-card-subheadline">€{{ net_forced_eq|format_eur_amount }}</div>
+            {% if lr.net_equity_to_shareholders_forced is not none %}
+            <div class="pdf-card-meta">{{ lr.t.label_gross }}: €{{ forced_eq|format_eur_amount }}</div>
+            {% endif %}
+            <div class="pdf-card-meta">{{ lr.t.label_equity_to_owner }}</div>
+        </div>
+        <div class="pdf-card pdf-card-muted">
+            <div class="pdf-card-eyebrow">{{ lr.t.scenario_book }}</div>
+            <div class="pdf-card-subheadline">€{{ book_eq|format_eur_amount }}</div>
+        </div>
+    </div>
+
+    {% if lr.would_be_insolvent_orderly or lr.would_be_insolvent_forced %}
+    <div class="pdf-card pdf-card-warning">
+        <div class="pdf-card-title">⚠ {{ lr.t.insolvency_chip_title }}</div>
+        {% if lr.would_be_insolvent_orderly %}
+        <div class="pdf-card-body">{{ lr.t.insolvency_chip_orderly }}</div>
+        {% endif %}
+        {% if lr.would_be_insolvent_forced %}
+        <div class="pdf-card-body">{{ lr.t.insolvency_chip_forced }}</div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <table class="pdf-table">
+        <thead>
+            <tr>
+                <th></th>
+                <th class="pdf-num">{{ lr.t.scenario_orderly }}</th>
+                <th class="pdf-num">{{ lr.t.scenario_forced }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {# Use format_eur_or_dash so missing inputs surface as "—"
+               rather than masquerading as €0 (audit P1 #10 rollout —
+               mirrors the screen template). #}
+            <tr>
+                <td>{{ lr.t.label_assets_book }}</td>
+                <td class="pdf-num">{{ lr.orderly.total_assets_book|format_eur_or_dash if lr.orderly.total_assets_book is not none else "—" }}</td>
+                <td class="pdf-num">{{ lr.forced.total_assets_book|format_eur_or_dash if lr.forced.total_assets_book is not none else "—" }}</td>
+            </tr>
+            <tr>
+                <td>{{ lr.t.label_assets_adjusted }}</td>
+                <td class="pdf-num">{{ lr.orderly.total_assets_adjusted|format_eur_or_dash if lr.orderly.total_assets_adjusted is not none else "—" }}</td>
+                <td class="pdf-num">{{ lr.forced.total_assets_adjusted|format_eur_or_dash if lr.forced.total_assets_adjusted is not none else "—" }}</td>
+            </tr>
+            <tr class="pdf-table-divider">
+                <td>{{ lr.t.label_liabilities_adjusted }}</td>
+                <td class="pdf-num">{{ lr.orderly.total_liabilities_adjusted|format_eur_or_dash if lr.orderly.total_liabilities_adjusted is not none else "—" }}</td>
+                <td class="pdf-num">{{ lr.forced.total_liabilities_adjusted|format_eur_or_dash if lr.forced.total_liabilities_adjusted is not none else "—" }}</td>
+            </tr>
+            <tr class="pdf-table-total">
+                <td>{{ lr.t.label_equity_to_owner }}</td>
+                <td class="pdf-num">€{{ orderly_eq|format_eur_amount }}</td>
+                <td class="pdf-num">€{{ forced_eq|format_eur_amount }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    {% if lr.scope_note %}
+    <div class="pdf-card pdf-card-muted">
+        <div class="pdf-card-title">{{ lr.t.scope_note_title }}</div>
+        <div class="pdf-card-body">{{ lr.t.liquidation_scope_note }}</div>
+    </div>
+    {% endif %}
+
+    <div class="pdf-card">
+        <div class="pdf-card-title">{{ lr.t.cta_title }}</div>
+        <div class="pdf-card-body">{{ lr.t.cta_body }}</div>
+    </div>
+
+    {% if lr.sources %}
+    <div class="pdf-footer-meta">
+        {{ lr.t.sources_label }}: {{ lr.sources|join(' · ') }}
+    </div>
+    {% endif %}
+</section>

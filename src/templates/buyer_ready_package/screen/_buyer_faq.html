@@ -1,0 +1,41 @@
+{#
+    Buyer FAQ — D2 deliverable.
+    BET-241 / F1 scaffold; content owned by F4 (BET-244).
+
+    Two groups:
+      • autofilled_items — derived from primitives, always present
+      • owner_prompt_items — 8 questions owner answered; partial-save
+        supported, empty answers render placeholder text per F4 spec
+
+    Owner answers render verbatim — NO LLM rewriting.
+#}
+
+<section class="brp-buyer-faq" data-section="buyer_faq">
+    <h2>Buyer FAQ</h2>
+
+    <div class="brp-faq-completion" data-pct="{{ package.buyer_faq.completion_pct }}">
+        {{ package.buyer_faq.completion_pct }}% complete
+    </div>
+
+    {% if package.buyer_faq.autofilled_items %}
+        <h3>From the business data</h3>
+        <dl class="brp-faq-list">
+            {% for item in package.buyer_faq.autofilled_items %}
+                <dt>{{ item.question }}</dt>
+                <dd>{{ item.answer }}</dd>
+            {% endfor %}
+        </dl>
+    {% endif %}
+
+    {% if package.buyer_faq.owner_prompt_items %}
+        <h3>From the owner</h3>
+        <dl class="brp-faq-list">
+            {% for item in package.buyer_faq.owner_prompt_items %}
+                <dt>{{ item.question }}</dt>
+                <dd
+                    {% if item.answer_source == 'placeholder' %}class="brp-faq-placeholder"{% endif %}
+                >{{ item.answer }}</dd>
+            {% endfor %}
+        </dl>
+    {% endif %}
+</section>

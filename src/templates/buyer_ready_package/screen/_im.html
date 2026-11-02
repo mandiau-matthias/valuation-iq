@@ -1,0 +1,253 @@
+{#
+    IM / CIM — the 12-15 page core of the buyer-ready package.
+    BET-243 / F3 render shell.
+
+    This partial is intentionally report-native: it renders A4 pages and
+    mirrors the main valuation report's modularity while keeping the IM as
+    a separate buyer-facing document.
+#}
+
+{% set _render_mode = brp_render_mode|default("screen") %}
+{% set _is_pdf = _render_mode == "pdf" %}
+
+<div class="brp-im{% if _is_pdf %} brp-pdf{% endif %}" data-section="im" data-render-mode="{{ _render_mode }}">
+
+    <section class="brp-a4-page brp-im-cover" data-section-key="cover">
+        <div class="brp-cover-top">
+            <div class="brp-cover-brand">
+                {{ package.advisor_brand.firm_name if package.advisor_brand else "Upswitch" }}
+                <span>Buyer-ready transaction package</span>
+            </div>
+            <div class="brp-confidential-chip">Confidential IM/CIM</div>
+        </div>
+
+        <div class="brp-cover-title">
+            <div class="brp-doc-label">Confidential Information Memorandum</div>
+            <h1>{{ package.cover.anonymised_title }}</h1>
+            <p>
+                A separate buyer-facing memorandum generated from the valuation report,
+                sellability profile, owner inputs, and transaction-readiness checklist.
+            </p>
+        </div>
+
+        <div class="brp-cover-meta">
+            <span>{{ package.cover.sector_label }}</span>
+            <span>/</span>
+            <span>{{ package.cover.region_label }}, {{ package.cover.country_code }}</span>
+            <span>/</span>
+            <span>Generated {{ package.cover.generated_at }}</span>
+        </div>
+
+        <div class="brp-cover-modules">
+            <div class="brp-price-band" data-module="asking-price-band">
+                {% if package.pricing %}
+                    <span class="brp-price-label">Recommended asking price</span>
+                    <strong class="brp-price-value">
+                        {% if package.pricing.recommended_asking_price_eur is not none %}
+                            {{ package.pricing.currency }} {{ "{:,.0f}".format(package.pricing.recommended_asking_price_eur).replace(",", ".") }}
+                        {% else %}
+                            {{ package.pricing.currency }} {{ "{:,.0f}".format(package.pricing.equity_value_mid_eur).replace(",", ".") }}
+                        {% endif %}
+                    </strong>
+                    <div class="brp-pricing-grid" data-module="valuation-price-range">
+                        <span>
+                            <b>{{ package.pricing.currency }} {{ "{:,.0f}".format(package.pricing.equity_value_low_eur).replace(",", ".") }}</b>
+                            low
+                        </span>
+                        <span>
+                            <b>{{ package.pricing.currency }} {{ "{:,.0f}".format(package.pricing.equity_value_mid_eur).replace(",", ".") }}</b>
+                            midpoint
+                        </span>
+                        <span>
+                            <b>{{ package.pricing.currency }} {{ "{:,.0f}".format(package.pricing.equity_value_high_eur).replace(",", ".") }}</b>
+                            high
+                        </span>
+                    </div>
+                    <span class="brp-price-note">
+                        {{ package.pricing.price_basis_note }}
+                        {% if package.pricing.display_band %}
+                            Display band: {{ package.pricing.display_band }}.
+                        {% endif %}
+                    </span>
+                {% else %}
+                    <span class="brp-price-label">Indicative asking price band</span>
+                    <strong class="brp-price-value">
+                        {{ package.cover.asking_price_band or "Advisor pricing range required" }}
+                    </strong>
+                    <span class="brp-price-note">
+                        Pricing range is rendered from the ValuationIQ report payload, not invented in the IM narrative.
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="brp-cover-readiness" data-module="sellability-score">
+                <span class="brp-price-label">Transaction readiness</span>
+                {% if package.cover.sellability_score is not none %}
+                    <div class="brp-cover-score-chip">
+                        <strong>{{ package.cover.sellability_score }}/100</strong>
+                        <span>{{ package.cover.sellability_band_label or "Sellability score" }}</span>
+                    </div>
+                {% else %}
+                    <div class="brp-placeholder">Sellability score pending.</div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <section class="brp-a4-page brp-executive-page" data-section-key="executive_summary"
+             data-confidence="{{ package.executive_summary.confidence }}">
+        <div class="brp-page-header">
+            <div>
+                <div class="brp-section-kicker">01 / Executive summary</div>
+                <h2 class="brp-page-title">The buyer story in one page</h2>
+            </div>
+            <div class="brp-confidence-chip" data-confidence="{{ package.executive_summary.confidence }}">
+                {{ package.executive_summary.confidence }} confidence
+            </div>
+        </div>
+
+        {% if package.executive_summary.confidence == "low" %}
+            <div class="brp-placeholder">Limited data — advisor narrative required.</div>
+        {% else %}
+            <p class="brp-pitch">{{ package.executive_summary.one_paragraph_pitch }}</p>
+        {% endif %}
+
+        <div class="brp-exec-grid">
+            <div class="brp-summary-panel">
+                <h3>Headline financials</h3>
+                <p class="brp-headline">{{ package.executive_summary.headline_financials }}</p>
+            </div>
+            <div class="brp-summary-panel">
+                <h3>Transaction rationale</h3>
+                <p>{{ package.executive_summary.transaction_rationale }}</p>
+            </div>
+            <div class="brp-summary-panel">
+                <h3>Key strengths</h3>
+                {% if package.executive_summary.key_strengths %}
+                    <ul>
+                        {% for item in package.executive_summary.key_strengths %}
+                            <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>Advisor narrative required.</p>
+                {% endif %}
+            </div>
+            <div class="brp-summary-panel">
+                <h3>Summary risks</h3>
+                {% if package.executive_summary.summary_risks %}
+                    <ul>
+                        {% for item in package.executive_summary.summary_risks %}
+                            <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>Advisor narrative required.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if package.executive_summary.provenance %}
+            <div class="brp-provenance">
+                Sources:
+                {% for ref in package.executive_summary.provenance %}
+                    {{ ref.source }}{% if ref.source_id %}:{{ ref.source_id }}{% endif %}{% if not loop.last %}; {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </section>
+
+    {% for section in package.im_sections %}
+        {% if section.section_key not in ["cover", "executive_summary"] %}
+            <section class="brp-a4-page brp-im-section"
+                     data-section-key="{{ section.section_key }}"
+                     data-confidence="{{ section.confidence }}">
+                <div class="brp-page-header">
+                    <div>
+                        <div class="brp-section-kicker">
+                            {{ "%02d"|format(loop.index) }} / {{ section.section_key.replace("_", " ") }}
+                        </div>
+                        <h2 class="brp-page-title">{{ section.heading }}</h2>
+                    </div>
+                    <div class="brp-confidence-chip" data-confidence="{{ section.confidence }}">
+                        {% if section.confidence == "medium" %}
+                            Advisor review recommended
+                        {% else %}
+                            {{ section.confidence }} confidence
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="brp-im-body">
+                    <div class="brp-narrative">
+                        {% if section.confidence == "low" %}
+                            <div class="brp-placeholder">Limited data — advisor narrative required.</div>
+                        {% elif section.narrative_paragraphs %}
+                            {% for paragraph in section.narrative_paragraphs %}
+                                <p>{{ paragraph }}</p>
+                            {% endfor %}
+                        {% else %}
+                            <div class="brp-placeholder">Advisor narrative pending.</div>
+                        {% endif %}
+
+                        {% if section.section_key == "deal_terms" and package.pricing %}
+                            <div class="brp-deal-pricing-callout" data-module="deal-terms-pricing">
+                                <span class="brp-section-kicker">Valuation report price bridge</span>
+                                <strong>
+                                    {% if package.pricing.recommended_asking_price_eur is not none %}
+                                        Recommended ask {{ package.pricing.currency }} {{ "{:,.0f}".format(package.pricing.recommended_asking_price_eur).replace(",", ".") }}
+                                    {% else %}
+                                        Indicated equity value {{ package.pricing.currency }} {{ "{:,.0f}".format(package.pricing.equity_value_mid_eur).replace(",", ".") }}
+                                    {% endif %}
+                                </strong>
+                                <p>
+                                    Range {{ package.pricing.currency }} {{ "{:,.0f}".format(package.pricing.equity_value_low_eur).replace(",", ".") }}
+                                    -
+                                    {{ package.pricing.currency }} {{ "{:,.0f}".format(package.pricing.equity_value_high_eur).replace(",", ".") }}
+                                    · {{ package.pricing.basis.replace("_", " ") }} · {{ package.pricing.confidence }} confidence
+                                </p>
+                            </div>
+                        {% endif %}
+
+                        {% if section.section_key == "disclaimers" and package.legal_readiness %}
+                            <div class="brp-legal-disclaimer-callout" data-module="legal-disclaimer">
+                                <span class="brp-section-kicker">Legal handoff boundary</span>
+                                <p>{{ package.legal_readiness.legal_disclaimer }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <aside class="brp-key-figures" aria-label="{{ section.heading }} key figures">
+                        {% if section.key_figures %}
+                            {% for fig in section.key_figures %}
+                                <div class="brp-figure">
+                                    <span class="brp-figure-label">{{ fig.label }}</span>
+                                    <strong class="brp-figure-value">{{ fig.value }}</strong>
+                                    {% if fig.note %}
+                                        <span class="brp-figure-note">{{ fig.note }}</span>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="brp-figure">
+                                <span class="brp-figure-label">Data module</span>
+                                <strong class="brp-figure-value">Pending</strong>
+                                <span class="brp-figure-note">No key figures supplied for this section.</span>
+                            </div>
+                        {% endif %}
+                    </aside>
+                </div>
+
+                {% if section.provenance %}
+                    <div class="brp-provenance">
+                        Sources:
+                        {% for ref in section.provenance %}
+                            {{ ref.source }}{% if ref.source_id %}:{{ ref.source_id }}{% endif %}{% if not loop.last %}; {% endif %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </section>
+        {% endif %}
+    {% endfor %}
+
+</div>

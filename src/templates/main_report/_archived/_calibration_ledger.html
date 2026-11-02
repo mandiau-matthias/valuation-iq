@@ -1,0 +1,207 @@
+{# 
+    CALIBRATION LEDGER COMPONENT
+    Step-by-step breakdown of multiple derivation from Step 11 pipeline
+    
+    Expected context variables:
+    - calibration_steps: list of dicts with {label, multiple, impact, ev, ref, description}
+    - discount_waterfall: list from Step 11 multiple_pipeline (preferred source)
+    - multiple_pipeline: raw Step 11 pipeline stages
+    - base_multiple: float (market median / P50)
+    - applied_multiple: float (final calibrated multiple)
+    - sustainable_ebitda: float
+    - valuation: float
+    
+    Step 11 Pipeline Stages (bank-grade transparency):
+    1. Market Consensus (P50) - baseline from comparables
+    2. SME Calibration - micro/small business adjustment
+    3. Quality Calibration - data quality adjustment
+    4. Owner Concentration - key person risk discount
+    5. Size Discount - revenue/EBITDA size tier
+    6. Liquidity Discount (DLOM) - illiquidity premium
+    7. Final Multiple - applied to sustainable EBITDA
+    
+    Business Type Variations:
+    - Tech: May show IP premium adjustments
+    - Hospitality: May show seasonality notes
+    - Services: May show owner dependency emphasis
+#}
+
+{# Risk level descriptions - Matches React ValuationCalibrationPage #}
+{% set risk_descriptions = {
+    'LAAG': 'gediversifieerd klantenbestand, gedelegeerde operaties',
+    'GEMIDDELD': 'enige eigenaarafhankelijkheid, gedeeltelijke delegatie',
+    'HOOG': 'eigenaar-centrisch, belangrijke relaties in gevaar',
+    'LOW': 'gediversifieerd klantenbestand, gedelegeerde operaties',
+    'MEDIUM': 'enige eigenaarafhankelijkheid, gedeeltelijke delegatie',
+    'HIGH': 'eigenaar-centrisch, belangrijke relaties in gevaar'
+} %}
+
+{# Use discount_waterfall from Step 11 if available, otherwise use calibration_steps #}
+{% set active_steps = discount_waterfall if (discount_waterfall and discount_waterfall|length > 0) else calibration_steps|default([]) %}
+
+{# If no steps available, build from available data #}
+{% if not active_steps or active_steps|length == 0 %}
+    {% set active_steps = [] %}
+    {% if base_multiple and base_multiple > 0 %}
+        {% set _ = active_steps.append({
+            'label': 'Markt Consensus (P50 Mediaan)',
+            'multiple': base_multiple,
+            'impact': None,
+            'ev': sustainable_ebitda * base_multiple if sustainable_ebitda else 0,
+            'ref': '¹',
+            'description': 'Baseline uit vergelijkbare transacties'
+        }) %}
+    {% endif %}
+    
+    {# Add owner dependency if available #}
+    {% if owner_dependency_adjustment and owner_dependency_adjustment != 0 %}
+        {% set running_mult = base_multiple + owner_dependency_adjustment %}
+        {% set _risk_level = owner_dependency_risk_level|default('GEMIDDELD')|upper %}
+        {% set _risk_desc = risk_descriptions.get(_risk_level, 'enige eigenaarafhankelijkheid') %}
+        {% set _ = active_steps.append({
+            'label': 'Sleutelpersoon Risico',
+            'multiple': running_mult,
+            'impact': owner_dependency_adjustment,
+            'ev': sustainable_ebitda * running_mult if sustainable_ebitda else 0,
+            'ref': '',
+            'description': _risk_level ~ ' — ' ~ _risk_desc
+        }) %}
+    {% endif %}
+    
+    {# Add size discount if available #}
+    {% if size_discount_percentage and size_discount_percentage != 0 %}
+        {% set size_impact = -1 * (size_discount_percentage / 100) * (base_multiple|default(4)) %}
+        {% set running_mult = (active_steps[-1].multiple if active_steps else base_multiple) + size_impact %}
+        {% set _ = active_steps.append({
+            'label': 'Micro-KMO Korting',
+            'multiple': running_mult,
+            'impact': size_impact,
+            'ev': sustainable_ebitda * running_mult if sustainable_ebitda else 0,
+            'ref': '²',
+            'description': 'Tier: ' ~ (size_tier|default('MICRO'))
+        }) %}
+    {% endif %}
+    
+    {# Add final DLOM adjustment to reach applied_multiple #}
+    {% if applied_multiple and active_steps %}
+        {% set dlom_impact = applied_multiple - active_steps[-1].multiple %}
+        {% if dlom_impact != 0 %}
+            {% set _ = active_steps.append({
+                'label': 'Illiquiditeitskorting (DLOM)',
+                'multiple': applied_multiple,
+                'impact': dlom_impact,
+                'ev': sustainable_ebitda * applied_multiple if sustainable_ebitda else 0,
+                'ref': '³',
+                'description': 'Privé-ondernemingen verkopen trager'
+            }) %}
+        {% endif %}
+    {% endif %}
+{% endif %}
+
+{# Calculate running values for EV if not provided #}
+{% set _ebitda = sustainable_ebitda|default(0)|float %}
+
+{# Only render if we have steps #}
+{% if active_steps and active_steps|length > 0 %}
+<table style="font-size: 8pt; width: 100%;">
+    <thead>
+        <tr style="background: hsl(224 15% 20%); color: white;">
+            <th style="padding: 8pt 10pt; text-align: left; width: 40%;">Stap</th>
+            <th style="padding: 8pt 10pt; text-align: right; width: 15%;">Multiple</th>
+            <th style="padding: 8pt 10pt; text-align: right; width: 15%;">Impact</th>
+            <th style="padding: 8pt 10pt; text-align: right; width: 15%;">EV</th>
+            <th style="padding: 8pt 10pt; text-align: left; width: 15%;">Ref</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for step in active_steps %}
+        {% set step_multiple = step.multiple|default(0)|float %}
+        {% set step_impact = step.impact|default(0)|float %}
+        {% set step_ev = step.ev|default(0)|float %}
+        {# Calculate EV if not provided #}
+        {% if step_ev == 0 and step_multiple > 0 and _ebitda > 0 %}
+            {% set step_ev = _ebitda * step_multiple %}
+        {% endif %}
+        
+        <tr style="{% if loop.index is odd %}background: hsl(40 15% 98%);{% endif %}">
+            <td style="padding: 10pt;">
+                {{ loop.index }}. {{ step.label|default('Stap ' ~ loop.index) }}
+                {% if step.description %}
+                <span style="display: block; font-size: 7pt; color: hsl(224 10% 55%); margin-top: 2pt;">
+                    {{ step.description }}
+                </span>
+                {% endif %}
+            </td>
+            <td style="padding: 10pt; text-align: right; font-family: 'JetBrains Mono', monospace; {% if loop.first %}font-weight: 700;{% endif %}">
+                {{ step_multiple|safe_round(2) }}×
+            </td>
+            <td style="padding: 10pt; text-align: right; font-family: 'JetBrains Mono', monospace; color: {% if step_impact != 0 %}{% if step_impact < 0 %}hsl(6 55% 50%){% else %}hsl(143 40% 42%){% endif %}{% else %}hsl(224 10% 55%){% endif %};">
+                {% if step_impact != 0 %}{{ step_impact|safe_round(2) }}×{% else %}—{% endif %}
+            </td>
+            <td style="padding: 10pt; text-align: right; font-family: 'JetBrains Mono', monospace;">
+                {% if step_ev > 0 %}{{ step_ev|format_currency_compact }}{% else %}—{% endif %}
+            </td>
+            <td style="padding: 10pt; color: hsl(172 55% 45%);">
+                {{ step.ref|default('') }}
+            </td>
+        </tr>
+        {% endfor %}
+        
+        {# Conclusion Row - Premium Deep Slate with Teal accent #}
+        <tr class="calibration-conclusion">
+            <td colspan="5" style="padding: 0;">
+                <div class="calibration-conclusion-inner">
+                    {# Left: Label with teal accent bar #}
+                    <div class="calibration-conclusion-left">
+                        <div class="calibration-conclusion-bar"></div>
+                        <div>
+                            <div class="calibration-conclusion-label-small">Conclusie</div>
+                            <div class="calibration-conclusion-label">Ondernemingswaarde (EV)</div>
+                        </div>
+                    </div>
+                    
+                    {# Right: Values with clear hierarchy #}
+                    <div class="calibration-conclusion-right">
+                        <div class="calibration-conclusion-item">
+                            <div style="font-size: 7pt; color: hsl(224 10% 50%); margin-bottom: 2pt;">Multiple</div>
+                            <span style="font-size: 13pt; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: hsl(40 12% 75%);">
+                                {{ applied_multiple|safe_round(2) }}×
+                            </span>
+                        </div>
+                        <div class="calibration-conclusion-divider"></div>
+                        <div class="calibration-conclusion-item">
+                            <div style="font-size: 7pt; color: hsl(172 55% 55%); margin-bottom: 2pt;">Waarde</div>
+                            <span style="font-size: 18pt; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: hsl(172 55% 60%);">
+                                {{ valuation|format_currency_compact }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+{# Reference Notes #}
+<div style="margin-top: 16pt; font-size: 7pt; color: hsl(224 10% 50%); line-height: 1.6;">
+    <p style="margin: 0 0 4pt 0;">
+        ¹ Marktband en referentiemultiple gebaseerd op Europese KMO-transactiedata waar beschikbaar; peer-setdetails alleen wanneer expliciet in het dossier meegeleverd.
+        {% if benchmark_ev_ebitda_p25 and benchmark_ev_ebitda_p75 %}
+        P25/P75 percentielen: {{ benchmark_ev_ebitda_p25|safe_round(1) }}–{{ benchmark_ev_ebitda_p75|safe_round(1) }}×.
+        {% endif %}
+    </p>
+    <p style="margin: 0 0 4pt 0;">
+        ² Omvangs- en procesrisico zoals weergegeven in de kalibratiestappen; geen vaste omzetgrens in de voetnoot.
+    </p>
+    <p style="margin: 0;">
+        ³ Illiquiditeitskorting conform gangbare praktijk voor niet-beursgenoteerde ondernemingen (restricted-stock studies).
+    </p>
+</div>
+{% else %}
+{# No calibration steps available #}
+<div class="callout callout-warning" style="margin: 16pt 0;">
+    <p style="font-size: 8pt; margin: 0;">
+        Volledige kalibratiestappen niet beschikbaar — raadpleeg adviseur voor gedetailleerde multiple afleiding.
+    </p>
+</div>
+{% endif %}

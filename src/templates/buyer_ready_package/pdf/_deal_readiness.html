@@ -1,0 +1,71 @@
+{#
+    Deal-readiness advisory — PDF twin (BET-231/232/233 → BET-378).
+    Data-derived signals to prepare for diligence. Advisory only:
+    ValuationIQ owns the price; this section never restates it.
+    Only rendered when `package.deal_readiness` is present.
+#}
+
+{% set dr = package.deal_readiness %}
+<section class="brp-deal-readiness brp-pdf" data-section="deal_readiness"
+         data-module="deal-readiness"
+         style="page-break-inside: avoid;">
+    <h2>Deal-readiness advisory</h2>
+    <p class="brp-deal-readiness-disclaimer">
+        Data-derived signals to prepare for buyer diligence. Advisory only — they do not change the valuation.
+    </p>
+
+    {% if dr.transaction_risk_band %}
+        <p class="brp-deal-readiness-band" data-risk-band="{{ dr.transaction_risk_band }}">
+            <strong>Transaction risk:</strong> {{ dr.transaction_risk_band | capitalize }}
+        </p>
+    {% endif %}
+
+    {% if dr.revenue_quality %}
+        <div class="brp-deal-readiness-block" data-block="revenue-quality">
+            <h3>Revenue quality</h3>
+            <p>
+                {{ dr.revenue_quality.classification }}
+                <span class="brp-deal-readiness-tag">{{ dr.revenue_quality.band }}</span>
+                {% if dr.revenue_quality.quality_score is not none %}
+                    — score {{ '{:.0f}'.format(dr.revenue_quality.quality_score) }}
+                {% endif %}
+            </p>
+        </div>
+    {% endif %}
+
+    {% if dr.customer_concentration %}
+        <div class="brp-deal-readiness-block" data-block="customer-concentration">
+            <h3>Customer concentration</h3>
+            <p data-rag="{{ dr.customer_concentration.rag }}">
+                {{ dr.customer_concentration.band }}
+                {% if dr.customer_concentration.top3_customer_revenue_pct is not none %}
+                    — top-3 customers {{ '{:.0f}'.format(dr.customer_concentration.top3_customer_revenue_pct) }}% of revenue
+                {% endif %}
+            </p>
+            {% if dr.customer_concentration.indicative_valuation_discount %}
+                <p class="brp-deal-readiness-discount">
+                    Indicative concentration discount:
+                    {{ '{:.0f}'.format(dr.customer_concentration.indicative_valuation_discount.low_pct) }}%–{{ '{:.0f}'.format(dr.customer_concentration.indicative_valuation_discount.high_pct) }}%
+                </p>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {% if dr.deal_structure %}
+        <div class="brp-deal-readiness-block" data-block="deal-structure">
+            <h3>Deal structure</h3>
+            <p><strong>Key-person risk:</strong> {{ dr.deal_structure.key_person_risk }}</p>
+            <p>{{ dr.deal_structure.summary }}</p>
+            {% if dr.deal_structure.recommendations %}
+                <ul class="brp-deal-readiness-reco-list">
+                    {% for reco in dr.deal_structure.recommendations %}
+                        <li class="brp-deal-readiness-reco" data-priority="{{ reco.priority }}">
+                            <strong>{{ reco.title }}</strong>
+                            <span class="brp-deal-readiness-reco-rationale">{{ reco.rationale }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    {% endif %}
+</section>

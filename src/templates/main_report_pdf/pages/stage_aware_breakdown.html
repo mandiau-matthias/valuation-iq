@@ -1,0 +1,125 @@
+{#
+    TRANSPARENT CALCULATION BREAKDOWN — PDF TWIN (BET-463).
+
+    WeasyPrint-compatible mirror of
+    main_report/pages/stage_aware_breakdown.html. Hardcoded colors instead of
+    `hsl(var(--*))`; tables instead of CSS Flex/Grid where layout matters.
+
+    Same context contract: reads `stage_aware_breakdown.*` from context — see
+    `MainReportDataAggregator._build_stage_aware_breakdown_section_context`.
+
+    Honest-rendering invariants (enforced by the context builder; the template
+    must not re-introduce a forbidden point):
+      • display == 'band_only'      → range low – high only; point is null.
+      • display == 'point_and_band' → point AND band.
+      • null value/contribution     → em-dash.
+      • reconciles_to_headline      → gates the reconciliation claim.
+#}
+
+{% set sab = stage_aware_breakdown %}
+
+<div class="report-page" style="page-break-before: always;">
+    <div style="max-width: 760px; margin: 0 auto; padding: 40px 0;">
+        {# ── Header ── #}
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr>
+                <td style="width: 28px; vertical-align: middle;">
+                    <span style="background: hsl({{ teal_hsl }}); color: white; font-size: 11px; font-weight: 700; width: 28px; height: 28px; border-radius: 50%; display: inline-block; text-align: center; line-height: 28px;">&#8721;</span>
+                </td>
+                <td style="padding-left: 12px; vertical-align: middle;">
+                    <h2 style="font-size: 18px; font-weight: 700; color: hsl(224, 25%, 12%); margin: 0;">
+                        {{ sab.section_title }}
+                    </h2>
+                    <p style="font-size: 13px; color: hsl(224, 10%, 45%); margin: 4px 0 0 0;">
+                        {{ sab.section_subtitle }}
+                    </p>
+                </td>
+            </tr>
+        </table>
+
+        {# ── Stage / tier + headline (band-only vs point+band) ── #}
+        <div style="background: hsl(0, 0%, 100%); border: 1px solid hsl(224, 15%, 88%); border-radius: 12px; padding: 24px; margin-bottom: 20px;">
+            <table style="border-collapse: collapse; margin-bottom: 16px;">
+                <tr>
+                    {% if sab.stage %}
+                    <td style="padding-right: 8px;">
+                        <span style="background: hsl(224, 15%, 94%); color: hsl(224, 10%, 45%); font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em;">{{ sab.stage_label }}: {{ sab.stage }}</span>
+                    </td>
+                    {% endif %}
+                    {% if sab.tier_label or sab.tier %}
+                    <td>
+                        <span style="background: hsla({{ teal_hsl }}, 0.12); color: hsl({{ teal_hsl }}); font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em;">{{ sab.tier_label_heading }}: {{ sab.tier_label or sab.tier }}</span>
+                    </td>
+                    {% endif %}
+                </tr>
+            </table>
+
+            {% if sab.display == 'point_and_band' and sab.headline.point is not none %}
+            {# ── Point + band ── #}
+            <p style="font-size: 26px; font-weight: 700; color: hsl(224, 25%, 12%); margin: 0; font-family: 'JetBrains Mono', monospace;">
+                &#8364; {{ sab.headline.point | format_eur_amount }}
+            </p>
+            <p style="font-size: 13px; color: hsl(224, 10%, 45%); margin: 6px 0 0 0;">
+                &#8364; {{ sab.headline.low | format_eur_amount }} &#8211; &#8364; {{ sab.headline.high | format_eur_amount }}
+            </p>
+            {% else %}
+            {# ── Band only (indicative / public): NO point estimate ── #}
+            <p style="font-size: 22px; font-weight: 700; color: hsl(224, 25%, 12%); margin: 0; font-family: 'JetBrains Mono', monospace;">
+                &#8364; {{ sab.headline.low | format_eur_amount }} &#8211; &#8364; {{ sab.headline.high | format_eur_amount }}
+            </p>
+            {% endif %}
+        </div>
+
+        {# ── Methods table (label, weight %, contribution €) — payload order ── #}
+        {% if sab.methods %}
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 10px;">
+            <thead>
+                <tr style="border-bottom: 2px solid hsl(224, 15%, 88%);">
+                    <th style="text-align: left; padding: 8px 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(224, 10%, 45%);">{{ sab.methods_heading }}</th>
+                    <th style="text-align: right; padding: 8px 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(224, 10%, 45%);">{{ sab.weight_heading }}</th>
+                    <th style="text-align: right; padding: 8px 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(224, 10%, 45%);">{{ sab.contribution_heading }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in sab.methods %}
+                <tr style="border-bottom: 1px solid hsl(224, 15%, 92%);">
+                    <td style="text-align: left; padding: 8px 6px; color: hsl(224, 25%, 12%); font-weight: 600;">{{ m.label }}</td>
+                    <td style="text-align: right; padding: 8px 6px; color: hsl(224, 10%, 45%); font-family: 'JetBrains Mono', monospace;">{% if m.weight is not none %}{{ m.weight | format_factor_pct(0) }}{% else %}&#8212;{% endif %}</td>
+                    <td style="text-align: right; padding: 8px 6px; color: hsl(224, 25%, 12%); font-family: 'JetBrains Mono', monospace;">{% if m.contribution is not none %}&#8364; {{ m.contribution | format_eur_or_dash }}{% else %}&#8212;{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {# ── Reconciliation note — only claim re-derivation when true ── #}
+        <p style="font-size: 11px; line-height: 1.5; color: hsl(224, 10%, 45%); margin: 0 0 20px 0;">
+            {% if sab.reconciles_to_headline %}{{ sab.reconciles_note }}{% else %}{{ sab.indicative_blend_note }}{% endif %}
+        </p>
+        {% endif %}
+
+        {# ── Selection rationale ── #}
+        {% if sab.selection_rationale %}
+        <p style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(224, 10%, 45%); margin: 0 0 6px 0;">{{ sab.rationale_label }}</p>
+        <p style="font-size: 13px; line-height: 1.6; color: hsl(224, 25%, 12%); margin: 0 0 20px 0;">{{ sab.selection_rationale }}</p>
+        {% endif %}
+
+        {# ── Caveats — the honest stage disclaimer (caveats[0]) + the rest ── #}
+        {% if sab.caveats %}
+        <div style="background: hsl(224, 15%, 96%); border: 1px solid hsl(224, 15%, 88%); border-radius: 12px; padding: 16px 20px; margin-bottom: 16px;">
+            <p style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(224, 10%, 45%); margin: 0 0 8px 0;">{{ sab.caveats_label }}</p>
+            <ul style="margin: 0; padding-left: 18px;">
+                {% for c in sab.caveats %}
+                <li style="font-size: 12px; line-height: 1.6; color: hsl(224, 25%, 12%); margin: 0 0 4px 0;">{{ c }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {# ── Benchmark provenance / audit line ── #}
+        {% if sab.benchmark_provenance_ids %}
+        <p style="font-size: 11px; line-height: 1.5; color: hsl(224, 10%, 45%); margin: 0;">
+            {{ sab.provenance_label }}: {{ sab.benchmark_provenance_ids | join(', ') }}
+        </p>
+        {% endif %}
+    </div>
+</div>

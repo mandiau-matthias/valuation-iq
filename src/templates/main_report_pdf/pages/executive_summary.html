@@ -1,0 +1,1108 @@
+{% if is_fiscal_method_only|default(false) %}
+{% with fiscal_summary_surface="main_report_pdf" %}
+{% include "shared/fiscal_reference_summary.html" %}
+{% endwith %}
+{% else %}
+{# 
+    EXECUTIVE SUMMARY / METRICS PAGE
+    Page 2 of 5
+    
+    Contents:
+    - Valuation headline
+    - Key metrics grid (EBITDA, Multiple, Revenue)
+    - Industry benchmark comparison
+    - Sensitivity table
+    - EV vs Equity clarification
+    
+    All inline styles use hardcoded values for WeasyPrint compatibility.
+    Stats grid uses table layout instead of CSS Grid.
+#}
+
+<div class="a4-page executive-summary-page">
+    {% set is_sde_method = is_sde_methodology|default(has_sde|default(false)) %}
+    {% set is_asset_anchored_method = is_asset_anchored_methodology|default(is_asset_methodology|default(false)) %}
+    {% set is_asset_method = is_asset_anchored_method %}
+    {% set is_canonical_direct_equity = valuation_run_id|default(false) and enterprise_value_applicability|default('applicable') == 'not_applicable' %}
+    {% set is_yield_method = is_yield_methodology|default(false) %}
+    {# Page Header #}
+    {% include "main_report_pdf/partials/_page_header.html" %}
+    
+    {# Section Header with Confidence Indicator #}
+    <div class="section-header">
+        <table style="width: 100%; border-collapse: collapse; border: none; margin: 0;">
+            <tr>
+                <td style="border: none; padding: 0; vertical-align: baseline; background: transparent;">
+                    <span class="section-number">{{ executive_summary_section_number }}</span>
+                    <h1 class="section-title" style="margin: 0;">{{ t.exec_summary_title }}</h1>
+                </td>
+                <td style="border: none; padding: 0; text-align: right; vertical-align: top; background: transparent;">
+                    {# Yuki audit (May 2026): see screen twin for full rationale.
+                       The single "Hoog" chip used to imply overall confidence;
+                       we now render it explicitly as Datadekking and add an
+                       Engine-vertrouwen chip beside it. A Volatiele-EBITDA chip
+                       fires when the multi-year normalised spread ≥ 3×. #}
+
+                    {# Volatility chip — spread ≥ 3× OR loss-year present.
+                       Ratio renders only when at least 2 positive years exist;
+                       a signed ratio is not a useful UX element. #}
+                    {% if ebitda_volatility and ebitda_volatility.is_volatile and not is_asset_anchored_method %}
+                    {# A bare "NN,N×" sitting next to the applied
+                       EV/EBITDA multiple reads as a second headline multiple. Make the
+                       unit unambiguously a DISPERSION statistic — explicit
+                       "EBITDA-volatiliteit (piek/dal)" label and a "(piek/dal)"
+                       qualifier on the ratio — instead of the bare engine chip_label. #}
+                    {% set _en_vol = (locale|default('nl'))|lower == 'en' %}
+                    {% set _fr_vol = (locale|default('nl'))|lower == 'fr' %}
+                    {% set _is_growth_ramp_vol = ebitda_volatility.volatility_driver == 'growth_ramp' %}
+                    {% set _vol_hsl = '224, 12%, 45%' if _is_growth_ramp_vol else '37, 65%, 55%' %}
+                    <div style="display: inline-block; padding: 4pt 10pt; border-radius: 4pt;
+                                background: hsla({{ _vol_hsl }}, 0.12); margin-bottom: 2pt;">
+                        <span style="font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl({{ _vol_hsl }});">
+                            {% if _is_growth_ramp_vol %}{% if _fr_vol %}Croissance de l’EBITDA (démarrage → aujourd’hui){% elif _en_vol %}EBITDA growth (start-up → today){% else %}EBITDA-groei (opstart → nu){% endif %}{% else %}{% if _fr_vol %}Volatilité de l’EBITDA (pic/creux){% elif _en_vol %}EBITDA volatility (peak/trough){% else %}EBITDA-volatiliteit (piek/dal){% endif %}{% endif %}
+                        </span>
+                        {% if ebitda_volatility.range_ratio is not none and not _is_growth_ramp_vol %}
+                        <span style="font-size: 7pt; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl({{ _vol_hsl }});">
+                            {{ ebitda_volatility.range_ratio|safe_round(1) }}:1 {% if _fr_vol %}pic/creux{% elif _en_vol %}peak/trough{% else %}piek/dal{% endif %}
+                        </span>
+                        {% endif %}
+                        {# Reframe a young company's growth ramp ("€10K → €78K") so a large
+                           peak/trough ratio does not read as live earnings instability. #}
+                        {% if _is_growth_ramp_vol %}
+                        <span style="display: block; margin-top: 1pt; font-size: 6.5pt; color: hsl(224, 12%, 45%); line-height: 1.3;">{% if _fr_vol %}Reflète la croissance depuis une année de démarrage — pas une instabilité.{% elif _en_vol %}Reflects growth from a start-up year — not earnings instability.{% else %}Weerspiegelt groei vanaf een laag opstartjaar — geen instabiliteit.{% endif %}</span>
+                        {% elif ebitda_volatility_trough_note %}
+                        <span style="display: block; margin-top: 1pt; font-size: 6.5pt; color: hsl(37, 55%, 48%); line-height: 1.3;">{{ ebitda_volatility_trough_note }}</span>
+                        {% endif %}
+                    </div>
+                    <br>
+                    {% endif %}
+
+                    {# Data Coverage chip (renamed; was the single confidence indicator) #}
+                    {% set _quality = quality_level or data_quality_level|default(t.exec_indicative_label) %}
+                    {% set _is_high = _quality == t.data_quality_band_high %}
+                    {% set _is_medium = _quality == t.data_quality_band_medium %}
+                    <div style="display: inline-block; padding: 4pt 10pt; border-radius: 4pt;
+                                background: {% if _is_high %}hsla(143, 40%, 42%, 0.15){% elif _is_medium %}hsla(37, 65%, 55%, 0.15){% else %}hsla(224, 10%, 55%, 0.15){% endif %};">
+                        <span style="font-size: 6pt; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; color: hsl(224, 10%, 45%); display: block; margin-bottom: 1pt;">
+                            {{ t.exec_data_coverage_chip_label }}
+                        </span>
+                        <span style="font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+                                     color: {% if _is_high %}hsl(143, 40%, 42%){% elif _is_medium %}hsl(37, 65%, 55%){% else %}hsl(224, 10%, 55%){% endif %};">
+                            {{ _quality }}
+                        </span>
+                        {# Numeric coverage % is client-suppressed: it reads like
+                           a confidence score and could contradict the qualitative
+                           band. The qualitative label above stays. #}
+                        {% if show_engine_confidence|default(false) and data_quality_score is not none %}
+                        <span style="font-size: 7pt; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: {% if _is_high %}hsl(143, 40%, 42%){% elif _is_medium %}hsl(37, 65%, 55%){% else %}hsl(224, 10%, 55%){% endif %};">
+                            {{ data_quality_score|safe_round(0) }}%
+                        </span>
+                        {% endif %}
+                        {# Anchor the bare coverage band so it reads as "how complete the
+                           supplied inputs are" — not a grade of the business itself. #}
+                        {% set _en_dc = (locale|default('nl'))|lower == 'en' %}
+                        {% set _fr_dc = (locale|default('nl'))|lower == 'fr' %}
+                        <span style="display: block; margin-top: 1pt; font-size: 6pt; color: hsl(224, 10%, 50%); line-height: 1.3;">{% if _fr_dc %}selon les données fournies{% elif _en_dc %}based on supplied figures{% else %}o.b.v. aangeleverde cijfers{% endif %}</span>
+                    </div>
+
+                    {# Model confidence chip (Step-9, coloured on actual score).
+                       Thresholds mirror Step-9's own band mapping in
+                       step_9_score_calculator.py: HIGH ≥ 80, MEDIUM ≥ 60.
+                       Client-suppressed (report clean-up, May 2026): a bare
+                       model confidence % reads as doubt to a seller and adds
+                       no value to the advisor↔client conversation. The model
+                       still computes it (logs / API); set show_engine_confidence
+                       to re-enable for internal / advisor-only views. #}
+                    {% if show_engine_confidence|default(false) and overall_confidence_score is defined and overall_confidence_score is not none %}
+                    {% set _conf = (overall_confidence_score|float) %}
+                    {% set _conf_is_high = _conf >= 80 %}
+                    {% set _conf_is_medium = _conf >= 60 and _conf < 80 %}
+                    <div style="display: inline-block; padding: 4pt 10pt; border-radius: 4pt; margin-left: 4pt;
+                                background: {% if _conf_is_high %}hsla(143, 40%, 42%, 0.15){% elif _conf_is_medium %}hsla(37, 65%, 55%, 0.15){% else %}hsla(6, 55%, 50%, 0.15){% endif %};">
+                        <span style="font-size: 6pt; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; color: hsl(224, 10%, 45%); display: block; margin-bottom: 1pt;">
+                            {{ t.exec_engine_confidence_chip_label }}
+                        </span>
+                        <span style="font-size: 8pt; font-weight: 700; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;
+                                     color: {% if _conf_is_high %}hsl(143, 40%, 42%){% elif _conf_is_medium %}hsl(37, 65%, 55%){% else %}hsl(6, 55%, 50%){% endif %};">
+                            {{ _conf|safe_round(0) }}%
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    {% if data_inputs %}
+                    <div style="font-size: 6pt; color: hsl(224, 10%, 45%); max-width: 240pt; text-align: right; margin-top: 2pt;">
+                        {% if source_policy_report|default(false) %}{{ source_policy_data_inputs_caption }}{% else %}{{ data_inputs|join(' • ') }}{% endif %}
+                        {% if comparables_count and comparables_count > 0 and not source_policy_report|default(false) %}
+                        • {{ comparables_count }} {{ t.exec_comparable_transactions }}
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if ebitda_volatility and ebitda_volatility.is_volatile and not is_asset_anchored_method %}
+                    {# Locale-aware (see screen twin rationale). Loss-year
+                       branch uses a different sentence so the line reads
+                       correctly when one bound is non-positive. #}
+                    {% set _vol_template = t.exec_volatility_chip_note_loss_year_template
+                                            if ebitda_volatility.has_loss_year
+                                            else t.exec_volatility_chip_note_template %}
+                    <div style="font-size: 6pt; color: hsl(37, 65%, 45%); max-width: 240pt; text-align: right; font-style: italic; margin-top: 1pt;">
+                        {{ _vol_template.format(
+                            min=ebitda_volatility.min_ebitda|format_currency_compact,
+                            max=ebitda_volatility.max_ebitda|format_currency_compact,
+                            min_year=ebitda_volatility.min_year,
+                            max_year=ebitda_volatility.max_year,
+                        ) }}
+                    </div>
+                    {% if ebitda_volatility.volatility_driver == 'normalization' %}
+                    <div style="font-size: 6pt; color: hsl(37, 55%, 48%); max-width: 240pt; text-align: right; font-style: italic; margin-top: 1pt;">
+                        {{ t.exec_volatility_chip_note_normalization_template.format(
+                            max_year=ebitda_volatility.max_year,
+                        ) }}
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    {# Methodology Badge #}
+    <div style="margin-bottom: 8pt;">
+        <span class="badge badge-primary" style="font-size: 7pt;">
+            {% if client_presentation_method_label|default(false) %}
+            {{ client_presentation_method_label }}
+            {% elif has_weighted_synthesis %}
+            {{ synthesis_badge_label|default('Waarderingssynthese') }}
+            {# Pass-9: lens tracks ``is_adaptive_only_path``, not numeric ``is_hybrid``. #}
+            {% elif is_adaptive_only_path|default(false) %}
+            {# VAL-2026-35A4: badge discloses the lens when DCF was excluded.
+               Asset/yield-anchored dossiers must win BEFORE the multiples-only
+               lens, otherwise an asset-heavy holding flagged
+               is_adaptive_multiples_only shows "· Marktbenadering" while every
+               other surface says "Substantiebenadering". #}
+            {% if is_yield_method %}
+            {{ t.exec_methodology_badge_yield }}
+            {% elif is_asset_anchored_method %}
+            {{ t.exec_methodology_badge_asset }}
+            {% elif is_adaptive_multiples_only|default(false) %}
+            {{ t.exec_methodology_badge_adaptive_multiples_only }}
+            {% else %}
+            {{ t.exec_methodology_badge_adaptive }}
+            {% endif %}
+            {% elif primary_method_label is defined and primary_method_label %}
+            {{ primary_method_label }}
+            {% elif is_hybrid %}
+            {{ t.exec_methodology_badge_hybrid }}
+            {% elif is_dcf_only_methodology %}
+            {{ t.exec_methodology_badge_dcf }}
+            {% elif is_sde_method %}
+            {{ t.exec_methodology_badge_sde }}
+            {% elif is_asset_anchored_method %}
+            {% if is_yield_method %}{{ t.exec_methodology_badge_yield }}{% else %}{{ t.exec_methodology_badge_asset }}{% endif %}
+            {% else %}
+            {{ t.exec_methodology_badge_multiples }}
+            {% endif %}
+        </span>
+        {% if show_engine_confidence|default(false) and overall_confidence_score %}
+        <span style="font-size: 7pt; color: hsl(224, 10%, 45%); margin-left: 8pt;">
+            {{ t.exec_confidence_score }}: {{ overall_confidence_score|safe_round(0) }}%
+        </span>
+        {% endif %}
+    </div>
+
+    {# Valuation Goal — custom purpose statement from accountant #}
+    {% if valuation_goal %}
+    <p style="font-size: 8.5pt; line-height: 1.55; color: hsl(225, 18%, 12%); margin: 0 0 8pt 0; padding: 8pt 12pt; background: hsl(224, 15%, 97%); border-radius: 6pt; border-left: 3pt solid hsl({{ teal_hsl }});">
+        <strong>{{ t.exec_goal_label }}:</strong> {{ valuation_goal }}
+    </p>
+    {% endif %}
+
+    {% if valuation_run_id|default(false) %}
+    {% include "shared/components/canonical_assessment_intro.html" %}
+    {% else %}
+    <p class="lead" style="font-size: 11pt; line-height: 1.55; margin-bottom: 8pt;">
+        {# Whitespace control mirrors the screen twin — see comment there. #}
+        {% if is_holding_sotp_report|default(false) %}{% if (locale|default('nl')|lower)[:2] == 'fr' %}Cette valorisation présente les capitaux propres indicatifs consolidés de{% elif (locale|default('nl')|lower)[:2] == 'en' %}This valuation presents the indicative consolidated equity value of{% else %}Deze waardering geeft de indicatieve geconsolideerde eigenvermogenswaarde van{% endif %} {{ company_name }} {{ t.exec_as_of }} {{ valuation_date }}, {% if (locale|default('nl')|lower)[:2] == 'fr' %}établie par somme des parties avec pondération des participations et éliminations vérifiées{% elif (locale|default('nl')|lower)[:2] == 'en' %}calculated by sum of the parts with ownership weighting and verified eliminations{% else %}berekend via sum of the parts met eigendomsweging en geverifieerde eliminaties{% endif %}
+        {%- elif is_asset_method or is_yield_method %}{% if (locale|default('nl'))|lower == 'fr' %}Cette valorisation donne la valeur indicative de{% elif (locale|default('nl'))|lower == 'en' %}This valuation gives the indicative value of{% else %}Deze bedrijfsschatting geeft de indicatieve waarde van{% endif %} {{ company_name }} {{ t.exec_as_of }} {{ valuation_date }}, {{ t.exec_description_calculated_via }}{% if is_yield_method %} {{ t.exec_methodology_yield }}{% else %} {{ t.exec_methodology_asset }}{% endif %}
+        {%- else %}{% if report_scope|default('standard') == 'client_indicative' and financial_reference_date %}{% if (locale|default('nl'))|lower == 'fr' %}Cette estimation donne une valeur d'entreprise indicative sur la base de la position financière et des résultats au {{ financial_reference_date|format_date(locale|default('nl')) }} de {{ company_name }}. Le rapport a été établi le {{ valuation_date }}. Aucun chiffre intermédiaire 2026 n'est intégré. Calculée via{% elif (locale|default('nl'))|lower == 'en' %}This business estimate gives an indicative enterprise value based on the financial position and results as at {{ financial_reference_date|format_date(locale|default('nl')) }} of {{ company_name }}. The report was prepared on {{ valuation_date }}. No 2026 interim figures are incorporated. Calculated via{% else %}Deze bedrijfsschatting geeft een indicatieve ondernemingswaarde van {{ company_name }} op basis van de financiële positie en resultaten per {{ financial_reference_date|format_date(locale|default('nl')) }}. Het rapport is opgesteld op {{ valuation_date }}. Er zijn geen tussentijdse cijfers over 2026 verwerkt. Berekend via{% endif %}{% else %}{{ t.exec_description_intro }} {{ company_name }} {{ t.exec_as_of }} {{ valuation_date }}, {{ t.exec_description_calculated_via }}{% endif %}{%- if client_presentation_method_label|default(false) %} {{ client_presentation_method_label }}
+        {%- elif has_weighted_synthesis %} {{ synthesis_methodology_label|default(synthesis_badge_label) }}
+        {%- elif is_asset_anchored_method %} {% if is_yield_method %}{{ t.exec_methodology_yield }}{% else %}{{ t.exec_methodology_asset }}{% endif %}
+        {%- elif is_adaptive_only_path|default(false) %}{%- if is_adaptive_multiples_only|default(false) %} {{ t.exec_methodology_adaptive_multiples_only }}{%- else %} {{ t.exec_methodology_adaptive }}{%- endif %}
+        {%- elif is_hybrid %} {{ t.exec_methodology_hybrid }}
+        {%- elif is_dcf_only_methodology %} {{ t.exec_methodology_dcf }}
+        {%- elif is_sde_method %} {{ t.exec_methodology_sde }}
+        {%- else %} {{ t.exec_methodology_multiples }}{%- endif -%}{%- endif -%}.
+    </p>
+    {% endif %}
+
+    {% if valuation_run_id|default(false) %}
+    {% set _exec_ev_range_low = enterprise_value_low %}
+    {% set _exec_ev_range_high = enterprise_value_high %}
+    {% set _exec_ev_range_show = enterprise_value_low is defined and enterprise_value_low is not none and enterprise_value_high is defined and enterprise_value_high is not none and enterprise_value_low < enterprise_value_high %}
+    {% set _headline_value = synthesis_blended_value if has_weighted_synthesis and synthesis_blended_value is not none and not dcf_ineligible_scenario else enterprise_value_mid %}
+    {% include "shared/components/canonical_value_summary.html" %}
+    {% else %}
+    {# Analytical Narrative — Aurora-aligned cream-callout (see screen twin).
+       With synthesis: only show EV spread from contributor equity min/max — never orchestrator band with a synthesis midpoint. #}
+    {# Defensive guard: tolerate callers that omit valuation_low/high (Undefined).
+       Ineligible-DCF guardrail: headline is the market leg, so use the market band. #}
+    {% if valuation_run is defined and valuation_run %}
+        {% set _exec_ev_range_low = enterprise_value_low %}
+        {% set _exec_ev_range_high = enterprise_value_high %}
+        {% set _exec_ev_range_show = enterprise_value_low is not none and enterprise_value_high is not none and enterprise_value_low < enterprise_value_high %}
+    {% elif has_weighted_synthesis and not dcf_ineligible_scenario %}
+        {% if synthesis_valuation_low is defined and synthesis_valuation_high is defined
+              and synthesis_valuation_low is not none and synthesis_valuation_high is not none
+              and synthesis_valuation_low < synthesis_valuation_high %}
+            {% set _exec_ev_range_low = synthesis_valuation_low %}
+            {% set _exec_ev_range_high = synthesis_valuation_high %}
+            {% set _exec_ev_range_show = true %}
+        {% else %}
+            {% set _exec_ev_range_low = none %}
+            {% set _exec_ev_range_high = none %}
+            {% set _exec_ev_range_show = false %}
+        {% endif %}
+    {% else %}
+        {% set _exec_ev_range_low = valuation_low %}
+        {% set _exec_ev_range_high = valuation_high %}
+        {# Also requires ``valuation_band_is_meaningful`` (aggregator-set,
+           half-spread ≥ 2 %) so a band thinner than display rounding does
+           not render as a collapsed range after compact rounding (when
+           Step-11 multiples → metric × multiple_low ≈ metric × multiple_high). #}
+        {% set _exec_ev_range_show =
+            _exec_ev_range_low is defined and _exec_ev_range_low is not none
+            and _exec_ev_range_high is defined and _exec_ev_range_high is not none
+            and _exec_ev_range_low < _exec_ev_range_high
+            and valuation_band_is_meaningful|default(true) %}
+        {# In DCF-only mode
+           the engine range printed base == low ("€23,7M (bandbreedte: €23,7M —
+           €32,1M)"), a band the displayed WACC × terminal-growth grid cannot
+           produce. Derive the narrative band from the SAME sensitivity matrix
+           whose marked base cell equals the headline EV (min/max surfaced by
+           dcf_section.py), so band and grid can never diverge again. #}
+        {% if is_dcf_only_methodology
+              and dcf_ev_band_low is defined and dcf_ev_band_low
+              and dcf_ev_band_high is defined and dcf_ev_band_high
+              and (dcf_ev_band_low|float) < (dcf_ev_band_high|float)
+              and (dcf_ev_band_low|float) <= (valuation|default(0)|float)
+              and (valuation|default(0)|float) <= (dcf_ev_band_high|float) %}
+            {% set _exec_ev_range_low = dcf_ev_band_low|float %}
+            {% set _exec_ev_range_high = dcf_ev_band_high|float %}
+            {% set _exec_ev_range_show = true %}
+        {% endif %}
+    {% endif %}
+    {% set _headline_value = enterprise_value_mid if valuation_run is defined and valuation_run else (synthesis_blended_value if has_weighted_synthesis and synthesis_blended_value and not dcf_ineligible_scenario else valuation) %}
+    {# Panel MAJOR (D2): on asset/yield dossiers the exec narrative led with the
+       gross EV/property value (€2,4M) while the cover hero leads with EQUITY
+       (€2,5M), and BOTH printed the same 1-sig-fig band — so the lead flipped
+       between EV and equity. Make the narrative lead with EQUITY to match the
+       cover hero, and name the gross figure explicitly (so no bare "EV" band
+       does double duty). Multiples/DCF/hybrid cases are unchanged (they lead
+       with EV as before). #}
+    {% set _exec_lead_is_equity = (is_holding_sotp_report|default(false) or is_yield_method or is_asset_method) and equity_value is not none %}
+    {% set _exec_lead_value = equity_value if _exec_lead_is_equity else _headline_value %}
+    {% set _exec_lead_low = equity_value_low if _exec_lead_is_equity else _exec_ev_range_low %}
+    {% set _exec_lead_high = equity_value_high if _exec_lead_is_equity else _exec_ev_range_high %}
+    {% set _exec_lead_range_show = (_exec_lead_low is not none and _exec_lead_high is not none and _exec_lead_low < _exec_lead_high and equity_value_band_is_meaningful|default(true)) if _exec_lead_is_equity else _exec_ev_range_show %}
+    <div style="margin: 4pt 0 8pt 0; padding: 8pt 10pt; border-radius: 6pt; border: 1pt solid hsl(224, 10%, 91%); background: hsl(40, 15%, 98%); page-break-inside: avoid; break-inside: avoid;">
+        <p style="margin: 0; font-size: 7.5pt; line-height: 1.5; color: hsl(224, 12%, 35%);">
+        {% if valuation_run is defined and valuation_run %}
+        {% include "shared/canonical_saved_summary.html" %}
+        {% else %}
+            {% if is_holding_sotp_report|default(false) %}
+            {% if (locale|default('nl')|lower)[:2] == 'fr' %}Après pondération des participations et éliminations vérifiées, la conclusion SOTP en capitaux propres s'élève à{% elif (locale|default('nl')|lower)[:2] == 'en' %}After ownership weighting and verified eliminations, the SOTP equity conclusion comes to{% else %}Na eigendomsweging en geverifieerde eliminaties bedraagt de SOTP-conclusie voor het eigen vermogen{% endif %}
+            {% elif _exec_lead_is_equity %}
+            {# Equity-led basis sentence for asset/yield, mirroring the cover hero. #}
+            {% if (locale|default('nl'))|lower == 'fr' %}Sur la base de ce profil, la valeur indicative des capitaux propres s’élève à{% elif (locale|default('nl'))|lower == 'en' %}Based on this profile the indicative equity value comes to{% else %}Op basis van dit profiel komt het indicatief eigen vermogen uit op{% endif %}
+            {% else %}{% if is_disclosed_external_market_fallback|default(false) %}{% if (locale|default('nl')|lower)[:2] == 'fr' %}Sur la base de l'EBITDA publié et de la référence externe expressément acceptée, la valeur d'entreprise indicative s'élève à{% elif (locale|default('nl')|lower)[:2] == 'en' %}Using reported EBITDA and the expressly accepted external reference, the indicative enterprise value comes to{% else %}Op basis van de gerapporteerde EBITDA en de uitdrukkelijk aanvaarde externe referentie komt de indicatieve ondernemingswaarde uit op{% endif %}{% elif has_weighted_synthesis %}{% if synthesis_value_basis == 'enterprise_value' %}{% if (locale|default('nl'))|lower == 'fr' %}Sur la base de la pondération des méthodes définie par le conseiller, la valeur d’entreprise pondérée s’établit à{% elif (locale|default('nl'))|lower == 'en' %}Based on the advisor-defined method weighting, the weighted enterprise value comes to{% else %}Op basis van de vastgelegde methodeweging komt de gewogen ondernemingswaarde uit op{% endif %}{% else %}{% if (locale|default('nl'))|lower == 'fr' %}Sur la base de la pondération des méthodes définie par le conseiller, la valeur des capitaux propres pondérée s'établit à{% elif (locale|default('nl'))|lower == 'en' %}Based on the advisor-defined method weighting, the weighted equity value comes to{% else %}Op basis van de door de adviseur ingestelde methodeweging komt de gewogen eigenvermogenswaarde uit op{% endif %}{% endif %}{% elif ((is_hybrid and not is_adaptive_multiples_only|default(false)) or (is_adaptive_only_path|default(false) and not is_adaptive_multiples_only|default(false))) and t.exec_narrative_basis_hybrid %}{{ t.exec_narrative_basis_hybrid }}{% elif is_dcf_only_methodology and not has_weighted_synthesis and t.exec_narrative_basis_dcf %}{{ t.exec_narrative_basis_dcf }}{% else %}{{ t.exec_narrative_basis }}{% endif %}{% endif %}
+            <strong style="color: hsl(225, 18%, 12%);">{{ _exec_lead_value|format_currency_compact }}</strong>{% if _exec_lead_range_show %}
+            {# On a reported (pre-normalisation) basis "bandbreedte" oversells the
+               span — it is model sensitivity, not a statistical range. #}
+            ({% if source_policy_report|default(false) %}{{ range_provenance_disclosure.kind_label }}{% elif headline_ebitda_is_reported|default(false) %}{% if (locale|default('nl'))|lower == 'fr' %}sensibilité du modèle avant normalisations{% elif (locale|default('nl'))|lower == 'en' %}model sensitivity before normalisations{% else %}modelgevoeligheid vóór normalisaties{% endif %}{% else %}{{ t.exec_range_label|lower }}{% endif %}: {{ _exec_lead_low|format_currency_compact }} — {{ _exec_lead_high|format_currency_compact }}){% endif %}.
+            {% if is_holding_sotp_report|default(false) %}{% if (locale|default('nl')|lower)[:2] == 'fr' %}Il s'agit de la valeur finale des capitaux propres après les ponts par entité, et non d'une valeur d'entreprise brute.{% elif (locale|default('nl')|lower)[:2] == 'en' %}This is final equity after entity-level bridges, not a gross enterprise value.{% else %}Dit is het finale eigen vermogen na bruggen per entiteit, niet de bruto ondernemingswaarde.{% endif %}{% elif is_yield_method %}{% if (locale|default('nl'))|lower == 'fr' %}Ce montant est obtenu après déduction de la dette nette de la valeur de marché immobilière (loyer ÷ cap-rate, avec plancher NAV) de {{ valuation|format_currency_compact }}.{% elif (locale|default('nl'))|lower == 'en' %}This is after deducting net debt from the property market value (rent ÷ cap-rate, with a NAV floor) of {{ valuation|format_currency_compact }}.{% else %}Dit is na aftrek van nettoschuld van de vastgoed-marktwaarde (huur ÷ cap-rate, met NAV-vloer) van {{ valuation|format_currency_compact }}.{% endif %}{% elif is_asset_method %}{% if (locale|default('nl'))|lower == 'fr' %}Ce montant est obtenu après déduction de la dette nette et de l’impôt différé de la valeur substantielle brute (actifs ajustés) de {{ valuation|format_currency_compact }}.{% elif (locale|default('nl'))|lower == 'en' %}This is after deducting net debt and deferred tax from the gross substance value (adjusted assets) of {{ valuation|format_currency_compact }}.{% else %}Dit is na aftrek van nettoschuld en latente belasting van de bruto substantiewaarde (gecorrigeerde activa) van {{ valuation|format_currency_compact }}.{% endif %}{% elif has_weighted_synthesis|default(false) %}{% if synthesis_value_basis == 'enterprise_value' %}{% if (locale|default('nl'))|lower == 'fr' %}Les composantes DCF et marché sont pondérées en valeur d’entreprise. La trésorerie et la dette financière ne sont appliquées qu’une fois dans le pont distinct vers les capitaux propres.{% elif (locale|default('nl'))|lower == 'en' %}The DCF and market legs are weighted on enterprise value. Cash and financial debt are applied only once in the separate equity bridge.{% else %}De DCF- en marktcomponent worden gewogen op ondernemingswaardebasis. Kas en financiële schuld worden pas één keer verwerkt in de afzonderlijke brug naar het eigen vermogen.{% endif %}{% else %}{% if (locale|default('nl'))|lower == 'fr' %}Ce montant est la valeur des capitaux propres pondérée de la synthèse — chaque composante méthodologique est déjà après compensation de la dette/trésorerie nette ; ce n'est pas une valeur d'entreprise.{% elif (locale|default('nl'))|lower == 'en' %}This is the weighted equity value of the synthesis — each methodology leg is already after netting debt/cash; it is not an enterprise value.{% else %}Dit is de gewogen eigenvermogenswaarde van de synthese — elk methode-been is reeds ná verrekening van de netto schuld-/kaspositie; dit is geen ondernemingswaarde (EV).{% endif %}{% endif %}{% else %}{{ t.exec_narrative_ev_note }}{% endif %}
+            {# Surface the surplus-cash framing next to the
+               equity headline (cash normally swept pre-completion cash-free/debt-free). #}
+            {% if surplus_cash_note %} {{ surplus_cash_note }}{% endif %}
+            {# Reviewer-mandated prominence: on a reported basis the reader must
+               see on page 2 — not only in the back matter — that unquantified
+               normalisations can move the value beyond the printed sensitivity. #}
+            {% if headline_ebitda_is_reported|default(false) %}
+            <strong style="color: hsl(225, 18%, 12%);">{% if (locale|default('nl'))|lower == 'fr' %}Des normalisations non quantifiées peuvent porter la valeur finale sensiblement au-delà de cette sensibilité du modèle.{% elif (locale|default('nl'))|lower == 'en' %}Unquantified normalisations can move the final value materially beyond this model sensitivity.{% else %}Niet-gekwantificeerde normalisaties kunnen de uiteindelijke waarde materieel buiten deze modelgevoeligheid brengen.{% endif %}</strong>
+            {% endif %}
+        {% endif %}
+    </p>
+    </div>
+
+    {% endif %}
+
+    {# Ineligible-DCF guardrail: lead with the market leg above; surface the advisor's
+       weighted blend here as a clearly-labelled scenario, never as the conclusion. #}
+    {% if dcf_ineligible_scenario and synthesis_blended_value %}
+    <div style="margin: 4pt 0 8pt 0; padding: 8pt 10pt; border-radius: 6pt; border: 1pt solid hsl(224, 10%, 91%); border-left: 3pt solid hsl(35, 60%, 45%); background: hsl(40, 30%, 98%); page-break-inside: avoid; break-inside: avoid;">
+        <p style="margin: 0 0 2pt 0; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(225, 18%, 12%);">
+            {% if (locale|default('nl'))|lower == 'fr' %}Scénario pondéré par le conseiller{% elif (locale|default('nl'))|lower == 'en' %}Advisor-weighted scenario{% else %}Adviseur-gewogen scenario{% endif %}
+        </p>
+        <p style="margin: 0; font-size: 7pt; line-height: 1.5; color: hsl(224, 12%, 35%);">
+            {% if (locale|default('nl'))|lower == 'fr' %}Mélange pondéré{% elif (locale|default('nl'))|lower == 'en' %}Weighted blend{% else %}Gewogen mix{% endif %}{% if synthesis_weight_compact %} ({{ synthesis_weight_compact }}){% endif %} : <strong style="color: hsl(225, 18%, 12%);">{{ synthesis_blended_value|format_currency_compact }}</strong>. {% if (locale|default('nl'))|lower == 'fr' %}La branche DCF n’atteint pas le seuil d’éligibilité du moteur (historique / horizon de prévision insuffisant) ; la valeur de marché ci-dessus reste le repère principal et ce mélange est un scénario, pas la conclusion.{% elif (locale|default('nl'))|lower == 'en' %}The DCF leg does not meet the engine’s eligibility threshold (insufficient history / forecast horizon), so the market value above leads and this blend is a scenario, not the conclusion.{% else %}De DCF-component haalt de geschiktheidsdrempel van de engine niet (onvoldoende historiek / prognosehorizon); de marktwaarde hierboven blijft het hoofdanker en deze mix is een scenario, niet de conclusie.{% endif %}
+        </p>
+    </div>
+    {% endif %}
+
+    {% if has_official_financials or (official_variance_comparison_rows and official_variance_comparison_rows|length > 0) or official_trust_match_eligible %}
+    <div style="margin: 0 0 8pt 0; padding: 8pt 12pt; background: hsl(224, 15%, 97%); border-radius: 6pt; border: 1px solid hsl(224, 10%, 88%); border-left: 3pt solid hsl(224, 12%, 42%);">
+        <table style="width: 100%; border-collapse: collapse; border: none; margin: 0;">
+            <tr>
+                <td style="border: none; padding: 0; background: transparent; vertical-align: top;">
+                    <p style="margin: 0 0 3pt 0; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(225, 18%, 12%);">
+                        {{ t.exec_official_registry_head }}
+                    </p>
+                    <p style="margin: 0; font-size: 6.5pt; color: hsl(224, 10%, 45%);">
+                        {% if official_filing_year %}{{ t.exec_official_filing_year_label }} {{ official_filing_year }} · {% endif %}
+                        {{ t.exec_official_source_staatsblad }}
+                    </p>
+                </td>
+                <td style="border: none; padding: 0; background: transparent; text-align: right; vertical-align: top;">
+                    {% if official_verification_label %}
+                    <span style="display: inline-block; padding: 3pt 8pt; border-radius: 10pt; font-size: 6.5pt; font-weight: 700; background: {% if official_verification_state == 'verified' %}hsla(143, 40%, 42%, 0.15){% elif official_verification_state == 'partial' %}hsla(37, 65%, 55%, 0.15){% else %}hsla(224, 10%, 55%, 0.15){% endif %}; color: {% if official_verification_state == 'verified' %}hsl(143, 40%, 42%){% elif official_verification_state == 'partial' %}hsl(37, 65%, 55%){% else %}hsl(224, 10%, 55%){% endif %};">
+                        {{ official_verification_label }}
+                    </span>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+
+        {% if has_official_financials %}
+        <p style="margin: 6pt 0 0 0; font-size: 6.5pt; color: hsl(225, 18%, 12%);">
+            {% if official_revenue is not none %}<strong>{{ t.exec_revenue_label }}:</strong> {{ official_revenue|format_currency }}{% endif %}
+            {% if official_ebitda is not none %} • <strong>{{ t.cover_ebitda_label }}:</strong> {{ official_ebitda|format_currency }}{% endif %}
+            {% if official_total_assets is not none %} • <strong>{{ t.exec_official_total_assets_label }}:</strong> {{ official_total_assets|format_currency }}{% endif %}
+            {% if official_equity is not none %} • <strong>{{ t.exec_official_equity_label }}:</strong> {{ official_equity|format_currency }}{% endif %}
+        </p>
+        {% endif %}
+
+        {% if official_variance_comparison_rows and official_variance_comparison_rows|length > 0 %}
+        <p style="margin: 8pt 0 3pt 0; font-size: 6.5pt; font-weight: 700; color: hsl(225, 18%, 12%);">{{ t.exec_dd_accountant_vs_official_title }}</p>
+        <table style="width: 100%; border-collapse: collapse; font-size: 6.5pt; margin-top: 2pt;">
+            <thead>
+                <tr style="border-bottom: 1px solid hsl(224, 10%, 82%);">
+                    <th style="text-align: left; padding: 3pt 8pt;">{{ t.exec_official_dd_line_item }}</th>
+                    <th style="text-align: right; padding: 3pt 8pt;">{{ t.exec_official_dd_col_official }}</th>
+                    <th style="text-align: right; padding: 3pt 8pt;">{{ t.exec_dd_col_accountant }}</th>
+                    <th style="text-align: right; padding: 3pt 8pt;">{{ t.exec_official_dd_delta_pct }}</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for row in official_variance_comparison_rows %}
+                <tr style="border-bottom: 1px solid hsl(224, 10%, 82%);">
+                    <td style="padding: 3pt 8pt;">{{ row.label }}</td>
+                    <td style="text-align: right; padding: 3pt 8pt;">{{ row.official|format_currency }}</td>
+                    <td style="text-align: right; padding: 3pt 8pt;">{% if row.user is not none %}{{ row.user|format_currency }}{% else %}—{% endif %}</td>
+                    <td style="text-align: right; padding: 3pt 8pt;">{% if row.variance_pct is not none %}{{ row.variance_pct|safe_round(1) }}%{% else %}—{% endif %}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% if official_variance_severity == 'hard' %}
+        <p style="margin: 4pt 0 0 0; font-size: 6.5pt; color: hsl(224, 10%, 45%);">{{ t.exec_official_variance_hard_note }}</p>
+        {% endif %}
+        {% endif %}
+
+        {% if official_trust_match_eligible %}
+        <p style="margin: 6pt 0 0 0; font-size: 6.5pt; color: hsl(143, 40%, 38%); font-weight: 700; line-height: 1.45;">
+            {{ t.exec_official_trust_match_verified }}
+        </p>
+        {% endif %}
+
+        {% if official_variance_state and official_variance_state not in ('not_started', 'pending', 'error', 'failed') %}
+        <p style="margin: 4pt 0 0 0; font-size: 6.5pt; color: hsl(224, 10%, 45%);">
+            <strong>{{ t.exec_official_variance_title }}:</strong> {{ official_variance_state }}
+            {% if official_requires_explanation %} • {{ t.exec_official_explanation_required }}{% endif %}
+            {% if official_variance_explanation %} • {{ official_variance_explanation }}{% endif %}
+        </p>
+        {% endif %}
+
+        {% if official_data_health and official_data_health.message %}
+        {% set _dh_status = official_data_health.status|default(official_data_health.state|default('ok')) %}
+        {% if _dh_status not in ('error', 'failed', 'degraded') and 'failed' not in official_data_health.message|lower %}
+        <p style="margin: 4pt 0 0 0; font-size: 6.5pt; color: hsl(224, 10%, 45%);">
+            {{ official_data_health.message }}
+        </p>
+        {% endif %}
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {# ====================================================================
+       HIGH-SEVERITY DATA QUALITY CALLOUT (Pass-4 / Pass-7) — PDF twin
+       --------------------------------------------------------------------
+       Mirrors the simplified_report and main_report screen-version callout.
+       Pass-7 gate restored — only force-render when integrity flags fire
+       (`show_quality_warnings_callout` toggles via aggregator's
+       `_force_callout_for_integrity`). Otherwise the Venus AI assistant /
+       Studio Co-pilot is the primary surface and the PDF ships clean.
+       ==================================================================== #}
+    {% if show_quality_warnings_callout and report_quality_warnings_high and report_quality_warnings_high|length > 0 and render_quality_warnings_in_report|default(false) %}
+    {# Aurora-aligned: drop the Tailwind red-700/red-50 hard-codes and let
+       ``.callout-danger`` apply the Aurora danger palette (6 55% 50%). #}
+    <div class="callout callout-danger" style="margin-bottom: 10pt; padding: 8pt;">
+        <h4 style="margin: 0 0 4pt 0; font-size: 9pt;">⚠ {{ high_severity_callout_title }}</h4>
+        <p style="margin: 0 0 4pt 0; font-size: 8pt;">{{ high_severity_callout_lead }}</p>
+        <ul style="margin: 0 0 0 12pt; padding: 0; font-size: 8pt;">
+            {% for w in report_quality_warnings_high %}
+            <li style="margin-bottom: 2pt;">
+                <strong>{{ w.message or w.type }}</strong>
+                {% if w.recommendation %}
+                <span style="display: block; opacity: 0.75; font-size: 7.5pt;">{{ w.recommendation }}</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if method_substitution_disclosure %}
+    {% set _is_nl = (locale|default('nl')|lower)[:2] == 'nl' %}
+    {% set _is_fr = (locale|default('nl')|lower)[:2] == 'fr' %}
+    {# Aurora-aligned: ``.callout-warning`` gives the canonical warning bg +
+       border (37 65% 55%); we only set spacing inline.  Was hard-coded to
+       Tailwind orange-700/cream — non-Aurora drift. #}
+    <div class="callout callout-warning" style="margin-bottom: 10pt; padding: 8pt;">
+        <h4 style="margin: 0 0 4pt 0; font-size: 9pt;">{{ method_substitution_disclosure.title }}</h4>
+        <p style="margin: 0 0 4pt 0; font-size: 8pt;">{{ method_substitution_disclosure.lead }}</p>
+        <p style="margin: 0; font-size: 8pt;">
+            <strong>{{ 'Aangevraagd' if _is_nl else ('Demandé' if _is_fr else 'Requested') }}:</strong>
+            {{ method_substitution_disclosure.requested_method_display }}
+            <span style="margin: 0 3pt;">→</span>
+            <strong>{{ 'Uitgevoerd' if _is_nl else ('Exécuté' if _is_fr else 'Executed') }}:</strong>
+            {{ method_substitution_disclosure.executed_method_display }}
+        </p>
+        {% if method_substitution_disclosure.reason %}
+        <p style="margin: 3pt 0 0 0; font-size: 7.5pt; color: hsl(224, 10%, 35%);">
+            <strong>{{ 'Reden' if _is_nl else ('Raison' if _is_fr else 'Reason') }}:</strong> {{ method_substitution_disclosure.reason }}
+        </p>
+        {% endif %}
+        {% if method_substitution_disclosure.remediation %}
+        <p style="margin: 3pt 0 0 0; font-size: 7.5pt; color: hsl(224, 10%, 35%);">
+            <strong>{{ 'Aanbevolen actie' if _is_nl else ('Action recommandée' if _is_fr else 'Recommended action') }}:</strong> {{ method_substitution_disclosure.remediation }}
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {# ====================================================================
+       SOTP-TRIGGER CALLOUT — fires when stand-alone valuation breaks down
+       --------------------------------------------------------------------
+       Set ``show_sotp_trigger`` upstream when the synthesis produces a
+       negative or marginal lower-bound equity range. The classic case is
+       a holding entity whose debt is funded against assets held in
+       separate vehicles (subsidiaries, real estate). Surfaces the gap
+       in the Executive Summary so a reader doesn't accept a misleading
+       single-entity number; preserves the path to a Sum-of-the-Parts
+       treatment as the defensible answer.
+
+       Aurora amber atmosphere — burnt clay accent rail, light cream
+       canvas — distinct from the red callout-danger for data-quality
+       fails (this is a methodology nudge, not a "do not ship" flag).
+       ==================================================================== #}
+    {% if show_sotp_trigger %}
+    <div class="callout keep-together"
+         style="margin-bottom: 10pt;
+                padding: 10pt 12pt;
+                border-left: 3pt solid hsl(17, 50%, 59%);
+                background: hsl(35, 70%, 97%);
+                border-radius: 4pt;">
+        <h4 style="margin: 0 0 4pt 0; font-size: 9pt; font-weight: 700; color: hsl(17, 55%, 38%);">
+            ◆ {{ t.sotp_trigger_title }}
+        </h4>
+        <p style="margin: 0; font-size: 8pt; line-height: 1.5; color: hsl(224, 10%, 25%);">
+            {{ t.sotp_trigger_text }}
+        </p>
+    </div>
+    {% endif %}
+
+    {# Valuation Hero Card — align with cover: Equity when bridge, else EV #}
+    <div style="break-inside: avoid; page-break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;">
+    <div class="value-hero">
+        {% if is_holding_sotp_report|default(false) %}
+        <p class="value-hero-label">{{ t.cover_equity_label }}</p>
+        <p class="value-hero-amount">{{ equity_value|format_currency_compact }}</p>
+        {% if equity_value_low is defined and equity_value_low is not none and equity_value_high is defined and equity_value_high is not none and equity_value_low < equity_value_high %}
+        <p class="value-hero-range">{{ t.exec_range_label }}: {{ equity_value_low|format_currency_compact }} — {{ equity_value_high|format_currency_compact }}</p>
+        {% endif %}
+        {% elif equity_value is defined and equity_value is not none and ((enterprise_value_applicability|default('applicable')) == 'not_applicable' or (show_ev_equity_bridge and headline_value_basis|default('equity_value') != 'enterprise_value')) %}
+        <p class="value-hero-label">{% if (enterprise_value_applicability|default('applicable')) == 'not_applicable' or show_enterprise_to_equity_bridge|default(true) %}{{ t.cover_equity_label }}{% else %}{{ t.calib_dcf_calculated_value }}{% endif %}</p>
+        {# A pending EBITDA normalization cannot support a precise point headline.
+           Lead with the indicative band and demote the midpoint. #}
+        {% set _equity_band_show = equity_value_low is defined and equity_value_low is not none and equity_value_high is defined and equity_value_high is not none and equity_value_low < equity_value_high and equity_value_band_is_meaningful|default(true) %}
+        {% set _en_eqband = (locale|default('nl'))|lower == 'en' %}
+        {% set _fr_eqband = (locale|default('nl'))|lower == 'fr' %}
+        {% if cover_anchor_low is defined and cover_anchor_low and cover_anchor_high %}
+        {# Mirror the cover's market-anchor to engine-weighted range. #}
+        <p class="value-hero-amount value-hero-amount--band" style="font-size: 22pt;">{{ cover_anchor_low|format_currency_compact }} — {{ cover_anchor_high|format_currency_compact }}</p>
+        <p class="value-hero-range">{% if _fr_eqband %}Ancrage conservateur par multiple de marché → valeur pondérée moteur (incl. potentiel DCF){% elif _en_eqband %}Conservative market-multiple anchor → engine-weighted (incl. DCF upside){% else %}Conservatief marktanker → engine-gewogen (incl. DCF-opwaarts){% endif %}</p>
+        {% elif ebitda_basis_pending_validation|default(false) and _equity_band_show %}
+        <p class="value-hero-amount value-hero-amount--band" style="font-size: 22pt;">{{ equity_value_low|format_currency_compact }} — {{ equity_value_high|format_currency_compact }}</p>
+        <p class="value-hero-range">{% if _fr_eqband %}Fourchette indicative{% elif _en_eqband %}Indicative range{% else %}Indicatieve bandbreedte{% endif %} · {% if _fr_eqband %}valeur de référence{% elif _en_eqband %}reference value{% else %}indicatieve richtwaarde{% endif %} {{ equity_value|format_currency_compact }}</p>
+        {% else %}
+        <p class="value-hero-amount">{{ equity_value|format_currency_compact }}</p>
+        {# Also requires ``equity_value_band_is_meaningful`` so a sub-2 %
+           half-spread (both bounds rounding to the same compact "€X.YM"
+           string) is suppressed — symmetric with the cover and the
+           ``_exec_ev_range_show`` gate above. #}
+        {% if _equity_band_show %}
+        <p class="value-hero-range">
+            {{ t.exec_range_label }}: {{ equity_value_low|format_currency_compact }} — {{ equity_value_high|format_currency_compact }}
+        </p>
+        {% endif %}
+        {% endif %}
+        {% if is_nav_methodology|default(false) and show_enterprise_to_equity_bridge|default(true) %}
+        <p class="value-hero-range" style="font-size: 7pt; opacity: 0.8;">({{ t.equity_adjusted_label }})</p>
+        {% endif %}
+        {% else %}
+        <p class="value-hero-label">{% if honest_present_range|default(false) %}Indicatieve ondernemingswaardeband (EV){% else %}{{ t.cover_ev_label }}{% endif %}</p>
+        {% set _hero_value = _headline_value %}
+        {% if honest_present_range|default(false) and _exec_ev_range_show %}
+        <p class="value-hero-amount value-hero-amount--band" style="font-size: 22pt;">{{ _exec_ev_range_low|format_currency_compact }} — {{ _exec_ev_range_high|format_currency_compact }}</p>
+        {% else %}
+        <p class="value-hero-amount">{{ _hero_value|format_currency_compact }}</p>
+        {% endif %}
+        {% if _exec_ev_range_show and not honest_present_range|default(false) %}
+        <p class="value-hero-range">
+            {% if source_policy_report|default(false) %}{{ range_provenance_disclosure.kind_label }}{% elif headline_ebitda_is_reported|default(false) %}{% if (locale|default('nl'))|lower == 'fr' %}Sensibilité du modèle avant normalisations{% elif (locale|default('nl'))|lower == 'en' %}Model sensitivity before normalisations{% else %}Modelgevoeligheid vóór normalisaties{% endif %}{% else %}{{ t.exec_range_label }}{% endif %}: {{ _exec_ev_range_low|format_currency_compact }} — {{ _exec_ev_range_high|format_currency_compact }}
+        </p>
+        {% endif %}
+        {% endif %}
+        {% if recommended_asking_price %}
+        {# Consolidated dossier with a booked minority interest: the ask is
+           anchored on seller-attributable (post-minority) equity, so %-vs-basis
+           must compare against that figure — comparing against pre-minority
+           equity would print the seller's rightful ask as a false discount. #}
+        {% set _rap_pct_basis = (minority_seller_equity if asking_price_reflects_minority|default(false) and minority_seller_equity else (equity_value if show_ev_equity_bridge and equity_value else (synthesis_blended_value if has_weighted_synthesis and synthesis_blended_value and not dcf_ineligible_scenario else valuation))) %}
+        {# The displayed buffer % is DERIVED from
+           (asking / basis − 1) just below. With a compact "€3,0M" asking the
+           derived "+1,4%" looked inconsistent (a reader reads €3,0M as exactly
+           €3.000.000 → +0,4%). Show the asking to whole-euro precision so the
+           figure still visibly justifies the derived percentage — but never to the
+           cent: |round drops blend-math cents (e.g. "€786.115,58" → "€786.116"),
+           matching the screen + buyer-ready twins. #}
+        <p class="value-hero-range" style="margin-top: 4pt;">
+            {{ t.exec_asking_price_label }}: <strong>{{ recommended_asking_price|round|format_currency }}</strong>
+            {# Yuki audit (May 2026): the strapline now branches on the actual
+               relationship between asking and basis. See the screen twin for
+               the full rationale — short version: "buffer for negotiation"
+               is only correct when asking > basis. When the gate suppresses
+               the buffer OR asking sits below basis, we render dedicated
+               copy so the line reads correctly. #}
+            {% if asking_price_reflects_minority|default(false) %}
+            <span style="font-size: 7pt; opacity: 0.7; margin-left: 4pt;">{% if (locale|default('nl'))|lower == 'fr' %}ancré sur les capitaux propres attribuables au vendeur (après intérêts minoritaires){% elif (locale|default('nl'))|lower == 'en' %}anchored on seller-attributable equity (after minority interest){% else %}verankerd op het verkoper-toerekenbare eigen vermogen (na minderheidsbelang){% endif %}</span>
+            {% elif recommended_asking_price_buffer_suppressed|default(false) %}
+            <span style="font-size: 7pt; opacity: 0.7; margin-left: 4pt;">{{ t.exec_asking_price_note_suppressed }}</span>
+            {% elif _rap_pct_basis and _rap_pct_basis > 0 %}
+                {% set _rap_pct = ((to_decimal(recommended_asking_price) / to_decimal(_rap_pct_basis) - 1) * 100) %}
+                {% if _rap_pct > 0 %}
+            <span style="font-size: 7pt; opacity: 0.7; margin-left: 4pt;">{{ t.exec_asking_price_note }} (+{{ _rap_pct|safe_round(1) }}%)</span>
+                {% else %}
+            {# When the asking price equals (==0) or sits below
+               (<0) the basis, there is NO negotiation buffer — labelling it
+               "Strategische buffer voor onderhandeling" is a dangling caption.
+               Inline locale-aware copy (the t.*_below_basis key is not in the
+               contract, so we must not reference it) reads correctly. #}
+            <span style="font-size: 7pt; opacity: 0.7; margin-left: 4pt;">{% if is_canonical_direct_equity %}{% if (locale|default('nl'))|lower == 'fr' %}Ancrage indicatif du modèle — le prix de transaction peut différer{% elif (locale|default('nl'))|lower == 'en' %}Indicative model anchor — transaction consideration may differ{% else %}Indicatief modelanker — de transactieprijs kan afwijken{% endif %}{% elif is_asset_method or is_yield_method %}{% if (locale|default('nl'))|lower == 'fr' %}Valeur autonome indicative — aucun coussin de négociation (la valeur de groupe nécessite une SOTP){% elif (locale|default('nl'))|lower == 'en' %}Indicative stand-alone value — no negotiation buffer (group value requires SOTP){% else %}Indicatieve stand-alone waarde — geen onderhandelingsbuffer (groepswaarde vereist SOTP){% endif %}{% elif (locale|default('nl'))|lower == 'fr' %}Ancrage de marché — aucun coussin de négociation{% elif (locale|default('nl'))|lower == 'en' %}Market anchor — no negotiation buffer{% else %}Marktanker — geen onderhandelingsbuffer{% endif %}{% if _rap_pct < 0 %} ({% if (locale|default('nl'))|lower == 'fr' %}après déductions du dossier, p.ex. intérêts minoritaires : {% elif (locale|default('nl'))|lower == 'en' %}after dossier-level deductions, e.g. minority interest: {% else %}na dossier-aftrekken zoals minderheidsbelang: {% endif %}{{ _rap_pct|safe_round(1) }}% — zie de brug{% endif %}</span>
+                {% endif %}
+            {% else %}
+            <span style="font-size: 7pt; opacity: 0.7; margin-left: 4pt;">{{ t.exec_asking_price_note }}</span>
+            {% endif %}
+        </p>
+        {# Keep the asking price indicative while earnings-basis or ownership
+           adjustments remain unverified. #}
+        {% if ebitda_basis_pending_validation|default(false) %}
+        <p class="value-hero-range" style="margin-top: 4pt; color: hsl(35, 60%, 38%); font-size: 7.5pt; line-height: 1.45;">
+            {% if (locale|default('nl'))|lower == 'fr' %}Indicatif tant que la base de résultat et les ajustements de normalisation ou de participation en attente ne sont pas validés. Base : exercice {{ latest_year|default(current_year) }}.{% elif (locale|default('nl'))|lower == 'en' %}Indicative until the earnings basis and any pending normalization or ownership adjustments are validated. Basis: FY{{ latest_year|default(current_year) }}.{% else %}Indicatief totdat de resultaatsbasis en eventuele openstaande normalisatie- of deelnemingscorrecties zijn gevalideerd. Basis: boekjaar {{ latest_year|default(current_year) }}.{% endif %}
+        </p>
+        {% endif %}
+        {% endif %}
+        {% set _pricing_earnings = valuation_basis_value|default(sustainable_ebitda) %}
+        {% if saas_is_primary_method and show_saas_formula %}
+        {# When SaaS is the founder's chosen primary method, lead with
+           EV/ARR (PDF mirror of main_report/pages/executive_summary.html). #}
+        <p class="value-hero-basis">
+            {{ t.exec_saas_anchor_label }}: {{ saas_arr|format_currency_compact }} &times; {{ saas_arr_multiple|safe_round(1) }}&times; ≈ <strong>{{ saas_enterprise_value|format_currency_compact }}</strong>
+        </p>
+        {% if _pricing_earnings and applied_multiple and enterprise_value_mid %}
+        {% set _ebitda_crosscheck_ev = sealed_display.multiples.ebitda_crosscheck_enterprise_value if sealed_display is defined else _pricing_earnings|float * applied_multiple|float %}
+        <p class="value-hero-range" style="margin-top: 4pt;">
+            {{ t.exec_implied_ebitda_multiple|default('Implied EBITDA multiple') }} cross-check: {{ _pricing_earnings|format_currency_compact }} &times; {{ applied_multiple|safe_round(1) }}&times; ≈ {{ _ebitda_crosscheck_ev|format_currency_compact }}
+        </p>
+        {% endif %}
+        {% else %}
+        <p class="value-hero-basis">
+            {% if is_holding_sotp_report|default(false) %}
+            {% set _sotp = holding_sotp|default({}) %}
+            {% if (locale|default('nl')|lower)[:2] == 'fr' %}{{ _sotp.entity_rows|default([])|length }} entités valorisées, pondérées par participation et rapprochées des éliminations vérifiées = <strong>{{ equity_value|format_currency_compact }}</strong> de capitaux propres{% elif (locale|default('nl')|lower)[:2] == 'en' %}{{ _sotp.entity_rows|default([])|length }} valued entities, ownership-weighted and reconciled to verified eliminations = <strong>{{ equity_value|format_currency_compact }}</strong> equity{% else %}{{ _sotp.entity_rows|default([])|length }} gewaardeerde entiteiten, eigendomsgewogen en gereconcilieerd met geverifieerde eliminaties = <strong>{{ equity_value|format_currency_compact }}</strong> eigen vermogen{% endif %}
+            {% elif has_weighted_synthesis %}
+            {{ synthesis_weight_summary|default(synthesis_formula_display) }}
+            {% elif is_canonical_direct_equity %}
+            {% include "shared/components/canonical_direct_equity_basis.html" %}
+            {% elif is_asset_method %}
+            {{ methodology_statement|default(primary_method_label|default(valuation_methodology)) }}
+            {% elif is_dcf_only_methodology %}
+            {{ t.exec_npv_calculation }} {{ dcf_projection_years|default(5) }} {{ t.exec_fcf_terminal_value }} = <span data-value-basis="enterprise_value">{{ enterprise_value_mid|format_currency_compact }} ({{ t.cover_ev_label }})</span>
+            {# Adaptive-only path. See screen twin for the full rationale —
+               same renormalised-weight blend formula when DCF leg > 0,
+               same EBITDA × multiple fallback otherwise. ───────────── #}
+            {% elif is_hybrid and is_adaptive_only_path|default(false) and not is_adaptive_multiples_only|default(false) %}
+            {% if sealed_display is defined %}
+                {% set _exec_w_mults_pct = sealed_display.weights.market_pct %}
+                {% set _exec_w_dcf_pct = sealed_display.weights.dcf_pct %}
+            {% else %}
+                {% set _exec_w_mults_raw = (adaptive_presentation_multiples_weight|float) if (adaptive_presentation_multiples_weight is defined and adaptive_presentation_multiples_weight is not none) else ((multiples_weight|float) if multiples_weight is defined else 0) %}
+                {% set _exec_w_dcf_raw = (adaptive_presentation_dcf_weight|float) if (adaptive_presentation_dcf_weight is defined and adaptive_presentation_dcf_weight is not none) else ((dcf_weight|float) if dcf_weight is defined else 0) %}
+                {% set _exec_w_total = _exec_w_mults_raw + _exec_w_dcf_raw %}
+                {% if _exec_w_total > 0 %}
+                {% set _exec_w_mults_pct = ((_exec_w_mults_raw / _exec_w_total * 100)|safe_round(0))|int %}
+                {% set _exec_w_dcf_pct = 100 - _exec_w_mults_pct %}
+                {% else %}
+                {% set _exec_w_mults_pct = none %}
+                {% set _exec_w_dcf_pct = none %}
+                {% endif %}
+            {% endif %}
+            {% if _exec_w_dcf_pct is not none and _exec_w_dcf_pct > 0 %}
+                {{ _exec_w_mults_pct }}% {{ t.exec_methodology_badge_multiples }} + {{ _exec_w_dcf_pct }}% {{ t.exec_methodology_badge_dcf }} = <strong>{{ _headline_value|format_currency_compact }}</strong>
+            {% else %}
+                {{ _pricing_earnings|format_currency_compact }} × {{ applied_multiple|safe_round(2) }}× ≈ <strong>{{ enterprise_value_mid|format_currency_compact }}</strong>
+            {% endif %}
+            {% if has_net_debt_adjustment or has_tax_latencies %}
+            <br>
+            <strong>{{ enterprise_value_mid|format_currency_compact }}</strong>
+            {% if has_net_debt_adjustment %} {{ bridge_net_debt_operator }} {{ bridge_net_debt_amount|format_currency_compact }}{% endif %}
+            {% if has_tax_latencies and tax_latency_net_impact is not none %} {% if (tax_latency_net_impact|float) >= 0 %}+{% else %}−{% endif %} {{ tax_latency_net_impact|float|abs|format_currency_compact }}{% endif %}
+             = {{ equity_value|format_currency_compact }}
+            {% endif %}
+            {% elif is_hybrid and not (is_adaptive_only_path|default(false) and is_adaptive_multiples_only|default(false)) %}
+            {% if sealed_display is defined %}
+                {% set _exec_w_mults_pct = sealed_display.weights.market_pct %}
+                {% set _exec_w_dcf_pct = sealed_display.weights.dcf_pct %}
+            {% else %}
+                {% set _exec_w_mults_raw = (multiples_weight|float) if multiples_weight is defined else 0 %}
+                {% set _exec_w_dcf_raw = (dcf_weight|float) if dcf_weight is defined else 0 %}
+                {% set _exec_w_total = _exec_w_mults_raw + _exec_w_dcf_raw %}
+                {% if _exec_w_total > 0 %}
+                {% set _exec_w_mults_pct = ((_exec_w_mults_raw / _exec_w_total * 100)|safe_round(0))|int %}
+                {% set _exec_w_dcf_pct = 100 - _exec_w_mults_pct %}
+                {% else %}
+                {% set _exec_w_mults_pct = 0 %}
+                {% set _exec_w_dcf_pct = 0 %}
+                {% endif %}
+            {% endif %}
+            {{ _exec_w_mults_pct }}% {{ t.exec_methodology_badge_multiples }} + {{ _exec_w_dcf_pct }}% {{ t.exec_methodology_badge_dcf }} = {{ valuation|format_currency_compact }}
+            {% elif is_sde_method and sde_value is defined and sde_value and sde_multiple is defined and sde_multiple %}
+            {{ sde_value|format_currency_compact }} × {{ sde_multiple|safe_round(2) }}× ≈ <strong>{{ enterprise_value_mid|format_currency_compact }}</strong>
+            {% else %}
+            {# Fix #3: see screen twin for rationale. When the engine
+               equity band drives the headline (because the Step-11
+               multiple pipeline collapsed), render the raw multiple
+               formula as a cross-check rather than as the headline math.
+               headline. #}
+            {% if ev_sourced_from_engine_equity|default(false) %}
+            {# Pre-blend leg uses the PRE-synthesis multiple (e.g. 3.13×); the
+               blended effective multiple (2.96×) lands on the headline line. #}
+            {% set _pre_blend_mult = pre_synthesis_multiple|default(applied_multiple) %}
+            {% set _pre_blend_ev = sealed_display.multiples.pre_synthesis_enterprise_value if sealed_display is defined else ((revenue|float * _pre_blend_mult|float) if multiple_metric_type == 'REVENUE' else (_pricing_earnings|float * _pre_blend_mult|float)) %}
+            <span style="color: hsl(224, 10%, 55%);">
+                {{ t.exec_pre_blend_label }}:
+                {% if multiple_metric_type == 'REVENUE' %}
+                {{ revenue|format_currency_compact }} × {{ _pre_blend_mult|safe_round(2) }}× ≈ {{ _pre_blend_ev|format_currency_compact }}
+                {% else %}
+                {{ _pricing_earnings|format_currency_compact }} × {{ _pre_blend_mult|safe_round(2) }}× ≈ {{ _pre_blend_ev|format_currency_compact }}
+                {% endif %}
+            </span>
+            {# Explicit blend reconciliation: when the engine weighted an SDE leg
+               into the headline, show EBITDA leg × w + SDE leg × w = headline so
+               the €267K is never left below both legs without a visible bridge. #}
+            {% if sde_blend_applied|default(false) and sde_blend_leg_ev and ebitda_blend_leg_ev %}
+            <br>
+            <span style="color: hsl(224, 10%, 55%);">{% if (locale|default('nl'))|lower == 'fr' %}Mélange pondéré : {{ ebitda_blend_leg_ev|format_currency_compact }} (EBITDA, {{ ebitda_blend_weight_pct }} %) + {{ sde_blend_leg_ev|format_currency_compact }} (SDE, {{ sde_blend_weight_pct }} %) = {{ sde_blend_headline_ev|format_currency_compact }}{% elif (locale|default('nl'))|lower == 'en' %}Weighted blend: {{ ebitda_blend_leg_ev|format_currency_compact }} (EBITDA, {{ ebitda_blend_weight_pct }}%) + {{ sde_blend_leg_ev|format_currency_compact }} (SDE, {{ sde_blend_weight_pct }}%) = {{ sde_blend_headline_ev|format_currency_compact }}{% else %}Gewogen blend: {{ ebitda_blend_leg_ev|format_currency_compact }} (EBITDA, {{ ebitda_blend_weight_pct }}%) + {{ sde_blend_leg_ev|format_currency_compact }} (SDE, {{ sde_blend_weight_pct }}%) = {{ sde_blend_headline_ev|format_currency_compact }}{% endif %}</span>
+            {% endif %}
+            <br>
+            {# Name the rail: this figure is an ENTERPRISE value. Left unlabelled it
+               reads as a second, contradictory headline next to the pre-synthesis
+               cross-check on the line above (VR-2026-9712). #}
+            {% set _ev_word = "valeur d'entreprise" if (locale|default('nl')|lower)[:2] == 'fr' else ('enterprise value' if (locale|default('nl')|lower)[:2] == 'en' else 'ondernemingswaarde') %}
+            <strong>{{ enterprise_value_mid|format_currency_compact }}</strong>
+            <span style="font-size: 7pt; color: hsl(224, 10%, 55%); font-style: italic;">
+                {{ _ev_word }} — {{ t.exec_blended_headline_note }}
+            </span>
+            {# When the headline multiple sits on the PRE-discount rail the gap to the
+               cross-check above is the Step 4-6 discount chain, not the synthesis
+               blend. Say so, or the reader is left with two unexplained numbers. #}
+            {% if applied_multiple_rail|default('post_discount') == 'pre_discount_market_ev' and applied_multiple and pre_synthesis_multiple %}
+            <br><span style="font-size: 7pt; color: hsl(224, 10%, 55%); font-style: italic;">{% if (locale|default('nl')|lower)[:2] == 'fr' %}Écart entre les deux lignes : les décotes des étapes 4 à 6 ({{ applied_multiple|safe_round(2) }}× → {{ pre_synthesis_multiple|safe_round(2) }}×), détaillées dans la cascade de multiples.{% elif (locale|default('nl')|lower)[:2] == 'en' %}Difference between the two lines: the Step 4-6 discounts ({{ applied_multiple|safe_round(2) }}× → {{ pre_synthesis_multiple|safe_round(2) }}×), itemised in the multiple waterfall.{% else %}Verschil tussen beide regels: de kortingen uit stap 4-6 ({{ applied_multiple|safe_round(2) }}× → {{ pre_synthesis_multiple|safe_round(2) }}×), gespecificeerd in de multiple-waterval.{% endif %}</span>
+            {% endif %}
+            {% elif multiple_metric_type == 'REVENUE' %}
+            {{ revenue|format_currency_compact }} × {{ applied_multiple|safe_round(2) }}× ≈ <strong>{{ enterprise_value_mid|format_currency_compact }}</strong>
+            {% if implied_ebitda_multiple %}
+            <br><span style="font-size: 7pt; color: hsl(224, 10%, 55%); font-style: italic;">{{ t.exec_implied_ebitda_multiple }} {{ implied_ebitda_multiple|safe_round(2) }}×</span>
+            {% endif %}
+            {% else %}
+            {{ _pricing_earnings|format_currency_compact }} × {{ applied_multiple|safe_round(2) }}× ≈ <strong>{{ enterprise_value_mid|format_currency_compact }}</strong>
+            {% endif %}
+            {% if has_net_debt_adjustment or has_tax_latencies %}
+            <br>
+            <strong>{{ enterprise_value_mid|format_currency_compact }}</strong>
+            {% if has_net_debt_adjustment %} {{ bridge_net_debt_operator }} {{ bridge_net_debt_amount|format_currency_compact }}{% endif %}
+            {% if has_tax_latencies and tax_latency_net_impact is not none %} {% if (tax_latency_net_impact|float) >= 0 %}+{% else %}−{% endif %} {{ tax_latency_net_impact|float|abs|format_currency_compact }}{% endif %}
+             = {{ equity_value|format_currency_compact }}
+            {% endif %}
+            {% endif %}
+        </p>
+        {% endif %}{# /saas_is_primary_method swap (PDF) #}
+        {% if show_saas_formula and not saas_is_primary_method %}
+        <p class="value-hero-range" style="margin-top: 4pt;">
+            {{ t.exec_saas_anchor_label }}: {{ saas_arr|format_currency_compact }} &times; {{ saas_arr_multiple|safe_round(1) }}&times; ≈ <strong>{{ saas_enterprise_value|format_currency_compact }}</strong>
+        </p>
+        {% endif %}
+    </div>
+    </div>
+
+    {% if formula_uses_sealed_earnings|default(false) %}<p data-sealed-earnings-basis style="font-size:7pt; margin:6pt 0;">{{ source_policy_earnings_caption }}</p>{% endif %}
+
+    {# Key Metrics - TABLE-BASED instead of CSS Grid #}
+    <div class="stats-grid" style="-webkit-print-color-adjust: exact; print-color-adjust: exact; page-break-inside: avoid;">
+        <table class="stats-grid-table">
+            <tr>
+                <td>
+                    <div class="stat-card" style="background: #faf9f7;">
+                        <p class="stat-card-label">
+                            {% if is_holding_sotp_report|default(false) %}{% if (locale|default('nl')|lower)[:2] == 'fr' %}Capitaux propres du groupe{% elif (locale|default('nl')|lower)[:2] == 'en' %}Group equity value{% else %}Eigen vermogen groep{% endif %}
+                            {% elif is_asset_method %}{{ t.cover_equity_label }}
+                            {% elif is_sde_method %}{{ t.cover_sde_label }}
+                            {% elif multiple_metric_type == 'REVENUE' %}{{ t.exec_revenue_label }}
+                            {% elif formula_uses_sealed_earnings|default(false) %}{{ source_policy_earnings_label }}
+                            {# Use pre-normalisation wording while advisor validation is pending. #}
+                            {% elif ebitda_basis_pending_validation|default(false) %}{% if (locale|default('nl'))|lower == 'fr' %}Base EBITDA {{ latest_year|default(current_year) }} (normalisation en attente){% elif (locale|default('nl'))|lower == 'en' %}EBITDA basis {{ latest_year|default(current_year) }} (normalization pending){% else %}EBITDA-basis {{ latest_year|default(current_year) }} (normalisatie in behandeling){% endif %}
+                            {% elif is_disclosed_external_market_fallback|default(false) and is_explicitly_weighted_reported_ebitda|default(false) %}{% if (locale|default('nl')|lower)[:2] == 'fr' %}EBITDA déclaré pondéré{% elif (locale|default('nl')|lower)[:2] == 'en' %}Weighted reported EBITDA{% else %}Gewogen gerapporteerde EBITDA{% endif %}
+                            {% elif is_disclosed_external_market_fallback|default(false) %}{{ t.ebitda_reported_label }}
+                            {% elif headline_ebitda_is_reported|default(false) %}{{ cover_ebitda_basis_label|default(t.ebitda_reported_label, true) }}
+                            {% else %}{# Derived once in the aggregator: "genormaliseerd" only with a non-zero adjustment total, "(gewogen)" only when the weighted basis is priced. #}{{ cover_ebitda_basis_label|default(t.cover_ebitda_label, true) }}{% endif %}
+                        </p>
+                        {# Compact in the KPI tile (17pt nowrap, no font step-down): full
+                           format_currency overflowed the ⅓-width card at ≥€100M. Full
+                           precision stays in the method pages and official-financials table. #}
+                        <p class="stat-card-value tabular" style="color: #1a1d23;">
+                            {% if is_holding_sotp_report|default(false) %}{{ equity_value|format_currency_compact }}
+                            {% elif is_asset_method %}{{ equity_value|format_currency_compact }}
+                            {% elif is_sde_method and sde_value is defined and sde_value %}{{ sde_value|format_currency_compact }}
+                            {% elif multiple_metric_type == 'REVENUE' %}{{ revenue|format_currency_compact }}
+                            {% else %}{{ sustainable_ebitda|format_currency_compact }}{% endif %}
+                        </p>
+                        {% if is_holding_sotp_report|default(false) %}<p class="stat-card-subtext">Holding SOTP</p>
+                        {% elif is_asset_method %}
+                        <p class="stat-card-subtext">{{ primary_method_label|default(valuation_methodology_display|default(valuation_methodology)) }}</p>
+                        {# Keep the subtitle consistent with the pending-normalisation label. #}
+                        {% elif ebitda_basis_pending_validation|default(false) and latest_normalized_ebitda is not none and multiple_metric_type != 'REVENUE' %}
+                        <p class="stat-card-subtext">{% if (locale|default('nl'))|lower == 'fr' %}Base normalisée {{ latest_year|default(current_year) }} (correction en attente){% elif (locale|default('nl'))|lower == 'en' %}Normalised basis {{ latest_year|default(current_year) }} (correction pending){% else %}Genormaliseerde basis {{ latest_year|default(current_year) }} (correctie in behandeling){% endif %}: <span class="stat-card-subtext-value">{{ latest_normalized_ebitda|format_currency }}</span></p>
+                        {% elif is_disclosed_external_market_fallback|default(false) and is_explicitly_weighted_reported_ebitda|default(false) and current_reported_ebitda is not none and multiple_metric_type != 'REVENUE' %}
+                        <p class="stat-card-subtext">{{ t.ebitda_reported_label }} {{ latest_year|default(current_year) }}: <span class="stat-card-subtext-value">{{ current_reported_ebitda|format_currency }}</span></p>
+                        {% elif latest_normalized_ebitda is not none and multiple_metric_type != 'REVENUE' %}
+                        <p class="stat-card-subtext">{% if is_disclosed_external_market_fallback|default(false) or headline_ebitda_is_reported|default(false) %}{{ t.ebitda_reported_label }}{% else %}{{ t.exec_normalized_label }}{% endif %} {{ latest_year|default(current_year) }}: <span class="stat-card-subtext-value">{{ latest_normalized_ebitda|format_currency }}</span></p>
+                        {% elif multiple_metric_type == 'REVENUE' and sustainable_ebitda %}
+                        <p class="stat-card-subtext">{{ t.cover_ebitda_label }}: <span class="stat-card-subtext-value">{{ sustainable_ebitda|format_currency }}</span></p>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    {% set _exec_synthesis_weight = synthesis_weight_compact|default(synthesis_method_count_label|default('', true), true) %}
+                    {% set _is_weighted_synthesis_stat = has_weighted_synthesis is sameas true and _exec_synthesis_weight %}
+                    {% set _holding_ev_applicable = is_holding_sotp_report|default(false) and (enterprise_value_applicability|default('applicable')) != 'not_applicable' %}
+                    <div class="stat-card" style="background: #faf9f7;">
+                        <p class="stat-card-label">
+                            {% if (is_holding_sotp_report|default(false) and not _holding_ev_applicable) or is_canonical_direct_equity %}{% if (locale|default('nl')|lower)[:2] == 'fr' %}Base de valeur{% elif (locale|default('nl')|lower)[:2] == 'en' %}Value basis{% else %}Waardebasis{% endif %}
+                            {% elif _holding_ev_applicable %}{% if (locale|default('nl')|lower)[:2] == 'fr' %}Valeur d'entreprise du groupe{% elif (locale|default('nl')|lower)[:2] == 'en' %}Group enterprise value{% else %}Ondernemingswaarde groep{% endif %}
+                            {% elif is_asset_method %}{{ primary_method_label|default(valuation_methodology_display|default(valuation_methodology)) }}
+                            {% elif is_dcf_only_methodology %}{{ t.cover_wacc_label }}
+                            {% elif _is_weighted_synthesis_stat %}{{ synthesis_badge_label|default(t.synthesis_title, true) }}
+                            {% else %}{{ multiple_display_label|default(t.cover_multiple_label) }}{% endif %}
+                        </p>
+                        <p class="stat-card-value tabular{% if _is_weighted_synthesis_stat %} stat-card-value--phrase{% endif %}" style="color: #1a1d23;">
+                            {% if (is_holding_sotp_report|default(false) and not _holding_ev_applicable) or is_canonical_direct_equity %}{% if (locale|default('nl')|lower)[:2] == 'fr' %}Capitaux propres{% elif (locale|default('nl')|lower)[:2] == 'en' %}Equity value{% else %}Eigen vermogen{% endif %}
+                            {% elif _holding_ev_applicable %}{{ enterprise_value_mid|format_currency_compact }}
+                            {% elif is_asset_method %}{{ valuation|format_currency_compact }}
+                            {% elif is_dcf_only_methodology %}{{ dcf_wacc|format_percentage }}
+                            {% elif _is_weighted_synthesis_stat %}{{ _exec_synthesis_weight }}
+                            {% elif is_sde_method and sde_multiple is defined and sde_multiple %}{{ sde_multiple|safe_round(2) }}×
+                            {% else %}{{ applied_multiple|safe_round(2) }}×{% endif %}
+                        </p>
+                        {% if (is_holding_sotp_report|default(false) and not _holding_ev_applicable) or is_canonical_direct_equity %}<p class="stat-card-subtext">{% if (locale|default('nl')|lower)[:2] == 'fr' %}Prémisses directes en capitaux propres ; valeur d’entreprise non applicable{% elif (locale|default('nl')|lower)[:2] == 'en' %}Direct equity premises; enterprise value not applicable{% else %}Directe equity-premissen; ondernemingswaarde niet van toepassing{% endif %}</p>
+                        {% elif _holding_ev_applicable %}<p class="stat-card-subtext">{% if (locale|default('nl')|lower)[:2] == 'fr' %}Avant les ponts vers les capitaux propres{% elif (locale|default('nl')|lower)[:2] == 'en' %}Before equity bridges{% else %}Vóór eigenvermogensbruggen{% endif %}</p>
+                        {% elif has_weighted_synthesis and synthesis_method_list %}
+                        <p class="stat-card-subtext">{{ synthesis_method_list }}</p>
+                        {% elif is_asset_method %}
+                        <p class="stat-card-subtext">{{ methodology_statement|default(primary_method_label|default(valuation_methodology)) }}</p>
+                        {% elif not is_dcf_only_methodology %}
+                        {% if valuation_run_id|default(false) %}
+            {% include "shared/components/canonical_benchmark_range.html" %}
+            {% elif multiple_low and multiple_high %}
+                        {% set _rail_lang = (locale|default('nl')|lower)[:2] %}
+                        {% if applied_multiple_rail|default('post_discount') == 'post_discount' %}{% set _mult_rail = 'après décotes' if _rail_lang == 'fr' else ('after discounts' if _rail_lang == 'en' else 'na kortingen') %}
+                        {% elif applied_multiple_rail == 'pre_discount_market_ev' %}{% set _mult_rail = 'avant décotes' if _rail_lang == 'fr' else ('before discounts' if _rail_lang == 'en' else 'vóór kortingen') %}
+                        {% else %}{% set _mult_rail = '' %}{% endif %}
+                        <p class="stat-card-subtext">{% if is_external_reference_range|default(false) %}Externe referentierange (geen percentielen){% else %}{{ t.exec_range_label }}{% if _mult_rail %} ({{ _mult_rail }}){% endif %}{% endif %}: <span class="stat-card-subtext-value">{{ multiple_low|safe_round(1) }}–{{ multiple_high|safe_round(1) }}×</span></p>
+                        {% elif benchmark_multiple_mid %}
+                        <p class="stat-card-subtext">{{ benchmark_multiple_label|default(t.exec_market_median) }}: <span class="stat-card-subtext-value">{{ benchmark_multiple_mid|safe_round(2) }}×</span></p>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    <div class="stat-card" style="background: #faf9f7;">
+                        <p class="stat-card-label">
+                            {% if is_holding_sotp_report|default(false) %}{% if (locale|default('nl')|lower)[:2] == 'fr' %}Entités valorisées{% elif (locale|default('nl')|lower)[:2] == 'en' %}Valued entities{% else %}Gewaardeerde entiteiten{% endif %}
+                            {% elif is_asset_method %}{{ t.cover_date_label }}
+                            {% elif multiple_metric_type == 'REVENUE' %}{{ t.cover_ebitda_label }}
+                            {% elif management_turnover_unaudited|default(false) %}{% if (locale|default('nl')|lower)[:2] == 'fr' %}Chiffre d’affaires de gestion (non audité){% elif (locale|default('nl')|lower)[:2] == 'en' %}Management revenue (unaudited){% else %}Managementomzet (niet-geauditeerd){% endif %}
+                            {% else %}{{ t.exec_revenue_label }}{% endif %}
+                        </p>
+                        <p class="stat-card-value tabular" style="color: #1a1d23;">
+                            {% if is_holding_sotp_report|default(false) %}{{ holding_sotp.entity_rows|default([])|length }}
+                            {% elif is_asset_method %}
+                            {{ valuation_date }}
+                            {% elif multiple_metric_type == 'REVENUE' %}
+                            {% if sustainable_ebitda is not none %}{{ sustainable_ebitda|format_currency_compact }}{% else %}—{% endif %}
+                            {% else %}
+                            {% if revenue is not none %}{{ revenue|format_currency_compact }}{% else %}—{% endif %}
+                            {% endif %}
+                        </p>
+                        {% if is_holding_sotp_report|default(false) %}<p class="stat-card-subtext">{% if (locale|default('nl')|lower)[:2] == 'fr' %}Participation et éliminations incluses{% elif (locale|default('nl')|lower)[:2] == 'en' %}Ownership and eliminations included{% else %}Eigendom en eliminaties verwerkt{% endif %}</p>
+                        {% elif is_asset_method %}
+                        <p class="stat-card-subtext">{{ company_name }}</p>
+                        {% elif management_turnover_unaudited|default(false) %}
+                        <p class="stat-card-subtext">{% if (locale|default('nl')|lower)[:2] == 'fr' %}Source : preuve de gestion fournie, identifiée comme non auditée.{% elif (locale|default('nl')|lower)[:2] == 'en' %}Source: supplied management evidence, identified as unaudited.{% else %}Bron: aangeleverd managementbewijs, aangeduid als niet-geauditeerd.{% endif %}</p>
+                        {% elif employee_count and multiple_metric_type != 'REVENUE' %}
+                        <p class="stat-card-subtext">{{ employee_count }} {{ t.exec_employee_singular if employee_count == 1 else t.exec_employee_plural }}</p>
+                        {% elif multiple_metric_type == 'REVENUE' and latest_normalized_ebitda %}
+                        <p class="stat-card-subtext">{{ t.exec_normalized_label }} {{ latest_year|default(current_year) }}: <span class="stat-card-subtext-value">{{ latest_normalized_ebitda|format_currency }}</span></p>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    {% if saas_nrr_pct or saas_rule_of_40 or saas_gross_revenue_churn_pct %}
+    {% set quality_colors = {
+        'strong': 'hsl(143, 40%, 42%)',
+        'healthy': 'hsl(210, 60%, 50%)',
+        'developing': 'hsl(37, 65%, 55%)',
+        'at_risk': 'hsl(0, 55%, 50%)'
+    } %}
+    {% set quality_labels = {
+        'strong': t.saas_quality_strong,
+        'healthy': t.saas_quality_healthy,
+        'developing': t.saas_quality_developing,
+        'at_risk': t.saas_quality_at_risk
+    } %}
+    <div style="margin-top: 8pt; padding: 7pt 10pt; background: hsl(224, 15%, 98%); border-radius: 4pt; border-left: 3pt solid hsl({{ teal_hsl }});">
+        <table style="width: 100%; border-collapse: collapse;"><tr>
+            <td style="padding: 0;">
+                <p style="font-size: 7pt; margin: 0 0 4pt 0; font-weight: 600; color: hsl(225, 18%, 12%); text-transform: uppercase; letter-spacing: 0.03em;">
+                    {{ t.exec_saas_quality_title }}
+                </p>
+            </td>
+            {% if saas_quality_label %}
+            <td style="padding: 0; text-align: right;">
+                <span style="font-size: 7pt; font-weight: 700; color: {{ quality_colors[saas_quality_label] }};">
+                    {{ quality_labels[saas_quality_label] }}
+                </span>
+            </td>
+            {% endif %}
+        </tr></table>
+        <p style="font-size: 6.5pt; margin: 0; color: hsl(224, 10%, 45%);">
+            {% if saas_nrr_pct %}<strong>{{ t.exec_saas_nrr_label }}:</strong> {{ saas_nrr_pct|safe_round(0) }}%{% endif %}
+            {% if saas_rule_of_40 %}{% if saas_nrr_pct %} &bull; {% endif %}<strong>{{ t.exec_saas_rule_of_40_label }}:</strong> {{ saas_rule_of_40|safe_round(0) }}{% endif %}
+            {% if saas_gross_revenue_churn_pct %}{% if saas_nrr_pct or saas_rule_of_40 %} &bull; {% endif %}<strong>{{ t.exec_saas_churn_label }}:</strong> {{ saas_gross_revenue_churn_pct|safe_round(0) }}%{% endif %}
+            {% if saas_arr_growth_pct %}{% if saas_nrr_pct or saas_rule_of_40 or saas_gross_revenue_churn_pct %} &bull; {% endif %}<strong>{{ t.exec_saas_arr_growth_label }}:</strong> {{ saas_arr_growth_pct|safe_round(0) }}%{% endif %}
+        </p>
+    </div>
+    {% endif %}
+    
+    {% include "main_report_pdf/partials/_limited_scope_advisory_panel.html" %}
+    {% if seller_margin_diligence_note or advisor_margin_diligence_note %}
+    <div style="margin: 8pt 0; padding: 6pt 8pt; border-left: 2pt solid hsl(37, 65%, 55%); background: hsla(37, 65%, 55%, 0.06);">
+        <p style="margin: 0; font-size: 7pt; line-height: 1.5; color: hsl(224, 10%, 25%);">
+            {{ seller_margin_diligence_note or advisor_margin_diligence_note }}
+        </p>
+    </div>
+    {% endif %}
+    {% if not is_holding_sotp_report|default(false) and not is_canonical_direct_equity %}
+    {% include "main_report_pdf/partials/_multiple_calibration_bridge.html" %}
+    {% endif %}
+
+    {# Sensitivity Matrix - only for non-hybrid EBITDA multiple cases #}
+    {% if not is_holding_sotp_report|default(false) and not is_canonical_direct_equity and not has_dcf and multiple_metric_type == 'EBITDA' %}
+    {% if not suppress_unsealed_sensitivity|default(false) %}
+    {% include "main_report_pdf/components/_sensitivity_table.html" %}
+    {% endif %}
+    {% endif %}
+    
+    {# Industry Benchmark Comparison (hidden for DCF/fiscal/NAV) #}
+    {% if not is_holding_sotp_report|default(false) and not is_asset_method and not is_canonical_direct_equity and valuation_methodology != 'DCF Analysis' and has_industry_benchmarks and benchmark_multiple_mid and to_decimal(benchmark_multiple_mid) > 0 %}
+    <div style="margin-top: 8pt; padding: 7pt 10pt; background: hsl(40, 15%, 98%); border-radius: 4pt; border-left: 3pt solid hsl({{ teal_hsl }});">
+        <p style="font-size: 7pt; margin: 0 0 2pt 0; font-weight: 600; color: hsl(225, 18%, 12%); text-transform: uppercase; letter-spacing: 0.03em;">
+            {{ t.exec_industry_comparison }}{% if sector %} · {{ sector }}{% endif %}
+        </p>
+        <p style="font-size: 6.5pt; margin: 0 0 4pt 0; color: hsl(224, 10%, 45%); font-style: italic;">
+            {{ t.exec_benchmark_source_note }}
+        </p>
+        {% if benchmark_sample_size and benchmark_sample_size >= 3 %}
+        <p style="font-size: 6.5pt; margin: 0 0 4pt 0; color: hsl(224, 10%, 45%);">
+            {{ t.exec_benchmark_applied_vs_reference }}
+        </p>
+        {% endif %}
+        <table style="width: 100%; border-collapse: collapse; border: none; margin: 0; font-size: 8pt;">
+            <tr>
+                <td style="border: none; padding: 0 20pt 0 0; color: hsl(224, 10%, 45%); background: transparent; vertical-align: top;">
+                    <strong>{% if benchmark_sample_size == 1 %}{{ t.exec_single_reference }}{% else %}{{ benchmark_multiple_label|default(t.exec_median_multiple) }}{% endif %}:</strong> {{ benchmark_multiple_mid|safe_round(2) }}×
+                    {% if benchmark_sample_size and benchmark_sample_size >= 3 and benchmark_multiple_mid and applied_multiple is not none and to_decimal(applied_multiple) > to_decimal(benchmark_multiple_mid) %}
+                    <span style="color: hsl({{ teal_hsl }});">(+{{ ((to_decimal(applied_multiple) - to_decimal(benchmark_multiple_mid)) / to_decimal(benchmark_multiple_mid) * 100)|safe_round(1) }}%)</span>
+                    {% elif benchmark_sample_size and benchmark_sample_size >= 3 and benchmark_multiple_mid and applied_multiple is not none and to_decimal(applied_multiple) < to_decimal(benchmark_multiple_mid) %}
+                    <span style="color: hsl(0, 70%, 50%);">({{ ((to_decimal(applied_multiple) - to_decimal(benchmark_multiple_mid)) / to_decimal(benchmark_multiple_mid) * 100)|safe_round(1) }}%)</span>
+                    {% endif %}
+                </td>
+                {% if benchmark_multiple_low and benchmark_multiple_high %}
+                <td style="border: none; padding: 0 20pt 0 0; color: hsl(224, 10%, 45%); background: transparent; vertical-align: top;">
+                    <strong>{{ t.exec_range_label }}:</strong> {{ benchmark_multiple_low|safe_round(1) }}–{{ benchmark_multiple_high|safe_round(1) }}×
+                </td>
+                {% endif %}
+                {% if benchmark_sample_size %}
+                <td style="border: none; padding: 0; color: hsl(224, 10%, 45%); background: transparent; vertical-align: top;">
+                    <strong>{{ t.exec_sample_label }}:</strong> {{ benchmark_sample_size }} {% if source_policy_report|default(false) %}{{ source_policy_observations_label }}{% elif benchmark_sample_size == 1 %}{{ t.exec_transactions_singular }}{% else %}{{ t.exec_transactions }}{% endif %}
+                    {# Tiered sample-size disclosures (Pratt, Damodaran):
+                       n<3 = insufficient (don't anchor on this), 3–9 = limited
+                       (use as anchor only), ≥10 = no flag. #}
+                    {% if benchmark_sample_size < 3 %}
+                    <span style="color: hsl(0, 70%, 50%); font-style: italic;">({{ t.exec_insufficient_data_warning }})</span>
+                    {% elif benchmark_sample_size < 10 %}
+                    <span style="color: hsl(30, 80%, 50%); font-style: italic;">({{ t.exec_limited_data }})</span>
+                    {% endif %}
+                </td>
+                {% endif %}
+            </tr>
+        </table>
+    </div>
+    {% elif not is_holding_sotp_report|default(false) and not is_asset_method and not is_canonical_direct_equity and valuation_methodology != 'DCF Analysis' %}
+    <div style="margin-top: 8pt; padding: 7pt 10pt; background: hsl(40, 15%, 98%); border-radius: 4pt; border-left: 3pt solid hsl(224, 8%, 70%);">
+        <p style="font-size: 8pt; margin: 0; color: hsl(224, 10%, 45%); font-style: italic;">
+            {% if show_benchmark_reference_without_table|default(false) %}
+            {{ t.exec_reference_without_benchmark_table }}
+            {% elif is_governed_external_market_reference|default(false) %}
+            {% set _external_index_key = external_market_reference_contract.business_type_id|default(business_type_title|default('business type')) ~ ' × ' ~ external_market_reference_contract.country_code|default(country_code|default('market')) %}
+            {% if (locale|default('nl'))|lower == 'fr' %}Aucun contrat Index {{ _external_index_key }} n’est disponible; la référence externe gouvernée est présentée séparément et sans percentiles empiriques.{% elif (locale|default('nl'))|lower == 'en' %}No {{ _external_index_key }} Index contract is available; the governed external reference is disclosed separately without empirical percentiles.{% else %}Geen {{ _external_index_key }} Index-contract beschikbaar; de governed externe referentie wordt afzonderlijk toegelicht, zonder empirische percentielen.{% endif %}
+            {% else %}
+            {{ t.exec_no_benchmarks }}
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+
+    {# EV-to-Equity Bridge (itemized table) #}
+    {% if not is_holding_sotp_report|default(false) %}
+    {% include "main_report_pdf/components/_equity_bridge_table.html" %}
+    {% endif %}
+
+    {# NAV Bridge: Book Equity → Corrections → Tax → Corrected NAV.
+       Suppressed when the dedicated Adjusted NAV page is rendering (the
+       deep-dive lives there); replaced with a compact cross-reference so
+       the exec summary still acknowledges the asset-anchor lens without
+       duplicating the bridge table (dedupe-2026-05-03). #}
+    {% if has_adjusted_nav_page|default(false) %}
+    {% if show_nav_bridge|default(false) and nav_corrected_value|default(none) is not none %}
+    <div style="margin-top: 12pt; padding: 8pt 10pt; border-radius: 4pt; background: hsla({{ teal_hsl }}, 0.04); border: 0.5pt solid hsla({{ teal_hsl }}, 0.20); page-break-inside: avoid; break-inside: avoid;">
+        <p style="margin: 0; font-size: 8pt; color: hsl(224, 12%, 35%); line-height: 1.5;">
+            <span style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl({{ teal_hsl }});">{{ t.exec_nav_bridge_xref_label|default("Gecorrigeerde NAV") }}:</span>
+            <strong style="color: hsl(224, 16%, 18%);" title="{{ nav_corrected_value|format_currency }}">{{ nav_corrected_value|format_currency_compact }}</strong>
+            — {{ t.exec_nav_bridge_xref_caption|default("zie het toegewijde NAV-dossier verderop in dit rapport voor de volledige boekwaarde-naar-intrinsieke-waarde brug, latenties en off-balance correcties.") }}
+        </p>
+    </div>
+    {% endif %}
+    {% else %}
+    {% include "main_report_pdf/components/_nav_bridge_table.html" %}
+    {% endif %}
+
+    {# EV vs Equity Clarification — on asset/yield dossiers the headline figure
+       is a NAV/substance or property value, not an enterprise value, so the
+       caption must not call it "EV". #}
+    {# The holding summary already states the SOTP basis in the lead, narrative
+       reconciliation and hero card, followed immediately by the dedicated
+       schedule.  Repeating that sentence in a keep-together callout created a
+       one-card spill page for wider canonical ranges, so only the generic
+       single-company EV/equity clarification renders here. #}
+    {% if valuation_run_id|default(false) and not is_holding_sotp_report|default(false) %}
+    {% include "shared/components/canonical_proceeds_notice.html" %}
+    {% elif not is_holding_sotp_report|default(false) %}
+    <div class="callout callout-info" style="margin: 6pt 0; padding: 8pt 12pt;">
+        <p style="font-size: 8pt; margin: 0 0 4pt 0; font-weight: 600; color: hsl(224, 17%, 12%);">
+            {% if equity_bridge_is_illustrative|default(false) %}{% if (locale|default('nl'))|lower == 'fr' %}Le pont ci-dessus illustre la valeur des capitaux propres à partir de la VE et des postes de trésorerie/dette déposés ; il ne constitue pas une conclusion sur le produit net du vendeur.{% elif (locale|default('nl'))|lower == 'en' %}The bridge above illustrates equity value from EV and the filed cash/debt positions; it is not a seller net-proceeds conclusion.{% else %}De brug hierboven illustreert de aandelenwaarde op basis van EV en de ingediende kas-/schuldposities; dit is geen conclusie over de netto-opbrengst voor de verkoper.{% endif %}{% elif is_yield_method %}{% if (locale|default('nl'))|lower == 'fr' %}La valeur brute de marché immobilière n’est pas le montant net ; les capitaux propres ci-dessus sont après déduction de la dette nette.{% elif (locale|default('nl'))|lower == 'en' %}The gross property market value is not what you net; the equity above is after netting the net debt/cash position.{% else %}De bruto vastgoed-marktwaarde is niet wat u netto ontvangt; het eigen vermogen hierboven is na verrekening van de netto schuld-/kaspositie.{% endif %}{% elif is_asset_method %}{% if (locale|default('nl'))|lower == 'fr' %}La valeur substantielle brute (actifs) n’est pas le montant net ; les capitaux propres ci-dessus sont après déduction de la dette nette et de l’impôt différé.{% elif (locale|default('nl'))|lower == 'en' %}The gross substance value (assets) is not what you net; the equity above is after deducting net debt and deferred tax.{% else %}De bruto substantiewaarde (activa) is niet wat u netto ontvangt; het eigen vermogen hierboven is na aftrek van nettoschuld en latente belasting.{% endif %}{% elif show_ev_equity_bridge|default(false) and has_net_debt_adjustment|default(false) %}{% if (locale|default('nl'))|lower == 'fr' %}Les capitaux propres ci-dessus résultent du pont : valeur d'entreprise (EV) − position nette de dette/trésorerie = capitaux propres — la valeur indicative pour le vendeur avant ajustements de transaction.{% elif (locale|default('nl'))|lower == 'en' %}The equity above follows from the bridge: enterprise value (EV) − net debt/cash position = equity — the indicative seller value before transaction adjustments.{% else %}Het eigen vermogen hierboven volgt uit de brug: ondernemingswaarde (EV) − netto schuld-/kaspositie = eigen vermogen — de indicatieve verkoperswaarde vóór transactiecorrecties.{% endif %}{% else %}{{ t.exec_ev_equity_note_title }}{% endif %}
+        </p>
+        <p style="font-size: 7.5pt; margin: 0 0 3pt 0;">
+            <strong>{% if equity_bridge_is_illustrative|default(false) %}De definitieve aandelenwaarde en netto-opbrengst vereisen bevestiging van restricted cash, leases, schuldachtige posten, werkkapitaal en completion accounts.{% else %}{{ t.exec_ev_equity_line2 }}{% endif %}</strong>
+        </p>
+        <p style="font-size: 7.5pt; margin: 0; color: hsl(224, 10%, 45%);">
+            {% if equity_value_unavailable|default(false) %}
+            {{ source_policy_equity_deficiency }}
+            {% elif has_balance_data %}
+            {{ t.exec_ev_equity_with_balance }}
+            {% else %}
+            {{ t.exec_ev_equity_no_balance }}
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+
+    {# SDE cross-check panel (owner-led micro-SMEs only). For a 1-owner /
+       ≤10-FTE company the second-most-likely buyer methodology is SDE; we
+       show it side-by-side with the EBITDA headline so the reader can do
+       the convergence check without the cross-method math being hidden in
+       a footnote. Three Towers Capital regression. #}
+    {% if not is_holding_sotp_report|default(false) and not suppress_sde_cross_check|default(false) and show_sde_cross_check and not is_sde_method and not is_asset_method and not is_canonical_direct_equity and not is_dcf_only_methodology %}
+    <div class="keep-together" style="margin-top: 10pt; margin-bottom: 10pt; padding: 10pt 12pt; background: hsl(224, 15%, 97%); border-radius: 6pt; border-left: 3pt solid hsl({{ teal_hsl }});">
+        <p style="font-size: 8.5pt; margin: 0 0 4pt 0; font-weight: 700; color: hsl(225, 18%, 12%);">
+            {{ t.exec_sde_cross_check_title }}
+        </p>
+        <p style="font-size: 7.5pt; margin: 0 0 6pt 0; color: hsl(224, 10%, 45%); line-height: 1.5;">
+            {{ t.exec_sde_cross_check_intro }}
+        </p>
+        <table style="width: 100%; border-collapse: collapse; border: none; font-size: 8pt; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">
+            <tr>
+                <td style="padding: 4pt 0; color: hsl(224, 10%, 45%); border: none; background: transparent;">{{ t.exec_sde_cross_check_sde_label }}</td>
+                <td style="padding: 4pt 0; text-align: right; color: hsl(225, 18%, 12%); font-weight: 600; border: none; background: transparent;">{{ sde_cross_check_value|format_currency }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 4pt 0; color: hsl(224, 10%, 45%); border: none; background: transparent;">{{ t.exec_sde_cross_check_multiple_label }}</td>
+                <td style="padding: 4pt 0; text-align: right; color: hsl(225, 18%, 12%); font-weight: 600; border: none; background: transparent;">{{ sde_cross_check_multiple|safe_round(2) }}×</td>
+            </tr>
+            <tr style="border-top: 1pt solid hsl(224, 10%, 85%);">
+                <td style="padding: 5pt 0 4pt 0; color: hsl({{ teal_dark_hsl }}); font-weight: 700; border: none; background: transparent;">= {{ t.exec_sde_cross_check_ev_label }}</td>
+                <td style="padding: 5pt 0 4pt 0; text-align: right; color: hsl({{ teal_dark_hsl }}); font-weight: 700; border: none; background: transparent;">{{ sde_cross_check_ev|format_currency }}</td>
+            </tr>
+        </table>
+        {# When the engine actually weighted this SDE leg into the headline, say so
+           explicitly — otherwise the leg reads as an independent figure unrelated
+           to the (lower) blended headline. #}
+        {% if sde_blend_applied|default(false) %}
+        <p style="font-size: 7pt; color: hsl({{ teal_dark_hsl }}); margin: 6pt 0 0 0; font-weight: 600; line-height: 1.5;">{% if (locale|default('nl'))|lower == 'fr' %}Cette jambe SDE est pondérée à {{ sde_blend_weight_pct }} % avec la jambe EBITDA ({{ ebitda_blend_weight_pct }} %) dans la valeur de référence de {{ sde_blend_headline_ev|format_currency_compact }}.{% elif (locale|default('nl'))|lower == 'en' %}This SDE leg is weighted {{ sde_blend_weight_pct }}% with the EBITDA leg ({{ ebitda_blend_weight_pct }}%) in the {{ sde_blend_headline_ev|format_currency_compact }} headline.{% else %}Deze SDE-leg weegt {{ sde_blend_weight_pct }}% mee met de EBITDA-leg ({{ ebitda_blend_weight_pct }}%) in de richtwaarde van {{ sde_blend_headline_ev|format_currency_compact }}.{% endif %}</p>
+        {% endif %}
+        <p style="font-size: 6.5pt; color: hsl(224, 10%, 50%); margin: 6pt 0 0 0; font-style: italic; line-height: 1.5;">
+            {% if sde_cross_check_source_run_id|default(none) %}{% if locale == 'fr' %}Contrôle croisé issu de la méthode SDE sauvegardée ; les hypothèses de résultat et de rémunération sont celles de cette méthode. Ce contrôle ne remplace pas la conclusion.{% elif locale == 'en' %}Cross-check from the saved SDE method; earnings and owner-compensation assumptions are those of that method. This cross-check does not replace the conclusion.{% else %}Kruiscontrole uit de opgeslagen SDE-methode; resultaat- en eigenaarsvergoedingsaannames volgen die methode. Deze toets vervangt de conclusie niet.{% endif %} {{ sde_cross_check_source_run_id }}{% else %}{{ t.exec_sde_cross_check_footnote }}{% endif %}
+        </p>
+    </div>
+    {% endif %}
+
+    {# Micro-business SDE methodology note (not relevant for DCF/fiscal/NAV) — kept for cases where the cross-check panel above is not rendered. Gated on a small-SME revenue ceiling so it never prints on a mid-market company. #}
+    {% if not is_holding_sotp_report|default(false) and not suppress_sde_cross_check|default(false) and not show_sde_cross_check and not is_sde_method and not is_asset_method and not is_canonical_direct_equity and valuation_methodology != 'DCF Analysis' and (revenue|default(0)|float) < 5000000 and not ev_sourced_from_engine_equity|default(false) %}
+    <p style="font-size: 7pt; color: hsl(224, 10%, 45%); margin-bottom: 6pt; font-style: italic;">
+        {{ t.exec_sde_note }}
+    </p>
+    {% endif %}
+
+    {% include "shared/range_provenance.html" %}
+</div>
+
+{% endif %}

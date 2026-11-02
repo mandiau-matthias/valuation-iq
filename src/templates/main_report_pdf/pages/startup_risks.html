@@ -1,0 +1,62 @@
+{#
+    STARTUP VALUATION — RISK REGISTER (PDF / WeasyPrint)
+
+    Table-based mirror of main_report/pages/startup_risks.html for the
+    print pipeline.  Renders only when the engine produced ≥1 finding;
+    master_report.html gates the include on truthy ``risks_register``.
+#}
+{% set risks = startup_report.risks_register or [] %}
+
+<div class="a4-page">
+    {% include "main_report_pdf/partials/_page_header.html" ignore missing %}
+
+    <h1 style="font-size: 18pt; margin-bottom: 8pt;">{{ startup_report.t.risks_section_title }}</h1>
+    <p style="font-size: 8pt; color: #4a5460; line-height: 1.55; margin-bottom: 10pt;">
+        {{ startup_report.t.risks_section_caption }}
+    </p>
+
+    {% if risks|length == 0 %}
+    <table style="width: 100%; border-collapse: collapse; border: 1pt solid #cfe7d6; background: #f4faf6;">
+        <tr>
+            <td style="padding: 8pt 10pt; font-size: 9pt; color: #1f2937;">
+                {{ startup_report.t.risks_empty_state }}
+            </td>
+        </tr>
+    </table>
+    {% else %}
+    {% for r in risks %}
+    {% set _accent = '#b04545' if r.severity == 'high'
+                      else '#a36a1f' if r.severity == 'medium'
+                      else '#475569' %}
+    {% set _bg = '#fdf3f3' if r.severity == 'high'
+                  else '#fdf6e3' if r.severity == 'medium'
+                  else '#f4f5f7' %}
+    {% set _label = startup_report.t.risks_severity_high if r.severity == 'high'
+                    else startup_report.t.risks_severity_medium if r.severity == 'medium'
+                    else startup_report.t.risks_severity_info %}
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 8pt; border: 1pt solid #e1e4ea; border-left: 3pt solid {{ _accent }}; background: {{ _bg }};">
+        <tr>
+            <td style="padding: 8pt 12pt;">
+                <table style="width: 100%; margin-bottom: 6pt;">
+                    <tr>
+                        <td style="font-size: 10pt; font-weight: 700; color: #1f2937;">{{ r.title }}</td>
+                        <td style="text-align: right; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: {{ _accent }};">
+                            {{ _label }}
+                        </td>
+                    </tr>
+                </table>
+                <p style="font-size: 9pt; line-height: 1.55; color: #1f2937; margin: 0 0 6pt 0;">
+                    {{ r.body }}
+                </p>
+                <p style="font-size: 8pt; color: #4a5460; margin: 0; padding-top: 5pt; border-top: 0.5pt solid #e1e4ea;">
+                    <strong style="color: {{ _accent }};">{{ startup_report.t.risks_col_action }}:</strong>
+                    {{ r.action }}
+                </p>
+            </td>
+        </tr>
+    </table>
+    {% endfor %}
+    {% endif %}
+
+    {% include "main_report_pdf/partials/_footer.html" ignore missing %}
+</div>

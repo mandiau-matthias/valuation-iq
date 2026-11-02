@@ -1,0 +1,82 @@
+{# 
+    TAX LATENCIES TABLE COMPONENT
+    Deferred tax assets/liabilities (belastinglatenties) for equity bridge
+
+    Expected context variables:
+    - t: ReportTranslations object
+    - tax_latencies: list of dicts with {type, description, temporary_difference, tax_rate, amount, account_code?}
+    - tax_latency_net_impact: float (net impact on equity value)
+    - has_tax_latencies: boolean
+    
+    All inline styles use hardcoded values for WeasyPrint compatibility.
+#}
+
+{% if has_tax_latencies and tax_latencies and tax_latencies|length > 0 %}
+<div style="margin-top: 16pt;">
+    <h3 style="margin-bottom: 6pt;">{{ t.tax_latency_title }}</h3>
+    <p style="font-size: 8pt; color: hsl(224, 10%, 45%); margin-bottom: 8pt;">
+        {{ t.tax_latency_description }}
+    </p>
+    
+    <table class="tax-latencies" style="font-size: 7.5pt; width: 100%; table-layout: fixed;">
+        <thead>
+            <tr>
+                <th style="width: 12%;">{{ t.tax_latency_type }}</th>
+                <th style="width: 14%;">{{ t.tax_latency_account_code }}</th>
+                <th style="width: 22%;">{{ t.tax_latency_desc_column }}</th>
+                <th class="text-right" style="width: 17%;">{{ t.tax_latency_temp_diff }}</th>
+                <th class="text-right" style="width: 10%;">{{ t.tax_latency_rate }}</th>
+                <th class="text-right" style="width: 17%;">{{ t.tax_latency_amount }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tl in tax_latencies %}
+            {# Round-1 fix C7: explicit three-way branch on tl.type so an
+               unrecognised value (missing, "mixed", legacy enum) falls into
+               a neutral grey state instead of being silently labeled as a
+               tax liability. The amount sign is the source of truth — when
+               type is missing we still colour the amount green/red based on
+               sign so the reader sees the economic effect. #}
+            {% set _tl_type = (tl.type or 'unknown')|string|lower %}
+            {% if _tl_type == 'active' %}
+                {% set _tl_badge_bg = 'hsla(143, 40%, 42%, 0.15)' %}
+                {% set _tl_badge_fg = 'hsl(143, 40%, 42%)' %}
+                {% set _tl_label = t.tax_latency_active %}
+            {% elif _tl_type == 'passive' %}
+                {% set _tl_badge_bg = 'hsla(6, 55%, 50%, 0.15)' %}
+                {% set _tl_badge_fg = 'hsl(6, 55%, 50%)' %}
+                {% set _tl_label = t.tax_latency_passive %}
+            {% else %}
+                {% set _tl_badge_bg = 'hsl(224, 12%, 96%)' %}
+                {% set _tl_badge_fg = 'hsl(224, 10%, 45%)' %}
+                {% set _tl_label = '—' %}
+            {% endif %}
+            <tr>
+                <td>
+                    <span class="badge" style="background: {{ _tl_badge_bg }}; color: {{ _tl_badge_fg }};">
+                        {{ _tl_label }}
+                    </span>
+                </td>
+                <td class="tabular" style="font-size: 7.5pt;">{% if tl.account_code %}{{ tl.account_code }}{% else %}—{% endif %}</td>
+                <td>{{ tl.description|default('—') }}</td>
+                <td class="text-right tabular">{{ tl.temporary_difference|format_currency }}</td>
+                {# 1dp on tax rate so Decimal-derived 25.005 doesn't print
+                   as `25.005%` (round-9 audit). #}
+                <td class="text-right tabular">{{ tl.tax_rate|safe_round(1) }}%</td>
+                <td class="text-right tabular" style="font-weight: 600; color: {% if tl.amount > 0 %}hsl(143, 40%, 42%){% elif tl.amount < 0 %}hsl(6, 55%, 50%){% else %}hsl(224, 10%, 45%){% endif %};">
+                    {% if tl.amount > 0 %}+{% endif %}{{ tl.amount|format_currency }}
+                </td>
+            </tr>
+            {% endfor %}
+            
+            {# Net impact row #}
+            <tr style="background: hsl(40, 15%, 98%); font-weight: 600; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                <td colspan="5">{{ t.tax_latency_net_impact }}</td>
+                <td class="text-right tabular" style="color: {% if (tax_latency_net_impact|float) > 0 %}hsl(143, 40%, 42%){% elif (tax_latency_net_impact|float) < 0 %}hsl(6, 55%, 50%){% else %}hsl(224, 10%, 45%){% endif %};">
+                    {% if (tax_latency_net_impact|float) > 0 %}+{% endif %}{{ tax_latency_net_impact|format_currency }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endif %}

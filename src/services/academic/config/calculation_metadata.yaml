@@ -1,0 +1,268 @@
+# Calculation Metadata Configuration
+#
+# This YAML file maps 19 valuation calculations to their academic sources and validation rules.
+# Each calculation links to specific academic research that supports the methodology.
+#
+# Structure:
+#   - calculation_id: Unique identifier
+#   - calculation_name: Human-readable name
+#   - description: What this calculation does
+#   - source_ids: List of academic source IDs (from academic_sources.yaml)
+#   - validation_rule_ids: List of validation rule IDs (from validation_rules.py)
+#   - formula: Plain text formula (optional)
+#   - formula_latex: LaTeX formula (optional)
+#   - confidence_level: very_high, high, medium_high, medium, low
+#   - category: Category for grouping (multiples, discounts, dcf, sme_multiples, etc.)
+#   - notes: Additional context (optional)
+#
+# Author: Upswitch CTO Team
+# Date: December 2025
+# Status: Production Ready
+
+---
+# ========================================
+# GENERAL CALCULATIONS
+# ========================================
+
+- calculation_id: ebitda_multiple_adjustment
+  calculation_name: "EBITDA Multiple Adjustment"
+  description: "Adjust base EBITDA multiple for company-specific risk factors"
+  source_ids:
+    - damodaran_2012
+    - mckinsey_2020
+    - pwc_2024
+    - trugman_2017  # SME-specific
+    - coulon_2021    # European SME-specific
+  validation_rule_ids:
+    - ebitda_multiple_range
+    - ebitda_multiple_sme_range
+  formula: "Adjusted_Multiple = Base_Multiple × (1 + Risk_Adjustment)"
+  formula_latex: "\\text{Adjusted Multiple} = \\text{Base Multiple} \\times (1 + \\text{Risk Adjustment})"
+  confidence_level: very_high
+  category: multiples
+
+- calculation_id: size_discount
+  calculation_name: "Size Discount (SME Premium)"
+  description: "Size premium discount for small/mid-sized companies"
+  source_ids:
+    - ibbotson_2024
+    - duff_phelps_2024
+    - fama_french_1992
+    - koeplin_2000  # SME private company discount research
+    - officer_2007   # SME M&A discount research
+  validation_rule_ids:
+    - size_discount_range
+    - size_discount_small_sme
+  formula: "Size_Discount = f(Revenue_Tier) per Ibbotson size premium schedule"
+  confidence_level: very_high
+  category: discounts
+
+- calculation_id: owner_dependency_discount
+  calculation_name: "Owner Dependency Discount"
+  description: "Key person risk adjustment for owner concentration"
+  source_ids:
+    - mckinsey_2020
+    - pwc_2024
+    - damodaran_2012
+    - astrachan_2003  # SME owner dependency research
+    - hitchner_2017    # SME applications expert
+  validation_rule_ids:
+    - owner_dependency_discount_range
+  formula: "Owner_Discount = f(Dependency_Score) per Big 4 guidelines"
+  confidence_level: high
+  category: discounts
+
+- calculation_id: liquidity_discount
+  calculation_name: "Liquidity Discount"
+  description: "Discount for lack of marketability in private companies"
+  source_ids:
+    - longstaff_1995
+    - silber_1991
+    - pwc_2024
+  validation_rule_ids:
+    - liquidity_discount_range
+  formula: "Liquidity_Discount = 20-40% per Longstaff (1995) and Silber (1991)"
+  confidence_level: high
+  category: discounts
+
+- calculation_id: customer_concentration_discount
+  calculation_name: "Customer Concentration Discount"
+  description: "Risk adjustment for customer concentration"
+  source_ids:
+    - mckinsey_2020
+    - pwc_2024
+  validation_rule_ids:
+    - customer_concentration_discount_range
+  formula: "Concentration_Discount = f(Top_Customer_Percentage)"
+  confidence_level: medium_high
+  category: discounts
+
+- calculation_id: dcf_terminal_growth
+  calculation_name: "DCF Terminal Growth Rate"
+  description: "Long-term growth rate for terminal value calculation"
+  source_ids:
+    - koller_2020
+    - damodaran_2018
+    - mckinsey_2020
+  validation_rule_ids:
+    - dcf_terminal_growth_rate
+  formula: "Terminal_Value = FCF × (1 + g) / (WACC - g)"
+  formula_latex: "\\text{Terminal Value} = \\frac{\\text{FCF} \\times (1 + g)}{\\text{WACC} - g}"
+  confidence_level: very_high
+  category: dcf
+
+- calculation_id: dcf_wacc
+  calculation_name: "DCF WACC Calculation"
+  description: "Weighted Average Cost of Capital calculation"
+  source_ids:
+    - damodaran_2012
+    - koller_2020
+    - ibbotson_2024
+    - trugman_2017      # SME WACC with size premium
+    - duff_phelps_2024  # SME cost of capital
+    - coulon_2021        # European SME WACC
+  validation_rule_ids:
+    - dcf_wacc_range
+    # NOTE: dcf_beta_range is NOT applicable here — beta (0.5x–2.0x) is an
+    # input to WACC, not a WACC value (typically 8%–25%). Wiring beta under
+    # dcf_wacc caused every DCF run to fail the beta rule on the WACC value.
+  formula: "WACC = (E/V × Re) + (D/V × Rd × (1-T))"
+  formula_latex: "\\text{WACC} = \\frac{E}{V} \\times R_e + \\frac{D}{V} \\times R_d \\times (1-T)"
+  confidence_level: very_high
+  category: dcf
+
+- calculation_id: valuation_range
+  calculation_name: "Valuation Range Methodology"
+  description: "Calculate valuation range based on confidence and dispersion"
+  source_ids:
+    - mckinsey_2020
+    - damodaran_2012
+  validation_rule_ids:
+    - valuation_range_width
+  formula: "Range = Midpoint × (1 ± Spread_Percentage)"
+  confidence_level: high
+  category: range
+
+# ========================================
+# SME-SPECIFIC CALCULATIONS
+# ========================================
+
+- calculation_id: sme_private_company_discount
+  calculation_name: "SME Private Company Discount"
+  description: "Discount for lack of marketability in private SME transactions"
+  source_ids:
+    - koeplin_2000
+    - officer_2007
+    - trugman_2017
+    - hitchner_2017
+  validation_rule_ids:
+    - sme_private_company_discount
+  formula: "Private_Discount = f(Revenue, Profitability, Marketability) per Koeplin et al."
+  confidence_level: very_high
+  category: sme_discounts
+  notes: "Empirically 15-35% for SMEs per Koeplin et al. (2000) and Officer (2007)"
+
+- calculation_id: sme_owner_compensation_normalization
+  calculation_name: "SME Owner Compensation Normalization"
+  description: "Adjust EBITDA for above/below market owner compensation"
+  source_ids:
+    - trugman_2017
+    - hitchner_2017
+    - pratt_niculita_2008
+  validation_rule_ids:
+    - sme_owner_comp_adjustment
+  formula: "Normalized_EBITDA = Reported_EBITDA + (Market_Comp - Actual_Comp)"
+  formula_latex: "\\text{Normalized EBITDA} = \\text{Reported EBITDA} + (\\text{Market Comp} - \\text{Actual Comp})"
+  confidence_level: very_high
+  category: sme_normalization
+  notes: "Critical for SME valuation - owner compensation often deviates from market"
+
+- calculation_id: sme_wacc_with_size_premium
+  calculation_name: "SME WACC with Size Premium"
+  description: "WACC calculation including SME size premium"
+  source_ids:
+    - trugman_2017
+    - duff_phelps_2024
+    - ibbotson_2024
+    - coulon_2021
+  validation_rule_ids:
+    - sme_wacc_range
+  formula: "WACC_SME = WACC_base + Size_Premium + Company_Specific_Risk"
+  formula_latex: "\\text{WACC}_{\\text{SME}} = \\text{WACC}_{\\text{base}} + \\text{Size Premium} + \\text{CSR}"
+  confidence_level: very_high
+  category: sme_dcf
+  notes: "SME WACC typically 12-25%, significantly higher than large companies"
+
+- calculation_id: sme_ebitda_multiple_belgian
+  calculation_name: "SME EBITDA Multiple Selection (Belgian Market)"
+  description: "Select appropriate EBITDA multiple for Belgian/European SME"
+  source_ids:
+    - vfb_belgium_2024
+    - vlerick_2023
+    - bdo_multiples
+    - coulon_2021
+  validation_rule_ids:
+    - belgian_sme_ebitda_multiple
+  formula: "Multiple_Base = f(Industry, Size, Growth, Profitability) per Belgian market data"
+  confidence_level: very_high
+  category: sme_multiples
+  notes: "Belgian SME multiples tend to be 4.0x-8.0x, more conservative than US/UK"
+
+- calculation_id: sme_transaction_comparables
+  calculation_name: "SME Transaction Comparable Analysis"
+  description: "Analyze comparable SME transactions for multiple selection"
+  source_ids:
+    - pepperdine_2024
+    - bizcomps_2024
+    - done_deals_2024
+    - trugman_2017
+  validation_rule_ids:
+    - sme_transaction_ebitda_multiple
+    - sme_transaction_revenue_multiple
+  formula: "Comp_Multiple = Median(Transaction_Multiples) with adjustments"
+  confidence_level: very_high
+  category: sme_multiples
+  notes: "Use actual SME transaction databases (Pepperdine, BizComps) not public company data"
+
+- calculation_id: family_business_control_discount
+  calculation_name: "Family Business Control/Minority Discount"
+  description: "Minority interest discount for family-controlled SMEs"
+  source_ids:
+    - uclouvain_2022
+    - coulon_2021
+    - astrachan_2003
+  validation_rule_ids:
+    - family_business_control_discount
+  formula: "Minority_Discount = f(Control_Premium, Family_Dynamics, Governance)"
+  confidence_level: high
+  category: sme_discounts
+  notes: "Common in European SMEs - 15-35% for minority stakes"
+
+- calculation_id: sme_information_asymmetry
+  calculation_name: "SME Information Asymmetry Discount"
+  description: "Discount for limited financial transparency in SMEs"
+  source_ids:
+    - astrachan_2003
+    - petersen_2004
+    - officer_2007
+  validation_rule_ids:
+    - sme_information_asymmetry_discount
+  formula: "Info_Discount = f(Financial_Quality, Audit_Status, Transparency)"
+  confidence_level: medium_high
+  category: sme_discounts
+  notes: "5-20% discount for SMEs with poor financial reporting"
+
+- calculation_id: sme_marketability_discount
+  calculation_name: "SME Marketability Discount"
+  description: "Discount for illiquidity and limited buyer pool for SMEs"
+  source_ids:
+    - emory_2002
+    - hitchner_2017
+    - trugman_2017
+  validation_rule_ids:
+    - sme_marketability_discount
+  formula: "Marketability_Discount = f(Size, Industry_Liquidity, Owner_Concentration)"
+  confidence_level: high
+  category: sme_discounts
+  notes: "20-50% for SMEs per Emory pre-IPO studies"
+

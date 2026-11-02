@@ -1,0 +1,79 @@
+{#
+    LIQUIDATION ANALYSIS — PAGE: SENSITIVITY ANALYSIS (PDF version)
+
+    PDF twin of main_report/pages/liquidation_sensitivity.html.
+    Phase 3 §09 — Tornado + P10/P50/P90 quantiles (Iman & Conover 1982).
+#}
+{% set lr = liquidation_report %}
+{% if lr.sensitivity %}
+{% set s = lr.sensitivity %}
+<section class="pdf-page liquidation-page">
+    <header class="pdf-section-header">
+        <span class="pdf-section-number">09</span>
+        <h1 class="pdf-section-title">{{ lr.t.sensitivity_section_title }}</h1>
+        <span class="pdf-badge">{{ lr.t.sensitivity_section_subtitle }}</span>
+    </header>
+
+    <div class="pdf-grid pdf-grid-4">
+        <div class="pdf-card pdf-card-primary">
+            <div class="pdf-card-eyebrow">{{ lr.t.sensitivity_central }}</div>
+            <div class="pdf-card-headline">€{{ s.central|format_eur_amount }}</div>
+        </div>
+        <div class="pdf-card">
+            <div class="pdf-card-eyebrow">{{ lr.t.sensitivity_p10 }}</div>
+            <div class="pdf-card-subheadline">€{{ s.p10|format_eur_amount }}</div>
+        </div>
+        <div class="pdf-card">
+            <div class="pdf-card-eyebrow">{{ lr.t.sensitivity_p50 }}</div>
+            <div class="pdf-card-subheadline">€{{ s.p50|format_eur_amount }}</div>
+        </div>
+        <div class="pdf-card">
+            <div class="pdf-card-eyebrow">{{ lr.t.sensitivity_p90 }}</div>
+            <div class="pdf-card-subheadline">€{{ s.p90|format_eur_amount }}</div>
+        </div>
+    </div>
+
+    {% if s.tornado %}
+    {# Tornado — bars rendered with inline styles so WeasyPrint paints
+       them without depending on `.pdf-tornado-*` rules that don't exist
+       in base.html yet (audit P1 #8).  Anchored at centre — low extends
+       left in warning color, high extends right in primary. #}
+    {% set tornado_max_range = (s.tornado | map(attribute='impact_range') | map('float') | map('abs') | max) if s.tornado else 1 %}
+    {% if tornado_max_range == 0 %}{% set tornado_max_range = 1 %}{% endif %}
+    <h2 class="pdf-h2">{{ lr.t.sensitivity_tornado_title }}</h2>
+    <div style="margin-bottom: 12pt;">
+        <div style="display: grid; grid-template-columns: 1.6fr 3fr 1.3fr; gap: 8pt; padding: 4pt 0; border-bottom: 0.5pt solid hsl(224, 10%, 85%); font-size: 7pt; color: hsl(224, 8%, 50%); text-transform: uppercase; letter-spacing: 0.04em;">
+            <span>{{ lr.t.sensitivity_col_driver }}</span>
+            <span style="text-align: center;">{{ lr.t.sensitivity_col_impact_low }} ←→ {{ lr.t.sensitivity_col_impact_high }}</span>
+            <span style="text-align: right;">{{ lr.t.sensitivity_col_range }}</span>
+        </div>
+        {% for bar in s.tornado %}
+        {% set raw_low_pct = (((bar.impact_low|float)|abs) / tornado_max_range) * 50 %}
+        {% set raw_high_pct = (((bar.impact_high|float)|abs) / tornado_max_range) * 50 %}
+        {% set low_pct = 50 if raw_low_pct > 50 else raw_low_pct %}
+        {% set high_pct = 50 if raw_high_pct > 50 else raw_high_pct %}
+        <div style="display: grid; grid-template-columns: 1.6fr 3fr 1.3fr; gap: 8pt; padding: 6pt 0; align-items: center; border-bottom: 0.5pt solid hsl(224, 10%, 92%); font-size: 8pt;">
+            <span>{{ bar.label }}</span>
+            <span style="position: relative; display: block; height: 10pt; background: hsl(224, 10%, 95%); border-radius: 2pt;">
+                <span style="position: absolute; top: 0; bottom: 0; width: {{ low_pct }}%; right: 50%; background: hsl(17, 50%, 59%); border-radius: 2pt 0 0 2pt;"></span>
+                <span style="position: absolute; top: 0; bottom: 0; width: {{ high_pct }}%; left: 50%; background: hsl(172, 55%, 45%); border-radius: 0 2pt 2pt 0;"></span>
+                <span style="position: absolute; top: -1pt; bottom: -1pt; left: 50%; width: 0.5pt; background: hsl(224, 10%, 60%);"></span>
+            </span>
+            <span style="text-align: right; font-weight: 600;">€{{ bar.impact_range|format_eur_amount }}</span>
+        </div>
+        {% endfor %}
+        <div style="display: flex; justify-content: space-between; font-size: 7pt; color: hsl(224, 8%, 55%); padding-top: 4pt;">
+            <span>€{{ ((tornado_max_range|float * -1))|format_eur_amount }}</span>
+            <span>0</span>
+            <span>+€{{ tornado_max_range|format_eur_amount }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="pdf-prose-small">{{ lr.t.sensitivity_sample_count }}: {{ s.sample_count }}</div>
+
+    {% if s.sources %}
+    <div class="pdf-sources">{{ lr.t.sources_label }}: {{ s.sources|join(' · ') }}</div>
+    {% endif %}
+</section>
+{% endif %}

@@ -1,0 +1,128 @@
+{#
+    REVENUE MULTIPLE VALUATION — PDF version (POLISHED)
+    ====================================================
+    Mirrors the DCF / NAV / EBITDA-Multiple / SDE per-method page rhythm:
+      1. Section header + EV/Sales badge
+      2. Methodology intro (when EV/Sales is the right lens — pre-profit,
+         high-growth, negative-EBITDA recovery, asset-light operators)
+      3. Multiple build-up waterfall
+      4. Calibration ledger filtered to the revenue lane
+      5. EV/Sales summary card (prefers operating_revenue → cover-consistent)
+      6. Sales × multiple sensitivity matrix (re-uses generic component)
+      7. Observed three-year revenue CAGR
+      8. Assumptions footnote
+
+    Conditionally included when `has_revenue_multiple_page` is True.
+    Gating contract: rendered for negative-/low-EBITDA businesses where
+    EV/Sales is the primary lens (early-stage operators, recovery cases,
+    high-growth pre-profit). On profitable SMEs the consolidated
+    calibration page is enough and this page stays parked.
+
+    Migrated 2026-05-15 to share the `method_section` macro with the
+    screen twin.  Only the print-stable body (subtitle, callouts, EV
+    summary table, sensitivity, observed CAGR, assumptions) lives here.
+    The hardcoded-hex subtitle is rendered inside the body slot (not
+    via the macro's `subtitle=` parameter) to preserve print typography
+    until screen+PDF CSS converges.
+
+    Context variables consumed:
+      has_revenue_multiple_page (bool)
+      revenue_multiple_section_number (str|None)
+      revenue_multiple_page_number (int|None)
+      revenue_method (MethodResult — hoisted from engine in aggregator)
+      operating_revenue (float — preferred over `revenue` for cover-anchored consistency)
+      revenue (float — fallback)
+      revenue_multiple_applied (float)
+      revenue_multiple_low, revenue_multiple_high (band)
+      ev_revenue_enterprise_value (engine output)
+      revenue_growth_3y_cagr (decimal ratio — exact three-year horizon)
+      revenue_sensitivity_matrix_2d / revenue_sensitivity_metric / revenue_sensitivity_multiple
+#}
+
+{% from "shared/macros/method_section.html" import method_section with context %}
+
+{% call method_section(
+    method_key='revenue_multiple',
+    section_number=revenue_multiple_section_number|default('R'),
+    title=t.calib_title ~ ' — EV/Sales',
+    tree_root='main_report_pdf',
+    page_number=revenue_multiple_page_number|default(total_pages - 3),
+    method=revenue_method
+) %}
+
+    <p style="margin-bottom: 10pt; font-size: 8pt; color: hsl(224, 10%, 45%);">
+        {{ t.calib_multiples_intro }}
+        <span class="badge badge-primary" style="margin-left: 8pt; font-size: 6pt;">EV/Sales</span>
+    </p>
+
+
+
+    {# EBITDA's shared waterfall is not an EV/Sales calibration schedule.
+       The saved revenue method and its own EV band are disclosed below. #}
+
+    {# NOTE: _calibration_ledger.html intentionally NOT included here.
+       Consolidated multi-method ledger is owned by the calibration page
+       (renders directly after this dossier). Dedupe-2026-05-03. #}
+
+    {# Sales × multiple summary card. Prefers operating_revenue when
+       present so this page agrees with the cover Omzet stat (which
+       Mercury also prefers operating_revenue). Falls back to gross revenue
+       otherwise. #}
+    {% set _top_line = revenue_valuation_basis|default(operating_revenue|default(revenue)) %}
+    {% if _top_line and _top_line|float > 0 %}
+    <div style="margin-top: 18pt; padding: 10pt; border: 1pt solid hsl(224, 10%, 91%); border-left: 3pt solid hsl({{ teal_hsl }}); border-radius: 6pt; page-break-inside: avoid; break-inside: avoid;">
+        <h4 style="font-size: 9.5pt; margin: 0 0 8pt 0; color: hsl(225, 18%, 12%);">EV / Sales — {% if locale == 'fr' %}synthèse{% elif locale == 'en' %}summary{% else %}samenvatting{% endif %}</h4>
+
+        <table style="width: 100%; font-size: 8pt; border-collapse: collapse;">
+            <tr style="border-bottom: 1pt solid hsl(224, 12%, 96%);">
+                <td style="padding: 3pt 0; color: hsl(224, 10%, 45%); border: none;">
+                    {{ t.revenue_multiple_metric_label }}
+                </td>
+                <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">{{ _top_line|format_currency }}</td>
+            </tr>
+            <tr style="border-bottom: 1pt solid hsl(224, 12%, 96%);">
+                <td style="padding: 3pt 0; color: hsl(224, 10%, 45%); border: none;">× EV/Sales-multiple</td>
+                <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">≈{{ revenue_multiple_applied|safe_round(4) }}×</td>
+            </tr>
+            {% if ev_revenue_enterprise_value is defined and ev_revenue_enterprise_value is not none %}
+            <tr>
+                <td style="padding: 5pt 0; font-weight: 700; font-size: 9pt; color: hsl({{ teal_hsl }}); border: none;">= {{ t.dcf_enterprise_value_label }}</td>
+                <td style="padding: 5pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 700; font-size: 9pt; color: hsl({{ teal_hsl }}); border: none;">{{ ev_revenue_enterprise_value|format_currency }}</td>
+            </tr>
+            {% endif %}
+        </table>
+
+        {% if revenue_multiple_low is defined and revenue_multiple_high is defined and revenue_multiple_low is not none and revenue_multiple_high is not none %}
+        <p style="margin: 6pt 0 0 0; font-size: 7pt; color: hsl(224, 10%, 45%);">
+            {{ t.revenue_multiple_range_label }}: <strong style="color: hsl(224, 16%, 18%);">{{ revenue_multiple_low|safe_round(2) }}× — {{ revenue_multiple_high|safe_round(2) }}×</strong>
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {# Sales × multiple sensitivity matrix — re-uses the generic component. #}
+    {% with multiple_sensitivity_matrix_2d=revenue_sensitivity_matrix_2d,
+            multiple_sensitivity_metric=revenue_sensitivity_metric,
+            multiple_sensitivity_multiple=revenue_sensitivity_multiple,
+            metric_base=_top_line,
+            multiple_base=revenue_multiple_applied,
+            metric_label=t.revenue_multiple_metric_label,
+            multiple_axis_label='EV/Sales' %}
+    {% include "main_report_pdf/components/_multiple_sensitivity_matrix.html" ignore missing %}
+    {% endwith %}
+
+    {# Observed three-year CAGR is a descriptive metric, not a PEG valuation rule. #}
+    {% if revenue_growth_3y_cagr is defined and revenue_growth_3y_cagr is not none %}
+    <p style="margin-top: 12pt; font-size: 8pt; line-height: 1.5;">
+        {{ t.revenue_multiple_growth_cagr_label }}: <strong>{{ (revenue_growth_3y_cagr|float * 100)|safe_round(1) }}%</strong>
+    </p>
+    {% endif %}
+
+    {# Assumptions / sources footnote. #}
+    <div style="margin-top: 18pt; padding: 8pt 10pt; border-radius: 6pt; border: 1pt solid hsl(224, 10%, 91%); background: hsl(40, 15%, 98%); page-break-inside: avoid; break-inside: avoid;">
+        <p style="margin: 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.5;">
+            {{ t.revenue_multiple_assumptions_note|default("The revenue multiple uses only the metric-matched, source-dated benchmark committed by the sealed run. Operating revenue excludes financial and non-recurring income. EV/Revenue is a valuation lens and is reconciled with every other eligible method in the sealed synthesis.") }}
+        </p>
+    </div>
+
+{% endcall %}

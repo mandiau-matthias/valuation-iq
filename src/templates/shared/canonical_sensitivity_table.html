@@ -1,0 +1,22 @@
+{# Computed in Decimal from the saved pricing inputs. No arithmetic in this renderer. #}
+{% set _lang = (locale|default('en')|lower)[:2] %}
+{% set scenario = canonical_multiple_sensitivity|default(none) %}
+{% if scenario %}
+<section class="sensitivity-table canonical-sensitivity" data-calculation-id="{{ scenario.calculation_id }}" data-source-run-hash="{{ scenario.source_run_hash }}" style="page-break-inside:avoid;margin-top:10pt;">
+  <h3>{{ t.sensitivity_title }}</h3>
+  <p style="font-size:7pt;">{% if _lang == 'fr' %}Scénario illustratif : variation de ±20 % de la base financière valorisée et du multiple effectif. Autres hypothèses inchangées. Valeur d’entreprise uniquement ; aucune couverture statistique. Les axes sont arrondis à l’affichage ; les cellules utilisent les données exactes. Cette grille ne remplace pas la fourchette enregistrée.{% elif _lang == 'nl' %}Illustratief scenario: de geprijsde financiële maatstaf en de effectieve multiple variëren elk ±20%. Overige aannames blijven gelijk. Alleen ondernemingswaarde; geen statistische dekking. De assen zijn afgerond voor weergave; de cellen gebruiken exacte invoer. Deze tabel vervangt het opgeslagen waarderingsbereik niet.{% else %}Illustrative scenario: vary the pricing metric and effective multiple by ±20% each. All other assumptions remain fixed. Enterprise value only; no statistical coverage. Axes are rounded for display; cells use exact inputs. This grid does not replace the saved valuation range.{% endif %}</p>
+  <table style="width:100%;font-size:7.5pt;">
+    <thead><tr><th>{{ scenario.metric_type }} / {% if _lang == 'fr' %}Multiple{% else %}Multiple{% endif %}</th>{% for column in scenario.columns %}<th style="text-align:right;">≈{{ column.multiple|safe_round(4) }}×<br>{{ '-20%' if loop.index == 1 else ('+20%' if loop.index == 3 else t.sensitivity_base) }}</th>{% endfor %}</tr></thead>
+    <tbody>{% for row in scenario.rows %}<tr><th>≈{{ row.metric|format_currency }}<br>{{ '-20%' if loop.index == 1 else ('+20%' if loop.index == 3 else t.sensitivity_base) }}</th>{% set _base_row = loop.index == 2 %}{% for value in row["values"] %}<td data-value="{{ value }}"{% if _base_row and loop.index == 2 %} data-base-cell="true"{% endif %} style="text-align:right;padding:6pt;{% if _base_row and loop.index == 2 %}font-weight:700;background:#e9f6f3;{% endif %}">{{ value|format_currency }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+  </table>
+  {% set headline = canonical_sensitivity_headline_range|default(none) %}
+  {% if headline %}
+  <p class="canonical-sensitivity-headline" data-value-basis="{{ headline.value_basis }}" data-low="{{ headline.low }}" data-mid="{{ headline.mid }}" data-high="{{ headline.high }}" data-source-run-hash="{{ headline.source_run_hash }}" style="font-size:7pt;">
+    {% if _lang == 'fr' %}Fourchette de valorisation principale :{% elif _lang == 'nl' %}Waarderingsband van de hoofdconclusie:{% else %}Headline valuation range:{% endif %}
+    {{ headline.low|format_currency }} — {{ headline.high|format_currency }}
+    ({% if headline.value_basis == 'equity_value' %}{% if _lang == 'fr' %}capitaux propres{% elif _lang == 'nl' %}aandeelhouderswaarde{% else %}equity value{% endif %}{% else %}{% if _lang == 'fr' %}valeur d’entreprise{% elif _lang == 'nl' %}ondernemingswaarde{% else %}enterprise value{% endif %}{% endif %}; {% if _lang == 'fr' %}calcul enregistré{% elif _lang == 'nl' %}opgeslagen berekening{% else %}saved calculation{% endif %}).
+  </p>
+  {% endif %}
+  <p style="font-size:6pt;word-break:break-all;">{% if _lang == 'fr' %}Calcul du scénario{% elif _lang == 'nl' %}Scenarioberekening{% else %}Scenario calculation{% endif %}: {{ scenario.calculation_id }}<br>{% if _lang == 'fr' %}Calcul source{% elif _lang == 'nl' %}Bronberekening{% else %}Source calculation{% endif %}: {{ scenario.source_run_id }}</p>
+</section>
+{% endif %}

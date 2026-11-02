@@ -1,0 +1,138 @@
+{# DCF Valuation Section - Phase 3 #}
+<div class="section-container bg-white rounded-lg shadow-sm p-6 mb-4 border border-gray-200" data-section="dcf-valuation">
+  <div class="section-header mb-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900">DCF Valuation</h2>
+        <p class="text-sm text-gray-600">Discounted Cash Flow analysis</p>
+      </div>
+      <div class="bg-violet-100 text-violet-800 px-3 py-1 rounded-full text-sm font-semibold">
+        Phase {{ phase | default(3) }}
+      </div>
+    </div>
+  </div>
+  
+  <div class="section-content space-y-4">
+    <!-- DCF Summary -->
+    <div class="bg-gradient-to-br from-violet-50 to-purple-50 rounded-lg p-4 border border-violet-200">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <p class="text-xs text-violet-700 font-semibold mb-1">Enterprise Value</p>
+          <p class="text-2xl font-bold text-violet-900">€{{ "{:,.0f}".format(dcf_enterprise_value | default(0)) }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-violet-700 font-semibold mb-1">Equity Value</p>
+          <p class="text-2xl font-bold text-violet-900">€{{ "{:,.0f}".format(dcf_equity_value | default(0)) }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key Assumptions -->
+    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+      <h3 class="text-sm font-semibold text-gray-700 mb-3">Key Assumptions</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="flex justify-between items-center">
+          <span class="text-xs text-gray-600">WACC</span>
+          <span class="text-sm font-semibold text-gray-900">{{ "{:.2f}".format(wacc | default(0)) }}%</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-xs text-gray-600">Terminal Growth</span>
+          <span class="text-sm font-semibold text-gray-900">{{ "{:.2f}".format(terminal_growth | default(0)) }}%</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-xs text-gray-600">Forecast Period</span>
+          <span class="text-sm font-semibold text-gray-900">{{ forecast_years | default(10) }} years</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-xs text-gray-600">Risk-Free Rate</span>
+          <span class="text-sm font-semibold text-gray-900">{{ "{:.2f}".format(risk_free_rate | default(0)) }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cash Flow Projections -->
+    {% if cash_flow_projections %}
+    <div class="bg-white rounded-lg p-4 border border-gray-200">
+      <h3 class="text-sm font-semibold text-gray-700 mb-3">Free Cash Flow Projections (€000s)</h3>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-xs">
+          <thead>
+            <tr class="border-b border-gray-200">
+              <th class="text-left py-2 text-gray-600">Year</th>
+              {% for year in cash_flow_projections[:5] %}
+              <th class="text-right py-2 text-gray-600">{{ year.year }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b border-gray-100">
+              <td class="py-2 text-gray-700">FCF</td>
+              {% for year in cash_flow_projections[:5] %}
+              <td class="text-right py-2 font-semibold text-gray-900">{{ "{:,.0f}".format(year.fcf / 1000) }}</td>
+              {% endfor %}
+            </tr>
+            <tr>
+              <td class="py-2 text-gray-700">PV</td>
+              {% for year in cash_flow_projections[:5] %}
+              <td class="text-right py-2 text-violet-700">{{ "{:,.0f}".format(year.pv / 1000) }}</td>
+              {% endfor %}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Valuation Components -->
+    <div class="bg-violet-50 rounded-lg p-4 border border-violet-200">
+      <h3 class="text-sm font-semibold text-violet-900 mb-3">Valuation Components</h3>
+      <div class="space-y-2">
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-gray-700">PV of Cash Flows</span>
+          <span class="text-sm font-semibold text-gray-900">€{{ "{:,.0f}".format(pv_cash_flows | default(0)) }}</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-gray-700">Terminal Value</span>
+          <span class="text-sm font-semibold text-gray-900">€{{ "{:,.0f}".format(terminal_value | default(0)) }}</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-gray-700">Less: Net Debt</span>
+          <span class="text-sm font-semibold text-red-700">-€{{ "{:,.0f}".format(net_debt | default(0)) }}</span>
+        </div>
+        <div class="border-t border-violet-300 pt-2 mt-2">
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-bold text-violet-900">Equity Value</span>
+            <span class="text-lg font-bold text-violet-700">€{{ "{:,.0f}".format(dcf_equity_value | default(0)) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sensitivity Analysis -->
+    {% if sensitivity_analysis %}
+    <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+      <h3 class="text-sm font-semibold text-blue-900 mb-2">Sensitivity Analysis</h3>
+      <p class="text-xs text-blue-700 mb-2">Impact of key assumptions on valuation:</p>
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        {% for scenario in sensitivity_analysis %}
+        <div class="bg-white rounded p-2">
+          <p class="text-gray-700 font-medium">{{ scenario.name }}</p>
+          <p class="text-blue-700">€{{ "{:,.0f}".format(scenario.value) }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  
+  <div class="section-footer mt-4 pt-4 border-t border-gray-200">
+    <div class="flex items-center justify-between">
+      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-violet-100 text-violet-800">
+        {{ confidence | default(80) }}% Confidence
+      </span>
+      <span class="text-xs text-gray-500">DCF methodology with {{ forecast_years | default(10) }}-year projections</span>
+    </div>
+  </div>
+</div>
+
+

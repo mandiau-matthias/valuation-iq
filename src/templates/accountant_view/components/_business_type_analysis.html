@@ -1,0 +1,177 @@
+{#
+WORLD-CLASS: Business Type Analysis Component - Strategic Valuation Profile
+Persona: Designer (Clarity/Trust) + Academic (Rigor) + Pragmatic (Reality)
+#}
+
+{% if business_type or business_type_id %}
+<div class="strategic-profile-card" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; overflow: hidden; margin-bottom: 24pt; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+    
+    <!-- Header Section: Identity - Robust Table Layout -->
+    <table style="width: 100%; border-collapse: collapse; margin: 0; border: none; border-top: none; background: linear-gradient(to right, #f4f1ea, #FFFFFF); border-bottom: 1px solid #E2E8F0;">
+        <tr>
+            <td style="padding: 20pt; border: none; vertical-align: middle; width: 72px;">
+                <!-- Icon Container -->
+                <div style="width: 40px; height: 40px; line-height: 40px; background: linear-gradient(to bottom right, #4A5D4F, #607C6B); border-radius: 8px; text-align: center; font-size: 20pt; color: white; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);">
+                    {% if business_type_icon %}{{ business_type_icon }}{% else %}🏢{% endif %}
+                </div>
+            </td>
+            <td style="padding: 20pt 0; border: none; vertical-align: middle;">
+                <p style="font-family: 'Inter', sans-serif; font-size: 9pt; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 4pt 0;">
+                    {{ t.accountant_bta_strategic_profile }}
+                </p>
+                <h3 style="font-family: 'Inter', sans-serif; font-size: 18pt; font-weight: 700; color: #2b303a; margin: 0; line-height: 1.2; text-transform: capitalize;">
+                    {{ business_type | default(business_type_id) }}
+                </h3>
+            </td>
+            <td style="padding: 20pt; border: none; vertical-align: middle; text-align: right;">
+                <!-- Methodology Fit Badge -->
+                <div style="display: inline-block; background: #e9f0eb; border: 1px solid #d4e2db; padding: 4pt 12pt; border-radius: 999px;">
+                    <table style="display: inline-table; border-collapse: collapse; border: none; margin: 0; width: auto; border-top: none;">
+                        <tr>
+                            <td style="padding: 0; border: none; vertical-align: middle; width: 14pt;">
+                                <div style="width: 8px; height: 8px; background: #6b8e72; border-radius: 50%;"></div>
+                            </td>
+                            <td style="padding: 0; border: none; vertical-align: middle;">
+                                <span style="font-family: 'Inter', sans-serif; font-size: 9pt; font-weight: 600; color: #4a5d4f; white-space: nowrap;">
+                                    {{ t.accountant_bta_methodology_fit }}
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Impact Grid: 3 Columns - Robust Table Layout -->
+    <table style="width: 100%; border-collapse: collapse; margin: 0; border: none; border-top: none; background: #E2E8F0;">
+        <tr>
+            <!-- 1. Market Comparability (Multiples Preference) -->
+            <td style="width: 33.33%; padding: 0; border: none; vertical-align: top; background: #FFFFFF; border-right: 1px solid #E2E8F0;">
+                <div style="padding: 20pt;">
+                    <div style="margin-bottom: 12pt;">
+                        <p style="font-size: 9pt; font-weight: 600; color: #64748B; margin: 0 0 8pt 0; text-transform: uppercase;">{{ t.accountant_bta_methodology_alignment }}</p>
+                        <table style="width: 100%; border-collapse: collapse; margin: 0; border: none; border-top: none;">
+                            <tr>
+                                <td style="padding: 0; border: none; vertical-align: baseline;">
+                                    <span style="font-size: 20pt; font-weight: 700; color: #2b303a;">
+                                        {% if business_type_characteristics and business_type_characteristics.multiples_preference is not none %}
+                                            {{ (business_type_characteristics.multiples_preference * 100) | round(0) }}%
+                                        {% else %}
+                                            <span style="font-size: 12pt; color: #94A3B8;">N/A</span>
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td style="padding: 0 0 0 8pt; border: none; vertical-align: baseline;">
+                                    <span style="font-size: 10pt; color: #64748B; white-space: nowrap;">{{ t.accountant_bta_multiples_fit }}</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div style="width: 100%; height: 6px; background: #ebe7de; border-radius: 3px; overflow: hidden; margin-bottom: 12pt; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                        <div style="width: {{ (business_type_characteristics.multiples_preference * 100) if business_type_characteristics and business_type_characteristics.multiples_preference is not none else 0 }}%; height: 100%; background: {{ '#2b303a' if business_type_characteristics and business_type_characteristics.multiples_preference is not none else '#CBD5E1' }}; border-radius: 3px;"></div>
+                    </div>
+                    
+                    <p style="font-size: 9pt; line-height: 1.5; color: #475569; margin: 0;">
+                        {{ t.accountant_bta_high_volume_caption.format(type=business_type) }}
+                    </p>
+                </div>
+            </td>
+
+            <!-- 2. Owner Dependency Risk -->
+            <td style="width: 33.33%; padding: 0; border: none; vertical-align: top; background: #FFFFFF; border-right: 1px solid #E2E8F0;">
+                <div style="padding: 20pt;">
+                    <div style="margin-bottom: 12pt;">
+                        <p style="font-size: 9pt; font-weight: 600; color: #64748B; margin: 0 0 8pt 0; text-transform: uppercase;">{{ t.accountant_bta_key_person_risk }}</p>
+                        <table style="width: 100%; border-collapse: collapse; margin: 0; border: none; border-top: none;">
+                            <tr>
+                                <td style="padding: 0; border: none; vertical-align: baseline;">
+                                    <span style="font-size: 20pt; font-weight: 700; color: {% if business_type_characteristics and business_type_characteristics.owner_dependency_impact is not none %}{% if (business_type_characteristics.owner_dependency_impact) > 0.6 %}#b85c56{% elif (business_type_characteristics.owner_dependency_impact) > 0.3 %}#d9a558{% else %}#6b8e72{% endif %}{% else %}#94A3B8{% endif %};">
+                                        {% if business_type_characteristics and business_type_characteristics.owner_dependency_impact is not none %}
+                                            {{ (business_type_characteristics.owner_dependency_impact * 100) | round(0) }}%
+                                        {% else %}
+                                            <span style="font-size: 12pt;">N/A</span>
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td style="padding: 0 0 0 8pt; border: none; vertical-align: baseline;">
+                                    <span style="font-size: 10pt; color: #64748B; white-space: nowrap;">{{ t.accountant_bta_impact_label }}</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div style="width: 100%; height: 6px; background: #ebe7de; border-radius: 3px; overflow: hidden; margin-bottom: 12pt; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                        <div style="width: {{ (business_type_characteristics.owner_dependency_impact * 100) if business_type_characteristics and business_type_characteristics.owner_dependency_impact is not none else 0 }}%; height: 100%; background: {% if business_type_characteristics and business_type_characteristics.owner_dependency_impact is not none %}{% if (business_type_characteristics.owner_dependency_impact) > 0.6 %}#b85c56{% elif (business_type_characteristics.owner_dependency_impact) > 0.3 %}#d9a558{% else %}#6b8e72{% endif %}{% else %}#CBD5E1{% endif %}; border-radius: 3px;"></div>
+                    </div>
+                    
+                    <p style="font-size: 9pt; line-height: 1.5; color: #475569; margin: 0;">
+                        {% if business_type_characteristics and business_type_characteristics.owner_dependency_impact is not none %}
+                            {% if (business_type_characteristics.owner_dependency_impact) > 0.6 %}
+                                {{ t.accountant_bta_critical_risk }}
+                            {% elif (business_type_characteristics.owner_dependency_impact) > 0.3 %}
+                                {{ t.accountant_bta_moderate_risk }}
+                            {% else %}
+                                {{ t.accountant_bta_low_risk_caption }}
+                            {% endif %}
+                        {% else %}
+                            {{ t.accountant_bta_standard_risk }}
+                        {% endif %}
+                    </p>
+                </div>
+            </td>
+
+            <!-- 3. Profitability Profile -->
+            <td style="width: 33.33%; padding: 0; border: none; vertical-align: top; background: #FFFFFF;">
+                <div style="padding: 20pt;">
+                    <div style="margin-bottom: 12pt;">
+                        <p style="font-size: 9pt; font-weight: 600; color: #64748B; margin: 0 0 8pt 0; text-transform: uppercase;">{{ t.accountant_bta_sector_margin }}</p>
+                        <table style="width: 100%; border-collapse: collapse; margin: 0; border: none; border-top: none;">
+                            <tr>
+                                <td style="padding: 0; border: none; vertical-align: baseline;">
+                                    <span style="font-size: 20pt; font-weight: 700; color: #2b303a;">
+                                        {% if business_type_characteristics and business_type_characteristics.typical_ebitda_margin_median is not none %}
+                                            {{ (business_type_characteristics.typical_ebitda_margin_median * 100) | round(1) }}%
+                                        {% else %}
+                                            <span style="font-size: 12pt; color: #94A3B8;">N/A</span>
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td style="padding: 0 0 0 8pt; border: none; vertical-align: baseline;">
+                                    <span style="font-size: 10pt; color: #64748B; white-space: nowrap;">{{ t.accountant_bta_target_label }}</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <!-- Context Bar -->
+                    <div style="width: 100%; height: 6px; background: #ebe7de; border-radius: 3px; overflow: hidden; margin-bottom: 12pt; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                        <div style="width: 65%; height: 100%; background: #94A3B8; border-radius: 3px;"></div>
+                    </div>
+                    
+                    <p style="font-size: 9pt; line-height: 1.5; color: #475569; margin: 0;">
+                        {{ t.accountant_bta_benchmark_caption.format(type=business_type) }}
+                    </p>
+                </div>
+            </td>
+        </tr>
+    </table>
+    
+    <!-- Footer: Academic Citations - Robust Table Layout -->
+    <table style="width: 100%; border-collapse: collapse; margin: 0; border: none; border-top: 1px solid #E2E8F0; background: #f4f1ea;">
+        <tr>
+            <td style="padding: 12pt 20pt; border: none; vertical-align: middle;">
+                <span style="font-size: 8pt; font-weight: 500; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em;">{{ t.accountant_bta_academic_basis_label }}</span>
+            </td>
+            <td style="padding: 12pt 20pt; border: none; vertical-align: middle; text-align: right;">
+                <div style="font-size: 8pt; color: #64748B; font-style: italic;">
+                    {{ t.accountant_bta_academic_basis_ref }}
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+{% endif %}

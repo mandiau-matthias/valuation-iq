@@ -1,0 +1,27 @@
+{% if sealed_memorandum.normalizations.summary_rows or sealed_memorandum.normalizations.decisions %}
+<div class="a4-page" style="page-break-before:always;">
+    <div class="section-header"><span class="section-number">05</span><h1 class="section-title">{{ sealed_memorandum.labels.normalizations }}</h1></div>
+    {% if sealed_memorandum.normalizations.commentary %}<div class="callout callout-info"><p>{{ sealed_memorandum.normalizations.commentary }}</p></div>{% endif %}
+    {% if sealed_memorandum.normalizations.summary_rows %}
+    <table class="keep-together"><tbody>
+    {% for field in sealed_memorandum.normalizations.summary_rows %}<tr><td>{{ field.label }}</td><td class="text-right" data-sealed-field-id="{{ field.field_id }}">{{ field.display }}</td></tr>{% endfor %}
+    </tbody></table>
+    {% endif %}
+    {% if sealed_memorandum.normalizations.chart %}
+    <div class="sealed-chart" data-chart-id="normalization_bridge"><svg viewBox="{{ sealed_memorandum.normalizations.chart.view_box }}" role="img" aria-label="{{ sealed_memorandum.labels.normalizations }}" xmlns="http://www.w3.org/2000/svg">
+        <path d="M28 112H492" stroke="#dfe2e7" stroke-width="1"></path>
+        {% for bar in sealed_memorandum.normalizations.chart.bars %}<rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" rx="4" fill="{{ '#c87f63' if bar.tone == 'negative' else '#2ba899' }}" data-sealed-field-id="{{ bar.field_id }}"></rect><text x="{{ bar.label_x }}" y="128" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#737985">{{ bar.label }}</text><text x="{{ bar.label_x }}" y="141" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#737985">{{ bar.display }}</text>{% endfor %}
+    </svg></div>
+    {% endif %}
+    <h2>{{ sealed_memorandum.labels.decision }}</h2>
+    {% if sealed_memorandum.normalizations.decisions %}
+    <table><thead><tr><th>{{ sealed_memorandum.labels.account }}</th><th>{{ sealed_memorandum.labels.year }}</th><th>{{ sealed_memorandum.labels.decision }}</th><th class="text-right">{{ sealed_memorandum.labels.amount }}</th></tr></thead><tbody>
+    {% for row in sealed_memorandum.normalizations.decisions %}
+    <tr><td>{{ row.account }}<br><small>{{ row.rationale }}</small></td><td>{{ row.year }}</td><td>{{ row.decision }}</td><td class="text-right" data-sealed-field-id="{{ row.amount_field_id }}">{{ row.amount }}</td></tr>
+    {% endfor %}
+    </tbody></table>
+    {% else %}
+    <div class="pdf-card pdf-card-muted"><p>{{ sealed_memorandum.labels.none }}</p></div>
+    {% endif %}
+</div>
+{% endif %}

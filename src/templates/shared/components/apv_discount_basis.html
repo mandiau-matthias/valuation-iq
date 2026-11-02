@@ -1,0 +1,10 @@
+{% set apv_locale = (locale|default('nl'))[:2] %}
+<div style="margin-top: 18pt; padding: 10pt; border: 1pt solid #e2e8f0; border-left: 3pt solid hsl({{ teal_hsl }}); border-radius: 6pt; page-break-inside: avoid;">
+    <h4 style="font-size: 9.5pt; margin: 0 0 8pt; color: #1f2937;">
+        {% if apv_locale == 'en' %}APV discount assumptions{% elif apv_locale == 'fr' %}Hypothèses d’actualisation APV{% else %}APV-disconteringsaannames{% endif %}
+    </h4>
+    <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
+        <tr><td style="padding: 4pt 0;">{% if apv_locale == 'en' %}Declared unlevered base return{% elif apv_locale == 'fr' %}Rendement de base déclaré sans dette{% else %}Opgegeven basisrendement zonder schuld{% endif %}</td><td style="text-align: right; font-weight: 600;">{{ (dcf_wacc * 100)|safe_round(2) }}%</td></tr>
+        <tr><td style="padding: 4pt 0;">{% if apv_locale == 'en' %}Tax-shield discount rate{% elif apv_locale == 'fr' %}Taux d’actualisation du bouclier fiscal{% else %}Discontovoet belastingschild{% endif %}</td><td style="text-align: right; font-weight: 600;">{{ (dcf_apv_discount_rate * 100)|safe_round(2) }}%</td></tr>
+    </table>
+</div>

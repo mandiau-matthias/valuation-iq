@@ -1,0 +1,62 @@
+{#
+    NAV Deal Structure — Screen version
+    ===================================
+    Mirrors `main_report_pdf/components/_nav_deal_structure.html`. Same
+    self-gating + same translations; design tokens replace the inline-pt
+    sizes.
+#}
+{% if has_nav_deal_structure %}
+{% set _ds = nav_deal_structure %}
+{% set teal = primary_color_hsl or '172, 55%, 45%' %}
+<div style="margin-top: var(--space-5); padding: var(--space-3) var(--space-4); border: 1pt solid hsl(var(--report-slate-200)); border-radius: 6pt; background: hsl(0, 0%, 100%);">
+    <div style="margin-bottom: var(--space-2);">
+        <h4 style="font-size: var(--font-size-md); margin: 0 0 2pt 0; color: hsl(var(--report-slate-900));">{{ t.nav_deal_structure_title }}</h4>
+        <p style="margin: 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.45;">
+            {{ t.nav_deal_structure_subtitle }}
+        </p>
+    </div>
+
+    <table style="width: 100%; font-size: var(--font-size-sm); border-collapse: collapse; margin-bottom: var(--space-2);">
+        <thead>
+            <tr>
+                <th style="text-align: left; padding: 4pt 6pt; font-weight: 600; color: hsl(var(--report-text-muted)); border-bottom: 1pt solid hsl(var(--report-slate-100));"></th>
+                <th style="text-align: right; padding: 4pt 6pt; font-weight: 600; color: hsl(var(--report-text-muted)); border-bottom: 1pt solid hsl(var(--report-slate-100));">{{ _ds.share_deal.label if _ds.share_deal else '—' }}</th>
+                <th style="text-align: right; padding: 4pt 6pt; font-weight: 600; color: hsl(var(--report-text-muted)); border-bottom: 1pt solid hsl(var(--report-slate-100));">{{ _ds.asset_deal.label if _ds.asset_deal else '—' }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set _rows = [
+                ('headline_price', t.nav_deal_headline_price, none, false),
+                ('seller_tax', t.nav_deal_seller_tax, '6, 55%, 50%', false),
+                ('seller_net_proceeds', t.nav_deal_seller_net_proceeds, none, true),
+                ('buyer_tax_shield_npv', t.nav_deal_buyer_tax_shield, '143, 40%, 42%', false),
+                ('buyer_net_cost', t.nav_deal_buyer_net_cost, none, true),
+            ] %}
+            {% for key, label, color_hsl, emphasised in _rows %}
+            <tr>
+                <td style="padding: 3pt 6pt; color: hsl(var(--report-text-default));{% if emphasised %} font-weight: 600;{% endif %}">{{ label }}</td>
+                {% for scenario in [_ds.share_deal, _ds.asset_deal] %}
+                <td style="padding: 3pt 6pt; text-align: right; font-family: 'JetBrains Mono', monospace;{% if emphasised %} font-weight: 600;{% endif %}{% if color_hsl %} color: hsl({{ color_hsl }});{% endif %}">
+                    {% if scenario and scenario.get(key) is not none %}
+                        {% if key == 'seller_tax' %}−{% elif key == 'buyer_tax_shield_npv' and scenario[key] > 0 %}+{% endif %}{{ scenario[key]|abs|format_currency if key == 'seller_tax' else scenario[key]|format_currency }}
+                    {% else %}—{% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if _ds.indifference_premium is not none and _ds.indifference_premium != 0 %}
+    <div style="padding: var(--space-2) var(--space-3); border-radius: 4pt; background: hsla({{ teal }}, 0.06); border: 1pt solid hsla({{ teal }}, 0.2);">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);">
+            <span style="font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl({{ teal }});">{{ t.nav_deal_indifference_premium }}</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: var(--font-size-md); color: hsl({{ teal }});">{{ _ds.indifference_premium|format_currency }}</span>
+        </div>
+        <p style="margin: var(--space-1) 0 0 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.45;">
+            {% if _ds.recommendation %}{{ _ds.recommendation }}{% else %}{{ t.nav_deal_indifference_caption }}{% endif %}
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endif %}

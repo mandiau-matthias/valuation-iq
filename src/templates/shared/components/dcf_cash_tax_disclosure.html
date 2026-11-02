@@ -1,0 +1,20 @@
+{# Only persisted v2 facts: historical reports do not acquire new assumptions. #}
+{% set tax = dcf_cash_tax_provenance|default(none) %}
+{% if tax and tax.schema_version == 'dcf_tax_policy.v2' and tax.rate is not none %}
+{% set tax_locale = (locale|default('nl'))[:2] %}
+{% set tax_display = tax.rate|string %}
+{% if tax_locale in ['nl', 'fr'] %}{% set tax_display = tax_display|replace('.', ',') %}{% endif %}
+<p data-dcf-cash-tax-policy="{{ tax.schema_version }}" style="font-size: 8pt; line-height: 1.45; color: #525d70; margin: 8pt 0 0; break-inside: avoid;">
+{% if tax_locale == 'fr' %}
+Hypothèse fiscale : {{ tax_display }} %. {% if tax.source == 'advisor_override' %}Taux de modélisation fourni.{% else %}Taux de référence du pays {{ tax.country_code }}.{% endif %}
+Taux constant pour les impôts modélisés ; les impôts prévisionnels explicites prévalent. L'éligibilité aux taux réduits, les tranches de bénéfice et les pertes fiscales ne sont pas établies.
+{% elif tax_locale == 'en' %}
+Cash-tax assumption: {{ tax_display }}%. {% if tax.source == 'advisor_override' %}Supplied modeling rate.{% else %}Country reference rate for {{ tax.country_code }}.{% endif %}
+Constant rate for modeled tax inputs; explicit forecast taxes take precedence. Reduced-rate eligibility, profit bands and tax losses are not established.
+{% else %}
+Belastingaanname: {{ tax_display }}%. {% if tax.source == 'advisor_override' %}Aangeleverd modeltarief.{% else %}Landelijk referentietarief voor {{ tax.country_code }}.{% endif %}
+Constant tarief voor gemodelleerde belastingen; expliciet opgegeven prognosebelastingen hebben voorrang. Het recht op verlaagde tarieven, winstschijven en fiscale verliezen zijn niet vastgesteld.
+{% endif %}
+{{ tax.country_pack_version }}.
+</p>
+{% endif %}

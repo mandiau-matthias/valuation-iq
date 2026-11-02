@@ -1,0 +1,267 @@
+{#
+    SELLABILITY SECTION — PDF TWIN (BET-204 / chunk 6).
+
+    WeasyPrint-compatible mirror of
+    main_report/pages/sellability.html. Hardcoded colors instead of
+    `hsl(var(--*))`; tables instead of CSS Flex/Grid where layout matters.
+
+    Same context contract: reads `sellability.*` from context — see
+    `MainReportDataAggregator._build_sellability_section_context`.
+
+    Rendering states identical to the browser variant:
+      • "skipped"        — owner hasn't completed the profile; watermark CTA.
+      • "low_confidence" — sparse data; upsell empty state.
+      • "sale_ready"     — top band + no lifts; congratulatory copy.
+      • "normal"         — score + lifts + tertiary + provenance.
+#}
+
+<div class="report-page" style="page-break-before: always;">
+    <div style="max-width: 760px; margin: 0 auto; padding: 40px 0;">
+        {# ── Header ── #}
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr>
+                <td style="width: 28px; vertical-align: middle;">
+                    <span style="background: hsl({{ teal_hsl }}); color: white; font-size: 11px; font-weight: 700; width: 28px; height: 28px; border-radius: 50%; display: inline-block; text-align: center; line-height: 28px;">S</span>
+                </td>
+                <td style="padding-left: 12px; vertical-align: middle;">
+                    <h2 style="font-size: 18px; font-weight: 700; color: hsl(224, 25%, 12%); margin: 0;">
+                        {{ t.sellability_section_title }}
+                    </h2>
+                    <p style="font-size: 13px; color: hsl(224, 10%, 45%); margin: 4px 0 0 0;">
+                        {{ t.sellability_section_subtitle }}
+                    </p>
+                </td>
+            </tr>
+        </table>
+
+        {% if sellability.state == 'skipped' %}
+        {# ── Skipped state — watermark CTA ── #}
+        <div style="background: hsl(35, 90%, 96%); border: 1px dashed hsl(35, 70%, 75%); border-radius: 12px; padding: 24px; text-align: center;">
+            <p style="font-size: 13px; font-weight: 700; color: hsl(35, 50%, 30%); margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.05em;">
+                {{ sellability.skipped_title }}
+            </p>
+            <p style="font-size: 13px; line-height: 1.6; color: hsl(35, 50%, 22%); margin: 0;">
+                {{ sellability.skipped_body }}
+            </p>
+        </div>
+
+        {% else %}
+        {# Pre-compute band + confidence colors so each block reads them consistently. #}
+        {% if sellability.band == 'sale_ready_today' or sellability.band == 'sale_ready_in_most_ways' %}
+            {% set band_color = 'hsl(143, 40%, 42%)' %}
+        {% elif sellability.band == 'foundations_in_place' %}
+            {% set band_color = 'hsl(37, 65%, 55%)' %}
+        {% else %}
+            {% set band_color = 'hsl(0, 65%, 50%)' %}
+        {% endif %}
+
+        {% if sellability.confidence == 'high' %}
+            {% set confidence_color = 'hsl(143, 40%, 42%)' %}
+        {% elif sellability.confidence == 'med' %}
+            {% set confidence_color = 'hsl(37, 65%, 55%)' %}
+        {% else %}
+            {% set confidence_color = 'hsl(224, 10%, 55%)' %}
+        {% endif %}
+
+        {# ── Score + band + confidence headline (table layout) ── #}
+        <div style="background: hsl(0, 0%, 99%); border: 1px solid hsl(224, 10%, 88%); border-radius: 12px; padding: 24px; margin-bottom: 20px;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="vertical-align: middle;">
+                        <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(224, 10%, 45%); margin: 0 0 6px 0;">
+                            {{ t.sellability_score_label }}
+                        </p>
+                        <p style="font-size: 17px; font-weight: 700; color: hsl(224, 25%, 12%); margin: 0;">
+                            {{ sellability.band_label }}
+                        </p>
+                    </td>
+                    <td style="vertical-align: middle; text-align: right; white-space: nowrap;">
+                        <span style="background: {{ band_color }}; color: white; font-size: 16px; font-weight: 700; padding: 6px 14px; border-radius: 999px; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">
+                            {{ sellability.score }} / 100
+                        </span>
+                    </td>
+                </tr>
+            </table>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 12px;">
+                <tr>
+                    <td style="width: auto; vertical-align: middle; white-space: nowrap; padding-right: 8px;">
+                        <span style="background: {{ confidence_color }}; color: white; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em;">
+                            {{ sellability.confidence_label }}
+                        </span>
+                    </td>
+                    <td style="vertical-align: middle;">
+                        <p style="font-size: 12px; line-height: 1.5; color: hsl(224, 10%, 45%); margin: 0;">
+                            {{ sellability.band_advice }}
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        {# ── Factor breakdown bars (Page 1 top — A1 ticket).
+             WeasyPrint-safe: nested tables instead of flexbox; the bar
+             uses a single-cell coloured td + a width percentage. ── #}
+        {% if sellability.factors %}
+        <div style="margin-bottom: 20px;">
+            <p style="font-size: 14px; font-weight: 700; color: hsl(224, 25%, 12%); margin: 0 0 4px 0;">
+                {{ sellability.factor_breakdown_heading }}
+            </p>
+            <p style="font-size: 12px; color: hsl(224, 10%, 45%); margin: 0 0 12px 0;">
+                {{ sellability.factor_breakdown_subheading }}
+            </p>
+            {% for f in sellability.factors %}
+            {% if f.value_int >= 70 %}
+                {% set bar_color = 'hsl(143, 40%, 42%)' %}
+            {% elif f.value_int >= 40 %}
+                {% set bar_color = 'hsl(37, 65%, 55%)' %}
+            {% else %}
+                {% set bar_color = 'hsl(0, 65%, 50%)' %}
+            {% endif %}
+            <div style="margin-bottom: 12px;">
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 4px;">
+                    <tr>
+                        <td style="vertical-align: middle;">
+                            <p style="font-size: 13px; font-weight: 600; color: hsl(224, 25%, 12%); margin: 0;">
+                                {{ f.label }}
+                            </p>
+                        </td>
+                        <td style="vertical-align: middle; text-align: right; white-space: nowrap;">
+                            <span style="font-size: 11px; font-weight: 700; color: {{ bar_color }}; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">
+                                {{ f.value_int }} / 100
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+                <table style="width: 100%; border-collapse: collapse; background: hsl(224, 15%, 92%); height: 6px; border-radius: 3px;">
+                    <tr>
+                        <td style="background: {{ bar_color }}; width: {{ f.value_pct }}%; height: 6px; border-radius: 3px; padding: 0;"></td>
+                        <td style="width: {{ 100 - f.value_pct }}%; padding: 0;"></td>
+                    </tr>
+                </table>
+                {% if f.explanation %}
+                <p style="font-size: 11px; line-height: 1.5; color: hsl(224, 10%, 45%); margin: 4px 0 0 0;">
+                    {{ f.explanation }}
+                </p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if sellability.state == 'low_confidence' %}
+        <div style="background: hsl(224, 15%, 96%); border: 1px dashed hsl(224, 10%, 80%); border-radius: 12px; padding: 20px; text-align: center;">
+            <p style="font-size: 14px; font-weight: 700; color: hsl(224, 25%, 12%); margin: 0 0 6px 0;">
+                {{ sellability.low_confidence_heading }}
+            </p>
+            <p style="font-size: 13px; line-height: 1.6; color: hsl(224, 10%, 45%); margin: 0;">
+                {{ sellability.low_confidence_body }}
+            </p>
+        </div>
+        {% elif sellability.state == 'sale_ready' %}
+        <div style="background: hsl(143, 40%, 96%); border: 1px solid hsl(143, 40%, 80%); border-radius: 12px; padding: 20px;">
+            <p style="font-size: 14px; font-weight: 700; color: hsl(143, 50%, 25%); margin: 0 0 6px 0;">
+                {{ sellability.sale_ready_empty_heading }}
+            </p>
+            <p style="font-size: 13px; line-height: 1.6; color: hsl(143, 40%, 22%); margin: 0;">
+                {{ sellability.sale_ready_empty_body }}
+            </p>
+        </div>
+        {% else %}
+        {# ── Normal: top-3 lifts (table-stacked for WeasyPrint) ── #}
+
+        {% if sellability.top_three_lifts %}
+        <div style="margin-bottom: 20px;">
+            <p style="font-size: 14px; font-weight: 700; color: hsl(224, 25%, 12%); margin: 0 0 4px 0;">
+                {{ sellability.top_lifts_heading }}
+            </p>
+            <p style="font-size: 12px; color: hsl(224, 10%, 45%); margin: 0 0 12px 0;">
+                {{ sellability.top_lifts_subheading }}
+            </p>
+            {% for lift in sellability.top_three_lifts %}
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px;">
+                <tr>
+                    <td style="background: hsl(0, 0%, 99%); border: 1px solid hsl(224, 10%, 88%); border-radius: 10px; padding: 14px; vertical-align: top;">
+                        <p style="font-size: 13px; font-weight: 600; color: hsl(224, 25%, 12%); margin: 0 0 4px 0;">
+                            {{ lift.factor_label }}
+                        </p>
+                        <p style="font-size: 12px; line-height: 1.5; color: hsl(224, 10%, 45%); margin: 0;">
+                            {{ lift.action }}
+                        </p>
+                    </td>
+                    {% if lift.eur_impact %}
+                    <td style="vertical-align: top; padding-left: 12px; white-space: nowrap;">
+                        <span style="background: hsl(143, 40%, 92%); color: hsl(143, 50%, 25%); font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 6px; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">
+                            +€{% if lift.eur_impact >= 1000000 %}{{ '%.1f'|format(lift.eur_impact / 1000000) }}M{% elif lift.eur_impact >= 1000 %}{{ (lift.eur_impact / 1000)|round|int }}k{% else %}{{ lift.eur_impact|round|int }}{% endif %}
+                        </span>
+                    </td>
+                    {% endif %}
+                </tr>
+            </table>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if sellability.tertiary_lifts %}
+        <div style="margin-bottom: 20px;">
+            <p style="font-size: 13px; font-weight: 600; color: hsl(224, 25%, 12%); margin: 0 0 4px 0;">
+                {{ sellability.tertiary_lifts_heading }}
+            </p>
+            <p style="font-size: 11px; color: hsl(224, 10%, 45%); margin: 0 0 8px 0;">
+                {{ sellability.tertiary_lifts_subheading }}
+            </p>
+            <table style="width: 100%; border-collapse: collapse;">
+                {% for lift in sellability.tertiary_lifts %}
+                <tr>
+                    <td style="font-size: 12px; line-height: 1.6; color: hsl(224, 25%, 12%); padding: 2px 0;">
+                        <span style="font-weight: 600;">{{ lift.factor_label }}</span>
+                        <span style="color: hsl(224, 10%, 45%);"> · {{ lift.action }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% endif %}
+
+        {% endif %}{# end inner state branches #}
+
+        {# Provenance footnote — Aurora-aligned cream callout. Same rhythm
+           as the methodology callouts on every method dossier so the
+           reader sees a uniform "this is methodology / source info"
+           visual signal. Literal-uniformity pass — Aurora-pass-2026-05-03. #}
+        {% if sellability.provenance_label %}
+        <div style="margin: 16px 0 0 0; padding: 8pt 10pt; background: hsl(40, 15%, 98%); border: 1pt solid hsl(224, 10%, 91%); border-radius: 6pt; page-break-inside: avoid; break-inside: avoid;">
+            <p style="margin: 0; font-size: 7.5pt; line-height: 1.5; color: hsl(224, 12%, 35%);">
+                {{ sellability.provenance_label }}
+            </p>
+        </div>
+        {% endif %}
+
+        {# ── Caregiver-tone close + invite-accountant CTA (A1 ticket) ── #}
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid hsl(224, 10%, 88%);">
+            <p style="font-size: 12px; line-height: 1.6; color: hsl(224, 10%, 45%); font-style: italic; margin: 0 0 16px 0;">
+                {{ sellability.close_caregiver }}
+            </p>
+            {% if sellability.invite_accountant_url %}
+            <table style="width: 100%; border-collapse: collapse; background: hsl(0, 0%, 99%); border: 1px solid hsl(224, 10%, 88%); border-radius: 12px;">
+                <tr>
+                    <td style="padding: 16px; vertical-align: middle;">
+                        <p style="font-size: 13px; font-weight: 700; color: hsl(224, 25%, 12%); margin: 0 0 4px 0;">
+                            {{ sellability.invite_accountant_heading }}
+                        </p>
+                        <p style="font-size: 12px; line-height: 1.5; color: hsl(224, 10%, 45%); margin: 0;">
+                            {{ sellability.invite_accountant_body }}
+                        </p>
+                    </td>
+                    <td style="padding: 16px; vertical-align: middle; text-align: right; white-space: nowrap;">
+                        <a href="{{ sellability.invite_accountant_url }}" style="background: hsl({{ teal_hsl }}); color: white; font-size: 12px; font-weight: 600; padding: 8px 14px; border-radius: 8px; text-decoration: none;">
+                            {{ sellability.invite_accountant_cta }}
+                        </a>
+                    </td>
+                </tr>
+            </table>
+            {% endif %}
+        </div>
+
+        {% endif %}{# end skipped vs rendered branch #}
+    </div>
+</div>

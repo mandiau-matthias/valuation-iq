@@ -1,0 +1,8 @@
+{#
+    IM / CIM — PDF twin.
+    Keeps the same section payload and markup as the screen version; the
+    parent PDF shell supplies print styles and the render-mode flag.
+#}
+
+{% set brp_render_mode = "pdf" %}
+{% include "buyer_ready_package/screen/_im.html" %}

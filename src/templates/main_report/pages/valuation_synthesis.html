@@ -1,0 +1,259 @@
+{#
+    VALUATION SYNTHESIS PAGE (Screen version)
+    Conditional page — only when has_weighted_synthesis is true.
+
+    Context: t (ReportTranslations), synthesis_*, upswitch_adaptive_value, locale,
+    show_dcf_before_calibration, show_fiscal_reference.
+#}
+
+{% if valuation_synthesis_page_number is defined and valuation_synthesis_page_number is not none %}
+{% set synthesis_page_number = valuation_synthesis_page_number %}
+{% else %}
+{% set synthesis_page_number = 8 if show_dcf_before_calibration and show_fiscal_reference else 7 if show_dcf_before_calibration or show_fiscal_reference else 6 %}
+{% endif %}
+{% set weighted_synthesis_active = has_weighted_synthesis|default(false) %}
+{% set synthesis_reference_label = (t.synthesis_engine_reference_label|default(t.synthesis_adaptive_label)) if weighted_synthesis_active else t.synthesis_adaptive_label %}
+{% set synthesis_benchmark_heading = (t.synthesis_benchmark_label_weighted|default(t.synthesis_benchmark_label)) if weighted_synthesis_active else t.synthesis_benchmark_label %}
+{% set synthesis_disclaimer_copy = (t.synthesis_disclaimer_body_weighted|default(t.synthesis_disclaimer_body)) if weighted_synthesis_active else t.synthesis_disclaimer_body %}
+
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div class="section-header">
+        <span class="section-number">{{ valuation_synthesis_section_number|default(("%02d"|format(synthesis_page_number - 1))) }}</span>
+        <h1 class="section-title">{{ t.synthesis_title }}</h1>
+    </div>
+
+    <p style="margin-bottom: var(--space-3); font-size: var(--font-size-sm); color: hsl(var(--report-text-muted));">
+        {{ t.synthesis_subtitle }}
+    </p>
+
+    <div style="background: hsl(210, 80%, 96%); border: 1px solid hsl(210, 60%, 85%); border-radius: 8px; padding: 12pt 16pt; margin-bottom: var(--space-4);">
+        <p style="font-size: var(--font-size-sm); color: hsl(210, 50%, 30%); margin: 0; font-weight: 600;">
+            {{ t.synthesis_info_banner }}
+        </p>
+    </div>
+
+    <div style="background: hsl(var(--report-teal) / 0.06); border: 1px solid hsl(var(--report-teal) / 0.18); border-radius: 12px; padding: var(--space-5); text-align: center; margin-bottom: var(--space-4);">
+        <p style="font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.08em; color: hsl(var(--report-text-muted)); margin: 0 0 var(--space-1) 0; font-weight: 600;">
+            {{ t.synthesis_total }}
+        </p>
+        {# The blend formula must WRAP, not scroll. The previous
+           `white-space: nowrap; overflow-x: auto` scrolled on screen but
+           CLIPPED on print/Save-as-PDF (no horizontal scrollbar on paper),
+           so a 3+ method blend ran off the page edge. The NL/EN formula has
+           spaces between terms, so normal wrapping breaks cleanly between
+           terms; `overflow-wrap: break-word` is the last-resort fallback for
+           the FR variant (which renders operators without surrounding
+           spaces) and for very large legs. `word-break: break-all` is
+           deliberately NOT used — it would shatter `€2.500.000`/operators
+           mid-token (the Round-9 regression). #}
+        
+    {% if synthesis_formula_display %}
+        <p style="font-size: var(--font-size-md); color: hsl(var(--report-text)); margin: 0; font-family: 'JetBrains Mono', monospace; overflow-wrap: break-word; line-height: 1.7;">
+            {{ synthesis_formula_display }}
+        </p>
+        {% endif %}
+    </div>
+
+    {% if upswitch_adaptive_value is not none %}
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-bottom: var(--space-4);">
+        <div style="background: hsl(var(--report-surface)); border: 1px solid hsl(var(--report-slate-200)); border-radius: 10px; padding: var(--space-3); text-align: center;">
+            <p style="font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-text-muted)); margin: 0 0 var(--space-1) 0;">
+                {{ synthesis_reference_label }}
+            </p>
+            <p style="font-size: 20pt; font-weight: 700; color: hsl(var(--report-text)); margin: 0; ">
+                {{ upswitch_adaptive_value|format_currency_compact }}
+            </p>
+        </div>
+        <div style="background: hsl(var(--report-teal) / 0.08); border: 1px solid hsl(var(--report-teal) / 0.15); border-radius: 10px; padding: var(--space-3); text-align: center;">
+            <p style="font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-teal-dark)); margin: 0 0 var(--space-1) 0;">
+                {{ t.synthesis_accountant_blend_label }}
+            </p>
+            <p style="font-size: 20pt; font-weight: 700; color: hsl(var(--report-teal-dark)); margin: 0; ">
+                {{ synthesis_blended_value|format_currency_compact }}
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if synthesis_contributions %}
+    <div style="margin-bottom: var(--space-4);">
+        <h3 style="font-size: var(--font-size-sm); font-weight: 700; color: hsl(var(--report-text)); margin: 0 0 var(--space-2) 0; text-transform: uppercase; letter-spacing: 0.04em;">
+            {{ t.synthesis_section_composition }}
+        </h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: var(--font-size-sm);">
+            <thead>
+                <tr style="border-bottom: 2px solid hsl(var(--report-slate-200));">
+                    <th style="width: 36%; text-align: left; padding: 8pt 0; color: hsl(var(--report-text-muted)); font-weight: 600; font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.04em;">
+                        {{ t.synthesis_col_method }}
+                    </th>
+                    <th style="width: 24%; text-align: right; padding: 8pt 0; color: hsl(var(--report-text-muted)); font-weight: 600; font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.04em;">
+                        {{ t.synthesis_col_value }}
+                    </th>
+                    <th style="width: 14%; text-align: right; padding: 8pt 0; color: hsl(var(--report-text-muted)); font-weight: 600; font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.04em;">
+                        {{ t.synthesis_col_weight }}
+                    </th>
+                    <th style="width: 26%; text-align: right; padding: 8pt 0; color: hsl(var(--report-text-muted)); font-weight: 600; font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.04em;">
+                        {{ t.synthesis_col_contribution }}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in synthesis_contributions|default([]) %}
+                {% set _value_basis_label = c.value_basis_label %}
+                {% set _methodology_note = c.methodology_note %}
+                {% if not _value_basis_label and c.value_basis == 'net_engine' %}
+                    {% set _value_basis_label = t.synthesis_net_engine_value_basis %}
+                {% endif %}
+                {% if not _methodology_note and c.value_basis == 'net_engine' %}
+                    {% set _methodology_note = t.synthesis_net_engine_note %}
+                {% endif %}
+                <tr style="border-bottom: 1px solid hsl(var(--report-slate-100));">
+                    <td style="padding: 10pt 0; color: hsl(var(--report-text)); font-weight: 500;">
+                        <div>{{ c.label|default(c.method_key) }}</div>
+                        {% if _value_basis_label %}
+                        <div style="display: inline-block; margin-top: 3pt; padding: 1pt 5pt; border-radius: 999px; background: hsl(var(--report-teal) / 0.10); color: hsl(var(--report-teal-dark)); font-size: 7pt; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase;">
+                            {{ _value_basis_label }}
+                        </div>
+                        {% endif %}
+                        {% if _methodology_note %}
+                        <div style="margin-top: 3pt; color: hsl(var(--report-text-muted)); font-size: var(--font-size-xs); line-height: 1.45; font-weight: 400;">
+                            {{ _methodology_note }}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 10pt 0; text-align: right; color: hsl(var(--report-text)); white-space: nowrap; letter-spacing: 0;">
+                        <div>{% if synthesis_value_basis == 'enterprise_value' %}{{ (c.enterprise_value|default(0))|format_currency_compact }}{% else %}{{ (c.equity_value|default(0))|format_currency_compact }}{% endif %}</div>
+                        {% if c.bridge_adjustment %}
+                        <div style="margin-top: 3pt; color: hsl(var(--report-text-muted)); font-size: var(--font-size-xs);">
+                            +{{ c.bridge_adjustment|format_currency_compact }} {{ c.bridge_adjustment_label|default('') }}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 10pt 0; text-align: right; color: hsl(var(--report-text-muted)); white-space: nowrap; letter-spacing: 0;">
+                        {{ ((c.weight|default(0)) * 100)|safe_round(0) }}%
+                    </td>
+                    <td style="padding: 10pt 0; text-align: right; font-weight: 600; color: hsl(var(--report-teal-dark)); white-space: nowrap; letter-spacing: 0;">
+                        {{ (c.weighted_contribution|default(0))|format_currency_compact }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr style="border-top: 2px solid hsl(var(--report-slate-200));">
+                    <td style="padding: 10pt 0; font-weight: 700; color: hsl(var(--report-text));">
+                        {{ t.synthesis_table_footer_total }}
+                    </td>
+                    <td style="padding: 10pt 0;"></td>
+                    <td style="padding: 10pt 0; text-align: right; font-weight: 700; color: hsl(var(--report-text));">
+                        {{ t.synthesis_weight_total_percent }}
+                    </td>
+                    <td style="padding: 10pt 0; text-align: right; font-weight: 800; color: hsl(var(--report-teal-dark)); font-size: var(--font-size-md); white-space: nowrap; letter-spacing: 0;">
+                        {{ synthesis_blended_value|format_currency_compact }}
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+        {% if synthesis_value_basis == 'enterprise_value' and enterprise_value_low is not none and enterprise_value_mid is not none and enterprise_value_high is not none %}
+        <div style="margin-top: var(--space-2); padding: var(--space-2) var(--space-3); border-left: 3pt solid hsl(var(--report-teal)); background: hsl(var(--report-teal) / 0.05); border-radius: 4pt;">
+            <p style="margin: 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.45; letter-spacing: 0;">
+                <strong>{% if (locale|default('nl'))|lower == 'fr' %}EV pondérée — sensibilité du modèle (basse / médiane / haute){% elif (locale|default('nl'))|lower == 'en' %}Weighted EV — model sensitivity (low / midpoint / high){% else %}Gewogen EV — modelgevoeligheid (laag / midden / hoog){% endif %}:</strong>
+                {{ enterprise_value_low|format_currency }} / {{ enterprise_value_mid|format_currency }} / {{ enterprise_value_high|format_currency }}.
+            </p>
+        </div>
+        {% endif %}
+        {% if dcf_enterprise_value_low|default(0) and dcf_enterprise_value_mid|default(0) and dcf_enterprise_value_high|default(0) %}
+        <p style="margin: var(--space-2) 0 0 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.45; letter-spacing: 0;">
+            <strong>DCF-EV laag / midden / hoog:</strong> {{ dcf_enterprise_value_low|format_currency }} / {{ dcf_enterprise_value_mid|format_currency }} / {{ dcf_enterprise_value_high|format_currency }}.
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if synthesis_justification %}
+    <div style="margin-bottom: var(--space-4);">
+        <h3 style="font-size: var(--font-size-sm); font-weight: 700; color: hsl(var(--report-text)); margin: 0 0 var(--space-2) 0; text-transform: uppercase; letter-spacing: 0.04em;">
+            {{ t.synthesis_justification_label }}
+        </h3>
+        <div style="background: hsl(var(--report-surface)); border: 1px solid hsl(var(--report-slate-200)); border-radius: 8px; padding: var(--space-3); font-size: var(--font-size-sm); color: hsl(var(--report-text)); line-height: 1.7;">
+            <p style="margin: 0;">{{ synthesis_justification }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div style="background: hsl(35, 90%, 96%); border: 1px solid hsl(35, 70%, 85%); border-radius: 8px; padding: 12pt 16pt; margin-bottom: var(--space-3);">
+        <p style="font-size: var(--font-size-sm); color: hsl(35, 50%, 30%); margin: 0;">
+            <strong>{{ t.synthesis_disclaimer_title }}:</strong> {{ synthesis_disclaimer_copy }}
+        </p>
+    </div>
+
+    {% if upswitch_adaptive_value is not none %}
+    <div style="background: hsl(var(--report-teal-light)); border-radius: 8px; padding: 14pt 16pt;">
+        <p style="font-size: var(--font-size-sm); color: hsl(var(--report-teal-dark)); margin: 0 0 6pt 0; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">
+            {{ synthesis_benchmark_heading }}
+        </p>
+        <p style="font-size: 20pt; color: hsl(var(--report-teal-dark)); font-weight: 800; margin: 0 0 6pt 0;">
+            {{ upswitch_adaptive_value | format_currency }}
+        </p>
+        <p style="font-size: var(--font-size-sm); line-height: 1.6; color: hsl(var(--report-text-muted)); margin: 0;">
+            {% if has_weighted_synthesis %}
+            {{ t.synthesis_benchmark_note_weighted }}
+            {% else %}
+            {{ t.synthesis_benchmark_note }}
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+
+    {# Pipeline steps + academic citations — Aurora-tokened screen
+       twin (created 2026-05-10). Method registry is shared between
+       screen and PDF versions; only styling tokens differ. #}
+    {% with method_key='custom_weighted' %}
+    {% include "main_report/components/_method_citations.html" %}
+
+    {# Full page for the third lens. It answers a different question and lands
+       on a different value basis, so it is presented in its own right rather
+       than as a footnote — and every assumption that is NOT company-specific
+       is named as such. #}
+    {% if show_unweighted_lens_disclosure|default(false) %}
+    {% set _ul_fr = (locale|default('nl'))|lower == 'fr' %}
+    {% set _ul_en = (locale|default('nl'))|lower == 'en' %}
+    <h3 style="margin: 14pt 0 6pt 0; font-size: 9.5pt; color: hsl(225, 18%, 12%);">
+        {% if _ul_fr %}Lentille chiffre d'affaires / barème — contrôle sectoriel historique{% elif _ul_en %}Revenue / barema lens — historical sector reasonableness check{% else %}Omzet-/baremalens — historische sectorale redelijkheidstoets{% endif %}
+    </h3>
+    <table style="width: 100%; border-collapse: separate; border-spacing: 6pt 0; margin: 0 -6pt 8pt -6pt;">
+        <tr>
+            {% for lens in unweighted_valuation_lenses %}
+            <td style="width: 50%; vertical-align: top; border: 1pt solid hsl(224, 10%, 88%); border-radius: 6pt; padding: 8pt 10pt; background: hsl(0, 0%, 100%);">
+                <div style="font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(224, 10%, 45%); font-weight: 700;">{{ lens.label }}</div>
+                <div style="font-size: 13pt; font-weight: 700; color: hsl(225, 18%, 12%); margin-top: 2pt;">{{ lens.value|format_currency }}</div>
+                <div style="font-size: 6.5pt; color: hsl(224, 10%, 45%);">{% if _ul_fr %}valeur des capitaux propres, illustrative · 0% de pondération{% elif _ul_en %}illustrative equity value · 0% weight{% else %}illustratieve aandelenwaarde · 0% gewicht{% endif %}</div>
+                <p style="margin: 5pt 0 0 0; font-size: 6.6pt; line-height: 1.45; color: hsl(224, 10%, 45%);">{{ lens.computation_note }}</p>
+            </td>
+            {% endfor %}
+        </tr>
+    </table>
+    <div style="padding: 8pt 10pt; border-radius: 6pt; border: 1pt solid hsl(224, 10%, 88%); border-left: 3pt solid hsl(224, 12%, 55%); background: hsl(40, 15%, 98%); ">
+        <p style="margin: 0 0 3pt 0; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(225, 18%, 12%);">
+            {% if _ul_fr %}Pourquoi 0% de pondération ?{% elif _ul_en %}Why 0% weight?{% else %}Waarom 0% gewicht?{% endif %}
+        </p>
+        <p style="margin: 0; font-size: 7pt; line-height: 1.5; color: hsl(224, 12%, 35%);">
+            {% if _ul_fr %}Le coefficient de 0,85× provient d'un cas pratique fictif de BDO et n'est pas calibré pour cette entreprise; l'impact fiscal de 12,5% est également une hypothèse de ce cas. La méthode produit une valeur des capitaux propres, alors que les deux méthodes pondérées produisent une valeur d'entreprise. BDO avertit en outre que le barème traditionnel tient insuffisamment compte de la rentabilité et peut surestimer.{% elif _ul_en %}The 0.85x coefficient comes from a fictitious BDO worked example and is not calibrated to this company; the 12.5% fiscal impact is likewise a case hypothesis. The method yields an equity value, whereas both weighted methods yield enterprise value. BDO further warns that the traditional barema insufficiently reflects profitability and can overstate.{% else %}De 0,85×-coëfficiënt komt uit een fictief BDO-praktijkgeval en is niet bedrijfsspecifiek voor deze onderneming gekalibreerd; de fiscale impact van 12,5% is eveneens een casushypothese. De methode levert een aandelenwaarde, terwijl de twee gewogen methodes ondernemingswaarde opleveren. BDO waarschuwt bovendien dat de traditionele baremamethode onvoldoende rekening houdt met rentabiliteit en tot overschatting kan leiden.{% endif %}
+        </p>
+        <p style="margin: 4pt 0 0 0; font-size: 6.8pt; line-height: 1.45; color: hsl(224, 10%, 45%);">
+            <strong>{% if _ul_fr %}Condition{% elif _ul_en %}Condition{% else %}Voorwaarde{% endif %}:</strong>
+            {% if _ul_fr %}cette illustration suppose qu'aucun fonds de commerce ou goodwill déjà activé n'est compté deux fois. La composition des capitaux propres comptables et le périmètre immobilier doivent être confirmés.{% elif _ul_en %}this illustration assumes no already-capitalised acquired goodwill or handelsfonds is double counted. The composition of book equity and the property perimeter must be confirmed.{% else %}deze illustratie veronderstelt dat geen reeds geactiveerd aangekocht handelsfonds of goodwill dubbel wordt geteld. De samenstelling van het boekhoudkundig eigen vermogen en de vastgoedperimeter moeten worden bevestigd.{% endif %}
+        </p>
+        <p style="margin: 4pt 0 0 0; font-size: 6.8pt; line-height: 1.45; color: hsl(224, 10%, 45%);">
+            {% if _ul_fr %}Ces lentilles ne font pas partie de la conclusion pondérée en valeur d'entreprise; la sensibilité du modèle affichée ne les inclut pas.{% elif _ul_en %}These lenses are not part of the weighted enterprise-value conclusion; the displayed model sensitivity does not include them.{% else %}Deze lenzen maken geen deel uit van de gewogen EV-conclusie; de getoonde modelgevoeligheid omvat hen niet.{% endif %}
+        </p>
+    </div>
+    {% endif %}
+
+    {% endwith %}
+
+    {% with page_number=synthesis_page_number, total_pages=total_pages %}
+    {% include "main_report/partials/_footer.html" %}
+    {% endwith %}
+</div>

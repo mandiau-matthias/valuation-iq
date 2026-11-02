@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "generated_at": "2025-12-07",
+    "method": "calculated_from_css_conservative",
+    "note": "Conservative heights to ensure pages stay within A4 limits. Includes safety margins for complex layouts.",
+    "a4_content_width_pt": 510.24,
+    "a4_content_height_pt": 728.5,
+    "safe_content_height_pt": 550.0
+  },
+  "elements": {
+    "h1": 120.0,
+    "h2": 80.0,
+    "h3": 60.0,
+    "paragraph_short": 50.0,
+    "paragraph_medium": 70.0,
+    "paragraph_long": 110.0,
+    "table_single_row": 220.0,
+    "table_five_rows": 420.0,
+    "table_with_caption": 280.0,
+    "table_row_incremental": 45.0,
+    "table_caption_overhead": 50.0,
+    "table_header_height": 55.0,
+    "table_card_padding": 60.0,
+    "report_callout": 100.0,
+    "report_callout_warning": 100.0,
+    "hero_card": 500.0,
+    "grid_layout_2col": 220.0,
+    "unordered_list": 110.0,
+    "list_item": 35.0,
+    "stat_card": 160.0,
+    "page_break": 0.0,
+    "margin_top_standard": 30.0,
+    "margin_bottom_standard": 30.0,
+    "report_section_overhead": 50.0
+  },
+  "formulas": {
+    "paragraph_height_per_line": 22.0,
+    "table_base_height": 180.0,
+    "table_row_height": 45.0,
+    "average_chars_per_line": 85,
+    "char_width_pt": 6.0
+  },
+  "notes": {
+    "version": "1.1_conservative",
+    "change": "Increased all heights by 20-30% for safety margin to prevent overflow",
+    "h1": "font-size: 28pt, margin-top: 48pt, margin-bottom: 24pt + safety (total: ~120pt)",
+    "h2": "font-size: 18pt, margin-top: 32pt, margin-bottom: 16pt + safety (total: ~80pt)",
+    "h3": "font-size: 14pt, margin-top: 24pt, margin-bottom: 12pt + safety (total: ~60pt)",
+    "paragraph": "font-size: 11pt, line-height: 1.6, margin-bottom: 12pt + wrapping buffer",
+    "table": "Conservative row heights account for cell padding, borders, and potential wrapping",
+    "hero_card": "Large navy card - increased to account for internal table and spacing"
+  }
+}

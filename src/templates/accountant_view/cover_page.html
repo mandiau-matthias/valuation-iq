@@ -1,0 +1,99 @@
+<!-- 
+    COVER PAGE: Fixed A4 Professional Layout
+    Philosophy: Trust, Transparency, Minimalism
+    Compliance: Belgian Legal Disclaimer included
+    Design: Professional valuation report standards
+    Note: FIXED 297mm height with table layout for perfect A4 rendering
+-->
+<div class="cover-sheet" style="page: cover; height: 297mm; width: 210mm; position: relative; font-family: 'Inter', 'Helvetica', 'Arial', sans-serif; background-color: #FFFFFF; color: #2b303a; page-break-after: always; break-after: page; page-break-inside: avoid; overflow: hidden;">
+
+    <!-- Subtle Accent Line (Top Right) - Brand Accent: Sage -->
+    <div style="position: absolute; top: 0; right: 2cm; width: 4px; height: 120px; background-color: #4A5D4F;"></div>
+
+    <!-- Watermark Container (Robust Positioning) -->
+    <div style="position: absolute; right: -25pt; top: 150pt; opacity: 0.08; z-index: 0; pointer-events: none;">
+        {% if business_type_icon %}
+            <span style="font-size: 330pt; line-height: 1;">{{ business_type_icon }}</span>
+        {% else %}
+            <span style="font-size: 330pt; line-height: 1;">🏢</span>
+        {% endif %}
+    </div>
+
+    <!-- Main Layout Table: Precise vertical distribution for A4 -->
+    <table style="width: 100%; height: 297mm; max-height: 297mm; border-collapse: collapse; border: none; margin: 0; padding: 0;">
+        <!-- Top Spacer: Professional margin -->
+        <tr style="height: 80pt;">
+            <td style="border: none;"></td>
+        </tr>
+
+        <!-- Main Content: Vertically centered -->
+        <tr style="height: 350pt;">
+            <td style="vertical-align: middle; padding: 0 2cm; position: relative; z-index: 10; border: none;">
+                <div style="max-width: 90%;">
+                    <!-- Report Type Label -->
+                    <div style="border-bottom: 1px solid #E2E8F0; padding-bottom: 8pt; margin-bottom: 16pt; display: inline-block;">
+                        <span style="font-family: 'Inter', 'Helvetica', 'Arial', sans-serif; font-size: 10pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: #64748B;">
+                            {{ t.accountant_cover_report_type }}
+                        </span>
+                    </div>
+
+                    <!-- Main Title: Company Name -->
+                    <h1 style="font-size: 42pt; font-weight: 800; line-height: 1.05; letter-spacing: -0.04em; margin: 0 0 20pt 0; padding: 0; color: #2b303a; word-wrap: break-word;">
+                        {{ company_name | default('Company Name') }}
+                    </h1>
+
+                    <!-- Integrated Business Icon -->
+                    <table style="border: none; border-collapse: collapse; margin-left: 0;">
+                        <tr>
+                            <td style="width: 48px; padding: 0; border: none;">
+                                <div style="width: 48px; height: 48px; line-height: 48px; background: linear-gradient(to bottom right, #5A717D, #38494F); border-radius: 12px; text-align: center; font-size: 24pt; color: white; display: block; box-shadow: 0 1px 2px 0 rgba(43, 48, 58, 0.2);">
+                                    {% if business_type_icon %}{{ business_type_icon }}{% else %}🏢{% endif %}
+                                </div>
+                            </td>
+                            <td style="padding-left: 16pt; vertical-align: middle; border: none;">
+                                <p style="font-size: 14pt; font-weight: 400; color: #64748B; margin: 0; line-height: 1.2;">
+                                    {{ business_type | default(t.accountant_cover_business_default) }}
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+        
+        <!-- Footer: Fixed at bottom -->
+        <tr style="height: calc(297mm - 430pt);">
+            <td style="vertical-align: bottom; padding: 0 2cm 1cm 2cm; border: none;">
+                <!-- Legal Disclaimer (Belgian Compliance) -->
+                <div style="margin-bottom: 10pt; padding-top: 6pt; border-top: 1px solid #E2E8F0;">
+                    <p style="font-size: 6.5pt; color: #94A3B8; line-height: 1.3; text-align: justify; margin: 0;">
+                        <strong>{{ t.accountant_cover_disclaimer_label }}</strong> {{ t.accountant_cover_disclaimer_text }}
+                    </p>
+                </div>
+
+                <!-- Date & Reference ID (Two-column layout) -->
+                <table style="width: 100%; border: none; border-collapse: collapse; margin-left: 0;">
+                    <tr>
+                        <td style="width: 50%; vertical-align: bottom; padding: 0; border: none;">
+                            <p style="font-size: 9pt; font-weight: 600; color: #2b303a; margin: 0 0 4pt 0;">
+                                {{ t.accountant_cover_strictly_confidential }}
+                            </p>
+                            <p style="font-size: 9pt; color: #64748B; margin: 0;">
+                                {{ t.accountant_cover_generated_on }} {{ valuation_date | default(t.accountant_cover_date_pending) }}
+                            </p>
+                        </td>
+                        <td style="width: 50%; text-align: right; vertical-align: bottom; padding: 0; border: none;">
+                            <p style="font-size: 9pt; color: #94A3B8; margin: 0 0 4pt 0; text-transform: uppercase; letter-spacing: 0.05em;">
+                                {{ t.accountant_cover_reference_id }}
+                            </p>
+                            <p style="font-family: 'Inter', 'Courier New', monospace; font-size: 9pt; color: #2b303a; margin: 0;">
+                                {{ valuation_id | default('DRAFT-001') }}
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+</div>

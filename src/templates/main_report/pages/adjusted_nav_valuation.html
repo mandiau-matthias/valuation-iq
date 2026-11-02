@@ -1,0 +1,144 @@
+{#
+    ADJUSTED NAV (Gecorrigeerde Netto Actiefwaarde) — Screen / HTML version
+    =======================================================================
+    Round-1 fix C1: mirrors the PDF dossier
+    (`main_report_pdf/pages/adjusted_nav_valuation.html`) so the on-screen
+    report carries the same defensible artefact rather than only a small
+    bridge inside the executive summary. Visual rhythm matches the PDF
+    twin (methodology intro, bridge, tax latencies, intrinsic-value
+    summary card branched on sign, citations); inline styles use the
+    `--report-*` design tokens to stay consistent with the rest of the
+    on-screen tree.
+
+    Migrated 2026-05-15 to use the shared `method_section` macro so the
+    wrapper (page header, section title, citations rail, footer) is
+    defined once across all method pages × both trees.  The previous
+    screen template silently omitted the page header, citations rail
+    and footer — the macro now adds them automatically, closing the
+    last gap between the screen and PDF twins.
+
+    Gated upstream by `has_adjusted_nav_page` (set in the aggregator).
+    Includes are independently self-gating so a half-populated context
+    fails closed (renders empty section) rather than crashing.
+
+    Context variables consumed:
+      has_adjusted_nav_page (bool)
+      adjusted_nav_section_number (str|None)
+      adjusted_nav_page_number (int|None)
+      adjusted_nav_method (MethodResult — hoisted from engine in aggregator)
+      nav_book_equity, nav_corrected_value, nav_manual_adjustments_note,
+      ownership_multiplier
+#}
+
+{% from "shared/macros/method_section.html" import method_section with context %}
+
+{% call method_section(
+    method_key='adjusted_nav',
+    section_number=adjusted_nav_section_number|default('N'),
+    title=t.nav_page_title,
+    subtitle=t.nav_page_subtitle,
+    badge_label=t.nav_page_badge,
+    tree_root='main_report',
+    page_number=adjusted_nav_page_number,
+    total_pages=total_pages,
+    method=adjusted_nav_method
+) %}
+
+    {# ── 1. Methodology intro ── #}
+    <div style="margin-top: var(--space-3); margin-bottom: var(--space-4); padding: var(--space-3) var(--space-4); border-radius: 6pt; border: 1pt solid hsl(var(--report-slate-200)); background: hsl(var(--report-surface));">
+        <p style="margin: 0; font-size: var(--font-size-sm); color: hsl(var(--report-text-default)); line-height: 1.55;">
+            {{ t.nav_methodology_intro }}
+        </p>
+    </div>
+
+    {# ── 2. Book Equity → Corrected NAV bridge ── #}
+    {% include "main_report/components/_nav_bridge_table.html" %}
+
+    {# ── 3. Tax latencies (deferred tax assets/liabilities) ── #}
+    {% include "main_report/components/_tax_latencies_table.html" %}
+
+    {# ── 4. Intrinsic Value summary card — branches on sign:
+       - positive NAV → teal "Intrinsic value" frame
+       - negative NAV → rose "Net liability" frame + statutory callout
+       - book equity ≤ €10k → "×N" multiple instead of percentage so we
+         never print 50,000% noise. #}
+    {% if nav_corrected_value|default(none) is not none %}
+    {% set nav_book_value = nav_book_equity|default(0)|float %}
+    {% set nav_corrected_float = nav_corrected_value|float %}
+    {% set nav_uplift = nav_corrected_float - nav_book_value %}
+    {% set _nav_book_abs = (nav_book_value|abs) %}
+    {% set _nav_is_negative = nav_corrected_float < 0 %}
+    {% set _border_color = 'var(--report-teal)' if not _nav_is_negative else 'var(--report-negative, 6 55% 50%)' %}
+    <div style="margin-top: var(--space-5); padding: var(--space-4); border: 1pt solid hsl(var(--report-slate-200)); border-left: 3pt solid hsl({{ _border_color }}); border-radius: 6pt;">
+        <h4 style="font-size: var(--font-size-md); margin: 0 0 var(--space-3) 0; color: hsl(var(--report-slate-900));">
+            {% if _nav_is_negative %}{{ t.nav_net_liability_summary_header }}{% else %}{{ t.nav_intrinsic_summary_header }}{% endif %}
+        </h4>
+
+        <table style="width: 100%; font-size: var(--font-size-sm); border-collapse: collapse;">
+            <tr style="border-bottom: 1pt solid hsl(var(--report-slate-100));">
+                <td style="padding: 4pt 0; color: hsl(var(--report-text-muted)); border: none;">{{ t.nav_intrinsic_book_equity_label }}</td>
+                <td style="padding: 4pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; border: none;">{{ nav_book_value|format_currency }}</td>
+            </tr>
+            <tr style="border-bottom: 1pt solid hsl(var(--report-slate-100));">
+                <td style="padding: 4pt 0; color: hsl(var(--report-text-muted)); border: none;">
+                    {% if nav_uplift >= 0 %}+ {% else %}− {% endif %}{{ t.nav_intrinsic_revaluation_uplift_label }}
+                </td>
+                <td style="padding: 4pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; border: none;">{{ nav_uplift|abs|format_currency }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 6pt 0; font-weight: 700; font-size: var(--font-size-md); color: hsl({{ _border_color }}); border: none;">= {{ t.nav_intrinsic_value_label }}</td>
+                {# Round-3 polish: headline uses compact notation; full
+                   figure surfaces in the bridge breakdown above + the
+                   tooltip on hover for audit reconciliation. #}
+                <td style="padding: 6pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: var(--font-size-md); color: hsl({{ _border_color }}); border: none;" title="{{ nav_corrected_float|format_currency }}">{{ nav_corrected_float|format_currency_compact }}</td>
+            </tr>
+        </table>
+
+        {% if _nav_book_abs >= 10000 %}
+        {% set nav_uplift_pct = nav_uplift / nav_book_value * 100 %}
+        <p style="margin: var(--space-2) 0 0 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">
+            {{ t.nav_intrinsic_uplift_pct_label }}: <strong>
+            {%- if nav_uplift >= 0 %}+{% else %}−{% endif -%}
+            {{ nav_uplift_pct|abs|safe_round(1) }}%</strong>
+            {% if ownership_multiplier and ownership_multiplier|float < 1 %}
+            · {{ t.nav_intrinsic_ownership_label }}: <strong>{{ (ownership_multiplier|float * 100)|safe_round(0) }}%</strong>
+            {% endif %}
+        </p>
+        {% elif nav_book_value > 0 %}
+        {% set nav_uplift_x = nav_corrected_float / nav_book_value %}
+        <p style="margin: var(--space-2) 0 0 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">
+            {{ t.nav_intrinsic_uplift_pct_label }}:
+            <strong>{{ nav_uplift_x|safe_round(1) }}× {{ t.nav_intrinsic_book_equity_label|lower }}</strong>
+            {% if ownership_multiplier and ownership_multiplier|float < 1 %}
+            · {{ t.nav_intrinsic_ownership_label }}: <strong>{{ (ownership_multiplier|float * 100)|safe_round(0) }}%</strong>
+            {% endif %}
+        </p>
+        {% endif %}
+
+        {% if _nav_is_negative %}
+        <p style="margin: var(--space-3) 0 0 0; padding: var(--space-2) var(--space-3); font-size: var(--font-size-xs); color: hsl(6, 35%, 35%); background: hsla(6, 55%, 50%, 0.06); border-radius: 4pt; line-height: 1.5;">
+            {{ t.nav_net_liability_callout }}
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {# ── 4b. Audit trail (round-4 — moved from FE BelgianSmeAuditPanel) ── #}
+    {% include "main_report/components/_nav_audit_trail.html" %}
+
+    {# ── 4c. Deal-structure comparison (round-4 — moved from FE) ── #}
+    {% include "main_report/components/_nav_deal_structure.html" %}
+
+    {# ── 5. Methodology footnote / sources ── #}
+    <div style="margin-top: var(--space-5); padding: var(--space-3) var(--space-4); border-radius: 6pt; border: 1pt solid hsl(var(--report-slate-200)); background: hsl(var(--report-surface));">
+        <p style="margin: 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.5;">
+            {{ t.nav_assumptions_note }}
+        </p>
+        {% if nav_manual_adjustments_note %}
+        <p style="margin: var(--space-1) 0 0 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.5;">
+            {{ nav_manual_adjustments_note }}
+        </p>
+        {% endif %}
+    </div>
+
+{% endcall %}

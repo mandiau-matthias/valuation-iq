@@ -1,0 +1,156 @@
+{# 
+    METHOD OVERRIDE PAGE (PDF version)
+    Expected context: t (ReportTranslations), method_override_*, upswitch_adaptive_equity_value, equity_value, show_dcf_before_calibration, show_fiscal_reference
+#}
+
+<div class="a4-page last-report-page" style="page-break-inside: avoid; break-inside: avoid;">
+    {# Page Header #}
+    {% include "main_report_pdf/partials/_page_header.html" %}
+    
+    {# Section Header #}
+    <div class="section-header">
+        <span class="section-number">{{ method_override_section_number }}</span>
+        <div>
+            <h1 class="section-title">{{ t.method_override_title }}</h1>
+            <p class="section-subtitle" style="font-size: 9pt; color: hsl(224, 10%, 50%); margin: 4pt 0 0 0;">
+                {{ t.method_override_subtitle_pdf }}
+            </p>
+        </div>
+    </div>
+
+    {# Info Banner #}
+    <div class="keep-together" style="background: hsl(210, 80%, 96%); border: 1pt solid hsl(210, 60%, 80%); border-radius: 6pt; padding: 10pt 14pt; margin-bottom: 16pt;">
+        <p style="font-size: 8pt; color: hsl(210, 50%, 30%); margin: 0; font-weight: 600;">
+            {{ t.method_override_info_banner }}
+        </p>
+    </div>
+
+    {# Side-by-side comparison is the single value summary. The previous
+       selected-method table repeated these same three facts and forced this
+       final section onto an orphan continuation page in deterministic PDFs. #}
+    <div class="keep-together">
+    <table style="width: 100%; border-collapse: collapse; border: none; margin-bottom: 8pt;">
+        <tr>
+            <td style="width: 50%; vertical-align: top; padding: 0 6pt 0 0; border: none; background: transparent;">
+                <div style="background: hsl(224, 15%, 97%); border-radius: 6pt; padding: 10pt 12pt; text-align: center;">
+                    <p style="font-size: 7pt; text-transform: uppercase; letter-spacing: 0.5pt; color: hsl(224, 10%, 50%); margin-bottom: 6pt;">
+                        {{ t.synthesis_adaptive_label }}
+                    </p>
+                    <p style="font-size: 14pt; font-weight: 700; color: hsl(var(--pdf-primary-dark)); margin: 0;">
+                        {{ (upswitch_adaptive_equity_value or equity_value)|format_currency_compact }}
+                    </p>
+                    <p style="font-size: 7pt; color: hsl(224, 10%, 55%); margin-top: 4pt;">
+                        {{ t.method_override_adaptive_subcaption }}
+                    </p>
+                </div>
+            </td>
+            <td style="width: 50%; vertical-align: top; padding: 0 0 0 6pt; border: none; background: transparent;">
+                <div style="background: hsl(var(--pdf-primary-light)); border-radius: 6pt; padding: 10pt 12pt; text-align: center; border: 1pt solid hsl(var(--pdf-teal-40));">
+                    <p style="font-size: 7pt; text-transform: uppercase; letter-spacing: 0.5pt; color: hsl(var(--pdf-primary-dark)); margin-bottom: 6pt;">
+                        {{ t.method_override_label_manual_choice }}
+                    </p>
+                    <p style="font-size: 14pt; font-weight: 700; color: hsl(var(--pdf-primary)); margin: 0;">
+                        {% if method_override_value is not none %}
+                            {{ method_override_value|format_currency_compact }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </p>
+                    <p style="font-size: 7pt; color: hsl(224, 10%, 55%); margin-top: 4pt;">
+                        {{ method_override_label or '—' }}
+                    </p>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    {# % delta between manual choice and adaptive reference. M&A defensibility:
+       reviewers shouldn't have to compute "(€X − €Y) / €Y" mentally — surface
+       the delta with a colour-banded chip below the side-by-side cards.
+       Threshold: |delta| ≥ 0.5% prints a real value; below that we say
+       "within 0.5%" so rounding noise doesn't trigger a misleading badge. #}
+    {% set _adaptive_ref = (upswitch_adaptive_equity_value or equity_value)|default(0)|float %}
+    {% set _override_value = method_override_value|default(0)|float %}
+    {% if _adaptive_ref and _adaptive_ref > 0 and _override_value and _override_value > 0 %}
+    {% set _delta_pct = ((_override_value - _adaptive_ref) / _adaptive_ref) * 100 %}
+    {% set _delta_abs = (_delta_pct|abs)|safe_round(1) %}
+    <div style="margin-bottom: 16pt; padding: 8pt 12pt; border-radius: 6pt;
+                {% if _delta_pct|abs < 0.5 %}background: hsl(224, 12%, 96%); border: 1pt solid hsl(224, 10%, 88%);
+                {% elif _delta_pct > 0 %}background: hsl(143, 30%, 96%); border: 1pt solid hsl(143, 30%, 78%);
+                {% else %}background: hsl(6, 35%, 97%); border: 1pt solid hsl(6, 35%, 82%);
+                {% endif %}">
+        <table style="width: 100%; border-collapse: collapse; border: none; background: transparent;">
+            <tr>
+                <td style="border: none; padding: 0; vertical-align: middle; background: transparent;">
+                    <span style="font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(224, 16%, 28%);">
+                        {{ t.method_override_delta_label }}
+                    </span>
+                </td>
+                <td style="border: none; padding: 0; text-align: right; vertical-align: middle; background: transparent;">
+                    <span style="font-size: 9pt; font-weight: 700; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;
+                                 {% if _delta_pct|abs < 0.5 %}color: hsl(224, 14%, 32%);
+                                 {% elif _delta_pct > 0 %}color: hsl(143, 50%, 28%);
+                                 {% else %}color: hsl(6, 50%, 36%);
+                                 {% endif %}">
+                        {% if _delta_pct|abs < 0.5 %}
+                        {{ t.method_override_delta_match }}
+                        {% elif _delta_pct > 0 %}
+                        {{ t.method_override_delta_premium.replace('{percent}', _delta_abs|string) }}
+                        {% else %}
+                        {{ t.method_override_delta_discount.replace('{percent}', _delta_abs|string) }}
+                        {% endif %}
+                    </span>
+                </td>
+            </tr>
+        </table>
+    </div>
+    {% endif %}
+    </div>
+
+    {# Justification #}
+    {% if method_override_reason or method_override_note %}
+    {% set reason_labels = {
+        'fiscal_compliance': t.method_override_reason_fiscal_compliance,
+        'asset_heavy_business': t.method_override_reason_asset_heavy_business,
+        'internal_transfer': t.method_override_reason_internal_transfer,
+        'conservative_anchor': t.method_override_reason_conservative_anchor,
+        'client_preference': t.method_override_reason_client_preference,
+        'regulatory_requirement': t.method_override_reason_regulatory_requirement,
+        'other': t.method_override_reason_other,
+    } %}
+    <div class="keep-together" style="margin-bottom: 16pt;">
+        <h3 style="font-size: 9pt; font-weight: 700; color: hsl(224, 20%, 20%); margin-bottom: 8pt;">
+            {{ t.method_override_section_rationale }}
+        </h3>
+        <div style="background: hsl(224, 15%, 97%); border-radius: 6pt; padding: 12pt; font-size: 8pt; color: hsl(224, 10%, 35%); line-height: 1.55;">
+            {% if method_override_reason %}
+            <p style="margin: 0 0 6pt 0;">
+                <strong>{{ t.method_override_reason_label }}</strong> {{ reason_labels.get(method_override_reason, method_override_reason) }}
+            </p>
+            {% endif %}
+            {% if method_override_note %}
+            <p style="margin: 0;">
+                <strong>{{ t.method_override_note_label }}</strong> {{ method_override_note }}
+            </p>
+            {% endif %}
+            {% if method_override_date %}
+            <p style="margin: 6pt 0 0 0; font-size: 7pt; color: hsl(224, 10%, 55%); font-style: italic;">
+                {{ t.method_override_recorded_on }} {{ method_override_date|format_date }}
+            </p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# Disclaimer #}
+    <div class="keep-together" style="background: hsl(35, 90%, 96%); border: 1pt solid hsl(35, 70%, 80%); border-radius: 6pt; padding: 10pt 14pt; margin-bottom: 12pt;">
+        <p style="font-size: 8pt; color: hsl(35, 50%, 30%); margin: 0;">
+            <strong>{{ t.synthesis_disclaimer_title }}:</strong> {{ t.method_override_disclaimer_pdf }}
+        </p>
+    </div>
+
+    {# Page Footer #}
+    {% with page_number=total_pages, total_pages=total_pages %}
+    {% include "main_report_pdf/partials/_footer.html" %}
+    {% endwith %}
+</div>

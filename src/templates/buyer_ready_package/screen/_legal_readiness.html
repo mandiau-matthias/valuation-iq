@@ -1,0 +1,92 @@
+{#
+    Legal-readiness handoff — pre-counsel transaction package guardrail.
+
+    This is deliberately not legal drafting. It renders the gates and issue
+    list a legal advisor, buyer advisor, or transaction advisor needs before external distribution.
+#}
+
+{% if package.legal_readiness %}
+<section class="brp-legal-readiness" data-section="legal_readiness"
+         data-release-status="{{ package.legal_readiness.buyer_release_status }}">
+    <div class="brp-page-header">
+        <div>
+            <div class="brp-section-kicker">Legal handoff</div>
+            <h2>Transaction-readiness legal guardrails</h2>
+        </div>
+        <div class="brp-confidence-chip" data-confidence="{% if package.legal_readiness.buyer_release_status in ['blocked', 'lawyer_review_required'] %}medium{% else %}high{% endif %}">
+            {{ package.legal_readiness.buyer_release_status.replace("_", " ") }}
+        </div>
+    </div>
+
+    <div class="brp-legal-summary-grid">
+        <div class="brp-legal-summary-card">
+            <span class="brp-figure-label">Jurisdiction</span>
+            <strong>{{ package.legal_readiness.jurisdiction }}</strong>
+        </div>
+        <div class="brp-legal-summary-card">
+            <span class="brp-figure-label">Deal structure</span>
+            <strong>{{ package.legal_readiness.deal_structure.replace("_", " ") }}</strong>
+        </div>
+        <div class="brp-legal-summary-card">
+            <span class="brp-figure-label">Review posture</span>
+            <strong>
+                {% if package.legal_readiness.counsel_review_required %}
+                    Legal review required
+                {% else %}
+                    Advisor review gate clear
+                {% endif %}
+            </strong>
+        </div>
+    </div>
+
+    <div class="brp-legal-counts" data-module="legal-readiness-counts">
+        <span><b>{{ package.legal_readiness.clear_count }}</b> clear</span>
+        <span><b>{{ package.legal_readiness.review_count }}</b> review</span>
+        <span><b>{{ package.legal_readiness.blocked_count }}</b> blocked</span>
+    </div>
+
+    <table class="brp-legal-table">
+        <thead>
+            <tr>
+                <th>Gate</th>
+                <th>Status</th>
+                <th>Owner</th>
+                <th>Required before</th>
+                <th>Reason</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in package.legal_readiness.items %}
+                <tr data-status="{{ item.status }}">
+                    <td>
+                        <strong>{{ item.title }}</strong>
+                        <span>{{ item.category.replace("_", " ") }}</span>
+                    </td>
+                    <td>
+                        <span class="brp-status-chip brp-legal-status-{{ item.status }}">
+                            {{ item.status }}
+                        </span>
+                    </td>
+                    <td>{{ item.owner }}</td>
+                    <td>{{ item.required_before.replace("_", " ") }}</td>
+                    <td>
+                        {{ item.reason }}
+                        {% if item.evidence_ref %}
+                            <span class="brp-legal-evidence">Evidence: {{ item.evidence_ref }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="brp-legal-notice">
+        <strong>Confidentiality gate</strong>
+        <p>{{ package.legal_readiness.confidentiality_gate }}</p>
+    </div>
+    <div class="brp-legal-notice brp-legal-notice-muted">
+        <strong>Boundary</strong>
+        <p>{{ package.legal_readiness.legal_disclaimer }}</p>
+    </div>
+</section>
+{% endif %}

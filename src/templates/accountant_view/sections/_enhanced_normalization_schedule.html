@@ -1,0 +1,284 @@
+{# ========================================================================
+   ENHANCED NORMALIZATION SCHEDULE - ASA BVS-III Compliant
+
+   Detailed Quality of Earnings assessment showing:
+   - Owner salary adjustment (market rate normalization)
+   - Personal/discretionary expenses (automobiles, travel, meals, etc.)
+   - Non-recurring items (one-time gains/losses)
+   - Professional service fees (non-operating)
+   - Asset sale gains/losses
+   - Related party transactions
+
+   Academic Compliance: ASA BVS-III, AICPA BVS-VII, Trugman (2017) Ch. 8
+   ======================================================================== #}
+
+{% if show_enhanced_normalization_schedule %}
+<div class="page">
+<h2 style="font-family: 'Inter', sans-serif; font-size: 14pt; font-weight: 700; color: #2b303a; margin-top: 0; margin-bottom: 24pt; border-bottom: 2px solid #2b303a; padding-bottom: 8pt;">{{ t.accountant_norm_section_title }}</h2>
+
+<p style="font-size: 11pt; line-height: 1.6; color: #334155; margin-bottom: 24pt;">
+    {{ t.accountant_norm_intro | safe }}
+</p>
+
+<div class="table-card" style="margin-bottom: 32pt;">
+    <table class="step-table" style="font-size: 10pt;">
+        <caption style="font-size: 10pt; font-weight: 700; padding: 12pt; background: var(--bg-subtle); border-bottom: 2px solid var(--upswitch-navy);">
+            {{ t.accountant_norm_caption }} — {{ normalization_year | default(2025) }}
+        </caption>
+        <thead>
+            <tr>
+                <th style="width: 10%;">{{ t.accountant_norm_col_category }}</th>
+                <th style="width: 30%;">{{ t.accountant_norm_col_item }}</th>
+                <th class="text-right" style="width: 15%;">{{ t.accountant_norm_col_amount }}</th>
+                <th style="width: 35%;">{{ t.accountant_norm_col_rationale }}</th>
+                <th style="width: 10%;">{{ t.accountant_norm_col_status }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- ==================== SECTION 1: OWNER COMPENSATION ==================== -->
+            <tr style="background-color: #f4f1ea;">
+                <td colspan="5" style="font-weight: 700; color: #2b303a; padding: 12pt; text-transform: uppercase; letter-spacing: 0.05em; font-size: 9pt;">
+                    {{ t.accountant_norm_section_owner }}
+                </td>
+            </tr>
+
+            <tr>
+                <td style="text-align: center; color: var(--text-muted); font-weight: 600;">1.1</td>
+                <td style="color: var(--text-body);">{{ t.accountant_norm_owner_salary }}</td>
+                <td class="text-right" style="{% if enhanced_schedule.owner_salary_adjustment and enhanced_schedule.owner_salary_adjustment != 0 %}color: {% if enhanced_schedule.owner_salary_adjustment > 0 %}#6b8e72{% else %}#b85c56{% endif %}; font-weight: 600;{% else %}color: var(--text-muted);{% endif %}">
+                    {% if enhanced_schedule.owner_salary_adjustment and enhanced_schedule.owner_salary_adjustment != 0 %}
+                        {% if enhanced_schedule.owner_salary_adjustment > 0 %}+{% endif %}{{ enhanced_schedule.owner_salary_adjustment | format_currency }}
+                    {% else %}
+                        €0
+                    {% endif %}
+                </td>
+                <td style="font-size: 9pt; color: var(--text-body);">
+                    {% if enhanced_schedule.owner_salary_adjustment and enhanced_schedule.owner_salary_adjustment != 0 %}
+                        {{ enhanced_schedule.owner_salary_rationale | default(t.accountant_norm_owner_salary_default) }}
+                    {% else %}
+                        {{ t.accountant_norm_owner_salary_no }}
+                    {% endif %}
+                </td>
+                <td style="text-align: center;">
+                    {% if enhanced_schedule.owner_salary_adjustment and enhanced_schedule.owner_salary_adjustment != 0 %}
+                        <span class="status-badge completed">{{ t.accountant_norm_status_applied }}</span>
+                    {% else %}
+                        <span class="status-badge skipped">{{ t.accountant_norm_status_na }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+
+            <!-- ==================== SECTION 2: DISCRETIONARY EXPENSES ==================== -->
+            <tr style="background-color: #f4f1ea; border-top: 2px solid #e2e8f0;">
+                <td colspan="5" style="font-weight: 700; color: #2b303a; padding: 12pt; text-transform: uppercase; letter-spacing: 0.05em; font-size: 9pt;">
+                    {{ t.accountant_norm_section_discretionary }}
+                </td>
+            </tr>
+
+            <tr>
+                <td style="text-align: center; color: var(--text-muted); font-weight: 600;">2.1</td>
+                <td style="color: var(--text-body);">{{ t.accountant_norm_personal_auto }}</td>
+                <td class="text-right" style="color: var(--text-muted);">€0</td>
+                <td style="font-size: 9pt; color: var(--text-muted);">{{ t.accountant_norm_personal_auto_caption }}</td>
+                <td style="text-align: center;"><span class="status-badge skipped">{{ t.accountant_norm_status_na }}</span></td>
+            </tr>
+
+            <tr>
+                <td style="text-align: center; color: var(--text-muted); font-weight: 600;">2.2</td>
+                <td style="color: var(--text-body);">{{ t.accountant_norm_personal_travel }}</td>
+                <td class="text-right" style="color: var(--text-muted);">€0</td>
+                <td style="font-size: 9pt; color: var(--text-muted);">{{ t.accountant_norm_personal_travel_caption }}</td>
+                <td style="text-align: center;"><span class="status-badge skipped">{{ t.accountant_norm_status_na }}</span></td>
+            </tr>
+
+            <tr>
+                <td style="text-align: center; color: var(--text-muted); font-weight: 600;">2.3</td>
+                <td style="color: var(--text-body);">{{ t.accountant_norm_family_comp }}</td>
+                <td class="text-right" style="color: var(--text-muted);">€0</td>
+                <td style="font-size: 9pt; color: var(--text-muted);">{{ t.accountant_norm_family_comp_caption }}</td>
+                <td style="text-align: center;"><span class="status-badge skipped">{{ t.accountant_norm_status_na }}</span></td>
+            </tr>
+
+            <tr>
+                <td style="text-align: center; color: var(--text-muted); font-weight: 600;">2.4</td>
+                <td style="color: var(--text-body);">{{ t.accountant_norm_personal_insurance }}</td>
+                <td class="text-right" style="color: var(--text-muted);">€0</td>
+                <td style="font-size: 9pt; color: var(--text-muted);">{{ t.accountant_norm_personal_insurance_caption }}</td>
+                <td style="text-align: center;"><span class="status-badge skipped">{{ t.accountant_norm_status_na }}</span></td>
+            </tr>
+
+            <!-- ==================== SECTION 3: NON-RECURRING ITEMS ==================== -->
+            <tr style="background-color: #f4f1ea; border-top: 2px solid #e2e8f0;">
+                <td colspan="5" style="font-weight: 700; color: #2b303a; padding: 12pt; text-transform: uppercase; letter-spacing: 0.05em; font-size: 9pt;">
+                    {{ t.accountant_norm_section_nonrecurring }}
+                </td>
+            </tr>
+
+            <tr>
+                <td style="text-align: center; color: var(--text-muted); font-weight: 600;">3.1</td>
+                <td style="color: var(--text-body);">{{ t.accountant_norm_litigation }}</td>
+                <td class="text-right" style="color: var(--text-muted);">€0</td>
+                <td style="font-size: 9pt; color: var(--text-muted);">{{ t.accountant_norm_litigation_caption }}</td>
+                <td style="text-align: center;"><span class="status-badge skipped">{{ t.accountant_norm_status_na }}</span></td>
+            </tr>
+
+            <tr>
+                <td style="text-align: center; color: var(--text-muted); font-weight: 600;">3.2</td>
+                <td style="color: var(--text-body);">{{ t.accountant_norm_restructuring }}</td>
+                <td class="text-right" style="color: var(--text-muted);">€0</td>
+                <td style="font-size: 9pt; color: var(--text-muted);">{{ t.accountant_norm_restructuring_caption }}</td>
+                <td style="text-align: center;"><span class="status-badge skipped">{{ t.accountant_norm_status_na }}</span></td>
+            </tr>
+
+            <tr>
+                <td style="text-align: center; color: var(--text-muted); font-weight: 600;">3.3</td>
+                <td style="color: var(--text-body);">{{ t.accountant_norm_asset_sale }}</td>
+                <td class="text-right" style="color: var(--text-muted);">€0</td>
+                <td style="font-size: 9pt; color: var(--text-muted);">{{ t.accountant_norm_asset_sale_caption }}</td>
+                <td style="text-align: center;"><span class="status-badge skipped">{{ t.accountant_norm_status_na }}</span></td>
+            </tr>
+
+            <tr>
+                <td style="text-align: center; color: var(--text-muted); font-weight: 600;">3.4</td>
+                <td style="color: var(--text-body);">{{ t.accountant_norm_covid }}</td>
+                <td class="text-right" style="color: var(--text-muted);">€0</td>
+                <td style="font-size: 9pt; color: var(--text-muted);">{{ t.accountant_norm_covid_caption }}</td>
+                <td style="text-align: center;"><span class="status-badge skipped">{{ t.accountant_norm_status_na }}</span></td>
+            </tr>
+
+            <!-- ==================== SECTION 4: OTHER ADJUSTMENTS ==================== -->
+            <tr style="background-color: #f4f1ea; border-top: 2px solid #e2e8f0;">
+                <td colspan="5" style="font-weight: 700; color: #2b303a; padding: 12pt; text-transform: uppercase; letter-spacing: 0.05em; font-size: 9pt;">
+                    {{ t.accountant_norm_section_other }}
+                </td>
+            </tr>
+
+            <tr>
+                <td style="text-align: center; color: var(--text-muted); font-weight: 600;">4.1</td>
+                <td style="color: var(--text-body);">{{ t.accountant_norm_related_party }}</td>
+                <td class="text-right" style="color: var(--text-muted);">€0</td>
+                <td style="font-size: 9pt; color: var(--text-muted);">{{ t.accountant_norm_related_party_caption }}</td>
+                <td style="text-align: center;"><span class="status-badge skipped">{{ t.accountant_norm_status_na }}</span></td>
+            </tr>
+
+            <tr>
+                <td style="text-align: center; color: var(--text-muted); font-weight: 600;">4.2</td>
+                <td style="color: var(--text-body);">{{ t.accountant_norm_excess_rent }}</td>
+                <td class="text-right" style="color: var(--text-muted);">€0</td>
+                <td style="font-size: 9pt; color: var(--text-muted);">{{ t.accountant_norm_excess_rent_caption }}</td>
+                <td style="text-align: center;"><span class="status-badge skipped">{{ t.accountant_norm_status_na }}</span></td>
+            </tr>
+
+            <tr>
+                <td style="text-align: center; color: var(--text-muted); font-weight: 600;">4.3</td>
+                <td style="color: var(--text-body);">{{ t.accountant_norm_professional_fees }}</td>
+                <td class="text-right" style="color: var(--text-muted);">€0</td>
+                <td style="font-size: 9pt; color: var(--text-muted);">{{ t.accountant_norm_professional_fees_caption }}</td>
+                <td style="text-align: center;"><span class="status-badge skipped">{{ t.accountant_norm_status_na }}</span></td>
+            </tr>
+
+            <!-- ==================== SUMMARY ROW ==================== -->
+            <tr style="border-top: 3px solid #2b303a; background-color: #f8fafc;">
+                <td colspan="2" style="font-weight: 700; color: #2b303a; padding: 18pt 12pt; text-transform: uppercase; letter-spacing: 0.05em; font-size: 11pt;">
+                    {{ t.accountant_norm_total_label }}
+                </td>
+                <td class="text-right" style="font-weight: 700; color: #2b303a; padding: 18pt 12pt; font-size: 14pt;">
+                    {% if enhanced_schedule.total_adjustments %}
+                        {% if enhanced_schedule.total_adjustments > 0 %}+{% endif %}{{ enhanced_schedule.total_adjustments | format_currency }}
+                    {% else %}
+                        €0
+                    {% endif %}
+                </td>
+                <td style="padding: 18pt 12pt; color: var(--text-body); font-weight: 600; font-family: 'Inter', sans-serif;">
+                    {% if enhanced_schedule.total_adjustments and enhanced_schedule.total_adjustments != 0 %}
+                        {{ t.accountant_norm_adjustments_applied }}
+                    {% else %}
+                        {{ t.accountant_norm_no_material }}
+                    {% endif %}
+                </td>
+                <td style="text-align: center; padding: 18pt 12pt;">
+                    {% if enhanced_schedule.total_adjustments and enhanced_schedule.total_adjustments != 0 %}
+                        <span class="status-badge completed">{{ t.accountant_norm_status_reviewed }}</span>
+                    {% else %}
+                        <span class="status-badge skipped">{{ t.accountant_norm_status_standard }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+
+            <!-- ==================== FINAL NORMALIZED EBITDA ==================== -->
+            <tr style="border-top: 3px solid #2b303a; background-color: #2b303a;">
+                <td colspan="2" style="padding: 20pt 12pt; font-weight: 700; color: #FFFFFF; text-transform: uppercase; letter-spacing: 0.05em; font-size: 13pt;">
+                    {{ t.accountant_norm_normalized_label }} ({{ normalization_year | default(2025) }})
+                </td>
+                <td class="text-right" style="font-size: 18pt; color: #FFFFFF; padding: 20pt 12pt; font-weight: 800;">
+                    {{ enhanced_schedule.normalized_ebitda | format_currency }}
+                </td>
+                <td style="padding: 20pt 12pt; color: rgba(255,255,255,0.95); font-weight: 600; font-family: 'Inter', sans-serif;">
+                    {{ t.accountant_norm_sustainable_earning }}
+                </td>
+                <td style="text-align: center; padding: 20pt 12pt;">
+                    <span style="display: inline-block; background: rgba(255,255,255,0.2); color: #FFFFFF; padding: 6pt 12pt; border-radius: 4px; font-weight: 700; font-size: 9pt; text-transform: uppercase;">{{ t.accountant_norm_valuation_basis }}</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ==================== DATA LIMITATION NOTICE ==================== -->
+<div class="report-callout warning" style="margin-top: 24pt;">
+    <h4 style="color: #d9a558; font-size: 10pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1pt; margin-bottom: 8pt;">{{ t.accountant_norm_data_limit_title }}</h4>
+    <p style="font-family: 'Inter', sans-serif; font-size: 11pt; color: #92400e; margin: 0; line-height: 1.5;">
+        {{ t.accountant_norm_data_limit_body.format(availability=(enhanced_schedule.data_availability | default(t.accountant_norm_data_limit_default_avail))) | safe }}
+    </p>
+    <ul style="margin: 12pt 0 0 24pt; padding-left: 0; font-size: 10pt; color: #92400e; line-height: 1.6;">
+        <li style="margin-bottom: 6pt;">{{ t.accountant_norm_data_limit_item1 }}</li>
+        <li style="margin-bottom: 6pt;">{{ t.accountant_norm_data_limit_item2 }}</li>
+        <li style="margin-bottom: 6pt;">{{ t.accountant_norm_data_limit_item3 }}</li>
+        <li style="margin-bottom: 0;">{{ t.accountant_norm_data_limit_item4 }}</li>
+    </ul>
+    <p style="font-family: 'Inter', sans-serif; font-size: 10pt; color: #92400e; margin: 12pt 0 0 0; font-style: italic;">
+        {{ t.accountant_norm_data_limit_footer | safe }}
+    </p>
+</div>
+
+<!-- ==================== METHODOLOGY EXPLANATION ==================== -->
+<div style="margin-top: 32pt; padding: 24pt; background-color: #f4f1ea; border: 1px solid #E2E8F0; border-radius: 8px;">
+    <h4 style="font-family: 'Inter', sans-serif; font-size: 11pt; font-weight: 700; color: #2b303a; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16pt;">{{ t.accountant_norm_categories_title }}</h4>
+
+    <table style="width: 100%; border-collapse: collapse; border: none; border-top: none;">
+        <tr>
+            <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                <h5 style="font-size: 10pt; color: #2b303a; margin-bottom: 12pt; font-weight: 700;">{{ t.accountant_norm_standard_categories }}</h5>
+                <ul style="margin: 0; padding-left: 18pt; font-size: 9pt; color: #475569; line-height: 1.8;">
+                    <li>{{ t.accountant_norm_cat_owner | safe }}</li>
+                    <li>{{ t.accountant_norm_cat_personal | safe }}</li>
+                    <li>{{ t.accountant_norm_cat_family | safe }}</li>
+                    <li>{{ t.accountant_norm_cat_nonrecurring | safe }}</li>
+                    <li>{{ t.accountant_norm_cat_related | safe }}</li>
+                </ul>
+            </td>
+            <td style="width: 4%; border: none;"></td>
+            <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                <h5 style="font-size: 10pt; color: #2b303a; margin-bottom: 12pt; font-weight: 700;">{{ t.accountant_norm_academic_foundation }}</h5>
+                <ul style="margin: 0; padding-left: 18pt; font-size: 9pt; color: #475569; line-height: 1.8;">
+                    <li>{{ t.accountant_norm_acad_trugman | safe }}</li>
+                    <li>{{ t.accountant_norm_acad_hitchner | safe }}</li>
+                    <li>{{ t.accountant_norm_acad_pratt | safe }}</li>
+                    <li>{{ t.accountant_norm_acad_asa | safe }}</li>
+                    <li>{{ t.accountant_norm_acad_aicpa | safe }}</li>
+                </ul>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- ==================== ENHANCED DISCLOSURE ==================== -->
+<div style="margin-top: 24pt; padding: 20pt; background-color: #fff7ed; border: 1px solid #fed7aa; border-left: 4px solid #f97316; border-radius: 6px;">
+    <h5 style="font-size: 10pt; color: #d9a558; margin: 0 0 8pt 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">{{ t.accountant_norm_enhanced_disclosure_title }}</h5>
+    <p style="font-size: 9pt; color: #92400e; line-height: 1.6; margin: 0;">
+        {{ t.accountant_norm_enhanced_disclosure_body | safe }}
+    </p>
+</div>
+
+</div>
+{% endif %}

@@ -1,0 +1,335 @@
+{#
+    STARTUP — FUNDRAISING ONE-PAGER (PDF / WeasyPrint)
+
+    Table-based mirror of main_report/pages/startup_one_pager.html.
+    WeasyPrint renders SVG well, so we keep the football field as inline
+    SVG; everything else uses the table layout WeasyPrint prefers.
+#}
+
+{# Canonical headline (April 2026 hardening) — single source of truth.
+   Both this page and the executive summary read from the same block so
+   the report can never show two different pre-money numbers.  Falls
+   back to the founder-view block on legacy engine responses. #}
+{% set canon = startup_report.canonical or {} %}
+{% set fv = startup_report.founder_view %}
+{% set head_mid  = (canon.pre_money_mid  if canon and canon.pre_money_mid  else (fv.equity_value_mid  if fv else startup_report.equity_value_mid))  | float %}
+{% set head_low  = (canon.pre_money_low  if canon and canon.pre_money_low  else (fv.equity_value_low  if fv else startup_report.equity_value_low))  | float %}
+{% set head_high = (canon.pre_money_high if canon and canon.pre_money_high else (fv.equity_value_high if fv else startup_report.equity_value_high)) | float %}
+{# Method-mix box still shows the founder triangulation weights — they
+   explain WHICH legs drove the headline, not the headline itself. #}
+{% set head_weights = (fv.weights if fv else startup_report.weights) %}
+{% set defs = startup_report.defensibility_score or {} %}
+{% set traffic = defs.traffic_light or 'yellow' %}
+{# Solid PDF chip colour — same source as the screen one-pager / exec
+   summary so a palette tune updates every startup surface in lockstep
+   (audit issue #17). #}
+{% set badge_bg = defensibility_traffic_pdf_bg(traffic) %}
+{% set badge_fg = defensibility_traffic_pdf_fg(traffic) %}
+
+{% set br = startup_report.berkus %}
+{% set vc = startup_report.vc %}
+{% set sf = startup_report.saas_forward %}
+{% set bp_b = (br.pre_money|default(0)) | float %}
+{% set bp_v = (vc.pre_money|default(0)) | float %}
+{% set bp_f = (sf.pre_money|default(0)|float) if sf and sf.available else 0 %}
+{% set axis_max = [bp_b, bp_v, bp_f, head_high] | max %}
+
+{% set sim = startup_report.cap_table_simulator %}
+{% set defensibility_top = (startup_report.defensibility or [])[:4] %}
+
+{# CTA URL — context-resolved, locale-aware (see startup_report_context.py). #}
+{% set advisor_url = startup_report.advisor_cta_url %}
+
+<div class="a4-page">
+    {% include "main_report_pdf/partials/_page_header.html" ignore missing %}
+
+    <table style="width: 100%; margin-bottom: 8pt;">
+        <tr>
+            <td style="font-size: 16pt; font-weight: 700;">{{ startup_report.t.fundraising_one_pager }}</td>
+            <td style="text-align: right; font-size: 8pt; color: #4a5460;">
+                {{ startup_report.stage_display }} · {{ startup_report.t.pre_money_triangulation }}<br/>
+                {# Method-family label — mirrors the screen one-pager and
+                   the panel's "EV/Revenue valuation" branding so the
+                   PDF cover identifies the engine. #}
+                <span style="font-weight: 600;">{{ startup_report.t.method_family_ev_revenue }}</span>
+            </td>
+        </tr>
+    </table>
+
+    {# Hero — canonical pre-money + defensibility badge + methode-mix #}
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 12pt;">
+        <tr>
+            <td style="vertical-align: top; padding: 10pt; border: 1pt solid #e1e4ea; width: 60%;">
+                <div style="font-size: 8pt; color: #4a5460; text-transform: uppercase; letter-spacing: 0.04em;">{{ startup_report.t.indicative_pre_money }}</div>
+                <div style="font-size: 22pt; font-weight: 700; color: #2a8a82; margin-top: 4pt; line-height: 1.05;">
+                    {{ head_mid|format_currency }}
+                </div>
+                <div style="font-size: 9pt; color: #4a5460; margin-top: 2pt;">
+                    {{ startup_report.t.range }}: <strong>{{ head_low|format_currency }}</strong>
+                    — <strong>{{ head_high|format_currency }}</strong>
+                </div>
+                {% if canon and canon.basis %}
+                <div style="font-size: 7.5pt; color: #4a5460; margin-top: 4pt; font-style: italic;">
+                    {{ canon.basis }}
+                </div>
+                {% endif %}
+                {% if startup_report.founder_pitch %}
+                <p style="margin-top: 8pt; font-size: 9pt; line-height: 1.5;">
+                    <span style="font-weight: 600;">{{ startup_report.t.founder_pitch_label }}:</span>
+                    <span style="color: #4a5460; font-style: italic;">{{ startup_report.founder_pitch }}</span>
+                </p>
+                {% endif %}
+                <p style="margin-top: 8pt; font-size: 9pt; line-height: 1.5;">
+                    {{ startup_report.narrative }}
+                </p>
+            </td>
+            <td style="vertical-align: top; padding: 10pt; border: 1pt solid #e1e4ea;">
+                {% if defs and defs.score_0_10 is not none %}
+                <div style="font-size: 8pt; color: #4a5460; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4pt;">
+                    {{ startup_report.t.defensibility_score_label }}
+                </div>
+                <table style="width: 100%; margin-bottom: 6pt;">
+                    <tr>
+                        <td style="font-size: 18pt; font-weight: 700; color: #1f2937;">
+                            {{ defs.score_0_10|safe_round(1) }}<span style="font-size: 9pt; color: #4a5460;">/10</span>
+                        </td>
+                        <td style="text-align: right;">
+                            <span style="display: inline-block; padding: 2pt 6pt; background: {{ badge_bg }}; color: {{ badge_fg }}; border-radius: 3pt; font-size: 8pt; font-weight: 700;">
+                                {{ defs.letter_grade }}
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+                <div style="font-size: 8pt; color: #4a5460; line-height: 1.4; margin-bottom: 6pt;">
+                    {{ startup_report.t.defensibility_score_caption }}
+                </div>
+                {% endif %}
+                <div style="font-size: 8.5pt; font-weight: 600; margin-bottom: 4pt;">
+                    {{ startup_report.t.method_mix_founder }}
+                </div>
+                <table style="width: 100%; font-size: 8.5pt;">
+                    {% for method, weight in head_weights.items() %}
+                    <tr>
+                        <td style="padding: 1pt 0;">
+                            {% if method == 'berkus' %}{{ startup_report.t.method_berkus }}
+                            {% elif method == 'scorecard' %}{{ startup_report.t.method_scorecard }}
+                            {% elif method == 'vc' %}{{ startup_report.t.method_vc }}
+                            {% elif method == 'saas_forward' %}{{ startup_report.t.method_saas_forward }}
+                            {% else %}{{ method|title }}{% endif %}
+                        </td>
+                        <td style="text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ (weight * 100)|safe_round(0) }}%</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                <div style="font-size: 7pt; color: #4a5460; margin-top: 6pt; line-height: 1.4;">
+                    {{ startup_report.t.canonical_headline_explainer }}
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    {# VC assumptions pill — Y5 / multiple / ROI / round so investors
+       can see the underlying inputs before reading the football field.
+       Parity with the screen one-pager: renders whenever the ``vc``
+       block exists; missing inputs render as ``—`` instead of hiding
+       the whole pill (audit issue #19). #}
+    {% if vc %}
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10pt; border: 1pt solid #e1e4ea;">
+        <tr>
+            <td style="padding: 6pt 10pt; vertical-align: top;">
+                <div style="font-size: 7pt; color: #4a5460; text-transform: uppercase; letter-spacing: 0.04em;">{{ startup_report.t.label_y5_revenue_simple }}</div>
+                <div style="font-size: 10pt; font-weight: 700; color: #1f2937; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{% if vc.year5_revenue %}{{ vc.year5_revenue|format_currency }}{% else %}—{% endif %}</div>
+            </td>
+            <td style="padding: 6pt 10pt; vertical-align: top; border-left: 1pt solid #e1e4ea;">
+                <div style="font-size: 7pt; color: #4a5460; text-transform: uppercase; letter-spacing: 0.04em;">{{ startup_report.t.label_exit_ev_revenue_multiple }}</div>
+                <div style="font-size: 10pt; font-weight: 700; color: #1f2937; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{% if vc.exit_revenue_multiple %}{{ vc.exit_revenue_multiple|safe_round_or_dash(1) }}×{% else %}—{% endif %}</div>
+            </td>
+            <td style="padding: 6pt 10pt; vertical-align: top; border-left: 1pt solid #e1e4ea;">
+                <div style="font-size: 7pt; color: #4a5460; text-transform: uppercase; letter-spacing: 0.04em;">{{ startup_report.t.label_target_roi }}</div>
+                <div style="font-size: 10pt; font-weight: 700; color: #1f2937; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{% if vc.target_roi_x %}{{ vc.target_roi_x|safe_round_or_dash(0) }}×{% else %}—{% endif %}</div>
+            </td>
+            <td style="padding: 6pt 10pt; vertical-align: top; border-left: 1pt solid #e1e4ea;">
+                <div style="font-size: 7pt; color: #4a5460; text-transform: uppercase; letter-spacing: 0.04em;">{{ startup_report.t.plus_round_to_raise }}</div>
+                <div style="font-size: 10pt; font-weight: 700; color: #1f2937; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{% if vc.investment_amount_sought and vc.investment_amount_sought > 0 %}{{ vc.investment_amount_sought|format_currency }}{% else %}—{% endif %}</div>
+            </td>
+        </tr>
+    </table>
+    {% endif %}
+
+    {# Football field — SVG renders cleanly in WeasyPrint #}
+    {% if axis_max > 0 %}
+    {% set chart_w = 520 %}
+    {% set chart_h = 200 %}
+    {% set pad_l = 110 %}
+    {% set pad_r = 18 %}
+    {% set pad_t = 12 %}
+    {% set bar_h = 20 %}
+    {% set row_gap = 16 %}
+    {% set track_w = chart_w - pad_l - pad_r %}
+    {% set blend_x = pad_l + (head_mid / axis_max * track_w) %}
+    {% set low_x = pad_l + (head_low / axis_max * track_w) %}
+    {% set high_x = pad_l + (head_high / axis_max * track_w) %}
+    <h2 style="font-size: 11pt; margin: 6pt 0 2pt;">{{ startup_report.t.football_field }}</h2>
+    {# Sub-caption pinning the lens (3-leg founder view).  Mirrors the
+       screen one-pager — Audit issue D2. #}
+    <p style="font-size: 7pt; color: #4a5460; margin: 0 0 4pt; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700;">
+        {{ startup_report.t.football_field_lens_founder }}
+    </p>
+    <p style="font-size: 8pt; color: #4a5460; margin-bottom: 6pt;">
+        {% set _ff_caption = startup_report.t.football_field_caption %}
+        {{ _ff_caption.replace('{mid}', head_mid|format_eur_amount) }}
+    </p>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 12pt;">
+        <tr>
+            <td style="padding: 8pt; border: 1pt solid #e1e4ea;">
+                <svg viewBox="0 0 {{ chart_w }} {{ chart_h }}" width="100%" preserveAspectRatio="xMidYMid meet">
+                    <rect x="{{ low_x }}" y="{{ pad_t - 4 }}"
+                          width="{{ high_x - low_x }}" height="{{ chart_h - pad_t - 22 }}"
+                          fill="#2a8a82" opacity="0.08" />
+                    {# Pre-revenue founders never have a SaaS Forward leg —
+                       drop zero-value rows so the chart never renders an
+                       awkward "not available" placeholder. #}
+                    {% set _all_legs = [
+                        {'label': startup_report.t.method_berkus,            'value': bp_b, 'fill': '#2a8a82'},
+                        {'label': startup_report.t.method_saas_forward_short, 'value': bp_f, 'fill': '#3aa49c'},
+                        {'label': startup_report.t.method_vc,                'value': bp_v, 'fill': '#1c6b64'}
+                    ] %}
+                    {% set legs = _all_legs | selectattr('value', 'gt', 0) | list %}
+                    {% for leg in legs %}
+                        {% set y = pad_t + loop.index0 * (bar_h + row_gap) %}
+                        {% set value_x = pad_l + (leg.value / axis_max * track_w) %}
+                        <text x="{{ pad_l - 8 }}" y="{{ y + bar_h * 0.7 }}"
+                              text-anchor="end" font-size="9" fill="#1f2937">{{ leg.label }}</text>
+                        <rect x="{{ pad_l }}" y="{{ y }}" rx="3" ry="3"
+                              width="{{ track_w }}" height="{{ bar_h }}" fill="#e1e4ea" />
+                        <rect x="{{ pad_l }}" y="{{ y }}" rx="3" ry="3"
+                              width="{{ value_x - pad_l }}" height="{{ bar_h }}" fill="{{ leg.fill }}" />
+                        <text x="{{ value_x + 4 }}" y="{{ y + bar_h * 0.7 }}"
+                              font-size="8" fill="#1f2937" font-family="monospace">{{ leg.value|format_currency_compact }}</text>
+                    {% endfor %}
+                    {% set last_y = pad_t + (legs|length - 1) * (bar_h + row_gap) + bar_h %}
+                    <line x1="{{ blend_x }}" y1="{{ pad_t - 4 }}"
+                          x2="{{ blend_x }}" y2="{{ last_y + 4 }}"
+                          stroke="#1f2937" stroke-width="1.2"
+                          stroke-dasharray="3 2" opacity="0.65" />
+                    <g transform="translate({{ blend_x - 50 }}, {{ chart_h - 12 }})">
+                        <rect x="0" y="-10" rx="2" ry="2" width="100" height="12" fill="#1f2937" opacity="0.85" />
+                        <text x="50" y="-2" text-anchor="middle" font-size="8" fill="white" font-family="monospace">{{ startup_report.t.blend }} {{ head_mid|format_currency_compact }}</text>
+                    </g>
+                    {# Axis baseline + 0 / axis_max tick labels.
+                       Mirrors the screen one-pager so PDF readers see
+                       the same anchor labels.  Audit issue D11. #}
+                    <line x1="{{ pad_l }}" y1="{{ chart_h - 20 }}"
+                          x2="{{ chart_w - pad_r }}" y2="{{ chart_h - 20 }}"
+                          stroke="#94a3b8" stroke-width="0.5" />
+                    <text x="{{ pad_l }}" y="{{ chart_h - 7 }}"
+                          font-size="7" fill="#4a5460"
+                          text-anchor="start" font-family="monospace">0</text>
+                    <text x="{{ chart_w - pad_r }}" y="{{ chart_h - 7 }}"
+                          font-size="7" fill="#4a5460"
+                          text-anchor="end" font-family="monospace">{{ axis_max|format_currency_compact }}</text>
+                </svg>
+            </td>
+        </tr>
+    </table>
+    {% endif %}
+
+    {# Cap-table simulator + defensibility — side by side #}
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 12pt;">
+        <tr>
+            <td style="vertical-align: top; width: 50%; padding-right: 4pt;">
+                {% if sim and sim.investment_amount and sim.pre_money %}
+                <table style="width: 100%; border: 1pt solid #2a8a82; background: #f0f7f6; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 8pt;">
+                            <div style="font-size: 8pt; font-weight: 700; color: #2a8a82; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4pt;">
+                                {{ startup_report.t.cap_table_simulator }}
+                            </div>
+                            <p style="font-size: 9pt; line-height: 1.5; margin: 0 0 6pt;">
+                                {# Audit issue #21 — the ``cap_table_simulator_proxy`` template
+                                   already opens with "Based on your last round size of …",
+                                   so the trailing ``based_on_last_round`` tag is redundant
+                                   and was removed. #}
+                                {% set _sim_template = startup_report.t.cap_table_simulator_ask if sim.source == 'investor_ask' else startup_report.t.cap_table_simulator_proxy %}
+                                {{ _sim_template.replace('{amount}', sim.investment_amount|format_eur_amount).replace('{pre}', sim.pre_money|format_eur_amount).replace('{dilution}', sim.dilution_pct|safe_round(1)|string)|safe }}
+                            </p>
+                            <table style="width: 100%; font-size: 8.5pt;">
+                                <tr><td>{{ startup_report.t.pre_money }}</td><td style="text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ sim.pre_money|format_currency }}</td></tr>
+                                <tr><td>{{ startup_report.t.plus_round_to_raise }}</td><td style="text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ sim.investment_amount|format_currency }}</td></tr>
+                                <tr style="font-weight: 700;"><td>{{ startup_report.t.equals_post_money }}</td><td style="text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ sim.post_money|format_currency }}</td></tr>
+                                {% if sim.option_pool_pct and sim.option_pool_pct > 0 %}
+                                <tr><td>{{ startup_report.t.option_pool_drag }}</td><td style="text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ sim.option_pool_pct|safe_round(1) }}%</td></tr>
+                                {% endif %}
+                                {% if sim.safe_dilution_pct and sim.safe_dilution_pct > 0 %}
+                                <tr><td>{{ startup_report.t.safe_conversion_drag }}</td><td style="text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ sim.safe_dilution_pct|safe_round(1) }}%</td></tr>
+                                {% endif %}
+                                <tr style="font-weight: 700; color: #2a8a82;"><td>{{ startup_report.t.founder_dilution }}</td><td style="text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ sim.founder_dilution_pct|safe_round(1) }}%</td></tr>
+                            </table>
+                            {# Visual share-distribution bar — same 4-segment
+                               split (founders / option pool / SAFEs / new
+                               investor) the founder saw in the Venus wizard. #}
+                            {% include "main_report_pdf/partials/_startup_share_distribution_bar.html" ignore missing %}
+                        </td>
+                    </tr>
+                </table>
+                {% else %}
+                <table style="width: 100%; border: 1pt solid #e1e4ea; background: #f8fafc; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 8pt;">
+                            <div style="font-size: 8pt; font-weight: 700; color: #4a5460; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4pt;">{{ startup_report.t.cap_table_simulator }}</div>
+                            <p style="font-size: 8.5pt; line-height: 1.5; margin: 0; color: #4a5460;">
+                                {{ startup_report.t.cap_table_empty|safe }}
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+                {% endif %}
+            </td>
+            <td style="vertical-align: top; width: 50%; padding-left: 4pt;">
+                {% if defensibility_top %}
+                <table style="width: 100%; border: 1pt solid #e1e4ea; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 8pt;">
+                            <div style="font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4pt;">
+                                {{ startup_report.t.defensibility_assumptions }}
+                            </div>
+                            <table style="width: 100%; font-size: 8.5pt;">
+                                {% for row in defensibility_top %}
+                                <tr>
+                                    <td style="padding: 2pt 0; border-bottom: 0.5pt solid #e1e4ea;">{{ row.label }}</td>
+                                    <td style="text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; border-bottom: 0.5pt solid #e1e4ea;">{{ row.value }}</td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                            <div style="font-size: 7pt; color: #4a5460; margin-top: 4pt;">
+                                {{ startup_report.t.full_audit_trail }}
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+
+    {# Viral CTA strip #}
+    <table style="width: 100%; border: 1pt solid #2a8a82; background: #f0f7f6; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 10pt;">
+                <div style="font-size: 10pt; font-weight: 700; margin-bottom: 2pt;">
+                    {{ startup_report.t.cta_ready_for_term_sheet_title }}
+                </div>
+                <div style="font-size: 8pt; color: #4a5460; line-height: 1.5;">
+                    {{ startup_report.t.cta_ready_for_term_sheet_subtitle }}
+                </div>
+            </td>
+            <td style="padding: 10pt; text-align: right; vertical-align: middle;">
+                <a href="{{ advisor_url }}" style="background: #2a8a82; color: white; padding: 8pt 14pt; border-radius: 4pt; font-weight: 700; text-decoration: none; font-size: 9pt;">
+                    {{ startup_report.t.cta_invite_accountant }}
+                </a>
+            </td>
+        </tr>
+    </table>
+
+    {% include "main_report_pdf/partials/_footer.html" ignore missing %}
+</div>

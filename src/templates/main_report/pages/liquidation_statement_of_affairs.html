@@ -1,0 +1,91 @@
+{#
+    LIQUIDATION ANALYSIS — PAGE: STATEMENT OF AFFAIRS (Section 00)
+
+    EY/KPMG-format M&A cover doc. Single page that aggregates every
+    Phase 1-4 output into a gross-to-net waterfall + M&A buyer band
+    (floor / reference / ceiling). Per AICPA SSVS No. 1 §47-58 +
+    IVS 104 §80.
+
+    Renders only when ``statement_of_affairs`` is present.
+
+    PDF twin: main_report_pdf/pages/liquidation_statement_of_affairs.html
+#}
+{% set lr = liquidation_report %}
+{% if lr.statement_of_affairs %}
+{% set soa = lr.statement_of_affairs %}
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div class="section-header">
+        <span class="section-number">00</span>
+        <h1 class="section-title" style="margin: 0; flex: 1;">{{ lr.t.soa_section_title }}</h1>
+        <div style="text-align: right;">
+            <span class="badge badge-primary" style="font-size: var(--font-size-xs);">
+                {{ lr.t.soa_section_subtitle }}
+            </span>
+        </div>
+    </div>
+
+    {# Three headline numbers — the most important figures in the entire report. #}
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin-bottom: var(--space-4);">
+        <div class="card" style="padding: var(--space-4); border-left: 3px solid hsl(var(--report-primary));">
+            <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); text-transform: uppercase; letter-spacing: 0.05em;">
+                {{ lr.t.soa_headline_net_orderly }}
+            </div>
+            <div style="font-size: 1.8rem; font-weight: 700; color: hsl(var(--report-primary)); margin-top: var(--space-1);">
+                €{{ soa.headline_net_orderly|format_eur_amount }}
+            </div>
+        </div>
+        <div class="card" style="padding: var(--space-4);">
+            <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); text-transform: uppercase; letter-spacing: 0.05em;">
+                {{ lr.t.soa_headline_net_forced }}
+            </div>
+            <div style="font-size: 1.4rem; font-weight: 600; margin-top: var(--space-1);">
+                €{{ soa.headline_net_forced|format_eur_amount }}
+            </div>
+        </div>
+        <div class="card" style="padding: var(--space-4); background: hsl(var(--report-surface-muted));">
+            <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); text-transform: uppercase; letter-spacing: 0.05em;">
+                {{ lr.t.soa_headline_book_equity }}
+            </div>
+            <div style="font-size: 1.4rem; font-weight: 600; margin-top: var(--space-1);">
+                €{{ soa.headline_book_equity|format_eur_amount }}
+            </div>
+        </div>
+    </div>
+
+    {# Orderly waterfall #}
+    <h2 style="font-size: var(--font-size-md); margin-top: var(--space-3); margin-bottom: var(--space-2);">
+        {{ lr.t.soa_waterfall_title_orderly }}
+    </h2>
+    <table style="width: 100%; font-size: var(--font-size-sm); border-collapse: collapse; margin-bottom: var(--space-3);">
+        <tbody>
+            {% for step in soa.waterfall_orderly %}
+            <tr style="{% if step.kind == 'subtotal' or step.kind == 'net' %}font-weight: 600; border-top: 1px solid hsl(var(--report-border));{% endif %}{% if step.kind == 'net' %}background: hsl(var(--report-surface-muted));{% endif %}">
+                <td style="padding: var(--space-1); {% if step.kind == 'deduction' %}padding-left: var(--space-3);{% endif %}">
+                    <div>{{ step.label }}</div>
+                    {% if step.rationale %}
+                    <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">{{ step.rationale }}</div>
+                    {% endif %}
+                </td>
+                <td style="text-align: right; padding: var(--space-1); white-space: nowrap;">
+                    {% if step.kind == 'gross' or step.kind == 'subtotal' or step.kind == 'net' %}
+                    €{{ step.running_total|format_eur_amount }}
+                    {% else %}
+                    €{{ step.amount|format_eur_amount }}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p data-buyer-range-status="not_assessed">{{ lr.t.buyer_range_not_assessed }}</p>
+
+    {% if soa.sources %}
+    <div style="margin-top: var(--space-3); font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">
+        {{ lr.t.sources_label }}: {{ soa.sources|join(' · ') }}
+    </div>
+    {% endif %}
+</div>
+{% endif %}

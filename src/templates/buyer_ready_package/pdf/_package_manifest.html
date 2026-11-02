@@ -1,0 +1,147 @@
+{#
+    Buyer package manifest — PDF twin.
+#}
+
+{% if package.buyer_package_manifest %}
+<section class="brp-package-manifest" data-section="buyer_package_manifest"
+         data-package-status="{{ package.buyer_package_manifest.package_status }}"
+         data-release-status="{{ package.buyer_package_manifest.release_status }}">
+    <div class="brp-page-header">
+        <div>
+            <div class="brp-section-kicker">Transaction package</div>
+            <h2>Buyer package index</h2>
+        </div>
+        <div class="brp-confidence-chip" data-confidence="{% if package.buyer_package_manifest.package_status == 'ready' %}high{% elif package.buyer_package_manifest.package_status == 'blocked' %}low{% else %}medium{% endif %}">
+            {{ package.buyer_package_manifest.release_status.replace("_", " ") }}
+        </div>
+    </div>
+
+    <div class="brp-manifest-summary-grid">
+        <div class="brp-manifest-summary-card" data-module="package-status">
+            <span class="brp-figure-label">Package status</span>
+            <strong>{{ package.buyer_package_manifest.package_status.replace("_", " ") }}</strong>
+        </div>
+        <div class="brp-manifest-summary-card" data-module="valuation-source">
+            <span class="brp-figure-label">Main valuation report</span>
+            <strong>{{ package.buyer_package_manifest.valuation_report_id or "Source pending" }}</strong>
+        </div>
+        <div class="brp-manifest-summary-card" data-module="valuation-pdf-status">
+            <span class="brp-figure-label">Valuation PDF</span>
+            <strong>{{ package.buyer_package_manifest.valuation_pdf_status.replace("_", " ") }}</strong>
+        </div>
+        <div class="brp-manifest-summary-card" data-module="custom-narrative-provider">
+            <span class="brp-figure-label">Custom narrative</span>
+            <strong>
+                {% if package.engine_signals.llm_provider %}
+                    {{ package.engine_signals.llm_provider.replace("_", " ") }}
+                {% else %}
+                    Structured only
+                {% endif %}
+            </strong>
+        </div>
+    </div>
+
+    {% if package.pricing %}
+        <div class="brp-manifest-price" data-module="package-price-range">
+            <span class="brp-section-kicker">Final price bridge</span>
+            <strong>
+                {% if package.pricing.recommended_asking_price_eur is not none %}
+                    Recommended ask {{ package.pricing.currency }} {{ "{:,.0f}".format(package.pricing.recommended_asking_price_eur).replace(",", ".") }}
+                {% else %}
+                    Indicative midpoint {{ package.pricing.currency }} {{ "{:,.0f}".format(package.pricing.equity_value_mid_eur).replace(",", ".") }}
+                {% endif %}
+            </strong>
+            <p>
+                Range {{ package.pricing.currency }} {{ "{:,.0f}".format(package.pricing.equity_value_low_eur).replace(",", ".") }}
+                -
+                {{ package.pricing.currency }} {{ "{:,.0f}".format(package.pricing.equity_value_high_eur).replace(",", ".") }}
+                · {{ package.pricing.basis.replace("_", " ") }} · {{ package.pricing.confidence }} confidence
+            </p>
+        </div>
+    {% endif %}
+
+    <table class="brp-manifest-table">
+        <thead>
+            <tr>
+                <th>Artifact</th>
+                <th>Status</th>
+                <th>Access gate</th>
+                <th>Owner</th>
+                <th>Control note</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for artifact in package.buyer_package_manifest.artifacts %}
+                {% set tone = "green" if artifact.status == "ready" else "yellow" if artifact.status == "needs_review" else "red" %}
+                <tr data-artifact-type="{{ artifact.artifact_type }}" data-status="{{ artifact.status }}">
+                    <td>
+                        <strong>{{ artifact.title }}</strong>
+                        <span>{{ artifact.artifact_type.replace("_", " ") }}</span>
+                        {% if artifact.source_ref %}
+                            <span class="brp-manifest-source">{{ artifact.source_ref }}</span>
+                        {% endif %}
+                        {% if artifact.issued_at %}
+                            <span class="brp-manifest-source">Issued {{ artifact.issued_at }}</span>
+                        {% endif %}
+                        {% if artifact.expires_at %}
+                            <span class="brp-manifest-source">Expires {{ artifact.expires_at }}</span>
+                        {% endif %}
+                        {% if artifact.custom_content_provider %}
+                            {% set provider_label = "Legal reviewer" if artifact.custom_content_provider == "counsel_owned" else ("Advisor-supplied" if artifact.custom_content_provider == "advisor_supplied" else artifact.custom_content_provider.replace("_", " ")) %}
+                            <span class="brp-manifest-source">
+                                Content source: {{ provider_label }}
+                            </span>
+                        {% endif %}
+                        {% if artifact.custom_content_status %}
+                            {% set status_label = "Legal review required" if artifact.custom_content_status == "counsel_review_required" else artifact.custom_content_status.replace("_", " ") %}
+                            <span class="brp-manifest-source">
+                                Content status: {{ status_label }}
+                            </span>
+                        {% endif %}
+                        {% if artifact.assistant_surfaces %}
+                            <span class="brp-manifest-source">
+                                Assistant access:
+                                {% for surface in artifact.assistant_surfaces %}
+                                    {{ surface|capitalize }}{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            </span>
+                        {% endif %}
+                        {% if artifact.integration_input_status %}
+                            <span class="brp-manifest-source">
+                                Integration inputs: {{ artifact.integration_input_status.replace("_", " ") }}
+                            </span>
+                        {% endif %}
+                        {% if artifact.open_input_count is not none %}
+                            <span class="brp-manifest-source">
+                                Open inputs: {{ artifact.open_input_count }}
+                            </span>
+                        {% endif %}
+                        {% if artifact.assistant_next_action %}
+                            <span class="brp-manifest-source">
+                                Next action: {{ artifact.assistant_next_action }}
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="brp-status-chip brp-status-{{ tone }}">
+                            {{ artifact.status.replace("_", " ") }}
+                        </span>
+                    </td>
+                    <td>{{ artifact.access_gate.replace("_", " ") }}</td>
+                    <td>{{ artifact.owner }}</td>
+                    <td>{{ artifact.reason }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="brp-legal-notice brp-legal-notice-muted">
+        <strong>Release control</strong>
+        <p>
+            This index is the buyer-package envelope. It does not replace transaction counsel:
+            it makes the release status, data-room gate, valuation-report provenance, and
+            lawyer handoff explicit before SME buyer circulation.
+        </p>
+    </div>
+</section>
+{% endif %}

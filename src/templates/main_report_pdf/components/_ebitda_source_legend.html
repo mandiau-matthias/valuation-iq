@@ -1,0 +1,70 @@
+{% set _ebitda_sources = ebitda_adjustments|default([])|map(attribute='source')|list %}
+{% set _show_yuki_source = 'yuki' in _ebitda_sources %}
+{% set _show_exact_source = 'exact' in _ebitda_sources %}
+{% set _show_suggestion_source = 'suggestion' in _ebitda_sources %}
+{% set _show_manual_source = 'manual' in _ebitda_sources %}
+{% set _show_metadata_source = 'metadata' in _ebitda_sources %}
+{% if report_scope|default('standard') != 'client_indicative' and (_show_yuki_source or _show_exact_source or _show_suggestion_source or _show_manual_source or _show_metadata_source) %}
+<div style="margin-top: 8pt; padding: 8pt 12pt; background: hsl(40, 15%, 98%); border-radius: 4pt; font-size: 7pt; color: hsl(224, 10%, 45%);">
+    <p style="margin: 0 0 5pt 0; font-weight: 700; color: hsl(225, 18%, 12%); text-transform: uppercase; letter-spacing: 0.04em;">
+        {{ t.ebitda_source_legend }}
+    </p>
+    <table style="width: 100%; border-collapse: collapse; font-size: 7pt;">
+        {% if _show_yuki_source %}
+        <tr>
+            <td style="padding: 1.5pt 8pt 1.5pt 0; vertical-align: top; border: none; white-space: nowrap;">
+                <span style="color: hsl({{ teal_hsl }});">&#9679;</span>
+                <strong style="color: hsl(225, 18%, 12%); margin-left: 3pt;">{{ t.ebitda_source_yuki }}</strong>
+            </td>
+            <td style="padding: 1.5pt 0; vertical-align: top; border: none; line-height: 1.45;">
+                {{ t.ebitda_source_yuki_desc }}
+            </td>
+        </tr>
+        {% endif %}
+        {% if _show_exact_source %}
+        <tr>
+            <td style="padding: 1.5pt 8pt 1.5pt 0; vertical-align: top; border: none; white-space: nowrap;">
+                <span style="color: hsl(210, 60%, 50%);">&#9679;</span>
+                <strong style="color: hsl(225, 18%, 12%); margin-left: 3pt;">{{ t.ebitda_source_exact }}</strong>
+            </td>
+            <td style="padding: 1.5pt 0; vertical-align: top; border: none; line-height: 1.45;">
+                {{ t.ebitda_source_exact_desc }}
+            </td>
+        </tr>
+        {% endif %}
+        {% if _show_suggestion_source %}
+        <tr>
+            <td style="padding: 1.5pt 8pt 1.5pt 0; vertical-align: top; border: none; white-space: nowrap;">
+                <span style="color: hsl(37, 65%, 55%);">&#9679;</span>
+                <strong style="color: hsl(225, 18%, 12%); margin-left: 3pt;">{{ t.ebitda_source_suggestion }}</strong>
+            </td>
+            <td style="padding: 1.5pt 0; vertical-align: top; border: none; line-height: 1.45;">
+                {{ t.ebitda_source_suggestion_desc }}
+            </td>
+        </tr>
+        {% endif %}
+        {% if _show_metadata_source %}
+        <tr>
+            <td style="padding: 1.5pt 8pt 1.5pt 0; vertical-align: top; border: none; white-space: nowrap;">
+                <span style="color: hsl(172, 45%, 40%);">&#9679;</span>
+                <strong style="color: hsl(225, 18%, 12%); margin-left: 3pt;">{{ t.ebitda_source_metadata }}</strong>
+            </td>
+            <td style="padding: 1.5pt 0; vertical-align: top; border: none; line-height: 1.45;">
+                {{ t.ebitda_source_metadata_desc }}
+            </td>
+        </tr>
+        {% endif %}
+        {% if _show_manual_source %}
+        <tr>
+            <td style="padding: 1.5pt 8pt 1.5pt 0; vertical-align: top; border: none; white-space: nowrap;">
+                <span style="color: hsl(224, 10%, 55%);">&#9679;</span>
+                <strong style="color: hsl(225, 18%, 12%); margin-left: 3pt;">{{ t.ebitda_source_manual }}</strong>
+            </td>
+            <td style="padding: 1.5pt 0; vertical-align: top; border: none; line-height: 1.45;">
+                {{ t.ebitda_source_manual_desc }}
+            </td>
+        </tr>
+        {% endif %}
+    </table>
+</div>
+{% endif %}

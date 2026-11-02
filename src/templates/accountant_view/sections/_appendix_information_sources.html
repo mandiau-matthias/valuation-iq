@@ -1,0 +1,227 @@
+<div class="page">
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 24pt; border: none; border-top: none;">
+        <tr>
+            <td style="padding: 0; border: none; vertical-align: middle;">
+                <h1 id="appendix-c" style="margin: 0 0 32pt 0; page-break-before: always; break-before: page;">{{ t.accountant_sources_section_title }}</h1>
+            </td>
+            <td style="padding: 0; border: none; text-align: right; vertical-align: top;">
+                <div style="display: inline-block; padding: 6pt 10pt; margin-top: 4pt; border: 1pt solid #E2E8F0; border-radius: 4px; background-color: #f4f1ea;">
+                    <span style="font-family: 'Inter', sans-serif; font-size: 8pt; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em;">{{ t.accountant_sources_transparency_badge }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="report-section" style="margin-bottom: 32pt;">
+        <p style="font-size: 12pt; line-height: 1.6; color: #334155; margin-bottom: 16pt;">
+            {{ t.accountant_sources_intro | safe }}
+        </p>
+        <p style="font-size: 11pt; line-height: 1.5; color: #475569; margin-bottom: 24pt;">
+            <strong>{{ t.accountant_sources_disclosure_label }}</strong> {{ t.accountant_sources_disclosure_body | safe }}
+        </p>
+    </div>
+
+    <div class="report-section">
+        <h2 style="margin-bottom: 24pt; color: #2b303a;">{{ t.accountant_sources_inventory_title }}</h2>
+
+        <p style="font-size: 11pt; line-height: 1.6; color: #334155; margin-bottom: 24pt;">
+            {{ t.accountant_sources_inventory_intro }}
+        </p>
+
+        <div class="table-card">
+            <table class="step-table" style="font-size: 9pt;">
+                <caption>{{ t.accountant_sources_caption }}</caption>
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">{{ t.accountant_sources_col_category }}</th>
+                        <th style="width: 45%;">{{ t.accountant_sources_col_description }}</th>
+                        <th style="width: 15%;">{{ t.accountant_sources_col_reliability }}</th>
+                        <th style="width: 15%;">{{ t.accountant_sources_col_impact }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for source in information_sources.data_sources %}
+                    <tr>
+                        <td style="font-weight: 600; color: #2b303a;">
+                            {{ source.type }}
+                            {% if source.type == 'Financial Statements' %}
+                                <div style="font-size: 8pt; font-weight: 400; color: #64748B; margin-top: 2pt;">{{ t.accountant_sources_primary_data }}</div>
+                            {% elif source.type == 'Market Multiples' %}
+                                <div style="font-size: 8pt; font-weight: 400; color: #64748B; margin-top: 2pt;">{{ t.accountant_sources_benchmarking_data }}</div>
+                            {% else %}
+                                <div style="font-size: 8pt; font-weight: 400; color: #64748B; margin-top: 2pt;">{{ t.accountant_sources_supporting_data }}</div>
+                            {% endif %}
+                        </td>
+                        <td style="line-height: 1.5; color: #475569;">
+                            {{ source.description }}
+                            {% if source.type == 'Financial Statements' %}
+                                <div style="font-size: 8pt; color: #64748B; margin-top: 4pt; font-style: italic;">
+                                    {{ t.accountant_sources_used_for_financials }}
+                                </div>
+                            {% elif source.type == 'Market Multiples' %}
+                                <div style="font-size: 8pt; color: #64748B; margin-top: 4pt; font-style: italic;">
+                                    {{ t.accountant_sources_used_for_multiples }}
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            {% if source.reliability == 'High' %}
+                                <span style="color: #6b8e72; font-weight: 700; text-transform: uppercase; font-size: 9pt;">{{ t.accountant_sources_reliability_high }}</span>
+                            {% elif source.reliability == 'Medium' %}
+                                <span style="color: #d9a558; font-weight: 700; text-transform: uppercase; font-size: 9pt;">{{ t.accountant_sources_reliability_medium }}</span>
+                            {% else %}
+                                <span style="color: #b85c56; font-weight: 700; text-transform: uppercase; font-size: 9pt;">{{ t.accountant_sources_reliability_low }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; color: {% if source.reliability == 'High' %}#6b8e72{% elif source.reliability == 'Medium' %}#d9a558{% else %}#b85c56{% endif %}; font-weight: 600;">
+                            {% if source.reliability == 'High' %}
+                                {{ t.accountant_sources_impact_high }}
+                            {% elif source.reliability == 'Medium' %}
+                                {{ t.accountant_sources_impact_baseline }}
+                            {% else %}
+                                {{ t.accountant_sources_impact_low }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Data Quality Assessment -->
+        <div style="margin-top: 32pt; padding: 24pt; background-color: #f8fafc; border: 1px solid #E2E8F0; border-radius: 8px;">
+            <h3 style="font-family: 'Inter', sans-serif; font-size: 12pt; font-weight: 700; color: #2b303a; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16pt;">{{ t.accountant_sources_quality_framework_title }}</h3>
+
+            <div style="display: table; width: 100%;">
+                <div style="display: table-row;">
+                    <div style="display: table-cell; width: 33%; vertical-align: top; padding-right: 20pt;">
+                        <h4 style="font-size: 11pt; color: #2b303a; margin-bottom: 8pt;">{{ t.accountant_sources_reliability_ratings_title }}</h4>
+                        <ul style="font-size: 10pt; color: #475569; line-height: 1.6; margin: 0; padding-left: 16pt;">
+                            <li>{{ t.accountant_sources_rating_high | safe }}</li>
+                            <li>{{ t.accountant_sources_rating_medium | safe }}</li>
+                            <li>{{ t.accountant_sources_rating_low | safe }}</li>
+                        </ul>
+                    </div>
+                    <div style="display: table-cell; width: 33%; vertical-align: top; padding-right: 20pt;">
+                        <h4 style="font-size: 11pt; color: #2b303a; margin-bottom: 8pt;">{{ t.accountant_sources_confidence_impact_title }}</h4>
+                        <ul style="font-size: 10pt; color: #475569; line-height: 1.6; margin: 0; padding-left: 16pt;">
+                            <li>{{ t.accountant_sources_confidence_high | safe }}</li>
+                            <li>{{ t.accountant_sources_confidence_baseline | safe }}</li>
+                            <li>{{ t.accountant_sources_confidence_low | safe }}</li>
+                        </ul>
+                    </div>
+                    <div style="display: table-cell; width: 34%; vertical-align: top;">
+                        <h4 style="font-size: 11pt; color: #2b303a; margin-bottom: 8pt;">{{ t.accountant_sources_quality_controls_title }}</h4>
+                        <ul style="font-size: 10pt; color: #475569; line-height: 1.6; margin: 0; padding-left: 16pt;">
+                            <li>{{ t.accountant_sources_qc_cross | safe }}</li>
+                            <li>{{ t.accountant_sources_qc_reasonableness | safe }}</li>
+                            <li>{{ t.accountant_sources_qc_documentation | safe }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Statements Review Section -->
+        {% if information_sources.financial_statements %}
+        <div style="margin-top: 32pt;">
+            <h3 style="font-family: 'Inter', sans-serif; font-size: 13pt; font-weight: 700; color: #2b303a; margin-bottom: 16pt;">{{ t.accountant_sources_fs_review_title }}</h3>
+
+            <div style="background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 20pt;">
+                <p style="font-size: 11pt; line-height: 1.6; color: #334155; margin-bottom: 16pt;">
+                    {{ t.accountant_sources_fs_review_intro }}
+                </p>
+
+                <div style="background-color: #f8fafc; padding: 16pt; border-radius: 6px; border-left: 4px solid #4a5d4f;">
+                    <h4 style="font-size: 11pt; color: #2b303a; margin-bottom: 8pt; margin-top: 0;">{{ t.accountant_sources_fs_reviewed_label }}</h4>
+                    <p style="font-size: 10pt; color: #475569; line-height: 1.5; margin: 0;">
+                        {{ information_sources.financial_statements | join(', ') }}
+                    </p>
+                    <p style="font-size: 9pt; color: #64748B; margin-top: 8pt; font-style: italic;">
+                        {{ t.accountant_sources_fs_review_date }} {{ valuation_date | default(t.accountant_cover_date_pending) | format_date }} • {{ t.accountant_sources_fs_assessment }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Market Data Sources -->
+        <div style="margin-top: 32pt;">
+            <h3 style="font-family: 'Inter', sans-serif; font-size: 13pt; font-weight: 700; color: #2b303a; margin-bottom: 16pt;">{{ t.accountant_sources_market_data_title }}</h3>
+
+            <div style="background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 20pt;">
+                <p style="font-size: 11pt; line-height: 1.6; color: #334155; margin-bottom: 16pt;">
+                    {{ t.accountant_sources_market_data_intro }}
+                </p>
+
+                <table style="width: 100%; border-collapse: collapse; border: none; background-color: #f8fafc; border-radius: 6px; overflow: hidden;">
+                    <thead style="background-color: #E2E8F0;">
+                        <tr>
+                            <th style="padding: 12pt 16pt; text-align: left; border: none; font-weight: 600; color: #2b303a; font-size: 10pt;">{{ t.accountant_sources_col_source }}</th>
+                            <th style="padding: 12pt 16pt; text-align: left; border: none; font-weight: 600; color: #2b303a; font-size: 10pt;">{{ t.accountant_sources_col_publication }}</th>
+                            <th style="padding: 12pt 16pt; text-align: left; border: none; font-weight: 600; color: #2b303a; font-size: 10pt;">{{ t.accountant_sources_col_application }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {# FOUNDATIONAL ACADEMIC SOURCES #}
+                        <tr>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; font-weight: 600; color: #2b303a;">Damodaran, A.</td>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; color: #475569;">Investment Valuation (2012), Wiley</td>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; color: #475569; font-size: 9pt;">{{ t.accountant_sources_app_damodaran }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; font-weight: 600; color: #2b303a;">Koller, Goedhart & Wessels</td>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; color: #475569;">McKinsey Valuation (2020), 7th Ed.</td>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; color: #475569; font-size: 9pt;">{{ t.accountant_sources_app_koller }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; font-weight: 600; color: #2b303a;">Trugman, G.R.</td>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; color: #475569;">Understanding Business Valuation (2017), AICPA</td>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; color: #475569; font-size: 9pt;">{{ t.accountant_sources_app_trugman }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; font-weight: 600; color: #2b303a;">Pratt & Niculita</td>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; color: #475569;">Valuing a Business (2008), 5th Ed.</td>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; color: #475569; font-size: 9pt;">{{ t.accountant_sources_app_pratt }}</td>
+                        </tr>
+                        {# SME & EUROPEAN MARKET SOURCES #}
+                        <tr>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; font-weight: 600; color: #2b303a;">Pepperdine University</td>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; color: #475569;">Private Capital Markets Report (2024)</td>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; color: #475569; font-size: 9pt;">{{ t.accountant_sources_app_pepperdine }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; font-weight: 600; color: #2b303a;">VFB Belgium</td>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; color: #475569;">2024 SME Multiples Report</td>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; color: #475569; font-size: 9pt;">{{ t.accountant_sources_app_vfb }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; font-weight: 600; color: #2b303a;">Vlerick Business School</td>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; color: #475569;">2023 Belgian M&A Study</td>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; color: #475569; font-size: 9pt;">{{ t.accountant_sources_app_vlerick }}</td>
+                        </tr>
+                        {# PROFESSIONAL STANDARDS #}
+                        <tr>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; font-weight: 600; color: #2b303a;">AICPA</td>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; color: #475569;">BVS-VII: Valuation of Small Businesses</td>
+                            <td style="padding: 12pt 16pt; border: none; border-bottom: 1px solid #E2E8F0; color: #475569; font-size: 9pt;">{{ t.accountant_sources_app_aicpa }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 12pt 16pt; border: none; font-weight: 600; color: #2b303a;">IVS Council</td>
+                            <td style="padding: 12pt 16pt; border: none; color: #475569;">IVS 105: Valuation Approaches and Methods</td>
+                            <td style="padding: 12pt 16pt; border: none; color: #475569; font-size: 9pt;">{{ t.accountant_sources_app_ivs }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Professional Standards Callout -->
+        <div style="margin-top: 48pt; padding: 20pt; background-color: #f4f1ea; border: 1px solid #E2E8F0; border-radius: 4px;">
+            <h4 style="font-family: 'Inter', sans-serif; font-size: 9pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1pt; color: #64748B; margin: 0 0 12pt 0;">{{ t.accountant_sources_uspap_compliance_title }}</h4>
+            <p style="font-size: 9pt; color: #475569; line-height: 1.6; margin: 0;">
+                {{ t.accountant_sources_uspap_compliance_body | safe }}
+            </p>
+        </div>
+    </div>
+</div>

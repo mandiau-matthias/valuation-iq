@@ -1,0 +1,83 @@
+{% set _has_advisor_audit = advisor_multiple_calibration or advisor_historical_ebitda_weighting or advisor_real_estate_treatment %}
+{% if _has_advisor_audit %}
+<div style="margin: 8pt 0; padding: 7pt 9pt; border-radius: 4pt; background: hsl(224, 20%, 97%); border: 0.5pt solid hsl(224, 12%, 88%); page-break-inside: avoid; break-inside: avoid;">
+    <div style="font-size: 6pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: hsl({{ teal_hsl }}); margin-bottom: 4pt;">
+        {{ t.advisor_controls_audit_title }}
+    </div>
+
+    {% if advisor_multiple_calibration and advisor_multiple_calibration.calibrated_multiple is defined and advisor_multiple_calibration.calibrated_multiple is not none %}
+    <div style="margin-bottom: 5pt;">
+        <div style="font-size: 7pt; font-weight: 700; color: hsl(225, 18%, 12%); margin-bottom: 1pt;">
+            {{ t.advisor_controls_multiple_calibration_title }}
+        </div>
+        <div style="font-size: 7pt; line-height: 1.4; color: hsl(224, 12%, 35%);">
+            {{ t.advisor_controls_sector_average_label }}: <strong>{{ advisor_multiple_calibration.sector_average_multiple|safe_round(2) }}×</strong>
+            · {{ t.advisor_controls_risk_quality_premium_label }}: <strong>{{ advisor_multiple_calibration.specific_risk_quality_premium|safe_round(2) }}×</strong>
+            · {{ t.advisor_controls_calibrated_label }}: <strong>{{ advisor_multiple_calibration.calibrated_multiple|safe_round(2) }}×</strong>
+        </div>
+        {% if advisor_multiple_calibration.note %}
+        <div style="margin-top: 1pt; font-size: 7pt; line-height: 1.4; color: hsl(224, 10%, 45%);">
+            <strong>{{ t.advisor_controls_note_label }}:</strong> {{ advisor_multiple_calibration.note }}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if advisor_multiple_calibration and advisor_multiple_calibration.effective_multiple_override is defined and advisor_multiple_calibration.effective_multiple_override is not none %}
+    <div style="margin-bottom: 5pt;">
+        <div style="font-size: 7pt; font-weight: 700; color: hsl(225, 18%, 12%); margin-bottom: 1pt;">
+            {{ t.advisor_controls_effective_override_title }}
+        </div>
+        <div style="font-size: 7pt; line-height: 1.4; color: hsl(224, 12%, 35%);">
+            {% if advisor_multiple_calibration.model_effective_multiple is not none %}
+            {{ t.advisor_controls_model_effective_multiple_label }}: <strong>{{ advisor_multiple_calibration.model_effective_multiple|safe_round(2) }}×</strong>
+            ·
+            {% endif %}
+            {{ t.advisor_controls_advisor_effective_multiple_label }}: <strong>{{ advisor_multiple_calibration.advisor_effective_multiple|safe_round(2) }}×</strong>
+            {% if advisor_multiple_calibration.delta_multiple is not none %}
+            · {{ t.advisor_controls_delta_multiple_label }}: <strong>{{ "%+.2f"|format(advisor_multiple_calibration.delta_multiple) }}×</strong>
+            {% endif %}
+        </div>
+        {% if advisor_multiple_calibration.effective_multiple_override_note %}
+        <div style="margin-top: 1pt; font-size: 7pt; line-height: 1.4; color: hsl(224, 10%, 45%);">
+            <strong>{{ t.advisor_controls_note_label }}:</strong> {{ advisor_multiple_calibration.effective_multiple_override_note }}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if advisor_historical_ebitda_weighting and advisor_historical_ebitda_weighting.rows %}
+    <div style="margin-bottom: 5pt;">
+        <div style="font-size: 7pt; font-weight: 700; color: hsl(225, 18%, 12%); margin-bottom: 1pt;">
+            {{ t.advisor_controls_historical_ebitda_weighting_title }}
+        </div>
+        <div style="font-size: 7pt; line-height: 1.4; color: hsl(224, 12%, 35%);">
+            {% for row in advisor_historical_ebitda_weighting.rows %}
+            <span>{{ row.year_display }}: <strong>{{ row.weight_percent|safe_round(0) }}%</strong></span>{% if not loop.last %} · {% endif %}
+            {% endfor %}
+            · {{ t.advisor_controls_weighted_ebitda_label }}: <strong>{{ advisor_historical_ebitda_weighting.weighted_ebitda_total|format_currency }}</strong>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if advisor_real_estate_treatment %}
+    <div>
+        <div style="font-size: 7pt; font-weight: 700; color: hsl(225, 18%, 12%); margin-bottom: 1pt;">
+            {{ t.advisor_controls_real_estate_treatment_title }}
+        </div>
+        <div style="font-size: 7pt; line-height: 1.4; color: hsl(224, 12%, 35%);">
+            {% if advisor_real_estate_treatment.treatment == 'included' %}
+                {{ t.advisor_controls_real_estate_included_label }}
+                {% if advisor_real_estate_treatment.market_value is not none %} · {{ t.advisor_controls_market_value_label }}: <strong>{{ advisor_real_estate_treatment.market_value|format_currency }}</strong>{% endif %}
+                {% if advisor_real_estate_treatment.book_value is not none %} · {{ t.advisor_controls_book_value_label }}: <strong>{{ advisor_real_estate_treatment.book_value|format_currency }}</strong>{% endif %}
+                {% if advisor_real_estate_treatment.surplus_value is not none %} · {{ t.advisor_controls_surplus_value_label }}: <strong>{{ advisor_real_estate_treatment.surplus_value|format_currency }}</strong>{% endif %}
+            {% else %}
+                {{ t.advisor_controls_real_estate_carve_out_label }}
+                {% if advisor_real_estate_treatment.estimated_market_rent is not none %} · {{ t.advisor_controls_market_rent_label }}: <strong>{{ advisor_real_estate_treatment.estimated_market_rent|format_currency }}</strong>{% endif %}
+                {% if advisor_real_estate_treatment.book_value is not none %} · {{ t.advisor_controls_book_value_label }}: <strong>{{ advisor_real_estate_treatment.book_value|format_currency }}</strong>{% endif %}
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}

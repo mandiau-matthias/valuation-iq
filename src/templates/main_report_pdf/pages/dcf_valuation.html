@@ -1,0 +1,318 @@
+{#
+    DCF VALUATION PAGE — PDF version (WeasyPrint / Aurora Clarity)
+    Conditionally included when has_dcf is True.
+
+    Migrated 2026-05-15 to share the `method_section` macro with the
+    screen twin.  Only the print-stable body (table-based EV summary,
+    cream-box subtitle, hardcoded hex tokens) lives here; the wrapper
+    (page header, section title, citations rail, footer) comes from
+    `shared/macros/method_section.html`.
+
+    The cream-box methodology subtitle is rendered inside the body
+    slot rather than via the macro's plain-text `subtitle` parameter,
+    because the PDF tree's cream-box callout matches the NAV / EBITDA
+    / SDE / Revenue dossier family pattern (Aurora-pass-2026-05-03).
+    Once the screen and PDF CSS converge, this can move up into the
+    macro's `subtitle=` parameter.
+
+    Body contents:
+    1. Methodology intro callout (cream box)
+    2. WACC Buildup
+    3. FCFF Projection Table
+    4. Terminal Value + Enterprise Value summary (table layout for WeasyPrint)
+    5. DCF Sensitivity Matrix
+    6. Assumptions footnote
+#}
+
+{% from "shared/macros/method_section.html" import method_section with context %}
+
+{% set apv_versioned = dcf_apv_contract_version|default('') == 'apv_tax_shield.v2' and dcf_has_apv_tax_shield|default(false) %}
+{% set apv_locale = (locale|default('nl'))[:2] %}
+{% set dcf_subtitle = t.dcf_page_subtitle %}
+{% if apv_versioned %}
+{% set dcf_subtitle = 'Operating cash flows are discounted at the declared unlevered base return. The separately valued financing tax shield is added once.' if apv_locale == 'en' else 'Les flux opérationnels sont actualisés au rendement de base déclaré sans dette. Le bouclier fiscal évalué séparément est ajouté une seule fois.' if apv_locale == 'fr' else 'Operationele kasstromen worden verdisconteerd tegen het opgegeven basisrendement zonder schuld. Het afzonderlijk gewaardeerde belastingschild wordt eenmaal toegevoegd.' %}
+{% endif %}
+
+{% call method_section(
+    method_key='dcf',
+    section_number=dcf_valuation_section_number,
+    title=t.dcf_page_title,
+    tree_root='main_report_pdf',
+    page_number=(4 if show_dcf_before_calibration else total_pages - 1),
+    method=dcf_method,
+    show_citations=(not apv_versioned and not is_governed_external_market_reference|default(false))
+) %}
+
+    {# Aurora-aligned methodology intro callout — matches the cream-box
+       pattern used by NAV / EBITDA / SDE / Revenue dossiers, calibration
+       and synthesis. Keeps the DCF page visually consistent with the
+       rest of the per-method dossier family (Aurora-pass-2026-05-03). #}
+    <div style="margin-top: 6pt; margin-bottom: 14pt; padding: 8pt 10pt; border-radius: 6pt; border: 1pt solid hsl(224, 10%, 91%); background: hsl(40, 15%, 98%); page-break-inside: avoid; break-inside: avoid;">
+        <p style="margin: 0; font-size: 8pt; color: hsl(224, 12%, 35%); line-height: 1.55;">
+            {{ dcf_subtitle }}
+            <span class="badge badge-primary" style="margin-left: 8pt; font-size: 6pt;">{{ t.calib_dcf_badge }}</span>
+        </p>
+    </div>
+
+    {# ── 1. WACC Buildup ── #}
+    {% include "main_report_pdf/components/_dcf_wacc_buildup.html" %}
+
+    {# ── 2. FCFF Projection Table ── #}
+    {% include "main_report_pdf/components/_dcf_projection_table.html" %}
+
+    {# ── 3. Terminal Value + Enterprise Value Summary ── #}
+    {% set _sealed_dcf = sealed_display.dcf if sealed_display is defined else none %}
+    {% set pv_list_floats = dcf_pv_fcf_projections|default([])|select('ne', none)|map('float')|list %}
+    {% set pv_explicit = _sealed_dcf.pv_explicit if _sealed_dcf else pv_list_floats|sum %}
+    {% set pv_terminal = _sealed_dcf.pv_terminal if _sealed_dcf else dcf_pv_terminal_value|default(0)|float %}
+    {% set _dcf_locale = (locale|default('nl'))|lower %}
+    {% set _dcf_is_en = _is_en|default(_dcf_locale[:2] == 'en') %}
+    {% set _dcf_is_fr = _dcf_locale[:2] == 'fr' %}
+    {% set apv_tax_shield = dcf_apv_tax_shield_value|default(0)|float %}
+    {% set has_apv_bridge = dcf_has_apv_tax_shield|default(false) and apv_tax_shield != 0 %}
+    {# Prefer the engine's stored EV (`dcf_enterprise_value`, populated by
+       `dcf_section.py:140` from `response.dcf_valuation.enterprise_value`) over
+       the in-template sum so the DCF page agrees with the cover-page EV/Equity
+       bridge. The values should match in DCF-only mode after the response_builder
+       bridge fix; the fallback sum handles legacy paths where EV isn't surfaced
+       on the DCF result (Three Towers Capital incident, 2026-04-28: cover showed
+       multiples-based €508K while DCF page summed €1.09M). #}
+    {% if _sealed_dcf %}
+    {% set dcf_ev = _sealed_dcf.enterprise_value %}
+    {% else %}
+    {% set _engine_dcf_ev = dcf_enterprise_value|default(0)|float %}
+    {% set dcf_ev = _engine_dcf_ev if _engine_dcf_ev > 0 else (pv_explicit + pv_terminal) %}
+    {% endif %}
+    {# Horizon-tail bridge: the engine
+       projects a LONGER explicit horizon (e.g. 10 years with growth decay)
+       than the 5 FCFF years the projection table displays. dcf_section.py
+       surfaces the PV of the hidden years as ``dcf_pv_explicit_tail`` so this
+       summary foots to the cover/calibration/vraagprijs headline EV instead
+       of silently stopping €1.0M short. #}
+    {% set horizon_tail = dcf_pv_explicit_tail|default(0)|float %}
+    {% set has_horizon_tail = dcf_has_horizon_tail|default(false) and horizon_tail != 0 %}
+    {% set _dcf_disp_years = dcf_displayed_projection_years|default(pv_list_floats|length, true)|int %}
+    {% set _dcf_horizon_years = dcf_explicit_horizon_years|default(_dcf_disp_years, true)|int %}
+    {% set dcf_operating_ev = _sealed_dcf.operating_enterprise_value if _sealed_dcf else (dcf_enterprise_value_before_apv|default(0)|float if has_apv_bridge else dcf_ev) %}
+    {% if not _sealed_dcf and has_apv_bridge and dcf_operating_ev <= 0 %}
+        {% set dcf_operating_ev = pv_explicit + pv_terminal + (horizon_tail if has_horizon_tail else 0) %}
+    {% endif %}
+
+    {% if dcf_ev > 0 %}
+    <div style="margin-top: 18pt; padding: 10pt; border: 1pt solid hsl(224, 10%, 91%); border-left: 3pt solid hsl({{ teal_hsl }}); border-radius: 6pt; page-break-inside: avoid; break-inside: avoid;">
+        <h4 style="font-size: 9.5pt; margin: 0 0 8pt 0; color: hsl(225, 18%, 12%);">{{ t.dcf_ev_summary_header }}</h4>
+
+        <table style="width: 100%; table-layout: fixed; font-size: 8pt; border-collapse: collapse;">
+            <colgroup><col style="width: 72%;"><col style="width: 28%;"></colgroup>
+            <tr style="border-bottom: 1pt solid hsl(224, 12%, 96%);">
+                <td style="padding: 3pt 0; color: hsl(224, 10%, 45%); border: none;">{{ t.dcf_pv_explicit_label }}{% if has_horizon_tail %} {% if _dcf_is_fr %}(années 1–{{ _dcf_disp_years }}, détaillées ci-dessus){% elif _dcf_is_en %}(years 1–{{ _dcf_disp_years }}, shown above){% else %}(jaar 1–{{ _dcf_disp_years }}, hierboven getoond){% endif %}{% endif %}</td>
+                <td data-sealed-field-id="method.dcf.present_value_explicit" style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">{{ pv_explicit|format_currency }}</td>
+            </tr>
+            {% if has_horizon_tail %}
+            <tr style="border-bottom: 1pt solid hsl(224, 12%, 96%);">
+                <td style="padding: 3pt 0; color: hsl(224, 10%, 45%); border: none;">{% if _dcf_is_fr %}VA des flux explicites (années {{ _dcf_disp_years + 1 }}–{{ _dcf_horizon_years }}, convergence vers la croissance terminale){% elif _dcf_is_en %}PV explicit cash flows (years {{ _dcf_disp_years + 1 }}–{{ _dcf_horizon_years }}, converging to terminal growth){% else %}CW expliciete kasstromen (jaar {{ _dcf_disp_years + 1 }}–{{ _dcf_horizon_years }}, convergerend naar terminale groei){% endif %}</td>
+                <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">{{ horizon_tail|format_currency }}</td>
+            </tr>
+            {% endif %}
+            <tr style="border-bottom: 1pt solid hsl(224, 12%, 96%);">
+                <td style="padding: 3pt 0; color: hsl(224, 10%, 45%); border: none;">
+                    {{ t.dcf_pv_terminal_label }}
+                    {% if dcf_terminal_value_methodology == 'exit_multiple' %}
+                    ({{ t.calib_dcf_terminal_method_exit_multiple }}{% if dcf_terminal_exit_multiple %} {{ dcf_terminal_exit_multiple|safe_round(1) }}×{% endif %})
+                    {% else %}
+                    ({{ t.calib_dcf_terminal_method_gordon }} {{ dcf_terminal_growth_rate|default(0)|format_percentage }}{% if has_horizon_tail %}{% if _dcf_is_fr %}, après l’année {{ _dcf_horizon_years }}{% elif _dcf_is_en %}, after year {{ _dcf_horizon_years }}{% else %}, na jaar {{ _dcf_horizon_years }}{% endif %}{% endif %})
+                    {% endif %}
+                </td>
+                <td data-sealed-field-id="method.dcf.present_value_terminal" style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">{{ pv_terminal|format_currency }}</td>
+            </tr>
+            {% if has_apv_bridge %}
+            <tr style="border-bottom: 1pt solid hsl(224, 12%, 96%);">
+                <td style="padding: 4pt 0; font-weight: 700; color: hsl(224, 12%, 35%); border: none;">{% if _dcf_is_fr %}= Valeur d’entreprise avant boucliers fiscaux{% elif _dcf_is_en %}= Enterprise Value before tax shields{% else %}= Ondernemingswaarde vóór belastingschild{% endif %}</td>
+                <td style="padding: 4pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 700; color: hsl(224, 16%, 18%); border: none;">{{ dcf_operating_ev|format_currency }}</td>
+            </tr>
+            <tr style="border-bottom: 1pt solid hsl(224, 12%, 96%);">
+                <td style="padding: 4pt 0; color: hsl(224, 10%, 45%); border: none;">{% if _dcf_is_fr %}VA des boucliers fiscaux de dette (APV){% elif _dcf_is_en %}PV debt tax shields (APV){% else %}CW belastingschild schuld (APV){% endif %}</td>
+                <td style="padding: 4pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">{{ apv_tax_shield|format_currency }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 5pt 0; font-weight: 700; font-size: 9pt; color: hsl({{ teal_hsl }}); border: none;">= {% if _dcf_is_fr %}Valeur d’entreprise (APV){% elif _dcf_is_en %}Enterprise Value (APV){% else %}Ondernemingswaarde (APV){% endif %}</td>
+                <td style="padding: 5pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 700; font-size: 9pt; color: hsl({{ teal_hsl }}); border: none;">{{ dcf_ev|format_currency }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td style="padding: 5pt 0; font-weight: 700; font-size: 9pt; color: hsl({{ teal_hsl }}); border: none;">= {{ t.dcf_enterprise_value_label }}</td>
+                <td style="padding: 5pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 700; font-size: 9pt; color: hsl({{ teal_hsl }}); border: none;">{{ dcf_ev|format_currency }}</td>
+            </tr>
+            {% endif %}
+        </table>
+
+        {% if dcf_terminal_value_pct_of_total or dcf_explicit_forecast_pct_of_total %}
+        <p style="margin: 6pt 0 0 0; font-size: 7pt; color: hsl(224, 10%, 45%);">
+            {# Both legs share one precision — mixed rounding ("37% · 62,6%")
+               reads as a reconciliation break when the legs must sum to 100%. #}
+            {% set _dcf_split_dp = 1 if report_scope|default('') == 'client_indicative' else 0 %}
+            {% if has_apv_bridge %}{% if _dcf_is_fr %}Répartition de la valeur opérationnelle — {% elif _dcf_is_en %}Operating value split — {% else %}Verdeling operationele waarde — {% endif %}{% endif %}{{ t.calib_dcf_explicit_period_label }}: <strong style="color: hsl(224, 16%, 18%);">{{ dcf_explicit_forecast_pct_of_total|default(0)|safe_round(_dcf_split_dp) }}%</strong>
+            · {{ t.calib_dcf_terminal_period_label }}: <strong style="color: hsl(224, 16%, 18%);">{{ dcf_terminal_value_pct_of_total|default(0)|safe_round(_dcf_split_dp) }}%</strong>
+            {% if has_apv_bridge and dcf_apv_tax_shield_pct_of_total %}
+            · {% if _dcf_is_fr %}Bouclier fiscal / valeur APV{% elif _dcf_is_en %}Tax shield / APV value{% else %}Belastingschild / APV-waarde{% endif %}: <strong style="color: hsl(224, 16%, 18%);">{{ dcf_apv_tax_shield_pct_of_total|default(0)|safe_round(1) }}%</strong>
+            {% endif %}
+        </p>
+        {% endif %}
+
+        {% if report_scope|default('') == 'client_indicative' and dcf_wacc|default(0) and dcf_terminal_growth_rate|default(0) and dcf_wacc > dcf_terminal_growth_rate %}
+        <p style="margin: 4pt 0 0 0; font-size: 7pt; color: hsl(224, 10%, 45%);">
+            <strong style="color: hsl(224, 16%, 18%);">WACC &gt; g:</strong> {{ dcf_wacc|format_percentage }} &gt; {{ dcf_terminal_growth_rate|format_percentage }}.
+        </p>
+        {% endif %}
+
+        {% if dcf_implied_ev_ebitda and dcf_implied_ev_ebitda > 0 %}
+        <p style="margin: 4pt 0 0 0; font-size: 7pt; color: hsl(224, 10%, 45%);">
+            {% if _dcf_is_fr %}Contrôle croisé EV/EBITDA implicite{% elif _dcf_is_en %}Implied EV/EBITDA cross-check{% else %}Impliciete EV/EBITDA-kruiscontrole{% endif %}:
+            <strong style="color: hsl(224, 16%, 18%);">{{ dcf_implied_ev_ebitda|safe_round(3 if report_scope|default('') == 'client_indicative' else 1) }}×</strong>
+            {% if _dcf_is_fr %}— l’approche par les revenus reformulée comme multiple de marché.{% elif _dcf_is_en %}— the income approach restated as a market multiple.{% else %}— de inkomstenbenadering uitgedrukt als marktmultiple.{% endif %}
+        </p>
+        {% endif %}
+
+        {% if dcf_terminal_value_steady_state and dcf_terminal_value_steady_state.checked %}
+        <p style="margin: 4pt 0 0 0; font-size: 7pt; color: hsl({% if dcf_terminal_value_steady_state.is_steady_state %}224, 10%, 45%{% else %}38, 92%, 38%{% endif %});">
+            {% if dcf_terminal_value_steady_state.is_steady_state %}
+            {% if _dcf_is_fr %}La valeur terminale repose sur une base de régime stable — le CapEx de la dernière année de prévision correspond aux amortissements.{% elif _dcf_is_en %}Terminal value rests on a steady-state base — the final forecast year's CapEx matches depreciation.{% else %}Restwaarde rust op een steady-state basis — de investeringen van het laatste prognosejaar zijn gelijk aan de afschrijvingen.{% endif %}
+            {% else %}
+            {% if _dcf_is_fr %}Note sur la valeur terminale : le CapEx et les amortissements de la dernière année de prévision divergent — la perpétuité suppose un réinvestissement maintenable (CapEx ≈ D&A).{% elif _dcf_is_en %}Terminal-value note: the final forecast year's CapEx and depreciation diverge — the perpetuity assumes maintainable reinvestment (CapEx ≈ D&A).{% else %}Restwaarde-opmerking: de investeringen en afschrijvingen van het laatste prognosejaar lopen uiteen — de eeuwigdurende waarde veronderstelt houdbare herinvestering (investeringen ≈ afschrijvingen).{% endif %}
+            {% endif %}
+        </p>
+        {% endif %}
+
+        {% if dcf_mid_year_discounting is defined %}
+        <p style="margin: 4pt 0 0 0; font-size: 7pt; color: hsl(224, 10%, 45%);">
+            <span style="text-transform: uppercase; letter-spacing: 0.05em;">{% if _dcf_is_fr %}Convention d’actualisation{% elif _dcf_is_en %}Discount timing{% else %}Disconteringsmoment{% endif %}:</span>
+            {% if dcf_mid_year_discounting %}{{ t.calib_dcf_mid_year_note }}{% else %}{{ t.calib_dcf_year_end_note }}{% endif %}
+        </p>
+        {% endif %}
+
+        {% if has_horizon_tail %}
+        <p style="margin: 4pt 0 0 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.5;">
+            {% if _dcf_is_fr %}La table de projection détaille les {{ _dcf_disp_years }} premières années ; le modèle DCF utilise un horizon explicite de {{ _dcf_horizon_years }} ans dont la croissance converge progressivement vers le taux terminal. La valeur actuelle des années {{ _dcf_disp_years + 1 }}–{{ _dcf_horizon_years }} figure comme ligne distincte ci-dessus, de sorte que la somme reconstitue exactement la valeur d’entreprise affichée en tête de rapport.{% elif _dcf_is_en %}The projection table details the first {{ _dcf_disp_years }} years; the DCF model runs an explicit horizon of {{ _dcf_horizon_years }} years in which growth gradually converges to the terminal rate. The present value of years {{ _dcf_disp_years + 1 }}–{{ _dcf_horizon_years }} is shown as a separate line above, so the build-up reproduces the headline enterprise value exactly.{% else %}De projectietabel detailleert de eerste {{ _dcf_disp_years }} jaar; het DCF-model rekent met een expliciete horizon van {{ _dcf_horizon_years }} jaar waarin de groei geleidelijk convergeert naar de terminale groeivoet. De contante waarde van jaar {{ _dcf_disp_years + 1 }}–{{ _dcf_horizon_years }} staat als afzonderlijke regel hierboven, zodat de opbouw exact aansluit op de ondernemingswaarde in de kop van dit rapport.{% endif %}
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {# ── 4. DCF Sensitivity Matrix ── #}
+    {% include "main_report_pdf/components/_dcf_sensitivity_matrix.html" %}
+
+    {# ── 5. Assumptions & Sources ── #}
+    <div style="margin-top: 18pt; padding: 8pt 10pt; border-radius: 6pt; border: 1pt solid hsl(224, 10%, 91%); background: hsl(40, 15%, 98%); page-break-inside: avoid; break-inside: avoid;">
+        <p style="margin: 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.5;">
+            {% if apv_versioned %}
+            {% include "shared/components/apv_source_basis.html" %}
+            {% elif valuation_run %}
+            {% if _dcf_is_fr %}Les flux, paramètres WACC, hypothèses terminales et conventions d’actualisation affichés ci-dessus proviennent exclusivement du run scellé. Les sources et dates d’observation applicables figurent dans le registre de preuves du dossier ; toute donnée absente reste indisponible et n’est pas reconstruite par le rapport.{% elif _dcf_is_en %}The cash flows, WACC inputs, terminal assumptions and discounting conventions shown above come exclusively from the sealed run. Applicable sources and observation dates are listed in the dossier evidence register; missing data remains unavailable and is not reconstructed by the report.{% else %}De hierboven getoonde kasstromen, WACC-inputs, terminale aannames en disconteringsconventies komen uitsluitend uit de verzegelde run. Toepasselijke bronnen en observatiedata staan in het bewijsregister; ontbrekende gegevens blijven niet beschikbaar en worden niet door het rapport gereconstrueerd.{% endif %}
+            {% else %}{{ t.dcf_assumptions_note }}{% endif %}
+        </p>
+        {% if client_presentation_methodology_statement|default(false) %}
+        <p style="margin: 4pt 0 0 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.5;">
+            {{ client_presentation_methodology_statement }}
+        </p>
+        {% endif %}
+        {% if dcf_historical_fcf_note %}
+        <p style="margin: 4pt 0 0 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.5;">
+            {{ dcf_historical_fcf_note }}
+            {% if dcf_historical_fcf_missing_fields %}
+            {{ t.dcf_historical_fcf_missing_fields_prefix }} {{ dcf_historical_fcf_missing_fields|join(', ') }}.
+            {% endif %}
+        </p>
+        {% endif %}
+        {% if dcf_has_apv_tax_shield|default(false) %}
+        {% set apv_provenance = dcf_apv_bridge_provenance|default({}) %}
+        {% set apv_reconciliation = dcf_apv_benchmark_reconciliation|default({}) %}
+        <p style="margin: 4pt 0 0 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.5;">
+            {% if _dcf_is_fr %}
+            Pont APV : les flux de bouclier fiscal de dette fournis explicitement sont actualisés avec la même convention de timing DCF et ajoutés à la valeur d’entreprise DCF opérationnelle.
+            {% if apv_provenance.customer_template_reconciliation|default(false) %}
+            Une référence de benchmark explicite identifie ce parcours comme une réconciliation avec le modèle client.
+            {% endif %}
+            {% if apv_reconciliation.status|default('') == 'matched' %}
+            Réconciliation avec le benchmark explicite du classeur client : correspondance dans la tolérance.
+            {% endif %}
+            {% elif _dcf_is_en %}
+            APV bridge: explicitly supplied debt tax-shield cash flows are discounted with the same DCF timing convention and added to operating DCF enterprise value.
+            {% if apv_provenance.customer_template_reconciliation|default(false) %}
+            An explicit benchmark reference identifies this as a customer-template reconciliation path.
+            {% endif %}
+            {% if apv_reconciliation.status|default('') == 'matched' %}
+            Explicit customer-workbook benchmark reconciliation: matched within tolerance.
+            {% endif %}
+            {% else %}
+            APV-brug: expliciet aangeleverde belastingschild-cashflows op schuld worden met dezelfde DCF-timing gedisconteerd en toegevoegd aan de operationele DCF-ondernemingswaarde.
+            {% if apv_provenance.customer_template_reconciliation|default(false) %}
+            Een expliciete benchmarkreferentie identificeert dit als reconciliatiepad voor de klanttemplate.
+            {% endif %}
+            {% if apv_reconciliation.status|default('') == 'matched' %}
+            Reconciliatie met expliciete klantwerkboekbenchmark: match binnen tolerantie.
+            {% endif %}
+            {% endif %}
+        </p>
+        {% endif %}
+        {% if dcf_apv_contract_version|default('') == 'apv_tax_shield.v2' %}
+        <p style="font-size: 7pt; line-height: 1.45; color: #64748b; margin: 6pt 0 0;" data-apv-policy="apv_tax_shield.v2">
+            {% if _dcf_is_fr %}Taux d’actualisation du bouclier fiscal : {{ (dcf_apv_discount_rate * 100)|safe_round(2) }} %.
+            {% if dcf_apv_discount_rate_source == 'base_rate_assumption' %}Le rendement de base est utilisé comme hypothèse et varie avec les scénarios de taux.{% else %}Ce taux explicite reste constant dans les scénarios de taux de base.{% endif %}
+            L’utilisation fiscale et les coûts de difficultés financières ne sont pas vérifiés par ce calcul.
+            {% elif _dcf_is_en %}Tax-shield discount rate: {{ (dcf_apv_discount_rate * 100)|safe_round(2) }}%.
+            {% if dcf_apv_discount_rate_source == 'base_rate_assumption' %}The base return is used as an assumption and varies with the rate scenarios.{% else %}This explicit rate remains fixed across base-rate scenarios.{% endif %}
+            Tax utilization and financing distress costs are not verified by this calculation.
+            {% else %}Discontovoet belastingschild: {{ (dcf_apv_discount_rate * 100)|safe_round(2) }}%.
+            {% if dcf_apv_discount_rate_source == 'base_rate_assumption' %}Het basisrendement wordt als aanname gebruikt en varieert met de rentescenario’s.{% else %}Deze expliciete rente blijft gelijk in de scenario’s voor het basisrendement.{% endif %}
+            Fiscale benutting en kosten van financiële moeilijkheden zijn niet geverifieerd door deze berekening.
+            {% endif %}
+        </p>
+        {% endif %}
+        {% if dcf_has_unpriced_tax_shield_schedule|default(false) %}
+        <p style="margin: 4pt 0 0 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.5;">
+            {% if _dcf_is_fr %}Le calendrier explicite des boucliers fiscaux est divulgué mais n’est pas ajouté à la valeur : le DCF est actualisé au WACC après impôt, qui intègre déjà cet avantage de financement.{% elif _dcf_is_en %}The explicit tax-shield schedule is disclosed but not added to value: this DCF is discounted at after-tax WACC, which already embeds the financing tax benefit.{% else %}Het expliciete belastingschildschema wordt toegelicht maar niet bij de waarde opgeteld: deze DCF gebruikt de WACC na belasting, waarin het financieringsvoordeel al vervat zit.{% endif %}
+        </p>
+        {% endif %}
+        {% if dcf_standard_benchmark_reconciliation and dcf_standard_benchmark_reconciliation.rows %}
+        {% set _dcf_recon = dcf_standard_benchmark_reconciliation %}
+        <div style="margin-top: 8pt; padding-top: 6pt; border-top: 1pt solid hsl(224, 10%, 91%);">
+            <p style="margin: 0 0 3pt 0; font-size: 7pt; color: hsl(224, 16%, 18%); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
+                {% if _dcf_is_fr %}Réconciliation avec le benchmark du classeur{% elif _dcf_is_en %}Workbook benchmark reconciliation{% else %}Werkboekbenchmark-reconciliatie{% endif %}
+            </p>
+            <p style="margin: 0 0 4pt 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.5;">
+                {% if _dcf_recon.status == 'matched' %}
+                {% if _dcf_is_fr %}Ce DCF se réconcilie avec le propre classeur du client dans la tolérance — chaque ligne correspond.{% elif _dcf_is_en %}This DCF reconciles to the customer's own workbook within tolerance — every line matches.{% else %}Deze DCF reconcilieert binnen tolerantie met het werkboek van de klant — elke regel komt overeen.{% endif %}
+                {% else %}
+                {% if _dcf_is_fr %}Ce DCF diverge du benchmark du classeur client — voir les lignes signalées.{% elif _dcf_is_en %}This DCF diverges from the customer workbook benchmark — see the flagged lines.{% else %}Deze DCF wijkt af van de werkboekbenchmark — zie de gemarkeerde regels.{% endif %}
+                {% endif %}
+            </p>
+            <table style="width: 100%; border-collapse: collapse; font-size: 7pt;">
+                <thead>
+                    <tr style="color: hsl(224, 10%, 45%);">
+                        <th style="text-align: left; padding: 1pt 0; font-weight: 600;">{% if _dcf_is_fr %}Ligne{% elif _dcf_is_en %}Line{% else %}Regel{% endif %}</th>
+                        <th style="text-align: right; padding: 1pt 0; font-weight: 600;">{% if _dcf_is_fr %}Classeur{% elif _dcf_is_en %}Workbook{% else %}Werkboek{% endif %}</th>
+                        <th style="text-align: right; padding: 1pt 0; font-weight: 600;">{% if _dcf_is_fr %}Modèle de calcul{% elif _dcf_is_en %}Calculation model{% else %}Rekenmodel{% endif %}</th>
+                        <th style="text-align: right; padding: 1pt 0; font-weight: 600;">&nbsp;</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in _dcf_recon.rows %}
+                    <tr style="border-top: 1pt solid hsl(224, 10%, 93%);">
+                        <td style="padding: 2pt 0; color: hsl(224, 12%, 35%);">{% if _dcf_is_fr %}{{ row.label_fr|default(row.label_en) }}{% elif _dcf_is_en %}{{ row.label_en }}{% else %}{{ row.label_nl }}{% endif %}</td>
+                        <td style="padding: 2pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl(224, 16%, 18%);">{{ row.expected|safe_round(2) }}</td>
+                        <td style="padding: 2pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl(224, 16%, 18%);">{{ row.actual|safe_round(2) }}</td>
+                        <td style="padding: 2pt 0; text-align: right; font-weight: 700; color: hsl({% if row.passed %}{{ teal_hsl }}{% else %}0, 70%, 45%{% endif %});">{% if row.passed %}&#10003;{% else %}&#10007;{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        {# Flat-projection advisory routed to Studio Co-pilot, not the report
+           body. PDF mirror of the screen template change. #}
+    </div>
+
+    {% include "shared/components/dcf_cash_tax_disclosure.html" %}
+    {% include "shared/components/dcf_sensitivity_scope_disclosure.html" %}
+
+{% endcall %}

@@ -1,0 +1,61 @@
+{#
+    SDE BRIDGE LADDER COMPONENT — screen version (Aurora design tokens)
+    ========================================================================
+    Screen twin of `main_report_pdf/components/_sde_bridge_ladder.html`.
+
+    Walk from Reported Net Income / Normalized EBITDA → Seller's
+    Discretionary Earnings, the canonical BizBuySell-style ladder for
+    owner-operator businesses.  Two flavours come out of the engine
+    (net-income decomposition or normalized-EBITDA path) — both render
+    via the same row schema.
+
+    Created 2026-05-10 to close the screen↔PDF parity gap that
+    `pages/sde_valuation.html` would otherwise expose (the page
+    `include`s this component with `ignore missing`, so the page rendered
+    silently without the bridge ladder when this twin was absent).
+
+    Expected context — `sde_bridge` is a list of rows with shape:
+      [
+        {label, amount, running_total, kind: 'anchor'|'addback'|'subtract'|'total'},
+        ...
+      ]
+    populated by `step_2_7_orchestrator._build_sde_bridge` or by
+    `sde_channel.build_sde_bridge`.  Each `label` already carries its
+    operator prefix ('+', '−'); rendered verbatim.
+
+    Self-gating: renders nothing when `sde_bridge` is missing, empty, or
+    the wrong shape.
+#}
+{% set _bridge_rows = sde_bridge if (sde_bridge and sde_bridge is iterable and sde_bridge is not mapping) else [] %}
+
+{% if _bridge_rows|length > 0 %}
+<div style="margin-top: var(--space-3); padding: var(--space-3); background: hsl(var(--report-surface)); border-radius: 6pt; border: 0.5pt solid hsl(var(--report-slate-200)); page-break-inside: avoid; break-inside: avoid;">
+    <p style="font-size: var(--font-size-xs); margin: 0 0 var(--space-2) 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-text-muted));">
+        {{ t.sde_bridge_title }}
+    </p>
+
+    {% for row in _bridge_rows %}
+        {% set _kind = row.kind|default('addback') %}
+        {% set _is_anchor = _kind == 'anchor' %}
+        {% set _is_total = _kind == 'total' %}
+        {% set _amount = row.amount|default(0)|float %}
+        {% set _is_subtract = _kind == 'subtract' or _amount < 0 %}
+        {% if _is_total %}
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-1) 0 2pt 0; margin-top: 3pt; border-top: 0.5pt solid hsl(var(--report-slate-300)); font-size: var(--font-size-sm); font-family: 'JetBrains Mono', monospace;">
+            <span style="font-weight: 700; color: hsl({{ teal_hsl }});">{{ row.label }}</span>
+            <span style="font-weight: 700; color: hsl({{ teal_hsl }});">{{ _amount|format_currency }}</span>
+        </div>
+        {% else %}
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 2pt 0; font-size: var(--font-size-xs); font-family: 'JetBrains Mono', monospace;">
+            <span style="color: hsl({% if _is_anchor %}var(--report-slate-700){% else %}var(--report-text-muted){% endif %}); {% if _is_anchor %}font-weight: 600;{% endif %}">{{ row.label }}</span>
+            <span style="font-weight: 600; {% if _is_subtract %}color: hsl(var(--report-danger));{% endif %}">{{ _amount|abs|format_currency }}</span>
+        </div>
+        {% endif %}
+    {% endfor %}
+
+    {# Footnote: SDE definition, calls out single-owner assumption #}
+    <p style="margin: var(--space-2) 0 0 0; font-size: var(--font-size-xxs); color: hsl(var(--report-text-muted)); line-height: 1.4;">
+        {{ t.sde_bridge_footnote }}
+    </p>
+</div>
+{% endif %}

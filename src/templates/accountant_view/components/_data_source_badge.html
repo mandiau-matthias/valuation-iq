@@ -1,0 +1,122 @@
+{#
+=============================================================================
+DATA SOURCE BADGE COMPONENT
+=============================================================================
+
+WHAT: Displays the origin and confidence of calculation data
+WHY: Algorithmic Defensibility (Primitive 2) - every value traceable to source
+HOW: Shows data source, confidence level, and optional academic citation
+
+USAGE:
+{% include "accountant_view/components/_data_source_badge.html" with
+    data_source="TITAN_BUSINESS_TYPES_DB",
+    data_source_name="Titan Business Types Database",
+    source_confidence="HIGH",
+    primary_citation=primary_citation,
+    show_citation=True
+%}
+
+CONTEXT VARIABLES:
+- data_source: Data source identifier (e.g., "TITAN_BUSINESS_TYPES_DB")
+- data_source_name: Human-readable name (optional)
+- source_confidence: Confidence level ("VERY_HIGH", "HIGH", "MEDIUM", "LOW")
+- primary_citation: Primary academic citation dict (optional)
+- show_citation: Whether to show the primary citation (default: False)
+- compact: Use compact styling (default: False)
+
+ACADEMIC COMPLIANCE:
+- USPAP Standard 9: Provenance documentation
+- IVS 105: Data source transparency
+
+@component _data_source_badge.html
+@author UpSwitch CTO Team
+@date January 2026
+#}
+
+{% if data_source or data_source_name %}
+{% set raw_data_source = data_source|string %}
+{% set source_label = data_source_name or data_source %}
+{% if not data_source_name and raw_data_source == "DELPHI_BENCHMARK_CONTRACT" %}
+{% set source_label = "Upswitch Index Benchmark Contract" %}
+{% endif %}
+<div class="source-badge{% if compact %} source-badge-compact{% endif %}" style="
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: {% if compact %}4px 8px{% else %}6px 12px{% endif %};
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    font-family: 'Inter', sans-serif;
+    font-size: {% if compact %}0.7rem{% else %}0.75rem{% endif %};
+">
+    {# Source Icon #}
+    <span class="source-icon" style="font-size: {% if compact %}0.8rem{% else %}1rem{% endif %};">
+        {% if data_source == "DELPHI_BENCHMARK_CONTRACT" %}
+        ✓
+        {% elif data_source == "TITAN_BUSINESS_TYPES_DB" or data_source == "titan" %}
+        📊
+        {% elif data_source == "DISCLOSED_EXTERNAL_MARKET_FALLBACK" %}
+        📈
+        {% elif data_source == "PEPPERDINE_2024" or "pepperdine" in data_source|lower %}
+        🎓
+        {% elif data_source == "BIZBUYSELL_2024" or "bizbuysell" in data_source|lower %}
+        🏪
+        {% elif data_source == "VFB_BELGIUM_2024" or "vfb" in data_source|lower %}
+        🇧🇪
+        {% else %}
+        📋
+        {% endif %}
+    </span>
+    
+    {# Source Label #}
+    <span class="source-label" style="color: #475569; font-weight: 500;">
+        Source: {{ source_label }}
+    </span>
+    
+    {# Confidence Badge #}
+    {% if source_confidence %}
+    <span class="confidence-badge" style="
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        {% if source_confidence == 'VERY_HIGH' %}
+        background-color: #dcfce7;
+        color: #166534;
+        {% elif source_confidence == 'HIGH' %}
+        background-color: #dbeafe;
+        color: #1e40af;
+        {% elif source_confidence == 'MEDIUM' %}
+        background-color: #fef3c7;
+        color: #92400e;
+        {% else %}
+        background-color: #fee2e2;
+        color: #991b1b;
+        {% endif %}
+    ">
+        {{ source_confidence }}
+    </span>
+    {% endif %}
+</div>
+
+{# Primary Citation (if requested) #}
+{% if show_citation and primary_citation %}
+<div class="primary-citation" style="
+    margin-top: 4px;
+    padding: 4px 8px;
+    background-color: #fafafa;
+    border-left: 2px solid #cbd5e1;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.7rem;
+    color: #64748b;
+    font-style: italic;
+">
+    {% if primary_citation.author %}{{ primary_citation.author }}{% endif %}
+    {% if primary_citation.year %}({{ primary_citation.year }}){% endif %}
+    {% if primary_citation.title %}: {{ primary_citation.title }}{% endif %}
+</div>
+{% endif %}
+{% endif %}

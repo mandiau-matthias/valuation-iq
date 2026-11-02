@@ -1,0 +1,21 @@
+{% if show_multiple_calibration_bridge|default(false) %}
+<div style="margin: var(--space-3) 0; padding: var(--space-3); border-radius: 6pt; border: 1pt solid hsl(var(--report-slate-200)); background: hsl(var(--report-surface));">
+    <p style="margin: 0 0 var(--space-2); font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-text-muted));">
+        {% if is_seller_report|default(false) %}{{ t.seller_multiple_bridge_title }}{% else %}{{ t.advisor_multiple_bridge_title }}{% endif %}
+    </p>
+    <div style="display: flex; flex-wrap: wrap; gap: var(--space-4); font-size: var(--font-size-sm);">
+        {% if bridge_reference_multiple %}
+        <span><strong>{% if is_seller_report|default(false) %}{{ t.seller_multiple_bridge_reference }}{% else %}{{ t.advisor_multiple_bridge_reference }}{% endif %}:</strong> {{ bridge_reference_multiple|safe_round(2) }}×</span>
+        {% endif %}
+        {% if bridge_base_multiple %}
+        <span><strong>{% if is_seller_report|default(false) %}{{ t.seller_multiple_bridge_base }}{% else %}{{ t.advisor_multiple_bridge_base }}{% endif %}:</strong> {{ bridge_base_multiple|safe_round(2) }}×</span>
+        {% endif %}
+        {% if bridge_applied_multiple %}
+        <span style="color: hsl(var(--report-teal));"><strong>{% if is_seller_report|default(false) %}{{ t.seller_multiple_bridge_applied }}{% else %}{{ t.advisor_multiple_bridge_applied }}{% endif %}:</strong> {{ bridge_applied_multiple|safe_round(2) }}×</span>
+        {% endif %}
+    </div>
+    <p style="margin: var(--space-2) 0 0; font-size: 11px; color: hsl(var(--report-text-muted)); line-height: 1.5;">
+        {{ t.exec_benchmark_applied_vs_reference }}
+    </p>
+</div>
+{% endif %}

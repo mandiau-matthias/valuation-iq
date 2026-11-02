@@ -1,0 +1,178 @@
+{#
+    DCF WACC BUILDUP COMPONENT — Screen version (Aurora Clarity)
+
+    Renders a structured WACC buildup table showing:
+    - Cost of Equity (CAPM): Rf + β × ERP + Size Premium + CSR
+    - WACC: E/(E+D) × Ke + D/(E+D) × Kd × (1-T)
+
+    Expected context:
+    - dcf_wacc_buildup (dict with risk_free_rate, beta, equity_risk_premium, etc.)
+    - dcf_wacc (float)
+    - t (ReportTranslations)
+    - teal_hsl (string)
+#}
+{% if dcf_apv_contract_version|default('') == 'apv_tax_shield.v2' and dcf_has_apv_tax_shield|default(false) %}
+{% include "shared/components/apv_discount_basis.html" %}
+{% elif not dcf_wacc_buildup %}
+{# Fallback panel: WACC was typed directly, no CAPM buildup. Surface this transparently
+   so the report doesn't silently drop the discount-rate provenance — defensibility hole. #}
+<div style="margin-top: var(--space-6); padding: var(--space-3); background: hsl(40, 15%, 98%); border-radius: 6pt; border: 1pt solid hsl(var(--report-slate-200)); border-left: 3pt solid hsl(35, 80%, 55%); page-break-inside: avoid;">
+    <h4 style="font-size: 9.5pt; margin: 0 0 var(--space-2) 0; color: hsl(var(--report-slate-900));">
+        {{ t.dcf_wacc_buildup_fallback_title }}
+    </h4>
+    <p style="margin: 0 0 var(--space-2) 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.5;">
+        {{ t.dcf_wacc_buildup_fallback_body }}
+    </p>
+    {% if dcf_wacc %}
+    <div style="display: flex; justify-content: space-between; padding: 4pt 0 0 0; border-top: 1pt solid hsl(var(--report-slate-200)); margin-top: var(--space-2);">
+        <span style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); text-transform: uppercase; letter-spacing: 0.05em;">{{ t.dcf_wacc_buildup_fallback_applied_label }}</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: hsl({{ teal_hsl }});">{{ dcf_wacc|format_percentage }}</span>
+    </div>
+    {% endif %}
+</div>
+{% else %}
+<div style="margin-top: var(--space-6); page-break-inside: avoid;">
+    <h4 style="font-size: 9.5pt; margin: 0 0 var(--space-3) 0; color: hsl(var(--report-slate-900));">
+        {{ t.dcf_wacc_buildup_title }}
+    </h4>
+    {% if dcf_wacc_buildup.mode|default('') == 'direct_sector_wacc' %}
+    {% set _direct_contract = dcf_wacc_buildup.wacc_evidence_contract|default({}) %}
+    <div style="padding: var(--space-3); background: hsl(var(--report-surface)); border-radius: 6pt; border: 1pt solid hsl(var(--report-slate-200)); border-left: 3pt solid hsl({{ teal_hsl }});">
+        <div style="display: flex; justify-content: space-between; gap: var(--space-5); align-items: flex-start;">
+            <div>
+                <p style="font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-text-muted)); margin: 0 0 var(--space-2) 0;">
+                    {% if (locale|default('nl'))|lower == 'fr' %}WACC sectoriel direct{% elif (locale|default('nl'))|lower == 'en' %}Direct sector WACC{% else %}Directe sector-WACC{% endif %}
+                </p>
+                <p style="margin: 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.5;">
+                    {% if (locale|default('nl'))|lower == 'fr' %}Taux publié appliqué directement ; aucune décomposition CAPM fictive n’est présentée.{% elif (locale|default('nl'))|lower == 'en' %}Published rate applied directly; no synthetic CAPM decomposition is shown.{% else %}Gepubliceerde rente rechtstreeks toegepast; er wordt geen fictieve CAPM-opbouw getoond.{% endif %}
+                </p>
+            </div>
+            <div style="text-align: right; white-space: nowrap;">
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 16pt; font-weight: 700; color: hsl({{ teal_hsl }});">{{ dcf_wacc_buildup.wacc|default(dcf_wacc)|format_percentage }}</div>
+                {# Two distinct ranges live around a direct sector WACC: the
+                   published source series (market context) and the model's own
+                   sensitivity span (the matrix rows). Label both; derive the
+                   sensitivity span from the SAME axis values the matrix uses. #}
+                {% if _direct_contract.range_low_pct is defined and _direct_contract.range_high_pct is defined %}
+                <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">{% if (locale|default('nl'))|lower == 'fr' %}Série source observée{% elif (locale|default('nl'))|lower == 'en' %}Observed source series{% else %}Geobserveerde bronreeks{% endif %}: {{ (_direct_contract.range_low_pct|float / 100)|format_percentage }} – {{ (_direct_contract.range_high_pct|float / 100)|format_percentage }}</div>
+                {% endif %}
+                {% set _wacc_axis = dcf_sensitivity_matrix_2d.primary_axis_values|default([]) if dcf_sensitivity_matrix_2d else [] %}
+                {% if _wacc_axis|length >= 2 %}
+                <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">{% if (locale|default('nl'))|lower == 'fr' %}Sensibilité du modèle (matrice){% elif (locale|default('nl'))|lower == 'en' %}Model sensitivity (matrix){% else %}Modelgevoeligheid (matrix){% endif %}: {{ (_wacc_axis|map('float')|min)|format_percentage }} – {{ (_wacc_axis|map('float')|max)|format_percentage }}</div>
+                {% endif %}
+            </div>
+        </div>
+        <div style="margin-top: var(--space-3); padding-top: var(--space-2); border-top: 1pt solid hsl(var(--report-slate-200)); font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.5;">
+            {% if _direct_contract.period is defined %}<strong>{% if (locale|default('nl'))|lower == 'fr' %}Période{% elif (locale|default('nl'))|lower == 'en' %}Period{% else %}Periode{% endif %}:</strong> {{ _direct_contract.period }}{% endif %}
+            {% if _direct_contract.chart_locator is defined %} · {{ _direct_contract.chart_locator }}{% endif %}
+            {% if _direct_contract.includes_size_premium|default(false) %}<br>{% if (locale|default('nl'))|lower == 'fr' %}La prime de petite entreprise est déjà incluse dans la méthodologie source ; aucune prime de taille supplémentaire n’a été ajoutée.{% elif (locale|default('nl'))|lower == 'en' %}The source methodology already includes its small-firm premium; no additional size premium was added.{% else %}De bronmethodologie bevat reeds de kleinbedrijfpremie; er werd geen bijkomende omvangspremie toegevoegd.{% endif %}{% endif %}
+        </div>
+    </div>
+    {% else %}
+    {% if dcf_wacc_buildup.wacc_override_applied %}
+    <p style="margin: 0 0 var(--space-2) 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.5;">
+        {% if is_governed_external_market_reference|default(false) %}De toegepaste voet is een sector-WACC-proxy (genoteerde sectorpeers, mediane sectorkapitaalstructuur, inclusief kleinbedrijfpremie), datumvast gebonden aan de hieronder vermelde bron. Hij is niet bedrijfsspecifiek voor deze onderneming gekalibreerd; er is geen bijkomende niet-onderbouwde risicopremie toegevoegd.{% else %}{{ t.dcf_wacc_buildup_override_note }}{% endif %}
+    </p>
+    {% endif %}
+
+    <div style="display: flex; gap: var(--space-5);">
+        {# Cost of Equity buildup — teal accent bar #}
+        <div style="flex: 1; padding: var(--space-3); background: hsl(var(--report-surface)); border-radius: 6pt; border: 1pt solid hsl(var(--report-slate-200)); border-left: 3pt solid hsl({{ teal_hsl }});">
+            <p style="font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-text-muted)); margin: 0 0 var(--space-2) 0;">
+                {{ t.dcf_cost_of_equity_label }} (CAPM)
+            </p>
+            <table style="width: 100%; font-size: var(--font-size-sm); border-collapse: collapse;">
+                <tbody>
+                    <tr>
+                        <td style="padding: 3pt 0; color: hsl(var(--report-text-muted));">{{ t.dcf_risk_free_rate_label }}</td>
+                        <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: hsl(var(--report-slate-800));">{{ dcf_wacc_buildup.risk_free_rate|default(0)|format_percentage }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 3pt 0; color: hsl(var(--report-text-muted));">{{ t.dcf_beta_label }}</td>
+                        <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: hsl(var(--report-slate-800));">{{ dcf_wacc_buildup.beta|default(0)|safe_round(2) }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 3pt 0; color: hsl(var(--report-text-muted));">{{ t.dcf_erp_label }}</td>
+                        <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: hsl(var(--report-slate-800));">{{ dcf_wacc_buildup.equity_risk_premium|default(0)|format_percentage }}</td>
+                    </tr>
+                    {% if dcf_wacc_buildup.size_premium %}
+                    <tr>
+                        <td style="padding: 3pt 0; color: hsl(var(--report-text-muted));">{{ t.dcf_size_premium_label }}</td>
+                        <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: hsl(var(--report-slate-800));">{{ dcf_wacc_buildup.size_premium|format_percentage }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if dcf_wacc_buildup.company_specific_risk %}
+                    <tr>
+                        <td style="padding: 3pt 0; color: hsl(var(--report-text-muted));">{{ t.dcf_csr_label }}</td>
+                        <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: hsl(var(--report-slate-800));">{{ dcf_wacc_buildup.company_specific_risk|format_percentage }}</td>
+                    </tr>
+                    {% endif %}
+                    {# Panel blocker B12: the "= cost of equity" total must foot
+                       to the CAPM components above (Rf + β·ERP + SP + CSR);
+                       see PDF twin for the full rationale. Show the computed
+                       sum, disclose the applied (rounded) rate when it differs
+                       by >0,1pp. #}
+                    {% set _ke_rf = dcf_wacc_buildup.risk_free_rate|default(0)|float %}
+                    {% set _ke_beta = dcf_wacc_buildup.beta|default(0)|float %}
+                    {% set _ke_erp = dcf_wacc_buildup.equity_risk_premium|default(0)|float %}
+                    {% set _ke_sp = dcf_wacc_buildup.size_premium|default(0)|float %}
+                    {% set _ke_csr = dcf_wacc_buildup.company_specific_risk|default(0)|float %}
+                    {% set _ke_computed = _ke_rf + (_ke_beta * _ke_erp) + _ke_sp + _ke_csr %}
+                    {% set _ke_applied = dcf_wacc_buildup.cost_of_equity|default(0)|float %}
+                    {% set _ke_show_computed = _ke_computed > 0.0001 %}
+                    {% set _ke_total_display = _ke_computed if _ke_show_computed else _ke_applied %}
+                    {# 0,02pp threshold (vs 0,1pp for WACC): see PDF twin. #}
+                    {% set _ke_reconcile = _ke_show_computed and _ke_applied > 0.0001 and ((_ke_computed - _ke_applied)|abs > 0.0002) %}
+                    <tr style="border-top: 1.5pt solid hsl(var(--report-slate-300));">
+                        <td style="padding: 5pt 0 3pt 0; font-weight: 700; color: hsl({{ teal_hsl }});">= {{ t.dcf_cost_of_equity_label }}{% if _ke_reconcile %} ({{ t.dcf_wacc_capm_buildup_label }}){% endif %}</td>
+                        <td style="padding: 5pt 0 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: hsl({{ teal_hsl }});">{{ _ke_total_display|format_percentage }}</td>
+                    </tr>
+                    {% if _ke_reconcile %}
+                    <tr>
+                        <td colspan="2" style="padding: 3pt 0 0 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.4;">
+                            {{ t.dcf_wacc_applied_in_wacc_label }}: {{ _ke_applied|format_percentage }} ({{ t.dcf_wacc_rounded_label }})
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        {# WACC calculation #}
+        <div style="flex: 1; padding: var(--space-3); background: hsl(var(--report-surface)); border-radius: 6pt; border: 1pt solid hsl(var(--report-slate-200));">
+            <p style="font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-text-muted)); margin: 0 0 var(--space-2) 0;">
+                {{ t.calib_dcf_wacc_label }}
+            </p>
+            <table style="width: 100%; font-size: var(--font-size-sm); border-collapse: collapse;">
+                <tbody>
+                    <tr>
+                        <td style="padding: 3pt 0; color: hsl(var(--report-text-muted));">{{ t.dcf_cost_of_equity_label }} (Ke)</td>
+                        <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: hsl(var(--report-slate-800));">{{ dcf_wacc_buildup.cost_of_equity|default(0)|format_percentage }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 3pt 0; color: hsl(var(--report-text-muted));">{{ t.dcf_equity_weight_label }}</td>
+                        <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: hsl(var(--report-slate-800));">{{ dcf_wacc_buildup.equity_weight|default(0)|format_percentage }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 3pt 0; color: hsl(var(--report-text-muted));">{{ t.dcf_cost_of_debt_label }} (Kd)</td>
+                        <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: hsl(var(--report-slate-800));">{{ dcf_wacc_buildup.cost_of_debt|default(0)|format_percentage }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 3pt 0; color: hsl(var(--report-text-muted));">{{ t.dcf_debt_weight_label }}</td>
+                        <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: hsl(var(--report-slate-800));">{{ dcf_wacc_buildup.debt_weight|default(0)|format_percentage }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 3pt 0; color: hsl(var(--report-text-muted));">{{ t.dcf_tax_rate_label }}</td>
+                        <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: hsl(var(--report-slate-800));">{{ dcf_wacc_buildup.tax_rate|default(0)|format_percentage }}</td>
+                    </tr>
+                    <tr style="border-top: 1.5pt solid hsl(var(--report-slate-300));">
+                        <td style="padding: 5pt 0 3pt 0; font-weight: 700; color: hsl({{ teal_hsl }});">= {{ t.calib_dcf_wacc_label }}</td>
+                        <td style="padding: 5pt 0 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: hsl({{ teal_hsl }});">{{ dcf_wacc_buildup.wacc|default(dcf_wacc)|default(0)|format_percentage }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}

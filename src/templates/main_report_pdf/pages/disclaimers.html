@@ -1,0 +1,468 @@
+{# 
+    DISCLAIMERS PAGE
+    Page 5 of 5
+    
+    Contents:
+    - Primary disclaimer banner
+    - Key notices grid (table-based)
+    - Legal summary
+    - Methodology note
+    - Report certification
+    
+    All inline styles use hardcoded values for WeasyPrint compatibility.
+    Notices grid uses table layout instead of CSS Grid.
+#}
+
+<div class="a4-page{% if not has_attestation_page|default(false) and not show_multiple_evidence_appendix|default(false) and not show_discount_methodology_appendix|default(false) %} last-report-page{% endif %}" style="page-break-before: always;">
+    {% set is_asset_anchored_method = is_asset_anchored_methodology|default(is_asset_methodology|default(false)) %}
+    {% set is_yield_method = is_yield_methodology|default(false) %}
+
+    {# Page Header #}
+    {% include "main_report_pdf/partials/_page_header.html" %}
+    
+    {# Section Header #}
+    <div class="section-header">
+        <span class="section-number">{{ disclaimers_section_number }}</span>
+        <h1 class="section-title">{{ t.disc_title }}</h1>
+    </div>
+
+    {# Engine defensibility scope — disclaimers page only (PDF + screen twin). #}
+    <!--upswitch-defensibility-banner-inject-->
+    {% if defensibility_scope_banner_html %}
+    {{ defensibility_scope_banner_html|safe }}
+    {% endif %}
+
+    {# Academic cross-check = INTERNAL pre-distribution QA (raw engine self-
+       warnings, sometimes English, occasionally false-positive at a band
+       boundary). It must NOT appear on a client-facing/externally-distributed
+       PDF — gate behind an explicit internal flag (default off). #}
+    {% if academic_validation_issues and show_internal_academic_qa|default(false) %}
+    <div class="keep-together callout callout-warning" style="margin-bottom: 12pt; padding: 10pt 12pt; background: hsl(40, 90%, 96%); border: 1pt solid hsl(35, 70%, 85%); border-radius: 6pt;">
+        <h4 style="margin: 0 0 6pt 0; font-size: 9pt; font-weight: 700;">
+            {{ t.disc_academic_review_title | default('Academic cross-check') }}
+        </h4>
+        <ul style="font-size: 8pt; margin: 0; padding-left: 14pt; line-height: 1.5;">
+            {% for issue in academic_validation_issues %}
+            <li>{{ issue }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {# VZW / ASBL non-profit warning (PDF twin — table-based for WeasyPrint) #}
+    {% if is_vzw|default(false) %}
+    <div class="keep-together" style="margin-bottom: 14pt; padding: 12pt 14pt; background: hsl(40, 90%, 95%); border: 1.5pt solid hsl(35, 75%, 68%); border-radius: 6pt;">
+        <h4 style="margin: 0 0 6pt 0; font-size: 9pt; font-weight: 700; color: hsl(30, 60%, 28%);">
+            {% if (locale|default('nl'))|lower == 'fr' %}⚠️ Avertissement : Entité sans but lucratif (ASBL)
+            {% elif (locale|default('nl'))|lower == 'en' %}⚠️ Notice: Non-Profit Entity (VZW / ASBL)
+            {% else %}⚠️ Opgelet: Rechtsvorm Vereniging zonder winstoogmerk (VZW){% endif %}
+        </h4>
+        <p style="font-size: 8pt; margin: 0; line-height: 1.55; color: hsl(30, 40%, 22%);">
+            {% if (locale|default('nl'))|lower == 'fr' %}
+            {{ company_name }} est une Association sans but lucratif (ASBL). Une ASBL ne peut pas distribuer ses bénéfices à des actionnaires — la cession classique d'actions n'est donc pas applicable. Tout projet de transfert doit s'effectuer via une cession d'actifs, un transfert d'activité, une conversion juridique (art. 13:9 CSA), ou une fusion. La valeur indicative est une référence économique uniquement. Consultez impérativement un notaire et un conseil fiscal spécialisé.
+            {% elif (locale|default('nl'))|lower == 'en' %}
+            {{ company_name }} is registered as a non-profit association (VZW / ASBL). A VZW cannot distribute profits to shareholders — a standard share transfer does not apply. Any transfer must use an asset deal, activity transfer, legal conversion (art. 13:9 CSA), or merger. The indicative value is an economic reference only. A notary and specialist tax counsel must be consulted before any transaction.
+            {% else %}
+            {{ company_name }} is geregistreerd als Vereniging zonder winstoogmerk (VZW). Een VZW kan geen winst uitkeren aan aandeelhouders — een klassieke aandelentransactie is niet van toepassing. Elk overdrachtsproject dient te verlopen via activa-overdracht, omzetting (art. 13:9 WVV), of fusie. De waarde in dit rapport is louter een economische referentiewaarde. Raadpleeg verplicht een notaris en fiscaal adviseur vóór elke transactie.
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+
+    {# NACE vs. selected-business-type mismatch (PDF twin) #}
+    {% if nace_business_type_mismatch|default(false) %}
+    <div class="keep-together" style="margin-bottom: 14pt; padding: 12pt 14pt; background: hsl(40, 90%, 95%); border: 1.5pt solid hsl(35, 75%, 68%); border-radius: 6pt;">
+        <h4 style="margin: 0 0 6pt 0; font-size: 9pt; font-weight: 700; color: hsl(30, 60%, 28%);">
+            {% if (locale|default('nl'))|lower == 'fr' %}⚠️ À confirmer : type d'activité vs. code NACE
+            {% elif (locale|default('nl'))|lower == 'en' %}⚠️ Confirm: business type vs. NACE code
+            {% else %}⚠️ Te bevestigen: bedrijfstype vs. NACE-code{% endif %}
+        </h4>
+        <p style="font-size: 8pt; margin: 0; line-height: 1.55; color: hsl(30, 40%, 22%);">
+            {% if (locale|default('nl'))|lower == 'fr' %}
+            Le type d'activité sélectionné (<strong>{{ nace_mismatch_selected_title }}{% if nace_mismatch_selected_nace %} · NACE {{ nace_mismatch_selected_nace }}{% endif %}</strong>) ne correspond pas au profil NACE enregistré (<strong>{{ nace_mismatch_registry_nace }}{% if nace_mismatch_registry_desc %} — {{ nace_mismatch_registry_desc }}{% endif %}</strong>). Les multiples appliqués reflètent le type sélectionné ; confirmez le type correct avant de vous appuyer sur cette estimation.
+            {% elif (locale|default('nl'))|lower == 'en' %}
+            The selected business type (<strong>{{ nace_mismatch_selected_title }}{% if nace_mismatch_selected_nace %} · NACE {{ nace_mismatch_selected_nace }}{% endif %}</strong>) does not match the registered NACE profile (<strong>{{ nace_mismatch_registry_nace }}{% if nace_mismatch_registry_desc %} — {{ nace_mismatch_registry_desc }}{% endif %}</strong>). The applied multiples reflect the selected type; confirm the correct business type before relying on this estimate.
+            {% else %}
+            Het geselecteerde bedrijfstype (<strong>{{ nace_mismatch_selected_title }}{% if nace_mismatch_selected_nace %} · NACE {{ nace_mismatch_selected_nace }}{% endif %}</strong>) komt niet overeen met het geregistreerde NACE-profiel (<strong>{{ nace_mismatch_registry_nace }}{% if nace_mismatch_registry_desc %} — {{ nace_mismatch_registry_desc }}{% endif %}</strong>). De toegepaste multiples weerspiegelen het geselecteerde type; bevestig het correcte bedrijfstype voordat u op deze schatting vertrouwt.
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+
+    {# DCF↔market method-divergence caveat (hybrid only; title/body localized in
+       the aggregator). Same trigger as the QA invariant dcf_market_cross_method_
+       divergence — the headline blends two methods that disagree materially. #}
+    {% if method_divergence_caveat %}
+    <div class="keep-together" style="margin-bottom: 14pt; padding: 12pt 14pt; background: hsl(40, 90%, 95%); border: 1.5pt solid hsl(35, 75%, 68%); border-radius: 6pt;">
+        <h4 style="margin: 0 0 6pt 0; font-size: 9pt; font-weight: 700; color: hsl(30, 60%, 28%);">
+            ⚠️ {{ method_divergence_caveat.title }}
+        </h4>
+        <p style="font-size: 8pt; margin: 0; line-height: 1.55; color: hsl(30, 40%, 22%);">
+            {{ method_divergence_caveat.body }}
+        </p>
+    </div>
+    {% endif %}
+
+    {# Primary Disclaimer Banner #}
+    <div class="keep-together callout callout-danger" style="margin-bottom: 14pt;">
+        <h4 style="margin-bottom: 6pt; font-size: 10pt; font-weight: 700;">
+            {{ t.disc_primary_title }}
+        </h4>
+        <p style="font-size: 8pt; margin: 0;">
+            {{ t.disc_primary_text }}
+        </p>
+    </div>
+
+    {# Custom — trim-aware: ignore whitespace-only; full text if it differs from primary #}
+    {% set _custom = (custom_disclaimer or '')|trim %}
+    {% set _primary = t.disc_primary_text|trim %}
+    {% if _custom and _custom != _primary %}
+    <div class="keep-together" style="margin-bottom: 14pt; padding: 10pt; background: hsl(224, 15%, 97%); border-radius: 6pt; border-left: 3pt solid hsl({{ teal_hsl }});">
+        <h4 style="font-size: 9pt; margin-bottom: 6pt; font-weight: 600;">
+            {{ t.disc_custom_disclaimer_title }}
+        </h4>
+        <p style="font-size: 8pt; color: hsl(224, 10%, 35%); margin: 0; line-height: 1.55;">
+            {{ _custom|nl2br }}
+        </p>
+    </div>
+    {% elif _custom %}
+    <div class="keep-together" style="margin-bottom: 14pt; padding: 10pt; background: hsl(224, 15%, 97%); border-radius: 6pt; border-left: 3pt solid hsl({{ teal_hsl }});">
+        <h4 style="font-size: 9pt; margin-bottom: 6pt; font-weight: 600;">
+            {{ t.disc_custom_disclaimer_title }}
+        </h4>
+        <p style="font-size: 8pt; color: hsl(224, 10%, 35%); margin: 0; line-height: 1.55;">
+            {{ t.disc_custom_disclaimer_matches_primary_body }}
+        </p>
+    </div>
+    {% endif %}
+
+    {# ── Sealed advisor judgments ──────────────────────────────────────────
+       Written reconciliations the advisor committed to the immutable run:
+       why an alternative sector reference, discount-rate convention or
+       rule-of-thumb method does not contradict this conclusion. Rendering
+       them is what lets the client answer a counterparty who brings one up. #}
+    {% if advisor_judgment_notes|default([]) %}
+    <div class="keep-together" style="margin-bottom: 14pt; padding: 10pt; background: hsl(0, 0%, 100%); border: 1pt solid hsl(224, 15%, 88%); border-radius: 6pt;">
+        <h4 style="font-size: 9pt; margin: 0 0 6pt 0; font-weight: 700;">{% if (locale|default('nl'))|lower == 'fr' %}Hypothèses du modèle et points d'attention, scellés avec le calcul{% elif (locale|default('nl'))|lower == 'en' %}Model assumptions and attention points, sealed with the calculation{% else %}Modelaannames en aandachtspunten, verzegeld met de berekening{% endif %}</h4>
+        <ul style="font-size: 7.5pt; color: hsl(224, 10%, 35%); margin: 0; padding-left: 12pt; line-height: 1.55;">
+        {% for note in advisor_judgment_notes %}
+            <li style="margin-bottom: 4pt;">{{ note }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if pharmacy_transaction_diligence|default(false) %}
+    {% set _pd = pharmacy_transaction_diligence %}
+    <div class="keep-together" style="margin-bottom: 14pt; padding: 10pt; background: hsl(172, 42%, 96%); border: 1pt solid hsl(172, 30%, 84%); border-radius: 6pt;">
+        <h4 style="font-size: 9pt; margin: 0 0 6pt 0; font-weight: 700;">{% if (locale|default('nl'))|lower == 'fr' %}Points de diligence propres à l’officine{% elif (locale|default('nl'))|lower == 'en' %}Community-pharmacy diligence points{% else %}Apotheekspecifieke transactiepunten{% endif %}</h4>
+        <table style="width: 100%; border-collapse: collapse; font-size: 7.2pt; line-height: 1.38;">
+            <tr>
+                <td style="width: 50%; vertical-align: top; padding: 4pt 7pt 4pt 0; border: none;"><strong>{% if (locale|default('nl'))|lower == 'fr' %}Autorisation &amp; pharmacien titulaire{% elif (locale|default('nl'))|lower == 'en' %}Permit &amp; titular pharmacist{% else %}Vergunning &amp; titularis{% endif %}</strong><br>{% if (locale|default('nl'))|lower == 'fr' %}Continuité de l’autorisation, rôle, disponibilité, rémunération et coût de remplacement à confirmer.{% elif (locale|default('nl'))|lower == 'en' %}Confirm permit continuity, role, availability, remuneration and replacement cost.{% else %}Bevestig vergunningscontinuïteit, rol, inzet, vergoeding en vervangingskost.{% endif %}{% if _pd.personnel_ratio_pct is not none %} {% if (locale|default('nl'))|lower == 'fr' %}Frais de personnel {{ _pd.personnel_costs|format_currency }} &middot; {{ _pd.personnel_ratio_pct|safe_round(2) }}% du CA{% if _pd.personnel_ratio_below_sector_norm %}, sous la fourchette sectorielle de 10&ndash;15% (personnel et rémunération de direction comprise). Le contexte sectoriel implique pour ce chiffre d'affaires un besoin indicatif d'environ {{ _pd.implied_fte_low|safe_round(1) }}&ndash;{{ _pd.implied_fte_high|safe_round(1) }} ETP. {% if _pd.filed_employee_fte is not none %}Les comptes déposés mentionnent {{ _pd.filed_employee_fte|safe_round(1) }} ETP salariés (bilan social) ; l'implication opérationnelle du propriétaire/titulaire, les collaborateurs indépendants éventuels et le besoin total de remplacement doivent être confirmés séparément{% else %}Le nombre réel d'ETP, l'implication opérationnelle du propriétaire/titulaire et sa rémunération doivent être confirmés séparément{% endif %}{% endif %}.{% elif (locale|default('nl'))|lower == 'en' %}Personnel costs {{ _pd.personnel_costs|format_currency }} &middot; {{ _pd.personnel_ratio_pct|safe_round(2) }}% of revenue{% if _pd.personnel_ratio_below_sector_norm %}, below the 10&ndash;15% sector range (which covers staff and management remuneration). The sector context implies an indicative staffing need of approx. {{ _pd.implied_fte_low|safe_round(1) }}&ndash;{{ _pd.implied_fte_high|safe_round(1) }} FTE for this turnover. {% if _pd.filed_employee_fte is not none %}The filed accounts report {{ _pd.filed_employee_fte|safe_round(1) }} employee FTE (social balance); the owner/titular pharmacist's operational involvement, any self-employed staff and the total replacement need must be confirmed separately{% else %}The actual FTE count, the owner/titular pharmacist's operational involvement and their remuneration must be confirmed separately{% endif %}{% endif %}.{% else %}Personeelskosten {{ _pd.personnel_costs|format_currency }} &middot; {{ _pd.personnel_ratio_pct|safe_round(2) }}% van de omzet{% if _pd.personnel_ratio_below_sector_norm %}, onder de sectorband van 10&ndash;15% (die band omvat personeel &eacute;n managementvergoeding). De sectorcontext vermeldt voor deze omzet een indicatieve personeelsbehoefte van circa {{ _pd.implied_fte_low|safe_round(1) }}&ndash;{{ _pd.implied_fte_high|safe_round(1) }} VTE. {% if _pd.filed_employee_fte is not none %}De neergelegde jaarrekening vermeldt {{ _pd.filed_employee_fte|safe_round(1) }} werknemers-VTE (sociale balans); de operationele inzet van de eigenaar/titularis, eventuele zelfstandige medewerkers en de totale vervangingsbehoefte moeten afzonderlijk worden bevestigd{% else %}Het werkelijke aantal VTE, de operationele inzet van de eigenaar/titularis en diens vergoeding moeten afzonderlijk worden bevestigd{% endif %}{% endif %}.{% endif %}{% endif %}</td>
+                <td style="width: 50%; vertical-align: top; padding: 4pt 0 4pt 7pt; border: none;"><strong>{% if (locale|default('nl'))|lower == 'fr' %}Locaux &amp; périmètre{% elif (locale|default('nl'))|lower == 'en' %}Premises &amp; perimeter{% else %}Vastgoed &amp; perimeter{% endif %}</strong><br>{% if _pd.buildings_book_value is not none %}{% if (locale|default('nl'))|lower == 'fr' %}Valeur comptable rubrique 22 : {% elif (locale|default('nl'))|lower == 'en' %}Rubric 22 book value: {% else %}Boekwaarde rubriek 22: {% endif %}<strong>{{ _pd.buildings_book_value|format_currency }}</strong>. {% endif %}{% if (locale|default('nl'))|lower == 'fr' %}Titre, occupation, loyer, périmètre et valeur de marché à justifier.{% elif (locale|default('nl'))|lower == 'en' %}Evidence title, occupancy, rent, perimeter and market value.{% else %}Titel, bezetting, huur, perimeter en marktwaarde zijn te bewijzen.{% endif %}{% if _pd.rent_sensitivity_ev_per_10k is not none %} {% if (locale|default('nl'))|lower == 'fr' %}Chaque tranche de 10.000 € de loyer de marché imputé réduit la valeur d'entreprise d'environ {{ _pd.rent_sensitivity_ev_per_10k|format_currency }}.{% elif (locale|default('nl'))|lower == 'en' %}Each EUR 10,000 of market rent charged reduces enterprise value by roughly {{ _pd.rent_sensitivity_ev_per_10k|format_currency }}.{% else %}Elke &euro;10.000 aangerekende marktconforme huur verlaagt de marktcomponent met circa {{ _pd.rent_sensitivity_ev_per_10k|format_currency }}; het gewogen effect inclusief DCF-doorwerking is groter.{% endif %}{% endif %}</td>
+            </tr>
+            <tr>
+                <td style="vertical-align: top; padding: 5pt 7pt 4pt 0; border: none; border-top: .5pt solid hsl(172, 25%, 85%);"><strong>{% if (locale|default('nl'))|lower == 'fr' %}Stock{% elif (locale|default('nl'))|lower == 'en' %}Inventory{% else %}Voorraad{% endif %}</strong><br>{% if _pd.inventory is not none %}<strong>{{ _pd.inventory|format_currency }}</strong>{% if _pd.inventory_ratio_pct is not none %} · {{ _pd.inventory_ratio_pct|safe_round(2) }}%{% endif %}. {% endif %}{% if (locale|default('nl'))|lower == 'fr' %}Obtenir l’ancienneté, les dates d’expiration, les dépréciations et l’inventaire de clôture ; le repère BDO 8–10% / &gt;13% sert uniquement d’alerte de diligence.{% elif (locale|default('nl'))|lower == 'en' %}Obtain ageing, expiry, write-down policy and closing stocktake; the BDO 8–10% / &gt;13% context is a diligence flag only.{% else %}Vraag ageing, vervaldata, afboekbeleid en closing stocktake; de BDO-context 8–10% / &gt;13% is uitsluitend een diligence-signaal.{% endif %}</td>
+                <td style="vertical-align: top; padding: 5pt 0 4pt 7pt; border: none; border-top: .5pt solid hsl(172, 25%, 85%);"><strong>{% if (locale|default('nl'))|lower == 'fr' %}Fonds de roulement{% elif (locale|default('nl'))|lower == 'en' %}Working capital{% else %}Werkkapitaal{% endif %}</strong><br>{% if _pd.operating_nwc is not none %}{% if (locale|default('nl'))|lower == 'fr' %}BFR opérationnel indicatif : {% elif (locale|default('nl'))|lower == 'en' %}Indicative operating NWC: {% else %}Indicatief operationeel NWC: {% endif %}<strong>{{ _pd.operating_nwc|format_currency }}</strong>{% if _pd.operating_nwc_ratio_pct is not none %} · {{ _pd.operating_nwc_ratio_pct|safe_round(2) }}%{% endif %}. {% endif %}{% if (locale|default('nl'))|lower == 'fr' %}Fixer une cible de fonds de roulement normalisée dans le cadre du mécanisme de prix convenu.{% elif (locale|default('nl'))|lower == 'en' %}Agree a normalised working-capital target within the agreed price mechanism.{% else %}Leg een genormaliseerde werkkapitaaldoelstelling vast binnen het overeengekomen prijsmechanisme.{% endif %}</td>
+            </tr>
+            <tr>
+                <td style="vertical-align: top; padding: 5pt 7pt 0 0; border: none; border-top: .5pt solid hsl(172, 25%, 85%);"><strong>{% if (locale|default('nl'))|lower == 'fr' %}Remboursement &amp; concentration{% elif (locale|default('nl'))|lower == 'en' %}Reimbursement &amp; concentration{% else %}Terugbetaling &amp; concentratie{% endif %}</strong><br>{% if (locale|default('nl'))|lower == 'fr' %}Analyser la dépendance aux grossistes/fournisseurs, les remises et le mix de remboursement.{% elif (locale|default('nl'))|lower == 'en' %}Analyse wholesaler/supplier dependency, rebates and reimbursement mix.{% else %}Analyseer groothandel-/leveranciersafhankelijkheid, rebates en terugbetalingsmix.{% endif %}</td>
+                <td style="vertical-align: top; padding: 5pt 0 0 7pt; border: none; border-top: .5pt solid hsl(172, 25%, 85%);"><strong>{% if (locale|default('nl'))|lower == 'fr' %}Dette nette &amp; clôture{% elif (locale|default('nl'))|lower == 'en' %}Net debt &amp; completion{% else %}Nettoschuld &amp; closing{% endif %}</strong><br>{% if _pd.cash is not none and _pd.financial_debt is not none %}{% if (locale|default('nl'))|lower == 'fr' %}Trésorerie/dette provisoires : {% elif (locale|default('nl'))|lower == 'en' %}Preliminary cash/debt: {% else %}Voorlopige cash/schuld: {% endif %}{{ _pd.cash|format_currency }} / {{ _pd.financial_debt|format_currency }}. {% endif %}{% if (locale|default('nl'))|lower == 'fr' %}Vérifier trésorerie bloquée, contrats de location et passifs assimilés à de la dette.{% elif (locale|default('nl'))|lower == 'en' %}Verify restricted cash, leases and debt-like liabilities.{% else %}Verifieer restricted cash, leases en schuldachtige verplichtingen.{% endif %}</td>
+            </tr>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if source_references %}
+    <div class="keep-together" style="margin-bottom: 14pt; padding: 10pt; background: hsl(224, 15%, 97%); border-radius: 6pt;">
+        <h4 style="font-size: 9pt; margin-bottom: 6pt; font-weight: 600;">Bronnen en context</h4>
+        <ul style="font-size: 7.5pt; color: hsl(224, 10%, 35%); margin: 0; padding-left: 14pt; line-height: 1.5;">
+        {% for source in source_references %}
+            <li><strong>{{ source.title|default(source.name|default('Bron')) }}</strong>{% if source.url %}: <a href="{{ source.url }}" style="color: inherit; text-decoration: underline; text-decoration-color: hsl(224, 10%, 65%);">{{ source.url }}</a>{% endif %}{% if source.use %} — {{ source.use }}{% endif %}</li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {# Key Notices - TABLE-BASED instead of CSS Grid #}
+    <div class="keep-together">
+    <table style="width: 100%; border-collapse: collapse; border: none; margin-bottom: 14pt;">
+        <tr>
+            <td style="width: 50%; vertical-align: top; padding: 0 8pt 10pt 0; border: none; background: transparent;">
+                <h4 style="font-size: 9pt; margin-bottom: 6pt; font-weight: 600;">
+                    {{ t.disc_regulatory_title }}
+                </h4>
+                <p style="font-size: 8pt; color: hsl(224, 10%, 45%); margin: 0;">
+                    {{ t.disc_regulatory_text }}{% if report_scope|default('standard') == 'client_indicative' %} {% if (locale|default('nl'))|lower == 'fr' %}Préparé et revu en interne par Upswitch (rapprochement des sources, arithmétique, application de la méthodologie, rendu). Aucun conseil professionnel réglementé.{% elif (locale|default('nl'))|lower == 'en' %}Prepared and internally reviewed by Upswitch (source reconciliation, arithmetic, methodology execution, rendering). No regulated professional advice.{% else %}Opgesteld en intern beoordeeld door Upswitch (bronreconciliatie, rekenkunde, methodetoepassing, rendering). Geen gereglementeerd beroepsadvies.{% endif %}{% endif %}
+                </p>
+            </td>
+            <td style="width: 50%; vertical-align: top; padding: 0 0 10pt 8pt; border: none; background: transparent;">
+                <h4 style="font-size: 9pt; margin-bottom: 6pt; font-weight: 600;">
+                    {{ t.disc_data_dependency_title }}
+                </h4>
+                <p style="font-size: 8pt; color: hsl(224, 10%, 45%); margin: 0;">
+                    {{ t.disc_data_dependency_text }}
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 50%; vertical-align: top; padding: 0 8pt 0 0; border: none; background: transparent;">
+                <h4 style="font-size: 9pt; margin-bottom: 6pt; font-weight: 600;">
+                    {{ t.disc_third_party_title }}
+                </h4>
+                <p style="font-size: 8pt; color: hsl(224, 10%, 45%); margin: 0;">
+                    {{ t.disc_third_party_text|replace('{company_name}', company_name) }}
+                </p>
+            </td>
+            <td style="width: 50%; vertical-align: top; padding: 0 0 0 8pt; border: none; background: transparent;">
+                <h4 style="font-size: 9pt; margin-bottom: 6pt; font-weight: 600;">
+                    {{ t.disc_validity_title }}
+                </h4>
+                <p style="font-size: 8pt; color: hsl(224, 10%, 45%); margin: 0;">
+                    {% if report_scope|default('standard') == 'client_indicative' %}{% if (locale|default('nl'))|lower == 'fr' %}Ce rapport n'a pas de durée de validité automatique. Il doit être actualisé lors de nouveaux chiffres intermédiaires ou annuels, d'un changement matériel dans l'entreprise ou d'une utilisation dans un processus de transaction concret.{% elif (locale|default('nl'))|lower == 'en' %}This report has no automatic validity period. It must be updated upon new interim or annual figures, a material change in the business, or use in an actual transaction process.{% else %}Dit rapport heeft geen automatische geldigheidsduur. Het moet worden bijgewerkt bij nieuwe tussentijdse of jaarcijfers, een materiële wijziging in de onderneming of gebruik in een concreet transactieproces.{% endif %}{% else %}{{ t.disc_validity_text }} <strong>{{ t.disc_validity_days }}</strong> {{ valuation_date }}.{% endif %}
+                    {% if financial_reference_date and financial_reference_date != valuation_date %}
+                    <span style="display: block; margin-top: 3pt;">{% if (locale|default('nl'))|lower == 'fr' %}Base financière : {{ financial_reference_date|format_date(locale|default('nl')) }} ; aucun résultat intermédiaire postérieur n'est intégré.{% elif (locale|default('nl'))|lower == 'en' %}Financial basis: {{ financial_reference_date|format_date(locale|default('nl')) }}; no interim results after that date are incorporated.{% else %}Financiële basis: {{ financial_reference_date|format_date(locale|default('nl')) }}; er zijn geen tussentijdse resultaten van na die datum verwerkt.{% endif %}</span>
+                    {% endif %}
+                    {# Explicit expiry — round-9 audit. M&A reviewers shouldn't
+                       have to add 90 days mentally. Computed by the aggregator. #}
+                    {% if valuation_expiry_date and report_scope|default('standard') != 'client_indicative' %}
+                    <span style="display: block; margin-top: 3pt; font-weight: 600; color: hsl(224, 16%, 18%);">
+                        {{ t.disc_validity_until_label }}: {{ valuation_expiry_date }}.
+                    </span>
+                    {% endif %}
+                </p>
+            </td>
+        </tr>
+    </table>
+    </div>
+
+    {# Legal Summary #}
+    <div class="keep-together" style="margin-bottom: 14pt; padding: 10pt; background: hsl(224, 15%, 97%); border-radius: 6pt;">
+        <h4 style="font-size: 9pt; margin-bottom: 6pt;">{{ t.disc_legal_summary_title }}</h4>
+        <ul style="font-size: 8pt; color: hsl(224, 10%, 45%); margin: 0; padding-left: 16pt; line-height: 1.5;">
+            <li>{{ t.disc_legal_item_1 }}</li>
+            <li>{{ t.disc_legal_item_2 }}</li>
+            <li>{{ t.disc_legal_item_3 }}</li>
+        </ul>
+        <p style="font-size: 7pt; color: hsl(224, 10%, 55%); margin-top: 8pt; margin-bottom: 0;">
+{# The terms reference is the one URL in the report a reader cannot
+               click — every other source is a real annotation. Linkify the
+               printed token to the canonical locale terms page (the schemeless
+               form the catalogs print still resolves, but only if retyped). #}
+            {% set _terms_token = 'upswitch.app/terms-and-conditions' %}
+            {% set _terms_lang = (locale|default('nl'))|lower %}
+            {% set _terms_lang = _terms_lang[:2] if _terms_lang[:2] in ['nl', 'en', 'fr'] else 'en' %}
+            {% set _terms_href = 'https://www.upswitch.app/' ~ _terms_lang ~ '/terms-and-conditions' %}
+            {{ t.disc_legal_footer | replace(_terms_token, '<a href="' ~ _terms_href ~ '" style="color: inherit; text-decoration: underline;">' ~ _terms_token ~ '</a>') | safe }}
+        </p>
+    </div>
+
+    {# Methodology Note #}
+    <div class="keep-together" style="margin-bottom: 14pt;">
+        <h4 style="font-size: 9pt; margin-bottom: 4pt;">{{ t.disc_methodology_title }}</h4>
+        {% if methodology_statement %}
+        <p style="font-size: 8pt; color: hsl(224, 10%, 45%); margin: 0 0 6pt 0;">
+            {{ methodology_statement }}
+        </p>
+        {% elif is_asset_anchored_method %}
+        <p style="font-size: 8pt; color: hsl(224, 10%, 45%); margin: 0 0 6pt 0;">
+            {{ t.disc_methodology_yield_default if is_yield_method else t.disc_methodology_asset_default }}
+        </p>
+        {% elif is_adaptive_multiples_only|default(false) %}
+        <p style="font-size: 8pt; color: hsl(224, 10%, 45%); margin: 0 0 6pt 0;">
+            {% if (locale|default('nl'))|lower == 'fr' %}La valeur d’entreprise est calculée selon une approche de marché fondée sur des multiples de transactions comparables. La DCF n’est pas retenue comme jambe pondérée de la conclusion pour ce profil.{% elif (locale|default('nl'))|lower == 'en' %}Enterprise value is calculated using a market approach based on comparable transaction multiples. DCF is not included as a weighted leg of the conclusion for this profile.{% else %}De ondernemingswaarde is berekend op basis van de marktbenadering met vergelijkbare transactie-multiples. DCF is voor dit profiel niet opgenomen als afzonderlijk gewogen onderdeel van de conclusie.{% endif %}
+        </p>
+        {% else %}
+        <p style="font-size: 8pt; color: hsl(224, 10%, 45%); margin: 0 0 6pt 0;">
+            {{ t.disc_methodology_default }}
+        </p>
+        {% endif %}
+        {% if preparer_ebitda_override_footnote %}
+        <div style="margin: 6pt 0 6pt 0; padding: 7pt 9pt; background: hsl(var(--pdf-primary-light)); border-radius: 4pt; border-left: 3pt solid hsl(var(--pdf-primary));">
+            <p style="font-size: 8pt; font-weight: 600; margin: 0 0 3pt 0; color: hsl(224, 20%, 25%);">
+                {{ preparer_ebitda_override_title }}
+            </p>
+            <p style="font-size: 7.5pt; color: hsl(224, 10%, 40%); margin: 0; line-height: 1.45;">
+                {{ preparer_ebitda_override_footnote }}
+            </p>
+        </div>
+        {% endif %}
+        <p style="font-size: 8pt; color: hsl(224, 10%, 45%); margin: 0;">
+            <strong>{% if is_dcf_only_methodology|default(false) %}{% if (locale|default('nl'))|lower == 'fr' %}Preuves DCF{% elif (locale|default('nl'))|lower == 'en' %}DCF evidence{% else %}DCF-bewijs{% endif %}{% else %}{{ t.disc_benchmarks_label }}{% endif %}:</strong>
+            {% if is_dcf_only_methodology|default(false) %}
+            {% if (locale|default('nl'))|lower == 'fr' %}Les prévisions FCFF explicites et le contexte économique scellé constituent les entrées chiffrées. Taille d’échantillon : N/A — méthode sans échantillon. Les sources et dates d’observation figurent dans le registre des preuves intégrées au prix.{% elif (locale|default('nl'))|lower == 'en' %}Explicit FCFF forecasts and the sealed economic context are the priced inputs. Sample size: N/A — non-sample method. Sources and observation dates are listed in the priced evidence register.{% else %}Expliciete FCFF-prognoses en de verzegelde economische context vormen de geprijsde inputs. Steekproefomvang: N.v.t. — methode zonder steekproef. Bronnen en observatiedata staan in het register van geprijsd bewijs.{% endif %}
+            {% elif is_governed_external_market_reference|default(false) %}
+            {% if (locale|default('nl'))|lower == 'fr' %}La composante de marché utilise uniquement les points de référence fixés dans le contrat de marché externe scellé. Les percentiles ou bornes absents restent explicitement indisponibles et ne sont pas reconstruits par le rapport ; la taille d’échantillon spécifique à la cellule n’est pas publiée par la source.{% elif (locale|default('nl'))|lower == 'en' %}The market component uses only the reference points committed in the sealed external-market contract. Missing percentiles or bounds remain explicitly unavailable and are not reconstructed by the report; the cell-specific sample size is not published by the source.{% else %}Voor de marktcomponent worden uitsluitend de in het verzegelde externe marktcontract vastgelegde referentiepunten gebruikt. Ontbrekende percentielen of grenzen blijven expliciet niet beschikbaar en worden niet door het rapport gereconstrueerd; de celspecifieke steekproefomvang is niet door de bron gepubliceerd.{% endif %}
+            {% elif is_disclosed_external_market_fallback|default(false) %}
+            Geen empirische benchmark. De bron is een bekendgemaakte externe referentie; percentielen, steekproefomvang en benchmarkcontract zijn niet beschikbaar. Eventuele regulatoire of sectorbronnen geven uitsluitend context en zijn geen multiple-input.
+            {% elif has_industry_benchmarks and benchmark_data_source %}
+            {{ benchmark_data_source }}
+            {% if benchmark_sample_size %}(n={{ benchmark_sample_size }}){% endif %}.
+            {% else %}
+            {{ t.disc_benchmarks_default }}{% if benchmark_revenue_max %} ({{ t.disc_revenue_band }}: &lt;{{ benchmark_revenue_max|format_currency_compact }}){% endif %}{% if sector %}; {{ sector }}{% endif %}.
+            {% endif %}
+            {% if sector and has_industry_benchmarks %}
+            {{ t.disc_sector_label }}: {{ sector }}.
+            {% endif %}
+            {% if not is_dcf_only_methodology|default(false) and not is_disclosed_external_market_fallback|default(false) and not is_governed_external_market_reference|default(false) %}<span style="font-style: italic;"> {{ t.disc_technical_standards }}</span>{% endif %}
+        </p>
+        
+        {# Quality warnings from Step 0.
+           Round-9 audit: previously cropped silently at 3 — now renders up
+           to 5 with an explicit "+N more" footer for the rest. #}
+        {% if quality_warnings and quality_warnings|length > 0 %}
+        <div style="margin-top: 8pt; padding: 6pt 10pt; background: hsl(40, 80%, 95%); border-radius: 4pt; border-left: 3pt solid hsl(40, 80%, 50%);">
+            <p style="font-size: 7pt; margin: 0 0 4pt 0; font-weight: 600; color: hsl(40, 70%, 35%);">{{ t.disc_quality_notes_title }}:</p>
+            <ul style="font-size: 7pt; margin: 0; padding-left: 14pt; color: hsl(40, 60%, 30%);">
+                {% for warning in quality_warnings[:5] %}
+                <li>{{ warning.get('message', warning) if warning is mapping else warning }}</li>
+                {% endfor %}
+            </ul>
+            {% if quality_warnings|length > 5 %}
+            <p style="font-size: 7pt; margin: 4pt 0 0 0; color: hsl(40, 50%, 35%); font-style: italic;">
+                {{ t.disc_quality_more_label.replace('%d', (quality_warnings|length - 5)|string) }}
+            </p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    {# Academic References & Sources
+
+       April 2026 hardening: when the active method is startup_valuation
+       we render the venture / pre-seed corpus (Berkus, Payne, Sahlman,
+       Strebulaev, Atomico, Dealroom, INSEAD/LBS, Index/P9) instead of
+       the SME corpus (Damodaran/Koller/Pratt/Trugman) — those textbooks
+       cover historical-financials valuation and are off-corpus for a
+       pre-revenue founder report. #}
+    <div class="keep-together" style="margin-bottom: 16pt;">
+        <h4 style="font-size: 9pt; margin-bottom: 6pt;">{{ t.disc_references_title }}</h4>
+        {% if is_startup_valuation_report %}
+        <p style="font-size: 7pt; color: hsl(224, 10%, 50%); margin: 0 0 6pt 0;">
+            {{ t.disc_biblio_startup_intro | safe }}
+        </p>
+        <table style="width: 100%; border-collapse: collapse; border: none; margin: 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.65;">
+            <tr>
+                <td style="width: 50%; vertical-align: top; padding: 0 8pt 0 0; border: none; background: transparent;">
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_berkus | safe }}</p>
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_payne | safe }}</p>
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_sahlman | safe }}</p>
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_strebulaev | safe }}</p>
+                </td>
+                <td style="width: 50%; vertical-align: top; padding: 0 0 0 8pt; border: none; background: transparent;">
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_atomico | safe }}</p>
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_dealroom | safe }}</p>
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_insead_lbs | safe }}</p>
+                    <p style="margin: 0;">{{ t.disc_biblio_index_p9 | safe }}</p>
+                </td>
+            </tr>
+        </table>
+        {% elif is_asset_anchored_method %}
+        <p style="font-size: 7pt; color: hsl(224, 10%, 50%); margin: 0 0 6pt 0;">
+            {{ t.disc_references_asset_intro | safe }}
+        </p>
+        <table style="width: 100%; border-collapse: collapse; border: none; margin: 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.65;">
+            <tr>
+                <td style="width: 50%; vertical-align: top; padding: 0 8pt 0 0; border: none; background: transparent;">
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_damodaran | safe }}</p>
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_koller | safe }}</p>
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_pratt | safe }}</p>
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_hitchner | safe }}</p>
+                </td>
+                <td style="width: 50%; vertical-align: top; padding: 0 0 0 8pt; border: none; background: transparent;">
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_ivs | safe }}</p>
+                    {% if is_yield_method %}
+                    <p style="margin: 0;">{{ t.disc_biblio_yield_income | safe }}</p>
+                    {% else %}
+                    <p style="margin: 0;">{{ t.disc_biblio_asset_nav | safe }}</p>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+        {% elif is_dcf_only_methodology|default(false) %}
+        <p style="font-size: 7pt; color: hsl(224, 10%, 50%); margin: 0 0 6pt 0;">
+            {% if (locale|default('nl'))|lower == 'fr' %}Les sources scellées du dossier déterminent les hypothèses propres à ce cas. Les ouvrages ci-dessous étayent uniquement le cadre DCF ; ils ne remplacent ni les flux, ni les paramètres économiques, ni les preuves du dossier.{% elif (locale|default('nl'))|lower == 'en' %}The sealed dossier sources determine the case-specific assumptions. The works below support only the DCF framework; they do not replace the cash flows, economic inputs or case evidence.{% else %}De verzegelde dossierbronnen bepalen de dossierspecifieke aannames. De onderstaande werken ondersteunen alleen het DCF-raamwerk; zij vervangen de kasstromen, economische inputs of dossierbewijzen niet.{% endif %}
+        </p>
+        <table style="width: 100%; border-collapse: collapse; border: none; margin: 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.65;"><tr>
+            <td style="width: 50%; vertical-align: top; padding: 0 8pt 0 0; border: none; background: transparent;"><p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_damodaran | safe }}</p><p style="margin: 0;">{{ t.disc_biblio_koller | safe }}</p></td>
+            <td style="width: 50%; vertical-align: top; padding: 0 0 0 8pt; border: none; background: transparent;"><p style="margin: 0;">{{ t.disc_biblio_ivs | safe }}</p></td>
+        </tr></table>
+        {% elif is_governed_external_market_reference|default(false) %}
+        <p style="font-size: 7pt; color: hsl(224, 10%, 50%); margin: 0 0 6pt 0;">
+            {% if (locale|default('nl'))|lower == 'fr' %}Les sources scellées du dossier déterminent la référence de marché. Les ouvrages généraux ci-dessous étayent uniquement la structure méthodologique et ne constituent ni un multiple, ni un échantillon, ni une preuve transactionnelle pour ce dossier.{% elif (locale|default('nl'))|lower == 'en' %}The sealed dossier sources determine the market reference. The general works below support only the valuation framework; they do not provide a multiple, sample or transaction evidence for this case.{% else %}De verzegelde dossierbronnen bepalen de marktreferentie. De algemene werken hieronder ondersteunen alleen de waarderingsstructuur; zij leveren geen multiple, steekproef of transactiebewijs voor dit dossier.{% endif %}
+        </p>
+        {# Pratt & Niculita is short-cited on the synthesis page — its full
+           reference must appear here or the citation dangles. #}
+        <table style="width: 100%; border-collapse: collapse; border: none; margin: 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.65;"><tr>
+            <td style="width: 50%; vertical-align: top; padding: 0 8pt 0 0; border: none; background: transparent;"><p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_damodaran | safe }}</p><p style="margin: 0;">{{ t.disc_biblio_koller | safe }}</p></td>
+            <td style="width: 50%; vertical-align: top; padding: 0 0 0 8pt; border: none; background: transparent;"><p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_pratt | safe }}</p><p style="margin: 0;">{{ t.disc_biblio_ivs | safe }}</p></td>
+        </tr></table>
+        {% elif is_disclosed_external_market_fallback|default(false) %}
+        <p style="font-size: 7pt; color: hsl(224, 10%, 50%); margin: 0 0 6pt 0;">
+            Deze algemene waarderingsbronnen ondersteunen uitsluitend de rapportstructuur en rekenkundige EV/EBITDA-methodiek. Zij leveren geen {{ fallback_market_key }} multiple, steekproef of transactiebewijs voor dit dossier.
+        </p>
+        <table style="width: 100%; border-collapse: collapse; border: none; margin: 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.65;">
+            <tr>
+                <td style="width: 50%; vertical-align: top; padding: 0 8pt 0 0; border: none; background: transparent;">
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_damodaran | safe }}</p>
+                    <p style="margin: 0;">{{ t.disc_biblio_koller | safe }}</p>
+                </td>
+                <td style="width: 50%; vertical-align: top; padding: 0 0 0 8pt; border: none; background: transparent;">
+                    <p style="margin: 0;">{{ t.disc_biblio_ivs | safe }}</p>
+                </td>
+            </tr>
+        </table>
+        {% else %}
+        <p style="font-size: 7pt; color: hsl(224, 10%, 50%); margin: 0 0 6pt 0;">
+            {{ t.disc_references_intro }}
+        </p>
+        <table style="width: 100%; border-collapse: collapse; border: none; margin: 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.65;">
+            <tr>
+                <td style="width: 50%; vertical-align: top; padding: 0 8pt 0 0; border: none; background: transparent;">
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_damodaran | safe }}</p>
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_koller | safe }}</p>
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_pratt | safe }}</p>
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_hitchner | safe }}</p>
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_trugman | safe }}</p>
+                </td>
+                <td style="width: 50%; vertical-align: top; padding: 0 0 0 8pt; border: none; background: transparent;">
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_pepperdine | safe }}</p>
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_vfb | safe }}</p>
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_ibba | safe }}</p>
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_ivs | safe }}</p>
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_vlerick | safe }}</p>
+                    {# Round-10 audit: now cited in the EV/EBITDA dossier
+                       (DLOC/DLOM bands and BE peer-set calibration). #}
+                    <p style="margin: 0 0 3pt 0;">{{ t.disc_biblio_mercer | safe }}</p>
+                    <p style="margin: 0;">{{ t.disc_biblio_marktlink | safe }}</p>
+                </td>
+            </tr>
+        </table>
+        {% endif %}
+    </div>
+
+    {# Report Certification #}
+    <div class="keep-together" style="margin-top: 16pt; padding-top: 12pt; border-top: 1pt solid hsl(224, 10%, 85%);">
+        <table style="width: 100%; border-collapse: collapse; border: none; margin: 0;">
+            <tr>
+                <td style="border: none; padding: 0; background: transparent; vertical-align: bottom;">
+                    <p style="font-size: 7pt; color: hsl(224, 10%, 55%); margin: 0;">
+                        {{ t.disc_prepared_by }} {% if accountant_firm_name %}{{ accountant_firm_name }}{% else %}Upswitch{% endif %} • {{ valuation_date }}
+                        {% if accountant_email or accountant_phone %}
+                        <br><span style="font-size: 6pt;">{{ accountant_email or '' }}{% if accountant_email and accountant_phone %} · {% endif %}{{ accountant_phone or '' }}</span>
+                        {% endif %}
+                    </p>
+                </td>
+                <td style="border: none; padding: 0; text-align: right; background: transparent; vertical-align: bottom;">
+                    <p style="font-size: 7pt; color: hsl(224, 10%, 55%); margin: 0;">
+                        {{ t.disc_ref_label }}: {{ (report_id_display or report_id) | format_ref(valuation_date) }}
+                        {% if valuation_run_id and report_scope|default('standard') != 'client_indicative' %}
+                        <br><span style="font-family: monospace; font-size: 6pt;">Run {{ valuation_run_id }} · SHA-256 {{ valuation_run_hash[:16] }}…</span>
+                        {% endif %}
+                    </p>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+</div>

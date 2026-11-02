@@ -1,0 +1,73 @@
+{#
+    Page Header Partial - FLEXBOX LAYOUT (Screen/Browser Version)
+    Consistent header across all content pages (not cover)
+
+    PDF version: main_report_pdf/partials/_page_header.html (table-based for WeasyPrint)
+
+    Expected context:
+    - t: ReportTranslations object
+    - report_id: str
+    - valuation_date: str
+    - accountant_firm_name: str (optional)
+    - valuation_methodology_display / primary_method_label (optional, for the method chip)
+
+    Round-11 audit: deep TOC jumps left readers without a quick reminder of
+    which methodology drove the headline. The small mono-uppercase chip on
+    the right reuses the engine's already-computed `valuation_methodology_display`
+    (or `primary_method_label` when the report is a single-method override) so
+    every page below the cover answers "what method are we reading right now?"
+    without scrolling back. Hidden when neither label is present (defensive).
+#}
+{# Three Towers Capital regression (2026-05-26): on Upswitch Adaptive
+   workflows, ``valuation_methodology_display`` resolves to the executed
+   engine surface ("Marktmultiples (EV/EBITDA)") so the running chip on
+   every page contradicted the cover wording and the body's "Upswitch
+   Adaptive" framing. When the Adaptive page is part of the deck, the
+   chip should reflect the *workflow* (the surface the user is reading)
+   instead of the engine's downgraded output — the dedicated Adaptive
+   page already discloses the multiples lens to the reader. ``primary_
+   method_label`` (advisor method-override) still wins when set, so
+   single-method override reports continue to label themselves.
+
+   VAL-2026-35A4 follow-up (2026-05-27): on the multiples-only Adaptive
+   path the chip now qualifies the brand with the lens
+   ("Upswitch Adaptive · Marktbenadering") so a reader who lands on a
+   downstream page sees the same lens framing as the cover/exec/calib
+   pages, instead of reading "Adaptive" on every page while the body
+   says marktbenadering. #}
+{% set _is_adapt_mults_only = is_adaptive_multiples_only|default(false) %}
+{# Slice to the first two characters so locale variants ``en-US`` / ``nl-BE``
+   resolve to ``en`` / ``nl`` instead of falling through to the NL default. #}
+{% set _is_en_chip = ((locale|default('nl'))|lower)[:2] == 'en' %}
+{% set _is_fr_chip = ((locale|default('nl'))|lower)[:2] == 'fr' %}
+{% set _chip_label_adaptive = ("Upswitch Adaptive · Approche de marché" if _is_fr_chip else ("Upswitch Adaptive · Market Approach" if _is_en_chip else "Upswitch Adaptive · Marktbenadering")) if _is_adapt_mults_only else "Upswitch Adaptive" %}
+{% set _method_chip = primary_method_label
+    or (_chip_label_adaptive if has_upswitch_adaptive_page else valuation_methodology_display) %}
+{# Brand lead: accountant firm name when present (Enterprise / firm-branded
+   reports), otherwise the company being valued.  Falls back to "Confidential"
+   only when neither is known — without this the inner-page header was just
+   the word "Vertrouwelijk" floating above the body, which looked broken on
+   the unbranded Three Towers cover-and-page-2 pairing. #}
+{% set _brand_lead = accountant_firm_name or company_name %}
+<div class="page-header">
+    <div class="page-header-brand">
+        <span class="page-header-text">{% if _brand_lead %}{{ _brand_lead }} · {% endif %}{{ t.header_confidential }}</span>
+        <span class="page-header-powered">{{ t.header_powered_by }}</span>
+    </div>
+    <div class="page-header-meta">
+        {# VAL-2026-35A4 (2026-05-27): chip + ref id share a baseline so the
+           right column stacks two lines (chip+ref / date), matching the left
+           column's two lines (brand · confidential / powered-by). Previously
+           the chip was its own line because the chip span sat next to a
+           block-level <p>, producing a three-line right column that visually
+           overhung the brand. Layout lives in base.html (.page-header-meta-row)
+           so sanitizers cannot strip inline flex and break the row. #}
+        <div class="page-header-meta-row">
+            {% if _method_chip %}
+            <span class="page-header-method">{{ _method_chip }}</span>
+            {% endif %}
+            <p class="page-header-ref">{{ (report_id_display or report_id) | format_ref(valuation_date) }}</p>
+        </div>
+        <p class="page-header-date">{{ valuation_date }}</p>
+    </div>
+</div>

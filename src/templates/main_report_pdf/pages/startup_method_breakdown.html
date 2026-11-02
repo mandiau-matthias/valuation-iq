@@ -1,0 +1,321 @@
+{#
+    STARTUP VALUATION — METHOD BREAKDOWN (PDF / WeasyPrint)
+
+    Localised via ``startup_report.t.*`` — table-based mirror of
+    ``main_report/pages/startup_method_breakdown.html``.
+#}
+{% set br = startup_report.berkus %}
+{% set sc = startup_report.scorecard %}
+{% set vc = startup_report.vc %}
+{% set sf = startup_report.saas_forward %}
+
+<div class="a4-page">
+    {% include "main_report_pdf/partials/_page_header.html" ignore missing %}
+
+    <h1 style="font-size: 18pt; margin-bottom: 8pt;">{{ startup_report.t.method_breakdown_title }}</h1>
+
+    <h2 style="font-size: 12pt; margin: 8pt 0 4pt;">
+        {{ startup_report.t.berkus_section_title_template.replace('{value}', br.pre_money|format_eur_amount) }}
+    </h2>
+    <p style="font-size: 8pt; color: #4a5460; margin-bottom: 4pt;">
+        {{ startup_report.t.berkus_section_caption.replace('{max}', br.max_per_milestone|format_eur_amount) }}
+    </p>
+    <table style="width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 12pt;">
+        <thead>
+            <tr style="background: #f4f5f7;">
+                <th style="text-align: left; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.berkus_col_milestone }}</th>
+                <th style="text-align: right; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.berkus_col_score }}</th>
+                <th style="text-align: right; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.berkus_col_contribution }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in br.contributions %}
+            <tr>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ c.label }}</td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ c.score_pct }}/100</td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ c.value|format_currency }}</td>
+            </tr>
+            {% if c.evidence %}
+            <tr>
+                <td colspan="3" style="padding: 4pt 8pt; border: 1pt solid #e1e4ea; border-top: none; border-left: 2pt solid #2a8a82; background: #f7fbfa; font-size: 8pt; line-height: 1.5; color: #4a5460;">
+                    <span style="font-weight: 700; color: #1f2937;">{{ startup_report.t.founder_evidence_label }}:</span>
+                    <em>{{ c.evidence }}</em>
+                </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2 style="font-size: 12pt; margin: 8pt 0 4pt;">
+        {{ startup_report.t.scorecard_section_title_template.replace('{value}', sc.pre_money|format_eur_amount) }}
+    </h2>
+    <p style="font-size: 8pt; color: #4a5460; margin-bottom: 4pt;">
+        {{ startup_report.t.scorecard_section_caption.replace('{avg}', sc.average_pre_money|format_eur_amount).replace('{mult}', sc.blended_multiplier|safe_round(2)|string) }}
+    </p>
+    <table style="width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 12pt;">
+        <thead>
+            <tr style="background: #f4f5f7;">
+                <th style="text-align: left; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.scorecard_col_factor }}</th>
+                <th style="text-align: right; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.scorecard_col_weight }}</th>
+                <th style="text-align: right; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.scorecard_col_score }}</th>
+                <th style="text-align: right; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.scorecard_col_multiplier }}</th>
+                <th style="text-align: right; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.scorecard_col_weighted }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in sc.factors %}
+            <tr>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ f.label }}</td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ (f.weight * 100)|safe_round(0) }}%</td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ f.score_pct }}/100</td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ f.multiplier|safe_round(2) }}×</td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ f.weighted_multiplier|safe_round(3) }}</td>
+            </tr>
+            {% if f.evidence %}
+            <tr>
+                <td colspan="5" style="padding: 4pt 8pt; border: 1pt solid #e1e4ea; border-top: none; border-left: 2pt solid #2a8a82; background: #f7fbfa; font-size: 8pt; line-height: 1.5; color: #4a5460;">
+                    <span style="font-weight: 700; color: #1f2937;">{{ startup_report.t.founder_evidence_label }}:</span>
+                    <em>{{ f.evidence }}</em>
+                </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if sf and sf.available %}
+    <h2 style="font-size: 12pt; margin: 8pt 0 4pt;">
+        {{ startup_report.t.saas_forward_section_title_template.replace('{value}', sf.pre_money|format_eur_amount) }}
+    </h2>
+    <p style="font-size: 8pt; color: #4a5460; margin-bottom: 4pt;">
+        {{ startup_report.t.saas_forward_section_caption }}
+    </p>
+    <table style="width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 12pt;">
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.saas_label_current_arr }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ sf.current_arr|format_currency }}</td></tr>
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.saas_label_forward_arr }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ sf.forward_arr|format_currency }}</td></tr>
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.saas_label_mom_growth_used }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ sf.forward_mom_growth_pct|safe_round(1) }}%</td></tr>
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.saas_label_base_multiple }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ sf.base_multiple|safe_round(2) }}×</td></tr>
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.saas_label_risk_discount }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ ((1 - sf.risk_discount) * 100)|safe_round(0) }}%</td></tr>
+        {% if sf.churn_drag and sf.churn_drag > 0 %}
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.saas_label_churn_drag }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">-{{ (sf.churn_drag * 100)|safe_round(0) }}%</td></tr>
+        {% endif %}
+        <tr style="font-weight: 600;"><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.saas_label_applied_multiple }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ sf.applied_multiple|safe_round(2) }}×</td></tr>
+    </table>
+    {% endif %}
+
+    {% if vc.pre_money and vc.pre_money > 0 %}
+    <h2 style="font-size: 12pt; margin: 8pt 0 4pt;">
+        {{ startup_report.t.vc_section_title_template.replace('{value}', vc.pre_money|format_eur_amount) }}
+    </h2>
+
+    {# Formula walkthrough (PDF twin) — line-by-line EV/Revenue math.
+       Same advisory block as the screen method-breakdown.  Audit
+       issue B1 — moved here from the input panel where it didn't
+       belong. #}
+    {% if vc.year5_revenue and vc.exit_revenue_multiple and vc.target_roi_x %}
+    <table style="width: 100%; max-width: 320pt; border-collapse: collapse; font-size: 9pt; margin-bottom: 10pt; background: rgba(244, 99, 35, 0.04);">
+        <tr>
+            <td colspan="2" style="padding: 5pt 8pt; border-left: 3pt solid #2a8a82; font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #2a8a82;">
+                {{ startup_report.t.vc_formula_walkthrough_title }}
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 2pt 8pt; border-left: 3pt solid #2a8a82; color: #4a5460;">{{ startup_report.t.vc_formula_row_y5 }}</td>
+            <td style="padding: 2pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ vc.year5_revenue|format_currency }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 2pt 8pt; border-left: 3pt solid #2a8a82; color: #4a5460;">{{ startup_report.t.vc_formula_row_multiply }}</td>
+            <td style="padding: 2pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">× {{ vc.exit_revenue_multiple|safe_round_or_dash(1) }}×</td>
+        </tr>
+        <tr style="font-weight: 700;">
+            <td style="padding: 4pt 8pt; border-left: 3pt solid #2a8a82; border-top: 1pt solid #e1e4ea;">{{ startup_report.t.vc_formula_row_exit_value }}</td>
+            <td style="padding: 4pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; border-top: 1pt solid #e1e4ea;">{{ vc.terminal_value|format_currency }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 2pt 8pt; border-left: 3pt solid #2a8a82; color: #4a5460;">{{ startup_report.t.vc_formula_row_divide_roi }}</td>
+            <td style="padding: 2pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">÷ {{ vc.target_roi_x|safe_round_or_dash(0) }}×</td>
+        </tr>
+        <tr style="font-weight: 700; color: #2a8a82;">
+            <td style="padding: 5pt 8pt; border-left: 3pt solid #2a8a82; border-top: 1.5pt solid #2a8a82;">{{ startup_report.t.vc_formula_row_pre_money }}</td>
+            <td style="padding: 5pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-size: 11pt; border-top: 1.5pt solid #2a8a82;">{{ vc.pre_money|format_currency }}</td>
+        </tr>
+        <tr>
+            <td colspan="2" style="padding: 4pt 8pt; border-left: 3pt solid #2a8a82; font-size: 7.5pt; line-height: 1.5; color: #4a5460;">
+                {{ startup_report.t.vc_formula_walkthrough_caption }}
+            </td>
+        </tr>
+    </table>
+    {% endif %}
+
+    <table style="width: 100%; border-collapse: collapse; font-size: 9pt;">
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.vc_label_y5_revenue_projection }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ vc.year5_revenue|format_currency }}{% if not vc.used_year5_projection %} <span style="display: inline-block; margin-left: 6pt; padding: 1pt 5pt; background: #fdebd0; color: #92400e; border-radius: 8pt; font-size: 7pt; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; font-family: inherit;">{{ startup_report.t.vc_extrapolated_callout_label }}</span>{% endif %}</td></tr>
+        {# Promoted disclaimer (PDF twin) — same logic as screen.
+           Audit issue D7. #}
+        {% if not vc.used_year5_projection %}
+        <tr><td colspan="2" style="padding: 4pt 6pt; border: 1pt solid #e1e4ea; border-top: none; border-left: 2pt solid #f59e0b; background: #fef9e7; font-size: 7.5pt; line-height: 1.5; color: #1f2937;">
+            {{ startup_report.t.vc_extrapolated_callout_body }}
+        </td></tr>
+        {% endif %}
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.vc_label_exit_multiple }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ vc.exit_revenue_multiple|safe_round_or_dash(1) }}×</td></tr>
+        {# B3 — Inline source citation (PDF twin). Same caption as the
+           screen method-breakdown so the printed document carries the
+           same provenance directly under the multiple. #}
+        {% set vms_pdf = startup_report.vc_multiple_source %}
+        <tr><td colspan="2" style="padding: 4pt 6pt; border: 1pt solid #e1e4ea; border-top: none; border-left: 2pt solid #2a8a82; background: #f7fbfa; font-size: 7.5pt; line-height: 1.45; color: #4a5460;">
+            {% if vms_pdf %}
+                {% set _vms_pdf_caption = startup_report.t.vc_multiple_source_caption %}
+                {{ _vms_pdf_caption.replace('{source}', vms_pdf.source).replace('{sector}', vms_pdf.sector_label).replace('{p25}', vms_pdf.p25|safe_round(1)|string).replace('{p75}', vms_pdf.p75|safe_round(1)|string) }}
+            {% else %}
+                {{ startup_report.t.vc_multiple_source_caption_unsourced }}
+            {% endif %}
+        </td></tr>
+        {# Founder-supplied exit-multiple rationale (PDF twin) — same
+           rule as the screen template: render only when the founder
+           typed one in the wizard.  Italicised quote-styled row sits
+           under the peer-source citation. #}
+        {% if startup_report.exit_multiple_rationale %}
+        <tr><td colspan="2" style="padding: 4pt 6pt; border: 1pt solid #e1e4ea; border-top: none; border-left: 2pt solid #2a8a82; background: #f7fbfa; font-size: 7.5pt; line-height: 1.45; color: #4a5460;">
+            <span style="font-weight: 700; color: #1f2937;">{{ startup_report.t.exit_multiple_rationale_label }}:</span>
+            <em>{{ startup_report.exit_multiple_rationale }}</em>
+        </td></tr>
+        {% endif %}
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.vc_label_terminal_value }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ vc.terminal_value|format_currency }}</td></tr>
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.vc_label_roi_expectation }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ vc.target_roi_x|safe_round_or_dash(0) }}×</td></tr>
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.vc_label_post_money_today }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ vc.post_money|format_currency }}</td></tr>
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.vc_label_expected_dilution_to_exit }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ vc.dilution_pct|safe_round_or_dash(0) }}%</td></tr>
+    </table>
+    {% endif %}
+
+    {# B3 — Pre-money triangulation range, framed as P10/P50/P90.
+       PDF twin of the screen template's distribution card.  The
+       numbers re-use the canonical low/mid/high — same values, M&A
+       framing. The caption explicitly notes this is an empirical
+       leg-blend range, NOT a Monte-Carlo distribution. #}
+    {% set dist = startup_report.pre_money_distribution %}
+    {% if dist and dist.p50 and dist.p50 > 0 %}
+    <h2 style="font-size: 12pt; margin: 12pt 0 4pt;">{{ startup_report.t.pre_money_distribution_title }}</h2>
+    <p style="font-size: 8pt; color: #4a5460; margin-bottom: 6pt;">
+        {{ startup_report.t.pre_money_distribution_caption }}
+    </p>
+    <table style="width: 100%; max-width: 360pt; border-collapse: collapse; font-size: 9pt; margin-bottom: 12pt;">
+        <tr>
+            <td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.pre_money_distribution_p10 }}</td>
+            <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ dist.p10|format_currency }}</td>
+        </tr>
+        <tr style="background: #fdf6f1; font-weight: 700;">
+            <td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.pre_money_distribution_p50 }}</td>
+            <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ dist.p50|format_currency }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.pre_money_distribution_p90 }}</td>
+            <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ dist.p90|format_currency }}</td>
+        </tr>
+        {% if dist.spread_ratio %}
+        <tr>
+            <td style="padding: 4pt; border: 1pt solid #e1e4ea; color: #4a5460;">{{ startup_report.t.pre_money_distribution_spread_label }}</td>
+            <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: #4a5460;">{{ dist.spread_ratio|safe_round(2) }}×</td>
+        </tr>
+        {% endif %}
+    </table>
+    {% endif %}
+
+    {# Sensitivity grid — ±20% on Y5 + exit multiple. #}
+    {% set sens = startup_report.vc_sensitivity %}
+    {% if sens %}
+    <h2 style="font-size: 12pt; margin: 12pt 0 4pt;">{{ startup_report.t.sensitivity_section_title }}</h2>
+    <p style="font-size: 8pt; color: #4a5460; margin-bottom: 6pt;">
+        {{ startup_report.t.sensitivity_section_caption }}
+    </p>
+    <table style="width: 100%; max-width: 320pt; border-collapse: collapse; font-size: 9pt; margin-bottom: 4pt;">
+        <thead>
+            <tr style="background: #f4f5f7;">
+                <th style="text-align: left; padding: 4pt; border: 1pt solid #e1e4ea;">&nbsp;</th>
+                <th style="text-align: right; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.sensitivity_col_y5_low }}</th>
+                <th style="text-align: right; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.sensitivity_col_y5_mid }}</th>
+                <th style="text-align: right; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.sensitivity_col_y5_high }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row_label, row in [
+                (startup_report.t.sensitivity_row_mult_low, sens.grid[0]),
+                (startup_report.t.sensitivity_row_mult_mid, sens.grid[1]),
+                (startup_report.t.sensitivity_row_mult_high, sens.grid[2])
+            ] %}
+            <tr {% if loop.index == 2 %}style="background: rgba(244, 99, 35, 0.06); font-weight: 700;"{% endif %}>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ row_label }}</td>
+                {% for cell in row %}
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ cell|format_currency }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p style="font-size: 7.5pt; color: #4a5460; margin-bottom: 12pt;">
+        {{ startup_report.t.sensitivity_legend }}
+    </p>
+    {% endif %}
+
+    {# Sector comparables — Damodaran-corpus + public-deal multiples. #}
+    {% set comps = startup_report.sector_comparables %}
+    {% if comps and comps|length > 0 %}
+    <h2 style="font-size: 12pt; margin: 12pt 0 4pt;">{{ startup_report.t.comps_section_title }}</h2>
+    <p style="font-size: 8pt; color: #4a5460; margin-bottom: 6pt;">
+        {% set _comps_caption = startup_report.t.comps_section_caption %}
+        {{ _comps_caption.replace('{n}', comps|length|string).replace('{sector}', startup_report.sector|replace('_', ' ')) }}
+    </p>
+    {# Sector comparables table — parity with the screen template:
+       split EV multiples into P25 / Median / P75 columns instead of
+       packing them into one slash-delimited cell.  Median column is
+       visually heavier (font-weight + darker text) so the eye lands on
+       the canonical figure first.  Audit issue #20 PDF twin. #}
+    <table style="width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-bottom: 4pt;">
+        <thead>
+            <tr style="background: #f4f5f7;">
+                <th rowspan="2" style="text-align: left; padding: 4pt; border: 1pt solid #e1e4ea; vertical-align: bottom;">{{ startup_report.t.comps_col_business_type }}</th>
+                <th colspan="3" style="text-align: center; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.comps_col_ev_ebitda }}</th>
+                <th colspan="3" style="text-align: center; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.comps_col_ev_revenue }}</th>
+                <th rowspan="2" style="text-align: right; padding: 4pt; border: 1pt solid #e1e4ea; vertical-align: bottom;">{{ startup_report.t.comps_col_ebitda_margin }}</th>
+                <th rowspan="2" style="text-align: left; padding: 4pt; border: 1pt solid #e1e4ea; vertical-align: bottom;">{{ startup_report.t.comps_col_source }}</th>
+            </tr>
+            <tr style="background: #f4f5f7;">
+                <th style="text-align: right; padding: 3pt 4pt; border: 1pt solid #e1e4ea; font-size: 7.5pt; font-weight: 500; color: #4a5460;">{{ startup_report.t.comps_col_p25 }}</th>
+                <th style="text-align: right; padding: 3pt 4pt; border: 1pt solid #e1e4ea; font-size: 7.5pt; font-weight: 700;">{{ startup_report.t.comps_col_median }}</th>
+                <th style="text-align: right; padding: 3pt 4pt; border: 1pt solid #e1e4ea; font-size: 7.5pt; font-weight: 500; color: #4a5460;">{{ startup_report.t.comps_col_p75 }}</th>
+                <th style="text-align: right; padding: 3pt 4pt; border: 1pt solid #e1e4ea; font-size: 7.5pt; font-weight: 500; color: #4a5460;">{{ startup_report.t.comps_col_p25 }}</th>
+                <th style="text-align: right; padding: 3pt 4pt; border: 1pt solid #e1e4ea; font-size: 7.5pt; font-weight: 700;">{{ startup_report.t.comps_col_median }}</th>
+                <th style="text-align: right; padding: 3pt 4pt; border: 1pt solid #e1e4ea; font-size: 7.5pt; font-weight: 500; color: #4a5460;">{{ startup_report.t.comps_col_p75 }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in comps %}
+            {# Spread checks — em-dash p25/p75 cells when there's no
+               real spread.  Same logic as the screen template (audit
+               issue D5). #}
+            {% set ebitda_has_spread = c.ev_ebitda_p25 and c.ev_ebitda_p75 and c.ev_ebitda_p25 != c.ev_ebitda_median and c.ev_ebitda_p75 != c.ev_ebitda_median %}
+            {% set revenue_has_spread = c.ev_revenue_p25 and c.ev_revenue_p75 and c.ev_revenue_p25 != c.ev_revenue_median and c.ev_revenue_p75 != c.ev_revenue_median %}
+            <tr>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ c.title }}</td>
+                {# EV / EBITDA — three cells, em-dash when no real spread. #}
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: #4a5460;">{% if ebitda_has_spread %}{{ c.ev_ebitda_p25|safe_round(1) }}×{% else %}—{% endif %}</td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 700;">{% if c.ev_ebitda_median %}{{ c.ev_ebitda_median|safe_round(1) }}×{% else %}—{% endif %}</td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: #4a5460;">{% if ebitda_has_spread %}{{ c.ev_ebitda_p75|safe_round(1) }}×{% else %}—{% endif %}</td>
+                {# EV / Revenue — same shape. #}
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: #4a5460;">{% if revenue_has_spread %}{{ c.ev_revenue_p25|safe_round(1) }}×{% else %}—{% endif %}</td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 700;">{% if c.ev_revenue_median %}{{ c.ev_revenue_median|safe_round(1) }}×{% else %}—{% endif %}</td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: #4a5460;">{% if revenue_has_spread %}{{ c.ev_revenue_p75|safe_round(1) }}×{% else %}—{% endif %}</td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">
+                    {% if c.typical_ebitda_margin_median %}{{ (c.typical_ebitda_margin_median * 100)|safe_round(0) }}%{% else %}—{% endif %}
+                </td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; font-size: 7.5pt; color: #4a5460;">{{ c.multiples_source or '—' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p style="font-size: 7.5pt; color: #4a5460; margin-bottom: 12pt;">
+        {{ startup_report.t.comps_band_legend }}
+    </p>
+    {% endif %}
+
+    {% include "main_report_pdf/partials/_footer.html" ignore missing %}
+</div>

@@ -1,0 +1,5 @@
+{%- if apv_matrix -%}
+{{ 'APV sensitivity matrix' if apv_locale == 'en' else 'Matrice de sensibilité APV' if apv_locale == 'fr' else 'APV-gevoeligheidsmatrix' }}
+{%- elif secondary_key|default('terminal_growth') == 'exit_multiple' -%}
+{{ 'Sensitivity matrix (WACC × exit multiple)' if apv_locale == 'en' else 'Matrice de sensibilité (WACC × multiple de sortie)' if apv_locale == 'fr' else 'Gevoeligheidsmatrix (WACC × exit-multiple)' }}
+{%- else -%}{{ t.dcf_sensitivity_matrix_title }}{%- endif -%}

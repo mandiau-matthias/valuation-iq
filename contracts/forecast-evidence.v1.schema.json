@@ -1,0 +1,259 @@
+{
+  "$defs": {
+    "ForecastCashFlowPeriod": {
+      "additionalProperties": false,
+      "properties": {
+        "amortization": {
+          "maxLength": 48,
+          "pattern": "^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$",
+          "title": "Amortization",
+          "type": "string"
+        },
+        "capex": {
+          "maxLength": 48,
+          "pattern": "^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$",
+          "title": "Capex",
+          "type": "string"
+        },
+        "cash_taxes": {
+          "maxLength": 48,
+          "pattern": "^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$",
+          "title": "Cash Taxes",
+          "type": "string"
+        },
+        "change_in_operating_nwc": {
+          "maxLength": 48,
+          "pattern": "^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$",
+          "title": "Change In Operating Nwc",
+          "type": "string"
+        },
+        "depreciation": {
+          "maxLength": 48,
+          "pattern": "^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$",
+          "title": "Depreciation",
+          "type": "string"
+        },
+        "ebitda": {
+          "maxLength": 48,
+          "pattern": "^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$",
+          "title": "Ebitda",
+          "type": "string"
+        },
+        "end_date": {
+          "format": "date",
+          "title": "End Date",
+          "type": "string"
+        },
+        "free_cash_flow": {
+          "maxLength": 48,
+          "pattern": "^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$",
+          "title": "Free Cash Flow",
+          "type": "string"
+        },
+        "revenue": {
+          "maxLength": 48,
+          "pattern": "^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$",
+          "title": "Revenue",
+          "type": "string"
+        },
+        "source_document_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Document Hash",
+          "type": "string"
+        },
+        "start_date": {
+          "format": "date",
+          "title": "Start Date",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start_date",
+        "end_date",
+        "revenue",
+        "ebitda",
+        "depreciation",
+        "amortization",
+        "cash_taxes",
+        "capex",
+        "change_in_operating_nwc",
+        "free_cash_flow",
+        "source_document_hash"
+      ],
+      "title": "ForecastCashFlowPeriod",
+      "type": "object"
+    },
+    "ForecastVerification": {
+      "additionalProperties": false,
+      "properties": {
+        "company_identity_verified": {
+          "const": true,
+          "title": "Company Identity Verified",
+          "type": "boolean"
+        },
+        "document_hashes_verified": {
+          "const": true,
+          "title": "Document Hashes Verified",
+          "type": "boolean"
+        },
+        "record_id": {
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "schedule_reconciled": {
+          "const": true,
+          "title": "Schedule Reconciled",
+          "type": "boolean"
+        },
+        "source_identity_verified": {
+          "const": true,
+          "title": "Source Identity Verified",
+          "type": "boolean"
+        },
+        "verified_at": {
+          "title": "Verified At",
+          "type": "string"
+        },
+        "verifier_id": {
+          "minLength": 1,
+          "title": "Verifier Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "record_id",
+        "verifier_id",
+        "verified_at",
+        "source_identity_verified",
+        "company_identity_verified",
+        "document_hashes_verified",
+        "schedule_reconciled"
+      ],
+      "title": "ForecastVerification",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "company_id": {
+      "minLength": 1,
+      "title": "Company Id",
+      "type": "string"
+    },
+    "content_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "currency": {
+      "enum": [
+        "EUR",
+        "GBP",
+        "USD",
+        "CHF",
+        "CAD",
+        "AUD",
+        "NZD",
+        "SEK",
+        "NOK",
+        "DKK",
+        "PLN",
+        "CZK"
+      ],
+      "title": "Currency",
+      "type": "string"
+    },
+    "discount_timing": {
+      "enum": [
+        "year_end",
+        "mid_year"
+      ],
+      "title": "Discount Timing",
+      "type": "string"
+    },
+    "financing_treatment": {
+      "const": "unlevered_fcff",
+      "title": "Financing Treatment",
+      "type": "string"
+    },
+    "issued_on": {
+      "format": "date",
+      "title": "Issued On",
+      "type": "string"
+    },
+    "issuer": {
+      "minLength": 1,
+      "title": "Issuer",
+      "type": "string"
+    },
+    "lease_treatment": {
+      "const": "operating_cash_cost_in_ebitda",
+      "title": "Lease Treatment",
+      "type": "string"
+    },
+    "periods": {
+      "items": {
+        "$ref": "#/$defs/ForecastCashFlowPeriod"
+      },
+      "maxItems": 15,
+      "minItems": 1,
+      "title": "Periods",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "forecast-evidence.v1",
+      "default": "forecast-evidence.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_document_hashes": {
+      "items": {
+        "pattern": "^[0-9a-f]{64}$",
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Source Document Hashes",
+      "type": "array"
+    },
+    "source_kind": {
+      "enum": [
+        "connected_company_forecast",
+        "verified_company_document"
+      ],
+      "title": "Source Kind",
+      "type": "string"
+    },
+    "tenant_id": {
+      "minLength": 1,
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "terminal_assumptions": {
+      "minLength": 20,
+      "title": "Terminal Assumptions",
+      "type": "string"
+    },
+    "verification": {
+      "$ref": "#/$defs/ForecastVerification"
+    }
+  },
+  "required": [
+    "company_id",
+    "tenant_id",
+    "issuer",
+    "issued_on",
+    "currency",
+    "source_kind",
+    "source_document_hashes",
+    "periods",
+    "verification",
+    "financing_treatment",
+    "lease_treatment",
+    "discount_timing",
+    "terminal_assumptions",
+    "content_hash"
+  ],
+  "title": "ForecastEvidence",
+  "type": "object"
+}

@@ -1,0 +1,99 @@
+{# Growth Metrics Section - Phase 2 #}
+<div class="section-container bg-white rounded-lg shadow-sm p-6 mb-4 border border-gray-200" data-section="growth-metrics">
+  <div class="section-header mb-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900">Growth Metrics</h2>
+        <p class="text-sm text-gray-600">Historical performance and future potential</p>
+      </div>
+      <div class="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm font-semibold">
+        Phase {{ phase | default(2) }}
+      </div>
+    </div>
+  </div>
+  
+  <div class="section-content space-y-4">
+    <!-- Growth Rate Card -->
+    <div class="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-lg p-4 border border-teal-200">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-semibold text-teal-900">Revenue Growth Rate</h3>
+        <span class="text-2xl font-bold text-teal-700">{{ "{:+.1f}".format(growth_rate | default(0)) }}%</span>
+      </div>
+      <div class="grid grid-cols-3 gap-2 text-center">
+        <div>
+          <p class="text-xs text-gray-600">3-Year CAGR</p>
+          <p class="text-sm font-bold text-teal-700">{{ "{:.1f}".format(cagr_3y | default(0)) }}%</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-600">Industry Avg</p>
+          <p class="text-sm font-bold text-gray-700">{{ "{:.1f}".format(industry_growth | default(0)) }}%</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-600">Projected</p>
+          <p class="text-sm font-bold text-blue-700">{{ "{:.1f}".format(projected_growth | default(0)) }}%</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historical Revenue Trend -->
+    <div class="bg-white rounded-lg p-4 border border-gray-200">
+      <h3 class="text-sm font-semibold text-gray-700 mb-3">Historical Revenue Trend</h3>
+      <div class="space-y-2">
+        {% if historical_revenue %}
+          {% for year_data in historical_revenue %}
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-600">{{ year_data.year }}</span>
+            <div class="flex-1 mx-4">
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-teal-500 h-2 rounded-full" style="width: {{ ((year_data.revenue / historical_revenue[-1].revenue * 100) | round) if historical_revenue[-1].revenue > 0 else 0 }}%"></div>
+              </div>
+            </div>
+            <span class="text-sm font-semibold text-gray-900">€{{ "{:,.0f}".format(year_data.revenue) }}</span>
+          </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Growth Drivers -->
+    {% if growth_drivers %}
+    <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+      <h3 class="text-sm font-semibold text-blue-900 mb-2">Growth Drivers</h3>
+      <ul class="space-y-1">
+        {% for driver in growth_drivers %}
+        <li class="flex items-start text-xs text-blue-700">
+          <svg class="w-3 h-3 text-blue-500 mt-0.5 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd"></path>
+          </svg>
+          {{ driver }}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <!-- Growth Impact on Valuation -->
+    <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+      <div class="flex items-start">
+        <svg class="w-5 h-5 text-green-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd"></path>
+        </svg>
+        <div class="flex-1">
+          <h4 class="text-sm font-semibold text-green-900 mb-1">Growth Impact</h4>
+          <p class="text-xs text-green-700">{{ growth_impact | default('Strong growth trajectory positively influences valuation multiples and investor confidence.') }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="section-footer mt-4 pt-4 border-t border-gray-200">
+    <div class="flex items-center justify-between">
+      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
+        {{ confidence | default(65) }}% Confidence
+      </span>
+      <span class="text-xs text-gray-500">Based on {{ years_of_data | default(3) }} years of historical data</span>
+    </div>
+  </div>
+</div>
+
+

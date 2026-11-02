@@ -1,0 +1,65 @@
+{#
+    SAAS / ARR-MULTIPLE — CAP TABLE & DILUTION (PDF / WeasyPrint)
+
+    PDF twin of main_report/pages/saas_cap_table.html.  Same payload
+    (``saas_cap_table_simulator``), same content, same i18n surface
+    (``t.saas_cap_table_*``).  Currency values use ``|format_currency``
+    so figures render with locale-aware thousand separators on both
+    EN and NL — never ``|safe_round`` on a € value (that would emit
+    ``€1234567`` without grouping).
+#}
+{% set sim = saas_cap_table_simulator %}
+
+<div class="a4-page">
+    {% include "main_report_pdf/partials/_page_header.html" ignore missing %}
+
+    <div class="section-header" style="margin-bottom: 8pt;">
+        {% if saas_cap_table_section_number %}
+        <span class="section-number">{{ saas_cap_table_section_number }}</span>
+        {% endif %}
+        <h1 style="font-size: 18pt; margin: 0;">{{ t.saas_cap_table_title }}</h1>
+    </div>
+
+    {% if sim and sim.investment_amount and sim.pre_money %}
+    <div style="padding: 8pt; border: 1pt solid #f46323; background: #fef6f1; margin-bottom: 12pt;">
+        <h2 style="font-size: 12pt; margin: 0 0 4pt; color: #f46323;">{{ t.saas_cap_table_simulator_heading }}</h2>
+        <p style="font-size: 9pt; line-height: 1.45; margin: 0 0 6pt;">
+            {{ t.saas_cap_table_headline_sentence|format(
+                investment=sim.investment_amount|format_currency,
+                pre_money=sim.pre_money|format_currency,
+                dilution_pct=(sim.founder_dilution_pct|safe_round(1) ~ '%')
+            )|safe }}
+        </p>
+        <table style="width: 100%; border-collapse: collapse; font-size: 9pt;">
+            <tr><td style="padding: 3pt; border: 1pt solid #e1e4ea;">{{ t.saas_cap_table_pre_money_label }}</td><td style="padding: 3pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ sim.pre_money|format_currency }}</td></tr>
+            <tr><td style="padding: 3pt; border: 1pt solid #e1e4ea;">{{ t.saas_cap_table_round_label }}</td><td style="padding: 3pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ sim.investment_amount|format_currency }}</td></tr>
+            <tr style="font-weight: 600;"><td style="padding: 3pt; border: 1pt solid #e1e4ea;">{{ t.saas_cap_table_post_money_label }}</td><td style="padding: 3pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ sim.post_money|format_currency }}</td></tr>
+            <tr><td style="padding: 3pt; border: 1pt solid #e1e4ea;">{{ t.saas_cap_table_investor_dilution_label }}</td><td style="padding: 3pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ sim.investor_dilution_pct|safe_round(1) }}%</td></tr>
+            {% if sim.safe_dilution_pct and sim.safe_dilution_pct > 0 %}
+            <tr><td style="padding: 3pt; border: 1pt solid #e1e4ea;">{{ t.saas_cap_table_safe_dilution_label }}</td><td style="padding: 3pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ sim.safe_dilution_pct|safe_round(1) }}%</td></tr>
+            {% endif %}
+            {% if sim.option_pool_pct and sim.option_pool_pct > 0 %}
+            <tr><td style="padding: 3pt; border: 1pt solid #e1e4ea;">{{ t.saas_cap_table_option_pool_label }}</td><td style="padding: 3pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ sim.option_pool_pct|safe_round(1) }}%</td></tr>
+            {% endif %}
+            <tr style="font-weight: 600; color: #f46323;"><td style="padding: 3pt; border: 1pt solid #e1e4ea;">{{ t.saas_cap_table_founder_dilution_label }}</td><td style="padding: 3pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ sim.founder_dilution_pct|safe_round(1) }}%</td></tr>
+        </table>
+    </div>
+
+    {% if sim.safe_total and sim.safe_total > 0 %}
+    <h2 style="font-size: 12pt; margin: 8pt 0 4pt;">{{ t.saas_cap_table_safe_overview_heading }}</h2>
+    <table style="width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 12pt;">
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ t.saas_cap_table_safe_principal_label }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ sim.safe_total|format_currency }}</td></tr>
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ t.saas_cap_table_safe_drag_label }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ sim.safe_dilution_pct|safe_round(1) }}%</td></tr>
+    </table>
+    <p style="font-size: 8pt; color: #4a5460; margin-top: -8pt;">
+        {{ t.saas_cap_table_safe_assumption_note }}
+    </p>
+    {% endif %}
+    {% else %}
+    <p style="font-size: 9pt; color: #4a5460;">
+        {{ t.saas_cap_table_unavailable_note }}
+    </p>
+    {% endif %}
+
+    {% include "main_report_pdf/partials/_footer.html" ignore missing %}
+</div>

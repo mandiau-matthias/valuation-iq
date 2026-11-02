@@ -1,0 +1,138 @@
+{#
+    LIQUIDATION ANALYSIS — PAGE: STATEMENT OF NET REALISABLE VALUE
+
+    Phase 1 Section 3. The 12-class realisation schedule, EY/KPMG/Deloitte
+    working-paper format. One row per asset class with:
+      - book value
+      - adjusted FMV (appraiser override or default)
+      - orderly recovery factor + realisable value
+      - forced recovery factor + realisable value
+      - orderly disposal-month hint (Phase 3 PV-discounting will use this)
+    Plus a totals row and a residual-warning panel when the decomposed
+    lines don't reconcile to total_assets.
+
+    Renders only when the engine emitted ``liquidation_report.asset_schedule``.
+
+    PDF twin: main_report_pdf/pages/liquidation_realisation_schedule.html
+#}
+{% set lr = liquidation_report %}
+{% if lr.asset_schedule %}
+{% set s = lr.asset_schedule %}
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div class="section-header">
+        <span class="section-number">04</span>
+        <h1 class="section-title" style="margin: 0; flex: 1;">{{ lr.t.schedule_section_title }}</h1>
+        <div style="text-align: right;">
+            <span class="badge badge-primary" style="font-size: var(--font-size-xs);">
+                {{ lr.t.schedule_section_subtitle }}
+            </span>
+        </div>
+    </div>
+
+    {# Split into two stacked tables so the columns stay readable on
+       A4 portrait at the report's xs body font (audit P1 #7).  Both
+       tables share the same line iterator (`s.lines`) so totals match
+       row-for-row.  Each surfaces 5 columns: class · book FMV ·
+       adjusted FMV · recovery factor · realisable value (+ a
+       disposal-month column on the orderly table — irrelevant for the
+       forced auction which collapses to month 1). #}
+    <h2 style="font-size: var(--font-size-md); margin-top: var(--space-3); margin-bottom: var(--space-2);">
+        {{ lr.t.scenario_orderly }}
+    </h2>
+    <div style="margin-bottom: var(--space-3);">
+        <table style="width: 100%; font-size: var(--font-size-xs); border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                    <th style="text-align: left; padding: var(--space-2) var(--space-1);">{{ lr.t.schedule_col_class }}</th>
+                    <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.schedule_col_book }}</th>
+                    <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.schedule_col_adjusted }}</th>
+                    <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.schedule_col_orderly_factor }}</th>
+                    <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.schedule_col_orderly }}</th>
+                    <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.schedule_col_orderly_month }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for line in s.lines %}
+                <tr style="border-bottom: 1px solid hsl(var(--report-border-muted, var(--report-border)));">
+                    <td style="padding: var(--space-1);">{{ line.class_label }}</td>
+                    <td style="text-align: right;">€{{ line.book_value|format_eur_amount }}</td>
+                    <td style="text-align: right;">€{{ line.adjusted_value|format_eur_amount }}</td>
+                    <td style="text-align: right;">{{ line.orderly_recovery_factor|format_factor_pct(0) }}</td>
+                    <td style="text-align: right;">€{{ line.orderly_realisable_value|format_eur_amount }}</td>
+                    <td style="text-align: right;">{{ line.orderly_disposal_month }}</td>
+                </tr>
+                {% endfor %}
+                <tr style="font-weight: 600; border-top: 2px solid hsl(var(--report-border));">
+                    <td style="padding: var(--space-2) var(--space-1);">{{ lr.t.schedule_total_label }}</td>
+                    <td style="text-align: right;">€{{ s.total_book|format_eur_amount }}</td>
+                    <td style="text-align: right;">€{{ s.total_adjusted|format_eur_amount }}</td>
+                    <td></td>
+                    <td style="text-align: right;">€{{ s.total_orderly_realisable|format_eur_amount }}</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2 style="font-size: var(--font-size-md); margin-top: var(--space-3); margin-bottom: var(--space-2);">
+        {{ lr.t.scenario_forced }}
+    </h2>
+    <div style="margin-bottom: var(--space-3);">
+        <table style="width: 100%; font-size: var(--font-size-xs); border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                    <th style="text-align: left; padding: var(--space-2) var(--space-1);">{{ lr.t.schedule_col_class }}</th>
+                    <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.schedule_col_adjusted }}</th>
+                    <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.schedule_col_forced_factor }}</th>
+                    <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.schedule_col_forced }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for line in s.lines %}
+                <tr style="border-bottom: 1px solid hsl(var(--report-border-muted, var(--report-border)));">
+                    <td style="padding: var(--space-1);">{{ line.class_label }}</td>
+                    <td style="text-align: right;">€{{ line.adjusted_value|format_eur_amount }}</td>
+                    <td style="text-align: right;">{{ line.forced_recovery_factor|format_factor_pct(0) }}</td>
+                    <td style="text-align: right;">€{{ line.forced_realisable_value|format_eur_amount }}</td>
+                </tr>
+                {% endfor %}
+                <tr style="font-weight: 600; border-top: 2px solid hsl(var(--report-border));">
+                    <td style="padding: var(--space-2) var(--space-1);">{{ lr.t.schedule_total_label }}</td>
+                    <td style="text-align: right;">€{{ s.total_adjusted|format_eur_amount }}</td>
+                    <td></td>
+                    <td style="text-align: right;">€{{ s.total_forced_realisable|format_eur_amount }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    {% if s.unallocated_book and s.unallocated_book > 0 %}
+    <div class="card" style="padding: var(--space-3); margin-bottom: var(--space-3); border-left: 3px solid hsl(var(--report-warning));">
+        <div style="font-size: var(--font-size-sm); font-weight: 600; margin-bottom: var(--space-1);">
+            {{ lr.t.schedule_unallocated_label }}: €{{ s.unallocated_book|format_eur_amount }}
+        </div>
+        <div style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted));">
+            {{ lr.t.schedule_unallocated_warning }}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if s.warnings %}
+    <div class="card" style="padding: var(--space-3); margin-bottom: var(--space-3); background: hsl(var(--report-surface-muted));">
+        <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">
+            {% for w in s.warnings %}
+            <div>{{ w }}</div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if s.sources %}
+    <div style="margin-top: var(--space-3); font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">
+        {{ lr.t.sources_label }}: {{ s.sources|join(' · ') }}
+    </div>
+    {% endif %}
+</div>
+{% endif %}

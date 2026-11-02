@@ -1,0 +1,41 @@
+{% set seal = attestation_cover_seal|default(none) %}
+{% if seal and seal.renderable %}
+{% set _loc = (locale|default('nl'))|lower %}
+{% set _signed_label = 'Attestation numérique' if _loc == 'fr' else ('Digitally attested' if _loc == 'en' else 'Digitaal geattesteerd') %}
+{% set _verify_label = 'Vérifier' if _loc == 'fr' else ('Verify' if _loc == 'en' else 'Verifieer') %}
+{% set _signed_pdf_label = 'PDF signé' if _loc == 'fr' else ('Signed PDF' if _loc == 'en' else 'Getekende PDF') %}
+<div class="cover-attestation-seal"
+     style="margin-top: 10pt;
+            display: inline-block;
+            max-width: 265pt;
+            padding: 7pt 9pt;
+            border-radius: 6pt;
+            background: rgba(63, 145, 90, 0.15);
+            border: 1pt solid rgba(63, 145, 90, 0.45);
+            color: hsl(144, 38%, 24%);">
+    <span style="display: block; font-size: 6.5pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0;">
+        {{ _signed_label }} · {{ seal.eidas_tier }}
+    </span>
+    <span style="display: block; margin-top: 2pt; font-size: 7.5pt; font-weight: 750; line-height: 1.25;">
+        {{ seal.signer.name or seal.signer.firm or 'Upswitch Attest' }}
+        {% if seal.signer.register_body and seal.signer.register_number %}
+        · {{ seal.signer.register_body }} {{ seal.signer.register_number }}
+        {% endif %}
+    </span>
+    <span style="display: block; margin-top: 2pt; font-size: 6.5pt; line-height: 1.3; color: hsl(144, 24%, 31%);">
+        SHA-256 {{ seal.display_hash or seal.content_hash }}
+        {% if seal.signed_pdf_sha256 %}
+        · {{ _signed_pdf_label }} {{ seal.signed_pdf_sha256[:12] }}
+        {% endif %}
+    </span>
+    {% if seal.verify_url %}
+    <a href="{{ seal.verify_url }}"
+       style="display: block; margin-top: 2pt; font-size: 6.5pt; line-height: 1.3; color: hsl(172, 55%, 30%); text-decoration: none; word-break: break-all;">
+        {{ _verify_label }}: {{ seal.verify_url }}
+    </a>
+    {% endif %}
+    <span style="display: block; margin-top: 3pt; padding-top: 3pt; border-top: 1px solid rgba(63, 145, 90, 0.35); font-size: 6pt; line-height: 1.3; font-weight: 700; color: hsl(20, 52%, 35%);">
+        {{ legal_attestation_calculation_caveat }}
+    </span>
+</div>
+{% endif %}

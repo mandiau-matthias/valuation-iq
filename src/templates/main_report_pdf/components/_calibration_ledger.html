@@ -1,0 +1,225 @@
+{# 
+    CALIBRATION LEDGER COMPONENT
+    Step-by-step breakdown of multiple derivation from Step 11 pipeline
+    
+    All inline styles use hardcoded values for WeasyPrint compatibility.
+    Conclusion row uses table layout instead of flexbox.
+    
+    Expected context variables:
+    - calibration_steps, discount_waterfall, multiple_pipeline
+    - base_multiple, applied_multiple, sustainable_ebitda, valuation
+#}
+
+{% set risk_descriptions = {
+    'LAAG': t.ledger_risk_low,
+    'GEMIDDELD': t.ledger_risk_medium,
+    'HOOG': t.ledger_risk_high,
+    'LOW': t.ledger_risk_low,
+    'MEDIUM': t.ledger_risk_medium,
+    'HIGH': t.ledger_risk_high
+} %}
+{% set risk_labels = {
+    'LAAG': t.ledger_risk_label_low,
+    'GEMIDDELD': t.ledger_risk_label_medium,
+    'HOOG': t.ledger_risk_label_high,
+    'LOW': t.ledger_risk_label_low,
+    'MEDIUM': t.ledger_risk_label_medium,
+    'HIGH': t.ledger_risk_label_high
+} %}
+{% set tier_labels = {
+    'MICRO': t.ledger_tier_micro,
+    'Micro-KMO': t.ledger_tier_micro,
+    'Micro-SME': t.ledger_tier_micro,
+    'SMALL': t.ledger_tier_small,
+    'MEDIUM': t.ledger_tier_medium
+} %}
+
+{% set _valuation_basis = valuation_basis_value|default(sustainable_ebitda)|default(0) %}
+{% if not _valuation_basis or _valuation_basis <= 0 %}
+<div class="callout callout-warning" style="margin-bottom: 16pt;">
+    <p style="font-size: 8pt; margin: 0;">
+        {{ t.warning_zero_ebitda }}
+    </p>
+</div>
+{% endif %}
+
+{# Prefer discount_waterfall when it has full breakdown (3+ steps); else use calibration_steps for transparency #}
+{% set active_steps = discount_waterfall if (discount_waterfall and discount_waterfall|length >= 3) else calibration_steps|default([]) %}
+
+{% if not active_steps or active_steps|length == 0 %}
+    {% set active_steps = [] %}
+    {% if base_multiple and base_multiple > 0 and _valuation_basis and _valuation_basis > 0 %}
+        {% set _ = active_steps.append({
+            'label': t.ledger_market_consensus,
+            'multiple': base_multiple,
+            'impact': None,
+            'ev': _valuation_basis * base_multiple,
+            'ref': '¹',
+            'description': t.ledger_market_consensus_desc
+        }) %}
+    {% endif %}
+    
+    {% if owner_dependency_adjustment and owner_dependency_adjustment != 0 and _valuation_basis and _valuation_basis > 0 %}
+        {% set running_mult = base_multiple + owner_dependency_adjustment %}
+        {% set _risk_level = owner_dependency_risk_level|default('MEDIUM')|upper %}
+        {% set _risk_desc = risk_descriptions.get(_risk_level, t.ledger_risk_medium) %}
+        {% set _ = active_steps.append({
+            'label': t.ledger_key_person_risk,
+            'multiple': running_mult,
+            'impact': owner_dependency_adjustment,
+            'ev': _valuation_basis * running_mult,
+            'ref': '',
+            'description': risk_labels.get(_risk_level, _risk_level) ~ ' — ' ~ _risk_desc
+        }) %}
+    {% endif %}
+    
+    {% if size_discount_percentage and size_discount_percentage != 0 and _valuation_basis and _valuation_basis > 0 %}
+        {% set _base_for_size = (base_multiple if base_multiple and base_multiple > 0 else 4) %}
+        {% set size_impact = -1 * (size_discount_percentage / 100) * _base_for_size %}
+        {% set running_mult = (active_steps[-1].multiple if active_steps else (base_multiple if base_multiple and base_multiple > 0 else 4)) + size_impact %}
+        {% set _ = active_steps.append({
+            'label': t.ledger_micro_sme_discount,
+            'multiple': running_mult,
+            'impact': size_impact,
+            'ev': _valuation_basis * running_mult,
+            'ref': '²',
+            'description': t.ledger_tier_label ~ ': ' ~ tier_labels.get(size_tier|default('MICRO')|upper, size_tier|default('MICRO'))
+        }) %}
+    {% endif %}
+    
+    {% if applied_multiple and active_steps and _valuation_basis and _valuation_basis > 0 %}
+        {% set dlom_impact = applied_multiple - active_steps[-1].multiple %}
+        {% if dlom_impact != 0 %}
+            {% set _ = active_steps.append({
+                'label': t.ledger_dlom,
+                'multiple': applied_multiple,
+                'impact': dlom_impact,
+                'ev': _valuation_basis * applied_multiple,
+                'ref': '³',
+                'description': t.ledger_dlom_desc
+            }) %}
+        {% endif %}
+    {% endif %}
+{% endif %}
+
+{% set _ebitda = _valuation_basis|float %}
+{% set _supports_metric_to_ev_bridge = supports_metric_to_ev_bridge|default(not has_weighted_synthesis and not is_hybrid and not is_dcf_only_methodology) %}
+{% set _ledger_conclusion_basis = valuation_methodology_display|default(t.calib_hybrid_badge if is_hybrid else t.calib_dcf_final_value, true) %}
+{% set _component_ns = namespace(value=0, label=t.report_multiple_label_prefix_hybrid) %}
+{% if has_weighted_synthesis|default(false) and synthesis_contributions|default([]) %}
+    {% for contribution in synthesis_contributions %}
+        {% set _method_key = contribution.method_key|default('')|lower %}
+        {% if 'multiple' in _method_key or _method_key in ['multiples', 'market'] %}
+            {% set _component_ns.value = ((contribution.enterprise_value if synthesis_value_basis|default('equity_value') == 'enterprise_value' else contribution.equity_value)|default(contribution.value_before_bridge|default(0, true), true))|float %}
+            {% set _component_ns.label = contribution.label|default(t.report_multiple_label_prefix_hybrid, true) %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+{% if active_steps and active_steps|length > 0 %}
+<table style="font-size: 6.5pt; width: 100%; table-layout: fixed; page-break-inside: avoid; break-inside: avoid;">
+    <thead>
+        <tr style="background: hsl(224, 15%, 20%); color: white; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+            <th style="padding: 5pt 6pt; text-align: left; width: 40%;">{{ t.ledger_step_column }}</th>
+            <th style="padding: 5pt 6pt; text-align: right; width: 15%;">{{ t.ledger_multiple_column }}</th>
+            <th style="padding: 5pt 6pt; text-align: right; width: 15%;">{{ t.ledger_impact_column }}</th>
+            <th style="padding: 5pt 6pt; text-align: right; width: 15%;">{{ t.ledger_ev_column }}</th>
+            <th style="padding: 5pt 6pt; text-align: left; width: 15%;">{{ t.ledger_ref_column }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% set ns = namespace(row_num=0, last_ev=0, last_multiple=0) %}
+        {% for step in active_steps %}
+        {% set step_multiple = step.multiple|default(0)|float %}
+        {% set step_impact = step.impact|default(0)|float %}
+        {% set step_ev = step.ev|default(0)|float %}
+        {% if step_impact != 0 or step.impact is none or loop.first %}
+        {% set ns.row_num = ns.row_num + 1 %}
+        {# The EV column is a multiple-based ledger: EV = waarderingsbasis ×
+           multiple by definition. Prefer that recompute over any stale
+           engine-provided step.ev — on a hybrid dossier the blended/equity
+           figure can leak into step.ev and make the displayed EV inconsistent.
+           Fall back to the recompute
+           when ev is absent or drifts more than 2% from basis × multiple. #}
+        {% if step_multiple > 0 and _ebitda > 0 %}
+            {% set _recomputed_step_ev = _ebitda * step_multiple %}
+            {% if step_ev <= 0 or ((step_ev - _recomputed_step_ev)|abs > (_recomputed_step_ev * 0.02)) %}
+                {% set step_ev = _recomputed_step_ev %}
+            {% endif %}
+        {% endif %}
+        {% if step_ev > 0 %}{% set ns.last_ev = step_ev %}{% endif %}
+        {% if step_multiple > 0 %}{% set ns.last_multiple = step_multiple %}{% endif %}
+        
+        <tr style="{% if ns.row_num is odd %}background: hsl(40, 15%, 98%);{% endif %}">
+            <td style="padding: 5pt 6pt; word-wrap: break-word; overflow-wrap: break-word;">
+                {{ ns.row_num }}. {{ step.label|default(t.ledger_step_column ~ ' ' ~ ns.row_num) }}
+                {% if step.description %}
+                <span style="display: block; font-size: 5.5pt; color: hsl(224, 10%, 55%); margin-top: 0.5pt;">
+                    {{ step.description }}
+                </span>
+                {% endif %}
+            </td>
+            <td style="padding: 5pt 6pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; {% if loop.first %}font-weight: 700;{% endif %}">
+                {{ step_multiple|safe_round(2) }}×
+            </td>
+            <td style="padding: 5pt 6pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: {% if step_impact != 0 %}{% if step_impact < 0 %}hsl(6, 55%, 50%){% else %}hsl(143, 40%, 42%){% endif %}{% else %}hsl(224, 10%, 55%){% endif %};">
+                {# `+` prefix on positive impacts — sign visible at a glance,
+                   not implied by colour alone (audit round 2). #}
+                {% if step_impact != 0 %}{% if step_impact > 0 %}+{% endif %}{{ step_impact|safe_round(2) }}×{% else %}—{% endif %}
+            </td>
+            <td style="padding: 5pt 6pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">
+                {% if step_ev > 0 %}{{ step_ev|format_currency_compact }}{% else %}—{% endif %}
+            </td>
+            <td style="padding: 5pt 6pt; color: hsl({{ teal_hsl }});">
+                {{ step.ref|default('') }}
+            </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+        
+        {# Conclusion Row — compact two-line layout for A4 fit (short labels: EV, Netto kas, Eigen vermogen) #}
+        {% set _is_synthesis_component_ledger = has_weighted_synthesis|default(false) and not _supports_metric_to_ev_bridge %}
+        {% set _ledger_component_value = _component_ns.value if _component_ns.value > 0 else ns.last_ev %}
+        {% set _ledger_conclusion_value = _ledger_component_value if _is_synthesis_component_ledger and _ledger_component_value > 0 else enterprise_value_mid %}
+        {% set _ledger_conclusion_basis_display = _component_ns.label if _is_synthesis_component_ledger else _ledger_conclusion_basis %}
+        <tr class="calibration-conclusion" style="background: hsl(224, 15%, 10%); -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; page-break-inside: avoid; break-inside: avoid;">
+            <td colspan="5" style="padding: 5pt 10pt; border: none; background: hsl(224, 15%, 10%);">
+                <div style="font-size: 6.5pt; line-height: 1.25;">
+                    <div style="margin-bottom: 2pt;">
+                        <span style="display: inline-block; width: 3pt; height: 12pt; background: hsl({{ teal_hsl }}); border-radius: 2pt; margin-right: 6pt; vertical-align: middle;"></span>
+                        <span style="text-transform: uppercase; letter-spacing: 0.06em; color: hsl(224, 10%, 55%); font-weight: 500;">{{ t.ledger_conclusion }}</span>
+                        <span style="font-weight: 600; color: hsl(40, 12%, 92%); margin: 0 3pt;">{% if _is_synthesis_component_ledger %}{{ t.report_multiple_label_prefix_hybrid }}{% else %}{{ t.ledger_ev_short }}{% endif %}:</span>
+                        {% if _supports_metric_to_ev_bridge %}
+                        <span style="font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl(40, 12%, 75%);">{{ applied_multiple|safe_round(2) }}×</span>
+                        {% else %}
+                        <span style="font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl(40, 12%, 75%);">{{ _ledger_conclusion_basis_display }}</span>
+                        {% endif %}
+                        <span style="color: hsl(224, 10%, 45%); margin: 0 3pt;">→</span>
+                        <span style="font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl({{ teal_hsl }});">{{ _ledger_conclusion_value|format_currency_compact }}</span>
+                    </div>
+                    {% if _is_synthesis_component_ledger and synthesis_weight_summary %}
+                    <div style="padding-left: 11pt; color: hsl(40, 12%, 75%); font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">
+                        {{ t.synthesis_accountant_blend_label }}: {{ synthesis_weight_summary }}
+                    </div>
+                    {% endif %}
+                    {% if has_net_debt_adjustment or has_tax_latencies or has_balance_sheet_adjustments %}
+                    <div style="padding-left: 11pt; color: hsl(40, 12%, 75%); font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">
+                        {% if has_net_debt_adjustment %}{% if bridge_uses_net_cash_label %}{{ t.ledger_net_cash_short }}{% else %}{{ t.ledger_net_debt_short }}{% endif %} {{ bridge_net_debt_operator }} {{ bridge_net_debt_amount|format_currency_compact }}{% endif %}
+                        {% if has_tax_latencies and tax_latency_net_impact and (tax_latency_net_impact|float) != 0 %}{% if has_net_debt_adjustment %} + {% endif %}{{ t.tax_latency_title }} {% if (tax_latency_net_impact|float) >= 0 %}+{% else %}−{% endif %} {{ tax_latency_net_impact|float|abs|format_currency_compact }}{% endif %}
+                        {% if has_balance_sheet_adjustments %}{% for adj in balance_sheet_adjustments %} {% if adj.type == 'add' %}+{% else %}−{% endif %} {{ adj.label }} {{ adj.amount|abs|format_currency_compact }}{% endfor %}{% endif %}
+                        = <strong style="color: hsl({{ teal_hsl }});">{{ t.ledger_equity_short }}{% if is_nav_methodology|default(false) %} ({{ t.ledger_equity_adjusted_parenthetical }}){% endif %} {{ equity_value|format_currency_compact }}</strong>
+                    </div>
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+{% else %}
+<div class="callout callout-warning" style="margin: 16pt 0;">
+    <p style="font-size: 8pt; margin: 0;">
+        {{ t.ledger_no_steps }}
+    </p>
+</div>
+{% endif %}

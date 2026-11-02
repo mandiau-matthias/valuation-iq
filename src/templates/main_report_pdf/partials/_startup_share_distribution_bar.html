@@ -1,0 +1,43 @@
+{#
+    STARTUP VALUATION — SHARE DISTRIBUTION BAR (PDF / WeasyPrint)
+
+    Visual cap-table split that mirrors the Venus wizard's
+    RoundSimulatorStep bar.  PDF twin of
+    `main_report/partials/_startup_share_distribution_bar.html` —
+    same data fields, same 4-segment palette, table-based markup so
+    WeasyPrint renders it identically across versions.  The SAFE
+    segment collapses to 0pt width when no SAFEs are outstanding, so
+    a clean priced-only round renders as a 3-segment bar without
+    conditionals.
+
+    Required context (provided by `startup_report_context.py`):
+      * `startup_report.cap_table_simulator` — caller guards on truthy.
+#}
+{% set sim = startup_report.cap_table_simulator %}
+{% set segments = startup_report.share_distribution_segments|default([]) %}
+{% if sim and segments %}
+<div style="margin: 8pt 0;">
+    <p style="font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #4a5460; margin: 0 0 4pt;">
+        {{ startup_report.t.share_distribution_title }}
+    </p>
+    <table style="width: 100%; border-collapse: collapse; border: 1pt solid #e1e4ea; border-radius: 4pt; table-layout: fixed; height: 28pt;">
+        <tr>
+            {% for segment in segments %}
+            <td style="width: {{ segment.pct }}%; background: {{ segment.color }}; color: white; text-align: center; vertical-align: middle; font-size: 8.5pt; font-weight: 700; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">
+                {% if segment.show_inside_label %}{{ segment.pct|safe_round(0) }}%{% endif %}
+            </td>
+            {% endfor %}
+        </tr>
+    </table>
+    <table style="width: 100%; margin-top: 4pt; border-collapse: collapse;">
+        <tr style="font-size: 8pt; color: #4a5460;">
+            {% for segment in segments %}
+            <td style="padding-right: 8pt; white-space: nowrap;">
+                <span style="display: inline-block; width: 7pt; height: 7pt; background: {{ segment.color }}; margin-right: 4pt; vertical-align: middle;"></span>
+                {{ segment.label }} {{ segment.pct|safe_round(1) }}%
+            </td>
+            {% endfor %}
+        </tr>
+    </table>
+</div>
+{% endif %}

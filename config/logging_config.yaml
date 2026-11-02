@@ -1,0 +1,213 @@
+# Logging Configuration for Valuation Engine
+# Comprehensive logging configuration with financial data formatting,
+# context management, and audit trail capabilities
+
+# Logging Levels
+log_levels:
+  default: "INFO"
+  calculation: "CALCULATION"  # Custom level for calculation steps
+  validation: "VALIDATION"    # Custom level for validation steps
+  audit: "AUDIT"             # Custom level for audit events
+  debug: "DEBUG"
+  info: "INFO"
+  warning: "WARNING"
+  error: "ERROR"
+  critical: "CRITICAL"
+
+# Financial Data Formatting
+financial_formatting:
+  precision: 2                # Decimal places for financial values
+  privacy_mode: false        # Enable privacy mode (hash sensitive values)
+  currency_symbol: "€"       # Currency symbol for formatting
+  sensitive_fields:          # Fields to hash in privacy mode
+    - "revenue"
+    - "ebitda"
+    - "ebit"
+    - "net_income"
+    - "cash"
+    - "debt"
+    - "equity"
+    - "assets"
+    - "liabilities"
+    - "working_capital"
+    - "capex"
+    - "depreciation"
+    - "free_cash_flow"
+    - "enterprise_value"
+    - "equity_value"
+
+# Context Management
+context_management:
+  enabled: true
+  request_tracking: true
+  user_context: true
+  session_tracking: true
+  correlation_ids: true
+  nested_contexts: true
+  performance_metrics: true
+
+# Audit Logging
+audit_logging:
+  enabled: true
+  log_file: "logs/audit.log"
+  max_bytes: 10485760        # 10MB
+  backup_count: 5
+  retention_days: 90
+  compression: true
+  encryption: false          # Set to true for production
+  access_control: true
+
+# Performance Monitoring
+performance_monitoring:
+  enabled: true
+  metrics_logging: true
+  timing_logging: true
+  memory_monitoring: true
+  cpu_monitoring: true
+  throughput_tracking: true
+
+# Error Handling
+error_handling:
+  enabled: true
+  context_capture: true
+  stack_trace: true
+  local_variables: true
+  global_variables: false
+  recovery_strategies: true
+  alerting: true
+
+# Log Rotation
+log_rotation:
+  enabled: true
+  max_bytes: 10485760        # 10MB
+  backup_count: 5
+  compression: true
+  retention_days: 30
+
+# Security
+security:
+  sensitive_data_redaction: true
+  audit_trail: true
+  access_logging: true
+  encryption: false          # Set to true for production
+  secure_storage: false      # Set to true for production
+
+# Development vs Production
+environments:
+  development:
+    log_level: "DEBUG"
+    console_output: true
+    json_output: false
+    pretty_printing: true
+    debug_info: true
+    
+  production:
+    log_level: "INFO"
+    console_output: false
+    json_output: true
+    pretty_printing: false
+    debug_info: false
+    audit_logging: true
+    security:
+      encryption: true
+      secure_storage: true
+
+# Service-Specific Logging
+services:
+  dcf_engine:
+    log_level: "CALCULATION"
+    detailed_logging: true
+    step_by_step: true
+    formula_logging: true
+    input_output_logging: true
+    
+  multiples_engine:
+    log_level: "CALCULATION"
+    detailed_logging: true
+    comparable_selection: true
+    multiple_calculations: true
+    adjustments_logging: true
+    
+  synthesis_engine:
+    log_level: "CALCULATION"
+    detailed_logging: true
+    weight_calculations: true
+    owner_factor_adjustments: true
+    final_valuation: true
+    
+  business_intelligence:
+    log_level: "INFO"
+    type_classification: true
+    methodology_selection: true
+    owner_profiling: true
+    
+  privacy_services:
+    log_level: "AUDIT"
+    data_classification: true
+    sanitization_logging: true
+    privacy_violations: true
+    
+  ml_ai_services:
+    log_level: "INFO"
+    pipeline_logging: true
+    pattern_analysis: true
+    ai_insights: true
+    quality_scoring: true
+    
+  orchestration:
+    log_level: "INFO"
+    workflow_logging: true
+    service_coordination: true
+    result_aggregation: true
+    
+  api_layer:
+    log_level: "INFO"
+    request_logging: true
+    response_logging: true
+    middleware_logging: true
+    performance_metrics: true
+    
+  database:
+    log_level: "INFO"
+    query_logging: true
+    connection_logging: true
+    transaction_logging: true
+    
+  external_services:
+    log_level: "INFO"
+    api_calls: true
+    response_times: true
+    error_rates: true
+
+# Alerting Configuration
+alerting:
+  enabled: true
+  thresholds:
+    error_rate: 0.05         # 5% error rate
+    response_time: 5.0       # 5 seconds
+    memory_usage: 0.8        # 80% memory usage
+    cpu_usage: 0.8           # 80% CPU usage
+  
+  channels:
+    email: false
+    slack: false
+    webhook: false
+    log_file: true
+
+# Monitoring and Observability
+monitoring:
+  enabled: true
+  metrics_collection: true
+  health_checks: true
+  performance_tracking: true
+  error_tracking: true
+  audit_trail: true
+
+# Compliance and Governance
+compliance:
+  gdpr_logging: true
+  data_retention: 90         # days
+  audit_requirements: true
+  privacy_protection: true
+  access_controls: true
+  encryption_requirements: false  # Set to true for production

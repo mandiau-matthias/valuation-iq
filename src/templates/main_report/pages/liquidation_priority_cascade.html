@@ -1,0 +1,128 @@
+{#
+    LIQUIDATION ANALYSIS — PAGE: PRIORITY CASCADE (Section 05)
+
+    Phase 2 — Boek XX WER (BE) / Faillissementswet (NL) statutory
+    waterfall. The insolvency cascade used to anchor every
+    "equity to shareholder" figure. Each tier carries a statutory
+    anchor citation.
+
+    Two scenarios side-by-side: orderly + forced. Renders only when
+    the engine emitted ``priority_cascade_orderly`` (legacy payloads
+    skip this page).
+
+    PDF twin: main_report_pdf/pages/liquidation_priority_cascade.html
+#}
+{% set lr = liquidation_report %}
+{% if lr.priority_cascade_orderly %}
+{% set co = lr.priority_cascade_orderly %}
+{% set cf = lr.priority_cascade_forced %}
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div class="section-header">
+        <span class="section-number">05</span>
+        <h1 class="section-title" style="margin: 0; flex: 1;">{{ lr.t.cascade_section_title }}</h1>
+        <div style="text-align: right;">
+            <span class="badge badge-primary" style="font-size: var(--font-size-xs);">
+                {{ co.subtitle }}
+            </span>
+        </div>
+    </div>
+
+    {% if co.warnings or cf.warnings %}
+    <div class="card" style="padding: var(--space-3); margin-bottom: var(--space-3); border-left: 3px solid hsl(var(--report-warning));">
+        <div style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted));">
+            {{ lr.t.cascade_estimated_buckets_warning }}
+        </div>
+    </div>
+    {% endif %}
+
+    {# Orderly cascade #}
+    <h2 style="font-size: var(--font-size-md); margin-top: var(--space-3); margin-bottom: var(--space-2);">
+        {{ lr.t.scenario_orderly }}
+    </h2>
+    <table style="width: 100%; font-size: var(--font-size-xs); border-collapse: collapse; margin-bottom: var(--space-3);">
+        <thead>
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <th style="text-align: left; padding: var(--space-2) var(--space-1);">{{ lr.t.cascade_col_tier }}</th>
+                <th style="text-align: left; padding: var(--space-2) var(--space-1);">{{ lr.t.cascade_col_anchor }}</th>
+                <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.cascade_col_claim }}</th>
+                <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.cascade_col_recovery }}</th>
+                <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.cascade_col_recovery_rate }}</th>
+                <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.cascade_col_shortfall }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tier in co.tiers %}
+            {# Hide zero-claim tiers — clutter rather than information.
+               A €0 claim line tells the reader nothing useful and pads
+               an already-dense report. The full tier list is still
+               available via the structured payload for downstream
+               consumers (creditor letters, sufficiency memo). #}
+            {% if (tier.claim_amount|float) > 0 %}
+            <tr style="border-bottom: 1px solid hsl(var(--report-border-muted, var(--report-border)));">
+                <td style="padding: var(--space-1);">{{ tier.label }}</td>
+                <td style="padding: var(--space-1); font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">{{ tier.statutory_anchor }}</td>
+                <td style="text-align: right;">€{{ tier.claim_amount|format_eur_amount }}</td>
+                <td style="text-align: right;">€{{ tier.recovery_amount|format_eur_amount }}</td>
+                <td style="text-align: right;">{{ tier.recovery_rate|format_factor_pct(1) }}</td>
+                <td style="text-align: right;">€{{ tier.shortfall|format_eur_amount }}</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+            <tr style="font-weight: 600; border-top: 2px solid hsl(var(--report-border));">
+                <td colspan="2" style="padding: var(--space-2) var(--space-1);">{{ lr.t.cascade_equity_to_shareholders }}</td>
+                <td colspan="3" style="text-align: right;"></td>
+                <td style="text-align: right;">€{{ co.equity_to_shareholders|format_eur_amount }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    {# Forced cascade — symmetric to orderly so the reader can compare
+       column-for-column (audit P0 #5).  Earlier version dropped the
+       Statutory anchor + Shortfall columns and had a colspan-mismatched
+       totals row. #}
+    {% if cf %}
+    <h2 style="font-size: var(--font-size-md); margin-top: var(--space-3); margin-bottom: var(--space-2);">
+        {{ lr.t.scenario_forced }}
+    </h2>
+    <table style="width: 100%; font-size: var(--font-size-xs); border-collapse: collapse; margin-bottom: var(--space-3);">
+        <thead>
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <th style="text-align: left; padding: var(--space-2) var(--space-1);">{{ lr.t.cascade_col_tier }}</th>
+                <th style="text-align: left; padding: var(--space-2) var(--space-1);">{{ lr.t.cascade_col_anchor }}</th>
+                <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.cascade_col_claim }}</th>
+                <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.cascade_col_recovery }}</th>
+                <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.cascade_col_recovery_rate }}</th>
+                <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.cascade_col_shortfall }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tier in cf.tiers %}
+            {% if (tier.claim_amount|float) > 0 %}
+            <tr style="border-bottom: 1px solid hsl(var(--report-border-muted, var(--report-border)));">
+                <td style="padding: var(--space-1);">{{ tier.label }}</td>
+                <td style="padding: var(--space-1); font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">{{ tier.statutory_anchor }}</td>
+                <td style="text-align: right;">€{{ tier.claim_amount|format_eur_amount }}</td>
+                <td style="text-align: right;">€{{ tier.recovery_amount|format_eur_amount }}</td>
+                <td style="text-align: right;">{{ tier.recovery_rate|format_factor_pct(1) }}</td>
+                <td style="text-align: right;">€{{ tier.shortfall|format_eur_amount }}</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+            <tr style="font-weight: 600; border-top: 2px solid hsl(var(--report-border));">
+                <td colspan="2" style="padding: var(--space-2) var(--space-1);">{{ lr.t.cascade_equity_to_shareholders }}</td>
+                <td colspan="3" style="text-align: right;"></td>
+                <td style="text-align: right;">€{{ cf.equity_to_shareholders|format_eur_amount }}</td>
+            </tr>
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if co.sources %}
+    <div style="margin-top: var(--space-3); font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">
+        {{ lr.t.sources_label }}: {{ co.sources|join(' · ') }}
+    </div>
+    {% endif %}
+</div>
+{% endif %}

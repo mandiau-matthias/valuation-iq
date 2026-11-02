@@ -1,0 +1,145 @@
+{#
+    NAV Audit Trail — Screen version
+    ================================
+    Mirrors `main_report_pdf/components/_nav_audit_trail.html`. Same
+    self-gates and same translations; design tokens swap out the
+    inline-pt sizing for `var(--space-*)` / `var(--font-size-*)`.
+#}
+{% if has_nav_audit_trail %}
+{% set _at = nav_audit_trail %}
+<div style="margin-top: var(--space-5); padding: var(--space-3) var(--space-4); border: 1pt solid hsl(var(--report-slate-200)); border-radius: 6pt; background: hsl(0, 0%, 100%);">
+    <div style="margin-bottom: var(--space-2);">
+        <h4 style="font-size: var(--font-size-md); margin: 0 0 2pt 0; color: hsl(var(--report-slate-900));">{{ t.nav_audit_trail_title }}</h4>
+        <p style="margin: 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.45;">
+            {{ t.nav_audit_trail_subtitle }}
+        </p>
+    </div>
+
+    {% if _at.real_estate_revaluation %}
+    {% set _re = _at.real_estate_revaluation %}
+    <div style="margin-bottom: var(--space-2); padding: var(--space-2) var(--space-3); border: 1pt solid hsl(var(--report-slate-100)); border-radius: 4pt; background: hsl(var(--report-surface));">
+        <p style="margin: 0 0 var(--space-1) 0; font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-text-muted));">
+            {{ t.nav_audit_trail_re_card_title }}
+        </p>
+        <table style="width: 100%; font-size: var(--font-size-sm); border-collapse: collapse;">
+            <tr>
+                <td style="width: 33%; color: hsl(var(--report-text-muted)); border: none; padding: 2pt 0;">{{ t.nav_audit_trail_re_book }}</td>
+                <td style="width: 33%; color: hsl(var(--report-text-muted)); border: none; padding: 2pt 0;">{{ t.nav_audit_trail_re_appraisal }}</td>
+                <td style="width: 34%; color: hsl(var(--report-text-muted)); border: none; padding: 2pt 0;">{{ t.nav_audit_trail_re_meerwaarde }}</td>
+            </tr>
+            <tr style="font-family: 'JetBrains Mono', monospace;">
+                <td style="border: none; padding: 2pt 0; font-weight: 600;">{{ _re.book_value|format_currency }}</td>
+                <td style="border: none; padding: 2pt 0; font-weight: 600;">{{ _re.appraisal_value|format_currency }}</td>
+                <td style="border: none; padding: 2pt 0; font-weight: 700; color: hsl({{ '143, 40%, 42%' if _re.meerwaarde and _re.meerwaarde >= 0 else '6, 55%, 50%' }});">
+                    {% if _re.meerwaarde and _re.meerwaarde >= 0 %}+{% endif %}{{ _re.meerwaarde|format_currency }}
+                </td>
+            </tr>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if _at.equipment_revaluation %}
+    {% set _eq = _at.equipment_revaluation %}
+    <div style="margin-bottom: var(--space-2); padding: var(--space-2) var(--space-3); border: 1pt solid hsl(var(--report-slate-100)); border-radius: 4pt; background: hsl(var(--report-surface));">
+        <p style="margin: 0; font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-text-muted));">
+            {{ t.nav_audit_trail_eq_card_title }}
+        </p>
+        <p style="margin: 0 0 var(--space-1) 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">
+            {% if _eq.method == 'user_supplied_economic_book' %}
+                {{ t.nav_audit_trail_eq_subtitle_user }}
+            {% else %}
+                {{ t.nav_audit_trail_eq_subtitle_straight_line }}{% if _eq.age_years is defined and _eq.age_years is not none %} — {{ t.nav_audit_trail_eq_age_label }} {{ _eq.age_years }}y{% if _eq.economic_useful_life_years %} / {{ t.nav_audit_trail_eq_life_label }} {{ _eq.economic_useful_life_years }}y{% endif %}{% endif %}.
+            {% endif %}
+        </p>
+        <table style="width: 100%; font-size: var(--font-size-sm); border-collapse: collapse;">
+            <tr>
+                <td style="width: 25%; color: hsl(var(--report-text-muted)); border: none; padding: 2pt 0;">{{ t.nav_audit_trail_eq_original_cost }}</td>
+                <td style="width: 25%; color: hsl(var(--report-text-muted)); border: none; padding: 2pt 0;">{{ t.nav_audit_trail_eq_tax_book }}</td>
+                <td style="width: 25%; color: hsl(var(--report-text-muted)); border: none; padding: 2pt 0;">{{ t.nav_audit_trail_eq_economic_book }}</td>
+                <td style="width: 25%; color: hsl(var(--report-text-muted)); border: none; padding: 2pt 0;">{{ t.nav_audit_trail_eq_meerwaarde }}</td>
+            </tr>
+            <tr style="font-family: 'JetBrains Mono', monospace;">
+                <td style="border: none; padding: 2pt 0;">{% if _eq.original_cost is not none %}{{ _eq.original_cost|format_currency }}{% else %}—{% endif %}</td>
+                <td style="border: none; padding: 2pt 0;">{% if _eq.tax_book_value is not none %}{{ _eq.tax_book_value|format_currency }}{% else %}—{% endif %}</td>
+                <td style="border: none; padding: 2pt 0;">{% if _eq.economic_book_value is not none %}{{ _eq.economic_book_value|format_currency }}{% else %}—{% endif %}</td>
+                <td style="border: none; padding: 2pt 0; font-weight: 700; color: hsl({{ '143, 40%, 42%' if _eq.meerwaarde and _eq.meerwaarde >= 0 else '6, 55%, 50%' }});">
+                    {% if _eq.meerwaarde is not none %}{% if _eq.meerwaarde >= 0 %}+{% endif %}{{ _eq.meerwaarde|format_currency }}{% else %}—{% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if _at.deferred_tax_breakdown %}
+    {% set _asset_labels = {
+        'real_estate': t.nav_asset_class_real_estate,
+        'inventory': t.nav_asset_class_inventory,
+        'receivables': t.nav_asset_class_receivables,
+        'hidden_reserves': t.nav_asset_class_hidden_reserves,
+        'other_revaluations': t.nav_asset_class_other_revaluations,
+    } %}
+    {% set _rate_source_labels = {
+        'user_override': t.nav_rate_source_user_override,
+        'global_user_rate': t.nav_rate_source_global_user_rate,
+        'engine_default_per_asset': t.nav_rate_source_engine_default_per_asset,
+        'engine_default_global': t.nav_rate_source_engine_default_global,
+    } %}
+    <div style="margin-bottom: var(--space-2);">
+        <p style="margin: 0 0 var(--space-1) 0; font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-text-muted));">
+            {{ t.nav_audit_trail_dtb_title }}
+        </p>
+        <table style="width: 100%; font-size: var(--font-size-sm); border-collapse: collapse;">
+            <thead>
+                <tr style="background: hsl(var(--report-surface));">
+                    <th style="text-align: left; padding: 4pt 6pt; font-weight: 600; color: hsl(var(--report-text-muted)); border-bottom: 1pt solid hsl(var(--report-slate-100));">{{ t.nav_audit_trail_dtb_asset_class }}</th>
+                    <th style="text-align: right; padding: 4pt 6pt; font-weight: 600; color: hsl(var(--report-text-muted)); border-bottom: 1pt solid hsl(var(--report-slate-100));">{{ t.nav_audit_trail_dtb_meerwaarde }}</th>
+                    <th style="text-align: right; padding: 4pt 6pt; font-weight: 600; color: hsl(var(--report-text-muted)); border-bottom: 1pt solid hsl(var(--report-slate-100));">{{ t.nav_audit_trail_dtb_rate }}</th>
+                    <th style="text-align: right; padding: 4pt 6pt; font-weight: 600; color: hsl(var(--report-text-muted)); border-bottom: 1pt solid hsl(var(--report-slate-100));">{{ t.nav_audit_trail_dtb_deferred_tax }}</th>
+                    <th style="text-align: right; padding: 4pt 6pt; font-weight: 600; color: hsl(var(--report-text-muted)); border-bottom: 1pt solid hsl(var(--report-slate-100));">{{ t.nav_audit_trail_dtb_source }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in _at.deferred_tax_breakdown %}
+                <tr>
+                    <td style="padding: 3pt 6pt;">{{ _asset_labels.get(row.asset_class, row.asset_class) }}</td>
+                    <td style="padding: 3pt 6pt; text-align: right; font-family: 'JetBrains Mono', monospace;">{{ row.meerwaarde|format_currency }}</td>
+                    <td style="padding: 3pt 6pt; text-align: right; font-family: 'JetBrains Mono', monospace;">{{ row.rate_pct|safe_round(1) }}%</td>
+                    <td style="padding: 3pt 6pt; text-align: right; font-family: 'JetBrains Mono', monospace; color: hsl(6, 55%, 50%);">−{{ row.deferred_tax|format_currency }}</td>
+                    <td style="padding: 3pt 6pt; text-align: right; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">{{ _rate_source_labels.get(row.rate_source, row.rate_source) }}</td>
+                </tr>
+                {% endfor %}
+                {% if _at.tax_latency_deduction %}
+                <tr style="background: hsl(var(--report-surface)); font-weight: 600;">
+                    <td colspan="3" style="padding: 4pt 6pt; border-top: 1pt solid hsl(var(--report-slate-100));">
+                        {{ t.nav_audit_trail_dtb_total }}{% if _at.effective_tax_latency_pct %}<span style="margin-left: 4pt; font-weight: 400; color: hsl(var(--report-text-muted));">({{ t.nav_audit_trail_dtb_effective_label }} {{ _at.effective_tax_latency_pct|safe_round(1) }}%)</span>{% endif %}
+                    </td>
+                    <td colspan="2" style="padding: 4pt 6pt; text-align: right; font-family: 'JetBrains Mono', monospace; color: hsl(6, 55%, 50%); border-top: 1pt solid hsl(var(--report-slate-100));">−{{ _at.tax_latency_deduction|format_currency }}</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if _at.sme_eligibility %}
+    {% set _sme = _at.sme_eligibility %}
+    <div style="padding: var(--space-2) var(--space-3); border: 1pt solid hsl(var(--report-slate-100)); border-radius: 4pt; background: hsl(var(--report-surface));">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-1);">
+            <p style="margin: 0; font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-text-muted));">
+                {{ t.nav_audit_trail_sme_title }}
+            </p>
+            <span style="padding: 2pt 6pt; border-radius: 8pt; font-size: var(--font-size-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: hsl({{ '143, 40%, 42%' if _sme.is_eligible else '224, 10%, 50%' }}); background: hsla({{ '143, 40%, 42%' if _sme.is_eligible else '224, 10%, 50%' }}, 0.12);">
+                {{ _sme.rate_pct|safe_round(0) }}% · {% if _sme.is_eligible %}{{ t.nav_audit_trail_sme_eligible }}{% else %}{{ t.nav_audit_trail_sme_standard }}{% endif %}
+            </span>
+        </div>
+        {% if _sme.reasons %}
+        <ul style="margin: 0; padding-left: 12pt; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.45;">
+            {% for reason in _sme.reasons %}
+            <li>{{ reason }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endif %}

@@ -1,0 +1,155 @@
+{% if valuation_run_hash|default(false) %}
+{% include "shared/canonical_sensitivity_table.html" %}
+{% else %}
+{#
+    SENSITIVITY TABLE COMPONENT
+    3x3 matrix: basis variations x multiple variations = Enterprise Value
+
+    The basis (EBITDA / SDE / Revenue) is selected based on the active
+    methodology so the matrix renders coherently for every channel.
+
+    All inline styles use hardcoded values for WeasyPrint compatibility.
+
+    Expected context variables:
+    - multiple_metric_type ('EBITDA' | 'SDE' | 'REVENUE' | ...)
+    - sustainable_ebitda / sde_value / revenue / valuation_basis_value
+    - applied_multiple, multiple_low, multiple_high
+    - net_debt (optional, for footnote)
+#}
+
+{% set _metric_type = (multiple_metric_type|default('EBITDA'))|upper %}
+{% if _metric_type == 'SDE' %}
+    {% set _basis = (sde_value|default(valuation_basis_value)|default(0))|float %}
+    {% set _basis_header = t.sensitivity_ebitda_multiple_header|replace('EBITDA', 'SDE') %}
+{% elif _metric_type == 'REVENUE' %}
+    {% set _basis = (revenue|default(valuation_basis_value)|default(0))|float %}
+    {% set _basis_header = t.sensitivity_ebitda_multiple_header|replace('EBITDA', t.exec_revenue_label|default('Revenue')) %}
+{% else %}
+    {% set _basis = (sustainable_ebitda|default(valuation_basis_value)|default(0))|float %}
+    {% set _basis_header = t.sensitivity_ebitda_multiple_header %}
+{% endif %}
+
+{% set _mult = applied_multiple|default(base_multiple)|default(0)|float %}
+
+{% if not _basis or _basis <= 0 %}
+<div class="callout callout-warning" style="margin-top: 16pt;">
+    <p style="font-size: 8pt; margin: 0;">
+        {{ t.warning_zero_ebitda }}
+    </p>
+</div>
+{% endif %}
+
+{% if _basis > 0 and _mult > 0 %}
+{# Engine-supplied multiple band when present; ±20% illustrative fallback
+   labelled explicitly in the caption when not. Round-2 audit fix: the
+   silent-fabricated band misled M&A reviewers. #}
+{% set _engine_mult_low = multiple_low|default(none) %}
+{% set _engine_mult_high = multiple_high|default(none) %}
+{% set _has_engine_band = _engine_mult_low is not none and _engine_mult_high is not none and (_engine_mult_low|float) > 0 and (_engine_mult_high|float) > 0 and (_engine_mult_low|float) < (_engine_mult_high|float) %}
+<div class="sensitivity-table" style="margin-top: 10pt; page-break-inside: avoid;">
+    <h3 style="font-size: 10pt; margin-bottom: 6pt;">{{ t.sensitivity_title }}</h3>
+    <p style="font-size: 7.5pt; color: hsl(224, 10%, 50%); margin-bottom: 8pt;">
+        {{ t.sensitivity_description }}
+        {% if not _has_engine_band %}
+        <span style="font-style: italic; color: hsl(37, 65%, 45%);">
+            {{ t.sensitivity_illustrative_note|default('(±20% illustratieve band — modelmultiple-bandbreedte niet beschikbaar voor dit rapport.)') }}
+        </span>
+        {% endif %}
+    </p>
+
+    {% set basis_low = _basis * 0.8 %}
+    {% set basis_mid = _basis %}
+    {% set basis_high = _basis * 1.2 %}
+
+    {% set mult_low = (_engine_mult_low|float) if _has_engine_band else (_mult * 0.80) %}
+    {% set mult_mid = _mult %}
+    {% set mult_high = (_engine_mult_high|float) if _has_engine_band else (_mult * 1.20) %}
+
+    {% set basis_variations = [
+        {'factor': 0.8, 'label': '-20%', 'basis': basis_low},
+        {'factor': 1.0, 'label': t.sensitivity_base, 'basis': basis_mid, 'is_base': true},
+        {'factor': 1.2, 'label': '+20%', 'basis': basis_high}
+    ] %}
+
+    {% set mult_variations = [
+        {'mult': mult_low, 'label': t.sensitivity_low},
+        {'mult': mult_mid, 'label': t.sensitivity_base, 'is_base': true},
+        {'mult': mult_high, 'label': t.sensitivity_high}
+    ] %}
+
+    <table style="font-size: 7.5pt; margin: 10pt 0 6pt 0;">
+        <thead>
+            <tr>
+                <th class="header-dark" style="background: hsl(224, 15%, 20%); color: white; padding: 6pt 8pt;">
+                    {{ _basis_header }}
+                </th>
+                {% for m in mult_variations %}
+                <th style="text-align: center; padding: 6pt 8pt;">
+                    {{ m.mult|safe_round(2) }}×
+                    <span style="display: block; font-size: 7pt; color: {% if m.is_base %}hsl({{ teal_hsl }}){% else %}hsl(224, 10%, 55%){% endif %};">
+                        {{ m.label }}
+                    </span>
+                </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for b in basis_variations %}
+            <tr{% if b.is_base %} class="row-highlight" style="background: hsla({{ teal_hsl }}, 0.08);"{% endif %}>
+                <td style="font-weight: 600; padding: 6pt 8pt;">
+                    {{ b.basis|format_currency }}
+                    {% if b.is_base %}
+                    <span style="font-size: 7pt; color: hsl({{ teal_hsl }}); margin-left: 4pt;">{{ t.sensitivity_base }}</span>
+                    {% else %}
+                    <span style="font-size: 7pt; color: hsl(224, 10%, 55%); margin-left: 4pt;">{{ b.label }}</span>
+                    {% endif %}
+                </td>
+                {% for m in mult_variations %}
+                {% set cell_value = b.basis * m.mult %}
+                {% set is_center = b.is_base and m.is_base %}
+                <td class="text-right tabular{% if is_center %} cell-highlight{% endif %}" style="padding: 6pt 8pt;{% if is_center %} background: hsla({{ teal_hsl }}, 0.15); font-weight: 700; color: hsl({{ teal_hsl }});{% endif %}">
+                    {{ cell_value|format_currency_compact }}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {# Corner-of-corner extremes — explicitly labelled (audit round 2). #}
+    {% set min_value = basis_low * mult_low %}
+    {% set max_value = basis_high * mult_high %}
+    {% set valid_range = min_value and max_value and min_value < max_value %}
+    {% if valid_range %}
+    <p style="font-size: 6.5pt; color: hsl(224, 10%, 55%); margin-top: 6pt; font-style: italic;">
+        {{ t.sensitivity_corner_label|default('Scenario corners (low × low → high × high)') }}: {{ min_value|format_currency_compact }} — {{ max_value|format_currency_compact }}
+        {% if has_net_debt_adjustment %}
+        (EV; {{ t.exec_ev_bridge_equity_label }}: EV {{ bridge_net_debt_operator }} {{ bridge_net_debt_amount|format_currency_compact }})
+        {% endif %}
+    </p>
+    {% endif %}
+
+    {# Name the engine confidence-spread alongside the sensitivity corners so
+       a reviewer doesn't conflate the two. See the screen twin for the
+       synthesis-parity rationale. #}
+    {% if has_weighted_synthesis and synthesis_valuation_low is defined and synthesis_valuation_high is defined %}
+        {% set _engine_low = synthesis_valuation_low %}
+        {% set _engine_high = synthesis_valuation_high %}
+    {% else %}
+        {% set _engine_low = valuation_low if valuation_low is defined else none %}
+        {% set _engine_high = valuation_high if valuation_high is defined else none %}
+    {% endif %}
+    {% if _engine_low is not none and _engine_high is not none
+          and (_engine_low|float) > 0 and (_engine_high|float) > 0
+          and (_engine_low|float) < (_engine_high|float) %}
+    <p style="font-size: 6.5pt; color: hsl(224, 10%, 45%); margin-top: 3pt; font-style: italic;">
+        {{ t.sensitivity_provenance_note_template.format(
+            engine_low=_engine_low|format_currency_compact,
+            engine_high=_engine_high|format_currency_compact,
+        ) }}
+    </p>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endif %}

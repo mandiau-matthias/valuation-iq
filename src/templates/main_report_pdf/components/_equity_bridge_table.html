@@ -1,0 +1,215 @@
+{#
+    Equity Bridge Table — EV to Aandelenwaarde (Eigen Vermogen)
+
+    Renders an itemized table showing how Enterprise Value is adjusted
+    to arrive at Equity Value (Aandelenwaarde).
+
+    Context variables:
+      - show_ev_equity_bridge (bool)
+      - enterprise_value_mid (number)
+      - has_net_debt_adjustment (bool)
+      - bridge_net_debt_operator (string: "−" or "+")
+      - bridge_net_debt_amount (number)
+      - bridge_uses_net_cash_label (bool)
+      - has_tax_latencies (bool)
+      - tax_latency_net_impact (number)
+      - has_balance_sheet_adjustments (bool)
+      - balance_sheet_adjustments (list of dicts: id, label, amount, type, category)
+      - bridge_nwc_adjustment (number)
+      - has_bridge_residual (bool)
+      - bridge_residual_operator (string: "+" or "−")
+      - bridge_residual_amount (number)
+      - equity_value (number)
+      - teal_dark_hsl (string)
+      - t.* (translation keys)
+#}
+{% if show_ev_equity_bridge %}
+{# The top line of the bridge is "Ondernemingswaarde (EV)" for earnings-based
+   methods, but on an asset/NAV or yield dossier the figure being bridged is the
+   adjusted net asset value / property market value — NOT an enterprise value.
+   Label it accordingly (inline + locale-aware, no new translation keys) so a
+   NAV figure is never called "EV before net debt". #}
+{% set _br_asset = is_asset_methodology|default(is_asset_anchored_methodology|default(false)) %}
+{% set _br_yield = is_yield_methodology|default(false) %}
+{% set _br_en = ((locale|default('nl'))|lower)[:2] == 'en' %}
+{% set _br_fr = ((locale|default('nl'))|lower)[:2] == 'fr' %}
+{% if _br_yield %}
+{% set _bridge_top_label = ('Valeur de marché immobilière (revenus)' if _br_fr else ('Property market value (income)' if _br_en else 'Vastgoed-marktwaarde (inkomen)')) %}
+{% elif _br_asset %}
+{% set _bridge_top_label = ('Valeur substantielle (brute)' if _br_fr else ('Substance value (gross)' if _br_en else 'Substantiewaarde (bruto)')) %}
+{% else %}
+{% set _bridge_top_label = t.exec_ev_bridge_ev_label %}
+{% endif %}
+{% if _br_asset or _br_yield %}
+{% set _bridge_title = ('Pont valeur → capitaux propres' if _br_fr else ('Value → equity bridge' if _br_en else 'Brug naar eigen vermogen')) %}
+{% else %}
+{% set _bridge_title = t.exec_ev_bridge_title %}
+{% endif %}
+{# An illustrative bridge is a balance-sheet-dated statement: name the date so
+   an August report cannot read as a current equity position. #}
+{% if equity_bridge_is_illustrative|default(false) and financial_reference_date %}
+{% set _bridge_title = _bridge_title ~ (' au ' if _br_fr else (' as at ' if _br_en else ' per ')) ~ financial_reference_date|format_date(locale|default('nl')) %}
+{% endif %}
+<div class="equity-bridge" style="margin-top: 8pt; padding: 8pt 10pt; background: hsl(40, 15%, 98%); border-radius: 4pt; border: 1pt solid hsl(224, 10%, 90%); -webkit-print-color-adjust: exact; print-color-adjust: exact; break-inside: avoid; page-break-inside: avoid;">
+    <p style="font-size: 7pt; margin: 0 0 6pt 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(224, 10%, 45%);">
+        {{ _bridge_title }}
+    </p>
+    {% if equity_bridge_is_illustrative|default(false) %}
+    <p style="font-size: 7pt; margin: 0 0 6pt 0; line-height: 1.4; color: hsl(35, 60%, 38%);">
+        {% if _br_fr %}Illustration uniquement — ne constitue pas une conclusion sur le produit net. À confirmer pour la trésorerie restreinte, les contrats de location, les éléments assimilés à la dette, le fonds de roulement normalisé et les comptes de clôture.{% elif _br_en %}Illustration only — not an estimate of net sale proceeds. Before minimum operating cash; subject to confirmation of restricted cash, leases, debt-like items (including shareholder accounts and tax/social liabilities), normalized working capital and completion accounts.{% else %}Uitsluitend illustratief — geen raming van de netto-verkoopopbrengst. Vóór minimum operationele kas; te bevestigen voor geblokkeerde kasmiddelen, leases, schuldachtige posten (waaronder aandeelhoudersrekeningen en fiscale/sociale passiva), genormaliseerd werkkapitaal en completion accounts.{% endif %}
+    </p>
+    {% endif %}
+
+    <table style="width: 100%; border-collapse: collapse; font-size: 8pt; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">
+        {# EV / NAV / property-value row #}
+        <tr>
+            <td style="padding: 3pt 0; color: hsl(224, 10%, 45%); border: none;">{{ _bridge_top_label }}</td>
+            <td style="padding: 3pt 0; text-align: right; font-weight: 600; border: none;">{{ enterprise_value_mid|format_currency }}</td>
+        </tr>
+
+        {# Operating-cash carve-out disclosure (audit 2026-06-10 F06): when the
+           engine held back a size-tiered operating-cash buffer, decompose the
+           net line so the printed label can never contradict the balance
+           sheet. These rows are informative (they decompose the net-debt line
+           below); the aggregator only sets show_bridge_cash_split when they
+           reproduce that line to the euro. Inline + locale-aware. #}
+        {% if show_bridge_cash_split|default(false) %}
+        <tr>
+            <td style="padding: 2pt 0 2pt 8pt; color: hsl(224, 10%, 58%); border: none; font-size: 7pt;">
+                {% if _br_fr %}Trésorerie et équivalents{% elif _br_en %}Cash and equivalents{% else %}Kas en kasequivalenten{% endif %}
+            </td>
+            <td style="padding: 2pt 0; text-align: right; color: hsl(224, 10%, 58%); border: none; font-size: 7pt;">{{ bridge_cash_total|format_currency }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 2pt 0 2pt 8pt; color: hsl(224, 10%, 58%); border: none; font-size: 7pt;">
+                − {% if _br_fr %}Trésorerie opérationnelle conservée (seuil omzet/omvang){% elif _br_en %}Operating cash retained (size-tiered revenue threshold){% else %}Aangehouden operationele kas (omzet-/omvangsdrempel){% endif %}
+            </td>
+            <td style="padding: 2pt 0; text-align: right; color: hsl(224, 10%, 58%); border: none; font-size: 7pt;">{{ bridge_operating_cash_held|format_currency }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 2pt 0 2pt 8pt; color: hsl(224, 10%, 58%); border: none; font-size: 7pt;">
+                = {% if _br_fr %}Trésorerie excédentaire{% elif _br_en %}Excess cash{% else %}Overtollige kas{% endif %}
+            </td>
+            <td style="padding: 2pt 0; text-align: right; color: hsl(224, 10%, 58%); border: none; font-size: 7pt;">{{ bridge_excess_cash|format_currency }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 2pt 0 2pt 8pt; color: hsl(224, 10%, 58%); border: none; font-size: 7pt;">
+                − {% if _br_fr %}Dette financière (brute){% elif _br_en %}Interest-bearing debt (gross){% else %}Rentedragende schuld (bruto){% endif %}
+            </td>
+            <td style="padding: 2pt 0; text-align: right; color: hsl(224, 10%, 58%); border: none; font-size: 7pt;">{{ bridge_ib_debt|format_currency }}</td>
+        </tr>
+        {% endif %}
+
+        {# Net debt row — render whenever the engine flagged the bridge has a
+           net-debt component, regardless of magnitude. (Older threshold of >=1
+           silently dropped sub-€1 values that were still meaningful when paired
+           with sign-bearing operators.) #}
+        {% if has_net_debt_adjustment and bridge_net_debt_amount is not none and bridge_net_debt_amount != 0 %}
+        <tr>
+            <td style="padding: 3pt 0; color: hsl(224, 10%, 45%); border: none;">
+                {{ bridge_net_debt_operator }}
+                {% if bridge_uses_net_cash_label %}{{ t.exec_ev_bridge_net_cash_label }}{% else %}{{ t.exec_ev_bridge_net_debt_label }}{% endif %}
+            </td>
+            <td style="padding: 3pt 0; text-align: right; font-weight: 600; border: none;">{{ bridge_net_debt_amount|format_currency }}</td>
+        </tr>
+        {% endif %}
+
+        {# Tax latencies row #}
+        {% if has_tax_latencies and tax_latency_net_impact and (tax_latency_net_impact|float) != 0 %}
+        <tr>
+            <td style="padding: 3pt 0; color: hsl(224, 10%, 45%); border: none;">
+                {% if (tax_latency_net_impact|float) >= 0 %}+{% else %}−{% endif %}
+                {{ t.tax_latency_title }}{{ t.tax_latency_equity_bridge_qualifier }}
+            </td>
+            <td style="padding: 3pt 0; text-align: right; font-weight: 600; border: none;">{{ tax_latency_net_impact|float|abs|format_currency }}</td>
+        </tr>
+        {% endif %}
+
+        {# Balance sheet adjustments #}
+        {% if has_balance_sheet_adjustments %}
+        {% for adj in balance_sheet_adjustments %}
+        <tr>
+            <td style="padding: 3pt 0; color: hsl(224, 10%, 45%); border: none;">
+                {% if adj.type == 'add' %}+{% else %}−{% endif %}
+                {{ adj.label }}
+                {% if adj.account_code %}
+                <span style="display: inline-block; margin-left: 4pt; color: hsl(224, 10%, 60%); font-size: 7pt;">
+                    ({{ adj.account_code }})
+                </span>
+                {% endif %}
+            </td>
+            <td style="padding: 3pt 0; text-align: right; font-weight: 600; border: none;">{{ adj.amount|abs|format_currency }}</td>
+        </tr>
+        {% endfor %}
+        {% endif %}
+
+        {# NWC adjustment row #}
+        {% if bridge_nwc_adjustment and bridge_nwc_adjustment != 0 %}
+        <tr>
+            <td style="padding: 3pt 0; color: hsl(224, 10%, 45%); border: none;">
+                {% if bridge_nwc_adjustment >= 0 %}+{% else %}−{% endif %}
+                {{ t.exec_ev_bridge_nwc_label }}
+            </td>
+            <td style="padding: 3pt 0; text-align: right; font-weight: 600; border: none;">{{ bridge_nwc_adjustment|abs|format_currency }}</td>
+        </tr>
+        {% endif %}
+
+        {# A reconciliation difference is a diagnostic, not an observed
+           financial adjustment. Never hide it by materiality or method. #}
+        {% if has_bridge_residual %}
+        <tr>
+            <td style="padding: 3pt 0; color: hsl(224, 10%, 45%); border: none;">
+                {{ bridge_residual_operator }} {{ bridge_residual_label|default(t.exec_ev_bridge_residual_label) }}
+            </td>
+            <td style="padding: 3pt 0; text-align: right; font-weight: 600; border: none;">{{ bridge_residual_amount|format_currency }}</td>
+        </tr>
+        {% endif %}
+
+        {# Equity total row #}
+        <tr style="border-top: 1pt solid hsl(224, 10%, 85%);">
+            <td style="padding: 5pt 0 3pt 0; font-weight: 700; color: hsl({{ teal_dark_hsl }}); border: none;">
+                = {{ t.exec_ev_bridge_equity_label }}
+                {% if is_nav_methodology|default(false) %} ({{ t.ledger_equity_adjusted_parenthetical }}){% endif %}
+            </td>
+            <td style="padding: 5pt 0 3pt 0; text-align: right; font-weight: 700; color: hsl({{ teal_dark_hsl }}); border: none;">{{ equity_value|format_currency }}</td>
+        </tr>
+        {# Consolidated group with a booked third-party (minority) interest: deduct
+           it explicitly so the seller-attributable equity is shown as a number,
+           not only disclosed in prose. The booked
+           amount is the current best estimate; the final figure depends on the
+           confirmed ownership %. #}
+        {% if minority_interest_amount and minority_interest_amount > 0 and minority_seller_equity %}
+        <tr>
+            <td style="padding: 3pt 0; color: hsl(35, 55%, 40%); border: none;">
+                − {% if _br_fr %}Intérêts minoritaires (part du résultat comptabilisée — indicative){% elif _br_en %}Minority interest (booked result share — indicative){% else %}Minderheidsbelang (geboekt resultaataandeel — indicatief){% endif %}
+            </td>
+            <td style="padding: 3pt 0; text-align: right; font-weight: 600; color: hsl(35, 55%, 40%); border: none;">{{ minority_interest_amount|format_currency }}</td>
+        </tr>
+        <tr style="border-top: 1pt solid hsl(224, 10%, 85%);">
+            <td style="padding: 5pt 0 3pt 0; font-weight: 700; color: hsl(35, 55%, 36%); border: none;">
+                = {% if _br_fr %}Capitaux propres attribuables au vendeur (après minoritaires){% elif _br_en %}Seller-attributable equity (after minority){% else %}Verkoper-toerekenbaar eigen vermogen (na minderheid){% endif %}
+            </td>
+            <td style="padding: 5pt 0 3pt 0; text-align: right; font-weight: 700; color: hsl(35, 55%, 36%); border: none;">{{ minority_seller_equity|format_currency }}</td>
+        </tr>
+        {% endif %}
+    </table>
+    {% if show_bridge_cash_split|default(false) %}
+    <p style="margin: 6pt 0 0 0; font-size: 7pt; line-height: 1.45; color: hsl(224, 10%, 55%);">
+        {% if _br_fr %}La ligne nette ne compense que la trésorerie excédentaire avec la dette financière ; la trésorerie opérationnelle conservée reste dans l'entreprise (seuil dépendant de la taille, calculé sur le chiffre d'affaires).{% elif _br_en %}The net line only nets the excess cash against interest-bearing debt; the retained operating cash stays in the business (size-dependent threshold computed on revenue).{% else %}De netto-lijn verrekent uitsluitend de overtollige kas met de rentedragende schuld; de aangehouden operationele kas blijft in de onderneming (omvangsafhankelijke drempel, berekend op de omzet).{% endif %}
+    </p>
+    {% endif %}
+    {# Ownership-% + flow-vs-stock caveat: the deduction uses the BOOKED
+       current-year result share (a P&L flow) as an indicative proxy. The
+       definitive minority haircut is the third party's share of consolidated
+       EQUITY (a balance-sheet stock) at the confirmed ownership % — typically
+       larger, so this proxy is conservative. Stated precisely so a buyer's
+       advisor cannot mistake the proxy for definitive seller equity. #}
+    {% if minority_interest_pending %}
+    <p style="margin: 6pt 0 0 0; font-size: 7pt; line-height: 1.45; color: hsl(35, 60%, 38%);">
+        {% if _br_fr %}La déduction utilise la part minoritaire comptabilisée du résultat de l'exercice comme approximation indicative ; la valeur définitive attribuable au vendeur correspond à la part des tiers dans les capitaux propres consolidés au pourcentage de détention confirmé, à valider avec le conseiller.{% elif _br_en %}The deduction uses the booked current-year minority share of result as an indicative proxy; the definitive seller-attributable value is the third-party share of consolidated equity at the confirmed ownership %, to be agreed with the advisor.{% else %}De aftrek gebruikt het geboekte minderheidsaandeel in het resultaat van het boekjaar als indicatieve benadering; de definitieve verkoper-toerekenbare waarde is het belang van derden in het geconsolideerde eigen vermogen tegen het bevestigde eigendomspercentage, af te stemmen met de adviseur.{% endif %}
+    </p>
+    {% endif %}
+</div>
+{% endif %}
+
+{% include "shared/components/sde_synthesis_disclosure.html" %}

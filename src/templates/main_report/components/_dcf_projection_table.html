@@ -1,0 +1,163 @@
+{#
+    DCF PROJECTION TABLE COMPONENT — Screen version (Aurora Clarity)
+
+    Renders the 5-year FCFF buildup table:
+    Revenue → Growth → EBITDA → EBIT → Taxes → CapEx → ΔNWC → FCFF
+    Discount Factor → PV(FCFF)
+
+    Expected context:
+    - dcf_projection_detail (list of dicts, one per year, with keys:
+        year, revenue, ebitda, ebit, taxes, capex, nwc_change, free_cash_flow, growth_rate)
+    - dcf_fcf_projections (list of Decimal, fallback when detail not available)
+    - dcf_pv_fcf_projections (list of Decimal)
+    - dcf_wacc (float)
+    - t (ReportTranslations)
+    - teal_hsl (string)
+#}
+{% set detail = dcf_projection_detail %}
+{% set fcf_list = dcf_fcf_projections|default([]) %}
+{% set pv_list = dcf_pv_fcf_projections|default([]) %}
+{% set wacc = dcf_wacc|default(0.10)|float %}
+{% set n_years = detail|length if detail else fcf_list|length %}
+
+{% if n_years > 0 %}
+<div style="margin-top: var(--space-6); page-break-inside: avoid;">
+    <h4 style="font-size: 9.5pt; margin: 0 0 var(--space-3) 0; color: hsl(var(--report-slate-900));">
+        {{ t.dcf_projection_table_title }}
+    </h4>
+
+    {# table-layout: fixed pins the year columns to an equal share so a
+       6–10-year projection or billion-scale figures can't widen the table past
+       the content column (over-wide cells wrap rather than push years off-page
+       / force a horizontal scroll that clips on print). #}
+    <table style="width: 100%; table-layout: fixed; font-size: var(--font-size-sm); border-collapse: collapse;">
+        <thead>
+            <tr style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                <th style="text-align: left; padding: 6pt 8pt; background: hsl(var(--report-slate-800)); color: white; width: 22%;">&nbsp;</th>
+                {% for i in range(n_years) %}
+                <th style="text-align: right; padding: 6pt 8pt; background: hsl(var(--report-slate-800)); color: white; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em;">
+                    {% if detail and detail[i] and detail[i].year %}{{ detail[i].year }}{% else %}{{ t.calib_dcf_projection_years }} {{ i + 1 }}{% endif %}
+                </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% if detail %}
+            {# Revenue — primary row #}
+            <tr>
+                <td style="padding: 4pt 8pt; font-weight: 500; color: hsl(var(--report-slate-800));">{{ t.dcf_row_revenue }}</td>
+                {% for row in detail %}
+                <td style="text-align: right; padding: 4pt 8pt; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-slate-800));">{{ row.revenue|format_currency }}</td>
+                {% endfor %}
+            </tr>
+            {# Growth % — subordinate row #}
+            <tr style="background: hsl(var(--report-surface));">
+                <td style="padding: 3pt 8pt; color: hsl(var(--report-text-muted)); font-size: var(--font-size-xs); font-style: italic;">{{ t.dcf_row_growth }}</td>
+                {% for row in detail %}
+                <td style="text-align: right; padding: 3pt 8pt; font-family: 'JetBrains Mono', monospace; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">{{ ((row.growth_rate|default(0)|float) * 100)|safe_round(1) }}%</td>
+                {% endfor %}
+            </tr>
+            {# EBITDA — primary row #}
+            <tr>
+                <td style="padding: 4pt 8pt; font-weight: 500; color: hsl(var(--report-slate-800));">{{ t.dcf_row_ebitda }}</td>
+                {% for row in detail %}
+                <td style="text-align: right; padding: 4pt 8pt; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-slate-800));">{{ row.ebitda|format_currency }}</td>
+                {% endfor %}
+            </tr>
+            {# EBITDA Margin — subordinate row #}
+            <tr style="background: hsl(var(--report-surface));">
+                <td style="padding: 3pt 8pt; color: hsl(var(--report-text-muted)); font-size: var(--font-size-xs); font-style: italic;">{{ t.dcf_row_ebitda_margin }}</td>
+                {% for row in detail %}
+                {% set revenue_value = row.revenue|default(0)|float %}
+                {% set margin = ((row.ebitda|default(0)|float) / revenue_value * 100) if revenue_value else 0 %}
+                <td style="text-align: right; padding: 3pt 8pt; font-family: 'JetBrains Mono', monospace; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">{{ margin|safe_round(1) }}%</td>
+                {% endfor %}
+            </tr>
+            {% if dcf_historical_fcf_status == 'explicit_fcff_forecast' %}
+            <tr>
+                <td style="padding: 4pt 8pt; color: hsl(var(--report-text-muted));">{% if (locale|default('nl'))|lower == 'fr' %}Dérivation du FCFF{% elif (locale|default('nl'))|lower == 'en' %}FCFF derivation{% else %}FCFF-afleiding{% endif %}</td>
+                <td colspan="{{ n_years }}" style="text-align: right; padding: 4pt 8pt; color: hsl(var(--report-text-muted)); font-style: italic;">{% if (locale|default('nl'))|lower == 'fr' %}N/A — FCFF fourni explicitement ; le chiffre d’affaires et l’EBITDA sont présentés à titre contextuel.{% elif (locale|default('nl'))|lower == 'en' %}N/A — FCFF supplied explicitly; revenue and EBITDA are shown for context.{% else %}N.v.t. — FCFF expliciet aangeleverd; omzet en EBITDA worden als context getoond.{% endif %}</td>
+            </tr>
+            {% else %}
+            {# EBIT — primary row #}
+            <tr>
+                <td style="padding: 4pt 8pt; font-weight: 500; color: hsl(var(--report-slate-800));">{{ t.dcf_row_ebit }}</td>
+                {% for row in detail %}
+                <td style="text-align: right; padding: 4pt 8pt; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-slate-800));">{{ row.ebit|format_currency }}</td>
+                {% endfor %}
+            </tr>
+            {# Taxes — deduction row #}
+            <tr style="background: hsl(var(--report-surface));">
+                <td style="padding: 4pt 8pt; color: hsl(var(--report-text-muted));">{{ t.dcf_row_taxes }}</td>
+                {% for row in detail %}
+                <td style="text-align: right; padding: 4pt 8pt; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-danger));">({{ row.taxes|default(0)|float|abs|format_currency }})</td>
+                {% endfor %}
+            </tr>
+            {# D&A addback — non-cash, added back to NOPAT #}
+            <tr>
+                <td style="padding: 4pt 8pt; color: hsl(var(--report-text-muted));">{{ t.dcf_row_da_addback }}</td>
+                {% for row in detail %}
+                {% set da_val = (row.ebitda|default(0)|float - row.ebit|default(0)|float)|abs %}
+                <td style="text-align: right; padding: 4pt 8pt; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-slate-800));">{{ da_val|format_currency }}</td>
+                {% endfor %}
+            </tr>
+            {# CapEx — deduction row #}
+            <tr style="background: hsl(var(--report-surface));">
+                <td style="padding: 4pt 8pt; color: hsl(var(--report-text-muted));">{{ t.dcf_row_capex }}</td>
+                {% for row in detail %}
+                <td style="text-align: right; padding: 4pt 8pt; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-danger));">({{ row.capex|default(0)|float|abs|format_currency }})</td>
+                {% endfor %}
+            </tr>
+            {# ΔNWC — deduction row #}
+            <tr>
+                <td style="padding: 4pt 8pt; color: hsl(var(--report-text-muted));">{{ t.dcf_row_nwc }}</td>
+                {% for row in detail %}
+                {% set _nwc_change = row.nwc_change|float if row.nwc_change is defined and row.nwc_change is not none else none %}
+                <td style="text-align: right; padding: 4pt 8pt; font-family: 'JetBrains Mono', monospace;">
+                    {% if _nwc_change is not none and _nwc_change > 0 %}<span style="color: hsl(var(--report-danger));">({{ _nwc_change|abs|format_currency }})</span>{% elif _nwc_change is not none and _nwc_change < 0 %}{{ _nwc_change|abs|format_currency }}{% else %}{{ _nwc_change|default(0)|format_currency }}{% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endif %}
+            {% endif %}
+
+            {# FCFF result row — prominent teal highlight (always shown) #}
+            <tr style="border-top: 2pt solid hsl(var(--report-slate-900)); background: hsla({{ teal_hsl }}, 0.06); -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                <td style="padding: 6pt 8pt; font-weight: 700; color: hsl({{ teal_hsl }});">{{ t.dcf_row_fcff }}</td>
+                {% for i in range(n_years) %}
+                {% set fcf_val = detail[i].free_cash_flow if (detail and i < detail|length and detail[i]) else (fcf_list[i] if i < fcf_list|length else 0) %}
+                <td style="text-align: right; padding: 6pt 8pt; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: hsl({{ teal_hsl }});">{{ fcf_val|float|format_currency }}</td>
+                {% endfor %}
+            </tr>
+
+            {# Discount factor — subordinate row.
+               Mid-year convention (i + 0.5) when `dcf_mid_year_discounting` (default), else year-end (i + 1).
+               Rendered at 8 dp on purpose, NOT 2–4: the PV row below is the full-precision
+               FCFF × factor (it sums to the "CW vrije kasstromen" subtotal and ties to enterprise
+               value), so the *displayed* factor must carry enough precision that a reader who
+               multiplies the printed FCFF by the printed factor reproduces the printed CW(FCFF) to
+               the euro. At 4 dp the factor's half-ULP (5e-5) times a multi-million FCFF is tens of
+               euros; 8 dp keeps that error sub-euro across the SME→mid-market range.
+               Guarded by tests/unit/services/infrastructure/test_dcf_projection_table_arithmetic.py. #}
+            {% set _mid_year = dcf_mid_year_discounting if dcf_mid_year_discounting is defined else true %}
+            <tr>
+                <td style="padding: 3pt 8pt; color: hsl(var(--report-text-muted)); font-size: var(--font-size-xs);">{{ t.dcf_row_discount_factor }}</td>
+                {% for i in range(n_years) %}
+                {% set exponent = (i + 0.5) if _mid_year else (i + 1) %}
+                {% set df = 1.0 / ((1.0 + wacc) ** exponent) %}
+                <td style="text-align: right; padding: 3pt 8pt; font-family: 'JetBrains Mono', monospace; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">{{ df|safe_round(8) }}</td>
+                {% endfor %}
+            </tr>
+
+            {# PV(FCFF) — result row #}
+            <tr style="border-top: 1pt solid hsl(var(--report-slate-200)); background: hsla({{ teal_hsl }}, 0.04);">
+                <td style="padding: 5pt 8pt; font-weight: 600; color: hsl(var(--report-slate-800));">{{ t.dcf_row_pv_fcff }}</td>
+                {% for i in range(n_years) %}
+                {% set pv_val = pv_list[i] if i < pv_list|length else 0 %}
+                <td style="text-align: right; padding: 5pt 8pt; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: hsl(var(--report-slate-800));">{{ pv_val|float|format_currency }}</td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endif %}

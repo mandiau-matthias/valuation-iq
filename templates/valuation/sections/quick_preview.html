@@ -1,0 +1,76 @@
+{# Phase 1: Quick Preview Template #}
+<div class="valuation-section phase-1-preview bg-white rounded-lg shadow-sm border border-gray-200 p-6" data-section="preview">
+    <div class="section-header flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">
+            Initial Valuation Estimate
+        </h2>
+        <span class="confidence-badge px-3 py-1 rounded-full text-sm font-medium
+            {% if confidence_level == 'low' %}bg-yellow-100 text-yellow-800
+            {% elif confidence_level == 'medium' %}bg-blue-100 text-blue-800
+            {% elif confidence_level == 'high' %}bg-green-100 text-green-800
+            {% else %}bg-gray-100 text-gray-800{% endif %}">
+            {{ confidence_score }}% Confidence
+        </span>
+    </div>
+    
+    <div class="valuation-range-card bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 mb-6">
+        <div class="range-display grid grid-cols-3 gap-4">
+            <div class="range-item text-center">
+                <div class="text-sm font-medium text-gray-600 mb-1">Low</div>
+                <div class="text-2xl font-bold text-gray-900">€{{ '{:,.0f}'.format(value_low) }}</div>
+            </div>
+            <div class="range-item text-center bg-white rounded-lg p-4 shadow-sm border-2 border-indigo-200">
+                <div class="text-sm font-medium text-indigo-600 mb-1">Mid-Point</div>
+                <div class="text-3xl font-bold text-indigo-900">€{{ '{:,.0f}'.format(value_mid) }}</div>
+            </div>
+            <div class="range-item text-center">
+                <div class="text-sm font-medium text-gray-600 mb-1">High</div>
+                <div class="text-2xl font-bold text-gray-900">€{{ '{:,.0f}'.format(value_high) }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="methodology-note bg-gray-50 rounded-lg p-4 mb-4">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-blue-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-gray-700">
+                    Based on <strong>{{ industry }}</strong> industry multiples 
+                    ({{ '{:.1f}'.format(multiple_low) }}x - {{ '{:.1f}'.format(multiple_high) }}x revenue).
+                </p>
+                <p class="text-sm text-gray-500 mt-2">
+                    💡 This is a preliminary estimate. Provide more financial data 
+                    for a comprehensive DCF analysis.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="data-completeness">
+        <div class="flex justify-between items-center mb-2">
+            <span class="text-sm font-medium text-gray-700">Data Collection Progress</span>
+            <span class="text-sm text-gray-500">{{ data_completeness }}%</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                 style="width: {{ data_completeness }}%"></div>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">
+            {{ data_completeness }}% data collected • More data = higher accuracy
+        </p>
+    </div>
+    
+    <div class="next-steps mt-6 p-4 bg-blue-50 rounded-lg">
+        <h3 class="text-sm font-semibold text-blue-900 mb-2">Next Steps</h3>
+        <ul class="text-sm text-blue-800 space-y-1">
+            <li>• Provide EBITDA for DCF analysis</li>
+            <li>• Share growth projections for accuracy</li>
+            <li>• Add owner profile for complete valuation</li>
+        </ul>
+    </div>
+</div>
+

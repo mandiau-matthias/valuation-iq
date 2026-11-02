@@ -1,0 +1,489 @@
+<div class="page">
+{% set normalization_data = financial_analysis.ebitda_normalization if financial_analysis and financial_analysis.ebitda_normalization else (detailed_results.ebitda_normalization if detailed_results and detailed_results.ebitda_normalization else None) %}
+{% set user_normalizations = financial_analysis.user_normalizations if financial_analysis and financial_analysis.user_normalizations else None %}
+
+{% if user_normalizations or normalization_data %}
+{# PRIMITIVE 1: Economic Reality - Normalization Bridge #}
+
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 24pt; border: none; border-top: none;">
+    <tr>
+        <td style="padding: 0; border: none; vertical-align: middle;">
+            <h1 id="section-2" style="margin: 0 0 32pt 0; page-break-before: always; break-before: page;">{{ t.accountant_ebitda_section_title }}</h1>
+        </td>
+        <td style="padding: 0; border: none; text-align: right; vertical-align: middle;">
+            <div style="display: inline-block; padding: 6pt 10pt; margin: 0; border: 1pt solid #E2E8F0; border-radius: 4px; background-color: #f4f1ea;">
+                <span style="font-family: 'Inter', sans-serif; font-size: 8pt; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em;">{{ t.accountant_ebitda_ivs_badge }}</span>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<div class="report-section">
+    <p style="font-size: 12pt; line-height: 1.6; color: #334155; margin-top: 0; margin-bottom: 32pt;">
+        {{ t.accountant_ebitda_intro | safe }}
+    </p>
+
+    <div class="report-callout" style="margin-bottom: 32pt; background-color: #f4f1ea; border-left-color: #2b303a;">
+        <h4 style="font-family: 'Inter', sans-serif; font-size: 10pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1pt; color: #2b303a; margin: 0 0 8pt 0;">{{ t.accountant_ebitda_primitive_title }}</h4>
+        <p style="font-size: 11pt; color: #475569; margin: 0; line-height: 1.5;">
+            {{ t.accountant_ebitda_primitive_body | safe }}
+        </p>
+    </div>
+
+    <h2 style="font-family: 'Inter', sans-serif; font-size: 14pt; font-weight: 700; color: #2b303a; margin-top: 0; margin-bottom: 16pt;">{{ t.accountant_ebitda_schedule_title }}</h2>
+
+    {% if user_normalizations %}
+    {# USER-DEFINED NORMALIZATIONS - Show all normalized years #}
+    {% for norm in user_normalizations|sort(attribute='year', reverse=True) %}
+    <div class="table-card" style="{% if not loop.first %}margin-top: 32pt;{% endif %}">
+    <table class="step-table">
+        <caption>{{ t.accountant_ebitda_bridge_caption_user }} {{ norm.year }}</caption>
+        <thead>
+            <tr>
+                <th style="width: 45%;">{{ t.accountant_ebitda_col_item }}</th>
+                <th class="text-right" style="width: 20%;">{{ t.accountant_ebitda_col_adjustment }}</th>
+                <th style="width: 35%; padding-left: 24pt;">{{ t.accountant_ebitda_col_rationale }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="font-weight: 700; color: #2b303a;">{{ t.accountant_ebitda_reported_ebitda_year }} ({{ norm.year }})</td>
+                <td class="text-right font-bold" style="background: #f4f1ea;">{{ norm.reported_ebitda | format_currency }}</td>
+                <td style="padding-left: 24pt; color: #64748B; font-style: italic; font-family: 'Inter', sans-serif;">{{ t.accountant_ebitda_baseline_from_records }}</td>
+            </tr>
+        {% if norm.adjustments and norm.adjustments|length > 0 %}
+            {% for adjustment in norm.adjustments %}
+            <tr>
+                <td style="padding-left: 16pt; color: var(--text-body);">
+                    <span style="color: #CBD5E1; margin-right: 4pt;">↳</span> {{ adjustment.name or adjustment.category }}
+                </td>
+                <td class="text-right" style="color: {% if adjustment.amount >= 0 %}#6b8e72{% else %}#b85c56{% endif %}; font-weight: 600;">
+                    {% if adjustment.amount >= 0 %}+{% endif %}{{ adjustment.amount | format_currency }}
+                </td>
+                <td style="padding-left: 24pt; color: var(--text-body); font-size: 9pt; font-family: 'Inter', sans-serif;">{{ adjustment.description or adjustment.note or t.accountant_ebitda_user_defined_adjustment }}</td>
+            </tr>
+            {% endfor %}
+        {% endif %}
+        {% if norm.custom_adjustments and norm.custom_adjustments|length > 0 %}
+            {% for custom in norm.custom_adjustments %}
+            <tr>
+                <td style="padding-left: 16pt; color: var(--text-body);">
+                    <span style="color: #CBD5E1; margin-right: 4pt;">↳</span> {{ custom.description }}
+                </td>
+                <td class="text-right" style="color: {% if custom.amount >= 0 %}#6b8e72{% else %}#b85c56{% endif %}; font-weight: 600;">
+                    {% if custom.amount >= 0 %}+{% endif %}{{ custom.amount | format_currency }}
+                </td>
+                <td style="padding-left: 24pt; color: var(--text-body); font-size: 9pt; font-family: 'Inter', sans-serif;">{{ custom.note or t.accountant_ebitda_custom_adjustment }}</td>
+            </tr>
+            {% endfor %}
+        {% endif %}
+        {% if not norm.adjustments or norm.adjustments|length == 0 %}
+            <tr>
+                <td style="padding-left: 16pt; color: var(--text-muted);"><span style="color: #E2E8F0; margin-right: 4pt;">↳</span> {{ t.accountant_ebitda_no_adjustments }}</td>
+                <td class="text-right" style="color: var(--text-muted);">€0</td>
+                <td style="padding-left: 24pt; color: var(--text-muted); font-size: 9pt; font-family: 'Inter', sans-serif;">{{ t.accountant_ebitda_used_as_reported }}</td>
+            </tr>
+        {% endif %}
+            <tr style="border-top: 3px solid #2b303a; background-color: #2b303a;">
+                <td style="padding: 20pt 12pt; font-weight: 700; color: #FFFFFF; text-transform: uppercase; letter-spacing: 0.05em; font-size: 13pt;">{{ t.accountant_ebitda_normalized_year }} ({{ norm.year }})</td>
+                <td class="text-right font-bold" style="font-size: 18pt; color: #FFFFFF; padding: 20pt 12pt;">{{ norm.normalized_ebitda | format_currency }}</td>
+                <td style="padding: 20pt 12pt; color: rgba(255,255,255,0.95); font-weight: 600; font-family: 'Inter', sans-serif;">{{ t.accountant_ebitda_used_in_valuation }}</td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+
+    {# Impact Card for this year #}
+    {% if not loop.last %}
+    <div style="margin-top: 16pt; margin-bottom: 24pt; page-break-inside: avoid;">
+    <table style="width: 100%; border-collapse: collapse; border: none; border-top: none;">
+        <tr>
+            <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                <div class="stat-card">
+                    <p class="label">{{ t.accountant_ebitda_transformation_impact }} ({{ norm.year }})</p>
+                    <p class="value">
+                        {% if norm.reported_ebitda and norm.reported_ebitda != 0 %}
+                            {% if norm.adjustment_percentage is defined %}
+                                {{ (norm.total_adjustments / norm.reported_ebitda * 100) | round(1) }}%
+                            {% else %}
+                                {{ ((norm.total_adjustments / norm.reported_ebitda) * 100) | round(1) }}%
+                            {% endif %}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </p>
+                    <p style="font-size: 10pt; color: #64748B; margin-top: 8pt;">{{ t.accountant_ebitda_net_adjustment_caption }}</p>
+                </div>
+            </td>
+            <td style="width: 4%; border: none;"></td>
+            <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                <div class="stat-card">
+                    <p class="label">{{ t.accountant_ebitda_adjustment_count }}</p>
+                    <p class="value" style="color: #6b8e72;">{{ norm.adjustment_count }}</p>
+                    <p style="font-size: 10pt; color: #64748B; margin-top: 8pt;">{{ t.accountant_ebitda_categories_adjusted_year }}</p>
+                </div>
+            </td>
+        </tr>
+    </table>
+    </div>
+    {% endif %}
+    {% endfor %}
+
+    {# Overall Impact Summary (after all years) #}
+    <div style="margin-top: 32pt; page-break-inside: avoid;">
+    <table style="width: 100%; border-collapse: collapse; border: none; border-top: none;">
+        <tr>
+            <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                <div class="stat-card">
+                    <p class="label">{{ t.accountant_ebitda_years_normalized }}</p>
+                    <p class="value">{{ user_normalizations|length }}</p>
+                    <p style="font-size: 10pt; color: #64748B; margin-top: 8pt;">{{ t.accountant_ebitda_total_years_caption }}</p>
+                </div>
+            </td>
+            <td style="width: 4%; border: none;"></td>
+            <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                <div class="stat-card">
+                    <p class="label">{{ t.accountant_ebitda_documentation_quality }}</p>
+                    <p class="value" style="color: #6b8e72;">
+                        {% set total_custom = user_normalizations | sum(attribute='has_custom_adjustments') %}
+                        {% if total_custom > 0 %}{{ t.accountant_ebitda_quality_enhanced }}{% else %}{{ t.accountant_ebitda_quality_standard }}{% endif %}
+                    </p>
+                    <p style="font-size: 10pt; color: #64748B; margin-top: 8pt;">
+                        {% if total_custom > 0 %}{{ t.accountant_ebitda_includes_custom }}{% else %}{{ t.accountant_ebitda_based_on_standard }}{% endif %}
+                    </p>
+                </div>
+            </td>
+        </tr>
+    </table>
+    </div>
+
+    {% elif normalization_data %}
+    {# AUTOMATIC NORMALIZATION (Legacy Step 2.5) - Single year only #}
+
+    {# CRITICAL TRANSPARENCY: Show if weighted EBITDA is being used #}
+    {% if normalization_data.using_weighted_ebitda and normalization_data.current_year_ebitda %}
+    <div class="report-callout" style="margin-bottom: 24pt; background-color: #e9f0eb; border-left-color: #4a5d4f;">
+        <h4 style="font-family: 'Inter', sans-serif; font-size: 10pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1pt; color: #4a5d4f; margin: 0 0 8pt 0;">{{ t.accountant_ebitda_weighted_callout_title }}</h4>
+        <p style="font-size: 11pt; color: #2b303a; margin: 0; line-height: 1.5;">
+            {{ t.accountant_ebitda_weighted_callout_body.format(year=normalization_data.year, current_ebitda=(normalization_data.current_year_ebitda | format_currency)) | safe }}
+        </p>
+        <p style="font-size: 10pt; color: #475569; margin-top: 8pt; font-style: italic;">
+            <strong>{{ t.accountant_ebitda_weighted_rationale_label }}</strong> {{ normalization_data.ebitda_source_explanation or t.accountant_ebitda_weighted_default_rationale }}
+        </p>
+    </div>
+    {% endif %}
+
+    <div class="table-card">
+    <table class="step-table">
+        <caption>{% if normalization_data.using_weighted_ebitda %}{{ t.accountant_ebitda_bridge_caption_weighted }}{% else %}{{ t.accountant_ebitda_bridge_caption_reported }}{% endif %}</caption>
+        <thead>
+            <tr>
+                <th style="width: 45%;">{{ t.accountant_ebitda_col_item }}</th>
+                <th class="text-right" style="width: 20%;">{{ t.accountant_ebitda_col_adjustment }}</th>
+                <th style="width: 35%; padding-left: 24pt;">{{ t.accountant_ebitda_col_rationale }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if normalization_data.using_weighted_ebitda and normalization_data.current_year_ebitda %}
+            {# Show both current year and weighted EBITDA for transparency #}
+            <tr style="background-color: #f8fafc;">
+                <td style="font-weight: 600; color: #64748B;">{{ t.accountant_ebitda_current_year_ebitda }} ({{ normalization_data.year }})</td>
+                <td class="text-right" style="color: #64748B;">{{ normalization_data.current_year_ebitda | format_currency }}</td>
+                <td style="padding-left: 24pt; color: #64748B; font-size: 9pt; font-family: 'Inter', sans-serif;">{{ t.accountant_ebitda_single_year_not_used }}</td>
+            </tr>
+            <tr>
+                <td style="font-weight: 700; color: #2b303a;">{{ t.accountant_ebitda_weighted_historical }}</td>
+                <td class="text-right font-bold" style="background: #f4f1ea;">{{ normalization_data.reported_ebitda | format_currency }}</td>
+                <td style="padding-left: 24pt; color: #64748B; font-style: italic; font-family: 'Inter', sans-serif;">{{ t.accountant_ebitda_multi_year_weighted }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td style="font-weight: 700; color: #2b303a;">{{ t.accountant_ebitda_reported_ebitda_year }} ({{ normalization_data.year }})</td>
+                <td class="text-right font-bold" style="background: #f4f1ea;">{{ normalization_data.reported_ebitda | format_currency }}</td>
+                <td style="padding-left: 24pt; color: #64748B; font-style: italic; font-family: 'Inter', sans-serif;">{{ t.accountant_ebitda_baseline_from_records }}</td>
+            </tr>
+            {% endif %}
+        {% if normalization_data.adjustments and normalization_data.adjustments|length > 0 %}
+            {% for adjustment in normalization_data.adjustments %}
+            <tr>
+                <td style="padding-left: 16pt; color: var(--text-body);">
+                    <span style="color: #CBD5E1; margin-right: 4pt;">↳</span> {{ adjustment.name }}
+                </td>
+                <td class="text-right" style="color: {% if adjustment.amount >= 0 %}#6b8e72{% else %}#b85c56{% endif %}; font-weight: 600;">
+                    {% if adjustment.amount >= 0 %}+{% endif %}{{ adjustment.amount | format_currency }}
+                </td>
+                <td style="padding-left: 24pt; color: var(--text-body); font-size: 9pt; font-family: 'Inter', sans-serif;">{{ adjustment.description }}</td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td style="padding-left: 16pt; color: var(--text-muted);"><span style="color: #E2E8F0; margin-right: 4pt;">↳</span> {{ t.accountant_ebitda_owner_compensation }}</td>
+                <td class="text-right" style="color: var(--text-muted);">€0</td>
+                <td style="padding-left: 24pt; color: var(--text-muted); font-size: 9pt; font-family: 'Inter', sans-serif;">{{ t.accountant_ebitda_market_replacement_rate }}</td>
+            </tr>
+            <tr>
+                <td style="padding-left: 16pt; color: var(--text-muted);"><span style="color: #E2E8F0; margin-right: 4pt;">↳</span> {{ t.accountant_ebitda_discretionary_expenses }}</td>
+                <td class="text-right" style="color: var(--text-muted);">€0</td>
+                <td style="padding-left: 24pt; color: var(--text-muted); font-size: 9pt; font-family: 'Inter', sans-serif;">{{ t.accountant_ebitda_no_non_operating }}</td>
+            </tr>
+        {% endif %}
+            <tr style="border-top: 3px solid #2b303a; background-color: #2b303a;">
+                <td style="padding: 20pt 12pt; font-weight: 700; color: #FFFFFF; text-transform: uppercase; letter-spacing: 0.05em; font-size: 13pt;">{{ t.accountant_ebitda_normalized_label }}</td>
+                <td class="text-right font-bold" style="font-size: 18pt; color: #FFFFFF; padding: 20pt 12pt;">{{ normalization_data.normalized_ebitda | format_currency }}</td>
+                <td style="padding: 20pt 12pt; color: rgba(255,255,255,0.95); font-weight: 600; font-family: 'Inter', sans-serif;">{{ t.accountant_ebitda_representative_earning }}</td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+
+    {# Impact Analysis - Robust Table Layout #}
+    <table style="width: 100%; border-collapse: collapse; margin-top: 32pt; border: none; border-top: none;">
+        <tr>
+            <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                <div class="stat-card">
+                    <p class="label">{{ t.accountant_ebitda_transformation_impact }}</p>
+                    <p class="value">
+                        {% if user_normalizations %}
+                            {# Calculate average impact across all years #}
+                            {% set total_impact = 0 %}
+                            {% set count = 0 %}
+                            {% for norm in user_normalizations %}
+                                {% if norm.reported_ebitda != 0 %}
+                                    {% set impact = (norm.total_adjustments / norm.reported_ebitda) * 100 %}
+                                    {% set total_impact = total_impact + impact %}
+                                    {% set count = count + 1 %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if count > 0 %}
+                                {{ (total_impact / count) | round(1) }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        {% elif normalization_data.adjustment_percentage %}
+                            {{ normalization_data.adjustment_percentage | format_percentage }}
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </p>
+                    <p style="font-size: 10pt; color: #64748B; margin-top: 8pt;">
+                        {% if user_normalizations and user_normalizations|length > 1 %}
+                            {{ t.accountant_ebitda_avg_adjustment.format(count=user_normalizations|length) }}
+                        {% else %}
+                            {{ t.accountant_ebitda_net_adjustment }}
+                        {% endif %}
+                    </p>
+                </div>
+            </td>
+            <td style="width: 4%; border: none;"></td>
+            <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                <div class="stat-card">
+                    <p class="label">{{ t.accountant_ebitda_bridge_reliability }}</p>
+                    <p class="value" style="color: #6b8e72;">
+                        {% if user_normalizations %}
+                            {% set has_custom = user_normalizations | selectattr('has_custom_adjustments', 'equalto', True) | list | length > 0 %}
+                            {% if has_custom %}{{ t.accountant_ebitda_quality_enhanced }}{% else %}{{ t.accountant_ebitda_quality_high }}{% endif %}
+                        {% else %}
+                            {{ normalization_data.confidence or t.accountant_ebitda_quality_high }}
+                        {% endif %}
+                    </p>
+                    <p style="font-size: 10pt; color: #64748B; margin-top: 8pt;">{{ t.accountant_ebitda_based_on_documentation }}</p>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+{% endif %}
+
+{# Quality of Earnings - Academic Guardrail #}
+{% if normalization_data.margin_analysis %}
+{# CSS fragmentation will handle page break if needed #}
+<div class="report-section" style="margin-top: 48pt;">
+    <h3 style="font-family: 'Inter', sans-serif; font-size: 18pt; font-weight: 700; color: #2b303a; margin-bottom: 16pt;">{{ t.accountant_ebitda_quality_assessment_title }}</h3>
+    <p style="font-family: 'Inter', sans-serif; font-size: 12pt; line-height: 1.6; color: #334155; margin-bottom: 24pt;">
+        {{ t.accountant_ebitda_quality_assessment_intro }}
+    </p>
+
+    <div class="table-card">
+    <table class="step-table">
+        <thead>
+            <tr>
+                <th style="width: 40%;">{{ t.accountant_ebitda_metric_label }}</th>
+                <th class="text-right" style="width: 20%;">{{ t.accountant_ebitda_value_label }}</th>
+                <th style="width: 40%; padding-left: 24pt;">{{ t.accountant_ebitda_assessment_label }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="font-weight: 600; color: #2b303a;">{{ t.accountant_ebitda_current_margin }}</td>
+                <td class="text-right">{{ normalization_data.margin_analysis.current_margin | format_percentage }}</td>
+                <td style="padding-left: 24pt;">{{ t.accountant_ebitda_current_margin_caption }}</td>
+            </tr>
+            <tr>
+                <td style="font-weight: 600; color: #2b303a;">{{ t.accountant_ebitda_historical_mean }}</td>
+                <td class="text-right">{{ normalization_data.margin_analysis.average_margin | format_percentage }}</td>
+                <td style="padding-left: 24pt;">{{ t.accountant_ebitda_historical_mean_caption }}</td>
+            </tr>
+            <tr>
+                <td style="font-weight: 600; color: #2b303a;">{{ t.accountant_ebitda_margin_volatility }}</td>
+                <td class="text-right">{{ normalization_data.margin_analysis.margin_stdev | format_percentage }}</td>
+                <td style="padding-left: 24pt;">
+                    {% set stdev = normalization_data.margin_analysis.margin_stdev %}
+                    {% if stdev > 5.0 %}
+                        <span style="color: #b85c56; font-weight: 700;">{{ t.accountant_ebitda_volatility_high }}</span>
+                    {% elif stdev > 3.0 %}
+                        <span style="color: #d9a558; font-weight: 700;">{{ t.accountant_ebitda_volatility_moderate }}</span>
+                    {% else %}
+                        <span style="color: #6b8e72; font-weight: 700;">{{ t.accountant_ebitda_volatility_low }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+
+    {% if normalization_data.margin_analysis.quality_of_earnings_flag %}
+    <div class="report-callout warning">
+        <h4 style="color: #d9a558; font-size: 10pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1pt; margin-bottom: 8pt;">{{ t.accountant_ebitda_sustainability_flag_title }}</h4>
+        <p style="font-family: 'Inter', sans-serif; font-size: 12pt; color: #d9a558; margin: 0; line-height: 1.5;">
+            {{ t.accountant_ebitda_sustainability_flag_body | safe }}
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{# Technical Standards Footer #}
+<div style="margin-top: 48pt; padding: 20pt; background-color: #f4f1ea; border: 1px solid #E2E8F0; border-radius: 4px;">
+    <h4 style="font-family: 'Inter', sans-serif; font-size: 9pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1pt; color: #64748B; margin: 0 0 12pt 0;">{{ t.accountant_ebitda_compliance_title }}</h4>
+    <ul style="margin: 0; padding-left: 16pt; font-size: 9pt; color: #475569; line-height: 1.6; font-family: 'Inter', sans-serif;">
+        <li>{{ t.accountant_ebitda_compliance_asa | safe }}</li>
+        <li>{{ t.accountant_ebitda_compliance_aicpa | safe }}</li>
+        <li>{{ t.accountant_ebitda_compliance_trugman | safe }}</li>
+    </ul>
+</div>
+
+{% else %}
+{# FALLBACK: When normalization data is not available #}
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 24pt; border: none; border-top: none;">
+    <tr>
+        <td style="padding: 0; border: none; vertical-align: middle;">
+            <h1 id="section-2" style="margin: 0 0 32pt 0; page-break-before: always; break-before: page;">{{ t.accountant_ebitda_section_title }}</h1>
+        </td>
+        <td style="padding: 0; border: none; text-align: right; vertical-align: middle;">
+            <div style="display: inline-block; padding: 6pt 10pt; margin: 0; border: 1pt solid #E2E8F0; border-radius: 4px; background-color: #f4f1ea;">
+                <span style="font-family: 'Inter', sans-serif; font-size: 8pt; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em;">{{ t.accountant_ebitda_limited_data_badge }}</span>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<div class="report-section">
+    <p style="font-size: 12pt; line-height: 1.6; color: #334155; margin-top: 16pt; margin-bottom: 32pt;">
+        {{ t.accountant_ebitda_limited_intro }}
+    </p>
+
+    <div class="report-callout warning" style="margin-bottom: 32pt; background-color: #fef3c7; border-left-color: #d9a558;">
+        <h4 style="font-family: 'Inter', sans-serif; font-size: 10pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1pt; color: #d9a558; margin: 0 0 8pt 0;">{{ t.accountant_ebitda_limited_notice_title }}</h4>
+        <p style="font-size: 11pt; color: #92400e; margin: 0; line-height: 1.5;">
+            {{ t.accountant_ebitda_limited_notice_body | safe }}
+        </p>
+    </div>
+
+    <h3 style="font-family: 'Inter', sans-serif; font-size: 14pt; font-weight: 700; color: #2b303a; margin-top: 0; margin-bottom: 16pt;">{{ t.accountant_ebitda_earning_power_framework }}</h3>
+
+    <p style="font-size: 11pt; line-height: 1.6; color: #334155; margin-bottom: 24pt;">
+        {{ t.accountant_ebitda_earning_power_body | safe }}
+    </p>
+
+    <!-- Current Year Metrics -->
+    {% if current_year_data %}
+    <div class="table-card" style="margin-bottom: 32pt;">
+        <table class="step-table">
+            <caption>{{ t.accountant_ebitda_current_year_baseline_caption }}</caption>
+            <thead>
+                <tr>
+                    <th style="width: 40%;">{{ t.accountant_ebitda_metric_label }}</th>
+                    <th class="text-right" style="width: 30%;">{{ t.accountant_ebitda_value_label }}</th>
+                    <th style="width: 30%;">{{ t.accountant_ebitda_status_label }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if current_year_data.revenue %}
+                <tr>
+                    <td style="font-weight: 600; color: #2b303a;">{{ t.accountant_ebitda_revenue }}</td>
+                    <td class="text-right font-bold">{{ current_year_data.revenue | format_currency }}</td>
+                    <td style="color: #6b8e72; font-weight: 600; text-transform: uppercase; font-size: 9pt;">{{ t.accountant_ebitda_status_reported }}</td>
+                </tr>
+                {% endif %}
+                {% if current_year_data.ebitda %}
+                <tr style="background-color: #f4f1ea;">
+                    <td style="font-weight: 600; color: #2b303a;">{{ t.accountant_ebitda_reported_label }}</td>
+                    <td class="text-right font-bold" style="color: #4a5d4f;">{{ current_year_data.ebitda | format_currency }}</td>
+                    <td style="color: #d9a558; font-weight: 600; text-transform: uppercase; font-size: 9pt;">{{ t.accountant_ebitda_status_used_as_reported }}</td>
+                </tr>
+                {% endif %}
+                {% if current_year_data.revenue and current_year_data.ebitda %}
+                <tr>
+                    <td style="font-weight: 600; color: #2b303a;">{{ t.accountant_ebitda_margin_label }}</td>
+                    <td class="text-right font-bold">{{ ((current_year_data.ebitda / current_year_data.revenue) * 100) | round(1) }}%</td>
+                    <td style="color: #64748B; font-size: 9pt;">{{ t.accountant_ebitda_profitability_indicator }}</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Methodology Explanation -->
+    <div style="margin-top: 32pt; padding: 24pt; background-color: #f8fafc; border: 1px solid #E2E8F0; border-radius: 8px;">
+        <h4 style="font-family: 'Inter', sans-serif; font-size: 11pt; font-weight: 700; color: #2b303a; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16pt;">{{ t.accountant_ebitda_alt_methodology_title }}</h4>
+
+        <p style="font-size: 11pt; line-height: 1.6; color: #334155; margin-bottom: 16pt;">
+            {{ t.accountant_ebitda_alt_methodology_body | safe }}
+        </p>
+
+        <div style="background-color: #FFFFFF; padding: 16pt; border-radius: 6px; border-left: 4px solid #4a5d4f;">
+            <h5 style="font-size: 10pt; color: #2b303a; margin-bottom: 8pt; margin-top: 0;">{{ t.accountant_ebitda_quality_adjustments_title }}</h5>
+            <ul style="margin: 0; padding-left: 16pt; font-size: 10pt; color: #475569; line-height: 1.6;">
+                <li style="margin-bottom: 6pt;">{{ t.accountant_ebitda_quality_adj_data | safe }}</li>
+                <li style="margin-bottom: 6pt;">{{ t.accountant_ebitda_quality_adj_earnings | safe }}</li>
+                <li style="margin-bottom: 0;">{{ t.accountant_ebitda_quality_adj_size | safe }}</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Impact Analysis -->
+    <div style="margin-top: 32pt;">
+        <h4 style="font-family: 'Inter', sans-serif; font-size: 11pt; font-weight: 700; color: #2b303a; margin-bottom: 16pt;">{{ t.accountant_ebitda_valuation_impact_title }}</h4>
+
+        <table style="width: 100%; border-collapse: collapse; border: none; border-top: none;">
+            <tr>
+                <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                    <div class="stat-card" style="height: 100%;">
+                        <p class="label">{{ t.accountant_ebitda_quality_approach_label }}</p>
+                        <p class="value" style="font-size: 16pt; color: #4a5d4f;">{{ t.accountant_ebitda_multiple_first }}</p>
+                        <p style="font-size: 10pt; color: #64748B; margin-top: 8pt;">{{ t.accountant_ebitda_quality_approach_caption }}</p>
+                    </div>
+                </td>
+                <td style="width: 4%; border: none;"></td>
+                <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                    <div class="stat-card" style="height: 100%;">
+                        <p class="label">{{ t.accountant_ebitda_methodology_confidence_label }}</p>
+                        <p class="value" style="font-size: 16pt; color: #d9a558;">{{ t.accountant_ebitda_confidence_moderate }}</p>
+                        <p style="font-size: 10pt; color: #64748B; margin-top: 8pt;">{{ t.accountant_ebitda_limited_visibility }}</p>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+{# Professional Standards Footer #}
+<div style="margin-top: 48pt; padding: 20pt; background-color: #f4f1ea; border: 1px solid #E2E8F0; border-radius: 4px;">
+    <h4 style="font-family: 'Inter', sans-serif; font-size: 9pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1pt; color: #64748B; margin: 0 0 12pt 0;">{{ t.accountant_ebitda_pro_standards_title }}</h4>
+    <p style="font-size: 9pt; color: #475569; line-height: 1.6; margin: 0;">
+        {{ t.accountant_ebitda_pro_standards_body | safe }}
+    </p>
+</div>
+{% endif %}
+</div>

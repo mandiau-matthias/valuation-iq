@@ -1,0 +1,34 @@
+<div class="a4-page sealed-company-overview-page" style="page-break-before:always;">
+    <div class="section-header"><span class="section-number">02</span><h1 class="section-title">{{ sealed_memorandum.labels.company_overview }}</h1></div>
+    <h2>{{ sealed_memorandum.labels.company_profile }}</h2>
+    {% if sealed_memorandum.company_overview.facts %}
+    <table class="keep-together"><tbody>
+    {% for field in sealed_memorandum.company_overview.facts %}<tr><td style="width:34%; color:#737985;">{{ field.label }}</td><td data-sealed-field-id="{{ field.field_id }}">{{ field.display }}</td></tr>{% endfor %}
+    </tbody></table>
+    {% else %}<div class="pdf-card pdf-card-muted"><p>{{ sealed_memorandum.labels.none }}</p></div>{% endif %}
+
+    <h2>{{ sealed_memorandum.labels.financial_history }}</h2>
+    {% if sealed_memorandum.company_overview.financial_history %}
+    <table class="sealed-financial-history">
+        <thead><tr><th>{{ sealed_memorandum.labels.fiscal_year }}</th><th class="text-right">{{ sealed_memorandum.labels.revenue_short }}</th><th class="text-right">{{ sealed_memorandum.labels.reported_ebitda_short }}</th><th class="text-right">{{ sealed_memorandum.labels.ebitda_margin }}</th><th class="text-right">{{ sealed_memorandum.labels.total_assets }}</th><th class="text-right">{{ sealed_memorandum.labels.book_equity_short }}</th></tr></thead>
+        <tbody>{% for row in sealed_memorandum.company_overview.financial_history %}<tr><td>{{ row.year }}</td>{% for cell in row.cells %}<td class="text-right" data-sealed-field-id="{{ cell.field_id }}">{{ cell.display }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+    </table>
+    {% else %}<div class="pdf-card pdf-card-muted"><p>{{ sealed_memorandum.labels.no_financial_history }}</p></div>{% endif %}
+    {% if sealed_memorandum.company_overview.financial_history_chart %}
+    <div class="sealed-chart" data-chart-id="financial_history">
+        <div class="sealed-chart-caption">{{ sealed_memorandum.company_overview.financial_history_chart.series_labels.index }}</div>
+        <svg viewBox="{{ sealed_memorandum.company_overview.financial_history_chart.view_box }}" role="img" aria-label="{{ sealed_memorandum.labels.financial_history }}" xmlns="http://www.w3.org/2000/svg">
+            <line x1="50" y1="15" x2="72" y2="15" stroke="#2ba899" stroke-width="3"></line><text x="80" y="18" font-family="JetBrains Mono, monospace" font-size="8" fill="#737985">{{ sealed_memorandum.company_overview.financial_history_chart.series_labels.revenue }}</text>
+            <line x1="210" y1="15" x2="232" y2="15" stroke="#c87f63" stroke-width="3"></line><text x="240" y="18" font-family="JetBrains Mono, monospace" font-size="8" fill="#737985">{{ sealed_memorandum.company_overview.financial_history_chart.series_labels.ebitda }}</text>
+            <line x1="350" y1="15" x2="372" y2="15" stroke="#737985" stroke-width="2" stroke-dasharray="5 4"></line><text x="380" y="18" font-family="JetBrains Mono, monospace" font-size="8" fill="#737985">{{ sealed_memorandum.company_overview.financial_history_chart.series_labels.margin }}</text>
+            <path d="M50 136H470" stroke="#dfe2e7" stroke-width="1"></path>
+            <polyline fill="none" stroke="#2ba899" stroke-width="3" points="{{ sealed_memorandum.company_overview.financial_history_chart.revenue_points }}"></polyline>
+            <polyline fill="none" stroke="#c87f63" stroke-width="3" points="{{ sealed_memorandum.company_overview.financial_history_chart.ebitda_points }}"></polyline>
+            <polyline fill="none" stroke="#737985" stroke-width="2" stroke-dasharray="5 4" points="{{ sealed_memorandum.company_overview.financial_history_chart.margin_points }}"></polyline>
+            {% for marker in sealed_memorandum.company_overview.financial_history_chart.year_labels %}<text x="{{ marker.x }}" y="166" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#737985">{{ marker.label }}</text>{% endfor %}
+        </svg>
+    </div>
+    {% endif %}
+    <p class="pdf-prose-small" style="margin-top:10pt;">{{ sealed_memorandum.labels.financial_history_note }}</p>
+
+</div>

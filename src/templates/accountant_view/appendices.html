@@ -1,0 +1,189 @@
+<div class="page">
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 24pt; border: none; border-top: none;">
+        <tr>
+            <td style="padding: 0; border: none; vertical-align: middle;" colspan="2">
+                <h1 id="section-6" style="margin: 0 0 32pt 0; page-break-before: always; break-before: page;">{{ t.accountant_section_appendices }}</h1>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Appendix A: Historical Financial Performance -->
+    <div class="report-section">
+        <h2 id="appendix-a" style="margin-bottom: 24pt;">{{ t.accountant_app_a_title }}</h2>
+
+        {% if financial_analysis and financial_analysis.historical_performance %}
+            <div class="table-card">
+            <table class="step-table" style="font-size: 9pt;">
+                <caption>{{ t.accountant_app_a_caption }}</caption>
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">{{ t.accountant_app_a_metric }}</th>
+                        {% for year_data in financial_analysis.historical_performance %}
+                            <th class="text-right">{{ year_data.year_display|default(year_data.year) }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="font-weight: 600;">{{ t.accountant_app_a_revenue }}</td>
+                        {% for year_data in financial_analysis.historical_performance %}
+                        <td class="text-right">{{ year_data.revenue | format_currency }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 600;">{{ t.accountant_app_a_ebitda }}</td>
+                        {% for year_data in financial_analysis.historical_performance %}
+                        <td class="text-right">{{ year_data.ebitda | format_currency }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td style="font-style: italic;">{{ t.accountant_app_a_ebitda_margin }}</td>
+                        {% for year_data in financial_analysis.historical_performance %}
+                        <td class="text-right">{{ year_data.ebitda_margin | format_percentage if year_data.ebitda_margin else 'N/A' }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% set has_net_income = false %}
+                    {% for year_data in financial_analysis.historical_performance %}
+                        {% if year_data.net_income %}{% set has_net_income = true %}{% endif %}
+                    {% endfor %}
+                    {% if has_net_income %}
+                    <tr>
+                        <td>{{ t.accountant_app_a_net_income }}</td>
+                        {% for year_data in financial_analysis.historical_performance %}
+                        <td class="text-right">{{ year_data.net_income | format_currency if year_data.net_income else 'N/A' }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+            </div>
+        {% else %}
+            <p style="font-style: italic; color: #4B5563;">{{ t.accountant_app_a_no_data }}</p>
+        {% endif %}
+    </div>
+
+    <div class="report-section" style="margin-top: 32pt;">
+        <h2 id="appendix-b" style="margin-bottom: 24pt;">{{ t.accountant_app_b_title }}</h2>
+        <div style="font-size: 10pt; line-height: 1.6; color: #334155;">
+            <p style="margin-bottom: 12pt;"><strong>{{ t.accountant_app_b_purpose_label }}</strong> {{ description_of_assignment.purpose }}</p>
+            <p style="margin-bottom: 12pt;"><strong>{{ t.accountant_app_b_scope_label }}</strong> {{ description_of_assignment.scope }}</p>
+            <table style="width: 100%; border: none; margin: 12pt 0; border-top: none;">
+                <tr>
+                    <td style="width: 50%; border: none; padding: 0;">
+                        <p style="font-weight: 700; color: var(--upswitch-navy); margin-bottom: 4pt;">{{ t.accountant_app_b_standard_of_value }}</p>
+                        <p style="margin: 0;">{{ description_of_assignment.standard_of_value }}</p>
+                    </td>
+                    <td style="width: 50%; border: none; padding: 0; padding-left: 20pt; border-left: 1px solid #E2E8F0;">
+                        <p style="font-weight: 700; color: var(--upswitch-navy); margin-bottom: 4pt;">{{ t.accountant_app_b_premise_of_value }}</p>
+                        <p style="margin: 0;">{{ description_of_assignment.premise_of_value }}</p>
+                    </td>
+                </tr>
+            </table>
+            <p style="margin-top: 12pt;"><strong>{{ t.accountant_app_b_intended_users_label }}</strong> {{ description_of_assignment.intended_users }}</p>
+        </div>
+    </div>
+
+    <!-- Appendix D: Methodology Matrix -->
+    {# CSS fragmentation will create page break here if needed #}
+    <div class="report-section" style="margin-top: 48pt;">
+        <h2 id="appendix-d" style="margin-bottom: 24pt;">{{ t.accountant_app_d_title }}</h2>
+        <div class="table-card">
+            <table class="step-table" style="font-size: 9pt;">
+                <thead>
+                    <tr style="background: #f4f1ea;">
+                        <th style="width: 30%;">{{ t.accountant_app_d_col_criteria }}</th>
+                        <th style="width: 30%;">{{ t.accountant_app_d_col_assessment }}</th>
+                        <th style="width: 40%;">{{ t.accountant_app_d_col_impact }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="font-weight: 600;">{{ t.accountant_app_d_cash_flow_visibility }}</td>
+                        <td>{{ t.accountant_app_d_cash_flow_assessment }}</td>
+                        <td>{{ t.accountant_app_d_cash_flow_impact.format(weight=((methodology_selection.dcf_weight | format_percentage) if methodology_selection and methodology_selection.dcf_weight is defined else '0%')) }}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 600;">{{ t.accountant_app_d_market_comparability }}</td>
+                        <td>{{ t.accountant_app_d_market_assessment }}</td>
+                        <td>{{ t.accountant_app_d_market_impact.format(weight=((methodology_selection.multiples_weight | format_percentage) if methodology_selection and methodology_selection.multiples_weight is defined else '100%')) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div style="margin-top: 24pt; padding: 20pt; background: #f4f1ea; border: 1px solid #E2E8F0; border-radius: 8px;">
+            <h4 style="font-size: 10pt; font-weight: 700; color: var(--upswitch-navy); margin-bottom: 12pt; text-transform: uppercase; letter-spacing: 0.05em;">{{ t.accountant_app_d_synthesis_title }}</h4>
+            <p style="font-size: 11pt; line-height: 1.6; color: #475569; margin: 0; text-align: justify;">
+                {% if methodology_selection and methodology_selection.methodology_rationale %}
+                    {{ methodology_selection.methodology_rationale }}
+                {% else %}
+                    {{ t.accountant_app_d_synthesis_default }}
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Appendix F: Standards & Conditions -->
+    {# CSS fragmentation will create page break here if needed #}
+    <div class="report-section" style="margin-top: 48pt;">
+        <h2 id="appendix-f" style="margin-bottom: 24pt;">{{ t.accountant_app_f_title }}</h2>
+        <div class="report-callout" style="margin-bottom: 24pt;">
+            <p style="font-size: 10pt; line-height: 1.6; color: #334155; margin: 0;">
+                {{ t.accountant_app_f_callout | safe }}
+            </p>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-top: 0; border: none; border-top: none;">
+            <tr>
+                <!-- Key Assumptions -->
+                <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                    <div style="background: #f4f1ea; border: 1px solid #E2E8F0; border-radius: 8px; padding: 16pt; height: 100%;">
+                        <h3 style="font-size: 10pt; font-weight: 700; color: var(--upswitch-navy); margin-top: 0; margin-bottom: 12pt; text-transform: uppercase;">{{ t.accountant_app_f_key_assumptions_title }}</h3>
+                        <ul style="margin: 0; color: #475569; font-size: 9pt; line-height: 1.5;">
+                            <li style="margin-bottom: 6pt;">{{ t.accountant_app_f_key_assumption_1 }}</li>
+                            <li style="margin-bottom: 6pt;">{{ t.accountant_app_f_key_assumption_2 }}</li>
+                            <li style="margin-bottom: 0;">{{ t.accountant_app_f_key_assumption_3 }}</li>
+                        </ul>
+                    </div>
+                </td>
+                <td style="width: 4%; border: none;"></td>
+                <!-- Limiting Conditions -->
+                <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                    <div style="background: #faf5eb; border: 1px solid #f3e6d5; border-radius: 8px; padding: 16pt; height: 100%;">
+                        <h3 style="font-size: 10pt; font-weight: 700; color: #d9a558; margin-top: 0; margin-bottom: 12pt; text-transform: uppercase;">{{ t.accountant_app_f_limiting_conditions_title }}</h3>
+                        <ul style="margin: 0; color: #d9a558; font-size: 9pt; line-height: 1.5;">
+                            <li style="margin-bottom: 6pt;">{{ t.accountant_app_f_limiting_condition_1 }}</li>
+                            <li style="margin-bottom: 6pt;">{{ t.accountant_app_f_limiting_condition_2 }}</li>
+                            <li style="margin-bottom: 0;">{{ t.accountant_app_f_limiting_condition_3 }}</li>
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div style="margin-top: 48pt; padding: 24px 20pt 20pt 20pt; background-color: #f4f1ea; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <h4 style="font-size: 10pt; font-weight: 700; color: #2b303a; margin-bottom: 12pt; text-transform: uppercase; letter-spacing: 0.05em;">{{ t.accountant_app_compliance_title }}</h4>
+        <p style="font-size: 9pt; color: #64748B; text-align: justify; line-height: 1.6; margin: 0; font-family: 'Inter', sans-serif;">
+            <strong>{{ t.accountant_cover_disclaimer_label }}</strong> {{ t.accountant_cover_disclaimer_text }}
+        </p>
+    </div>
+
+    {# ACADEMIC COMPLIANCE & DATA QUALITY NOTICE #}
+    <div style="margin-top: 24pt; padding: 20pt; background-color: #FFFFFF; border: 2px solid #2b303a; border-radius: 8px;">
+        <h4 style="font-size: 10pt; font-weight: 700; color: #2b303a; margin-bottom: 12pt; text-transform: uppercase; letter-spacing: 0.05em;">
+            <span style="font-size: 14pt; vertical-align: middle; margin-right: 8pt;">📊</span><span style="vertical-align: middle;">{{ t.accountant_app_methodology_title }}</span>
+        </h4>
+        <p style="font-size: 9pt; color: #334155; text-align: justify; line-height: 1.7; margin: 0 0 12pt 0; font-family: 'Inter', sans-serif;">
+            <strong>{{ t.accountant_app_calculation_integrity_label }}</strong> {{ t.accountant_app_calculation_integrity_text }}
+        </p>
+        <ul style="font-size: 9pt; color: #334155; line-height: 1.6; margin: 0 0 12pt 0; padding-left: 20pt; font-family: 'Inter', sans-serif;">
+            <li style="margin-bottom: 4pt;"><strong>USPAP Standards 9 & 10</strong> — {{ t.accountant_app_method_uspap }}</li>
+            <li style="margin-bottom: 4pt;"><strong>IVS 105</strong> — {{ t.accountant_app_method_ivs }}</li>
+            <li style="margin-bottom: 4pt;"><strong>AICPA BVS-VII</strong> — {{ t.accountant_app_method_aicpa }}</li>
+            <li style="margin-bottom: 0;"><strong>Damodaran (2012)</strong> — {{ t.accountant_app_method_damodaran }}</li>
+        </ul>
+        <p style="font-size: 9pt; color: #475569; text-align: justify; line-height: 1.6; margin: 0; font-family: 'Inter', sans-serif; font-style: italic;">
+            {{ t.accountant_app_methodology_footer }}
+        </p>
+    </div>
+</div>

@@ -1,0 +1,58 @@
+{% set show_market_provenance = has_market_data_provenance and has_dcf %}
+{% if has_nwc_normalization or show_market_provenance %}
+{% set _has_both_provenance_panels = has_nwc_normalization and show_market_provenance %}
+<div style="margin-top: var(--space-4); display: grid; grid-template-columns: {% if _has_both_provenance_panels %}minmax(0, 1fr) minmax(0, 1fr){% else %}minmax(0, 1fr){% endif %}; gap: var(--space-3); align-items: start;">
+    {% if has_nwc_normalization %}
+    <div style="padding: var(--space-4); background: hsl(var(--report-surface)); border: 1pt solid hsl(var(--report-slate-200)); border-left: 3pt solid hsl(var(--report-teal)); border-radius: 8pt; page-break-inside: avoid; break-inside: avoid;">
+        <h4 style="margin: 0 0 var(--space-2) 0; color: hsl(var(--report-slate-900));">
+            {{ t.nwc_normalization_title }}
+        </h4>
+        <p style="font-size: var(--font-size-sm); margin: 0 0 var(--space-2) 0; color: hsl(var(--report-text-muted));">
+            {{ nwc_normalization.explanation or t.nwc_normalization_explanation_fallback }}
+        </p>
+        <table style="font-size: var(--font-size-sm); line-height: 1.35; width: 100%; table-layout: fixed; border-collapse: collapse; margin: 0;">
+            <tbody>
+                <tr><td style="font-weight: 600; width: 42%; padding: 4pt 10pt 4pt 0; vertical-align: top; border: none; color: hsl(var(--report-slate-600));">{{ t.nwc_label_target_nwc }}</td><td class="tabular" style="padding: 4pt 0; vertical-align: top; border: none; color: hsl(var(--report-slate-900)); white-space: nowrap;">{{ nwc_normalization.target_nwc_pct|safe_round(2) }}%</td></tr>
+                <tr><td style="font-weight: 600; padding: 4pt 10pt 4pt 0; vertical-align: top; border: none; color: hsl(var(--report-slate-600));">{{ t.nwc_label_actual_nwc }}</td><td class="tabular" style="padding: 4pt 0; vertical-align: top; border: none; color: hsl(var(--report-slate-900)); white-space: nowrap;">{{ nwc_normalization.actual_nwc_pct|safe_round(2) }}%</td></tr>
+                <tr><td style="font-weight: 600; padding: 4pt 10pt 4pt 0; vertical-align: top; border: none; color: hsl(var(--report-slate-600));">{{ t.nwc_label_bridge_impact }}</td><td class="tabular" style="padding: 4pt 0; vertical-align: top; border: none; color: hsl(var(--report-slate-900)); white-space: nowrap;">{{ nwc_normalization.surplus_deficit|format_currency }}</td></tr>
+                <tr><td style="font-weight: 600; padding: 4pt 10pt 4pt 0; vertical-align: top; border: none; color: hsl(var(--report-slate-600));">{{ t.nwc_label_years_analyzed }}</td><td class="tabular" style="padding: 4pt 0; vertical-align: top; border: none; color: hsl(var(--report-slate-900)); white-space: nowrap;">{{ nwc_normalization.years_analyzed }}</td></tr>
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if show_market_provenance %}
+    <div style="padding: var(--space-4); background: hsl(var(--report-surface)); border: 1pt solid hsl(var(--report-slate-200)); border-left: 3pt solid hsl(var(--report-clay)); border-radius: 8pt; page-break-inside: avoid; break-inside: avoid;">
+        <h4 style="margin: 0 0 var(--space-2) 0; color: hsl(var(--report-slate-900));">
+            {{ t.market_provenance_title }}
+        </h4>
+        <table style="font-size: var(--font-size-sm); line-height: 1.35; width: 100%; table-layout: fixed; border-collapse: collapse; margin: 0;">
+            <tbody>
+                <tr><td style="font-weight: 600; width: 34%; padding: 4pt 10pt 4pt 0; vertical-align: top; border: none; color: hsl(var(--report-slate-600));">{{ t.market_label_risk_free_rate }}</td><td class="tabular" style="padding: 4pt 0; vertical-align: top; border: none; color: hsl(var(--report-slate-900)); white-space: nowrap;">{{ ((market_data_provenance.risk_free_rate or 0) * 100)|safe_round(2) }}%</td></tr>
+                <tr><td style="font-weight: 600; padding: 4pt 10pt 4pt 0; vertical-align: top; border: none; color: hsl(var(--report-slate-600));">{{ t.market_label_source }}</td><td style="padding: 4pt 0; vertical-align: top; border: none; line-height: 1.35; overflow-wrap: break-word; color: hsl(var(--report-slate-800));">{{ market_data_provenance.risk_free_rate_source or '—' }}</td></tr>
+                {% if market_data_provenance.risk_free_rate_is_override %}
+                <tr><td style="font-weight: 600; padding: 4pt 10pt 4pt 0; vertical-align: top; border: none; color: hsl(var(--report-slate-600));">{{ t.market_label_manual_override }}</td><td style="padding: 4pt 0; vertical-align: top; border: none; color: hsl(var(--report-slate-800));">{{ t.market_label_applied }}</td></tr>
+                {% endif %}
+                <tr><td style="font-weight: 600; padding: 4pt 10pt 4pt 0; vertical-align: top; border: none; color: hsl(var(--report-slate-600));">{{ t.market_label_equity_risk_premium }}</td><td class="tabular" style="padding: 4pt 0; vertical-align: top; border: none; color: hsl(var(--report-slate-900)); white-space: nowrap;">{{ ((market_data_provenance.equity_risk_premium or 0) * 100)|safe_round(2) }}%</td></tr>
+                {# Humanize the engine's machine token "country_default:XX" —
+                   client copy must never leak config identifiers (panel B11). #}
+                {% set _erp_src_raw = market_data_provenance.equity_risk_premium_source %}
+                {% if _erp_src_raw and (_erp_src_raw|string).startswith('country_default:') %}
+                {% set _erp_src_cc = (_erp_src_raw|string).split(':', 1)[1] %}
+                {% set _erp_src_display = ('Valeur par défaut du pays (' ~ _erp_src_cc ~ ')') if ((locale|default('nl'))|lower)[:2] == 'fr' else (('Country default (' ~ _erp_src_cc ~ ')') if ((locale|default('nl'))|lower)[:2] == 'en' else ('Landstandaard (' ~ _erp_src_cc ~ ')')) %}
+                {% else %}
+                {% set _erp_src_display = _erp_src_raw %}
+                {% endif %}
+                <tr><td style="font-weight: 600; padding: 4pt 10pt 4pt 0; vertical-align: top; border: none; color: hsl(var(--report-slate-600));">{{ t.market_label_erp_source }}</td><td style="padding: 4pt 0; vertical-align: top; border: none; line-height: 1.35; overflow-wrap: break-word; color: hsl(var(--report-slate-800));">{{ _erp_src_display or '—' }}</td></tr>
+                {% if market_data_provenance.gdp_growth_rate is not none %}
+                <tr><td style="font-weight: 600; padding: 4pt 10pt 4pt 0; vertical-align: top; border: none; color: hsl(var(--report-slate-600));">{{ t.market_label_gdp_growth }}</td><td class="tabular" style="padding: 4pt 0; vertical-align: top; border: none; color: hsl(var(--report-slate-900)); white-space: nowrap;">{{ (market_data_provenance.gdp_growth_rate * 100)|safe_round(2) }}%</td></tr>
+                {% endif %}
+                {% if market_data_provenance.valuation_date %}
+                <tr><td style="font-weight: 600; padding: 4pt 10pt 4pt 0; vertical-align: top; border: none; color: hsl(var(--report-slate-600));">{{ t.market_label_as_of }}</td><td class="tabular" style="padding: 4pt 0; vertical-align: top; border: none; color: hsl(var(--report-slate-900)); white-space: nowrap;">{{ market_data_provenance.valuation_date }}</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endif %}

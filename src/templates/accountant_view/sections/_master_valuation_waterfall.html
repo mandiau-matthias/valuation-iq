@@ -1,0 +1,248 @@
+<div class="page">
+{# VALUATION WATERFALL - Multiple-First Methodology #}
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 24pt; border: none; border-top: none;">
+    <tr>
+        <td style="padding: 0; border: none; vertical-align: middle;">
+            <h1 id="section-3" style="margin: 0 0 32pt 0; page-break-before: always; break-before: page;">{{ t.accountant_section_valuation_waterfall }}</h1>
+        </td>
+        <td style="padding: 0; border: none; text-align: right; vertical-align: middle;">
+            <div style="display: inline-block; padding: 6pt 10pt; margin: 0; border: 1pt solid #E2E8F0; border-radius: 4px; background-color: #f4f1ea;">
+                <span style="font-family: 'Inter', sans-serif; font-size: 8pt; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em;">USPAP Standard 9</span>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<div class="report-section">
+    <p style="font-size: 12pt; line-height: 1.6; color: #334155; margin-top: 0; margin-bottom: 24pt;">
+        {{ t.accountant_wf_intro | safe }}
+    </p>
+
+    <div style="margin-bottom: 24pt; padding: 18pt; background: #f4f1ea; border: 1px solid #e2e8f0; border-radius: 4px;">
+        <h4 style="font-family: 'Inter', sans-serif; font-size: 11pt; font-weight: 700; color: #2b303a; margin: 0 0 6pt 0;">
+            🎓 {{ t.accountant_wf_bridge_title }}
+        </h4>
+        <p style="font-family: 'EB Garamond', 'Garamond', 'Georgia', serif; font-size: 12pt; line-height: 1.6; color: #4b5563; margin: 0;">
+            {{ t.accountant_wf_bridge_text | safe }}
+        </p>
+    </div>
+
+    {% if valuation_waterfall and valuation_waterfall.steps and valuation_waterfall.steps | length > 0 %}
+        <table class="valuation-ledger">
+            <thead>
+                <tr>
+                    <th class="col-component">{{ t.accountant_wf_col_component }}</th>
+                    <th class="col-value">{{ t.accountant_wf_col_equity_value }}</th>
+                    <th class="col-multiple">{{ t.accountant_wf_col_multiple }}</th>
+                    <th class="col-ref">{{ t.accountant_wf_col_ref }}</th>
+                    <th class="col-methodology">{{ t.accountant_wf_col_methodology }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {# --- SECTION: NORMALIZATION BRIDGE --- #}
+                <tr>
+                    <td colspan="5" class="section-label">{{ t.accountant_wf_section_normalization_bridge }}</td>
+                </tr>
+                
+                {# Reported EBITDA #}
+                <tr>
+                    <td style="font-weight: 500;">{{ t.accountant_wf_reported_earnings }}</td>
+                    <td class="col-result">{{ (reported_ebitda or ebitda) | format_currency if (reported_ebitda or ebitda) else '-' }}</td>
+                    <td colspan="2" class="col-ref">-</td>
+                    <td class="col-formula">{{ t.accountant_wf_as_documented }}</td>
+                </tr>
+                
+                {# Normalized EBITDA #}
+                <tr style="background-color: #f4f1ea; border-bottom: 2px solid #e2e8f0;">
+                    <td style="font-weight: 700; color: #2b303a;">{{ t.accountant_wf_normalized_ebitda }}</td>
+                    <td class="col-result" style="font-weight: 700; color: #2b303a;">{{ (normalized_ebitda or ebitda) | format_currency if (normalized_ebitda or ebitda) else '-' }}</td>
+                    <td class="col-multiple-cell" style="color: #6b7280;">-</td>
+                    <td class="col-ref"><span class="academic-footnote">⁵</span></td>
+                    <td class="col-formula">
+                        {{ t.accountant_wf_representative_earnings }}
+                        {% if ebitda and revenue %}
+                            {% set margin_decimal = safe_decimal_multiply(safe_decimal_divide(ebitda, revenue, 0), 100, 0) %}
+                            ({{ margin_decimal | safe_round(1) }}% {{ t.accountant_wf_margin_suffix }})
+                        {% endif %}
+                    </td>
+                </tr>
+
+                {# --- SECTION: VALUATION BUILD-UP --- #}
+                <tr>
+                    <td colspan="5" class="section-label" style="border-top: 1px solid #f4f1ea; margin-top: 12pt;">{{ t.accountant_wf_section_calibration }}</td>
+                </tr>
+                {% set has_structural_header = false %}
+                {% for step in valuation_waterfall.steps %}
+                    {% set step_num = loop.index %}
+                    
+                    {# Detect Structural Adjustments block #}
+                    {% if not has_structural_header and ('Equity' in step.step_name or 'Debt' in step.step_name or 'Ownership' in step.step_name or 'Interest' in step.step_name) %}
+                        {% set has_structural_header = true %}
+                        <tr>
+                            <td colspan="5" class="section-label" style="border-top: 1px solid #f4f1ea; margin-top: 18pt; padding-top: 18pt;">{{ t.accountant_wf_section_structural }}</td>
+                        </tr>
+                    {% endif %}
+                    
+                    {% set adjustment_num = step.adjustment if step.adjustment is not none else None %}
+                    {% set is_final = loop.last %}
+                    
+                    {# Better step names matching info tab #}
+                    {% set display_name = step.step_name %}
+                    {% if 'Consensus' in step.step_name %}
+                        {% set display_name = t.accountant_wf_step_market_consensus %}
+                        {% set display_reason = t.accountant_wf_step_market_consensus_reason %}
+                    {% elif 'SME' in step.step_name %}
+                        {% set display_name = t.accountant_wf_step_sme_calibration %}
+                        {% set display_reason = t.accountant_wf_step_sme_calibration_reason %}
+                    {% elif 'Quality' in step.step_name %}
+                        {% set display_name = t.accountant_wf_step_quality %}
+                        {% set display_reason = t.accountant_wf_step_quality_reason %}
+                    {% elif 'Owner' in step.step_name %}
+                        {% set display_name = t.accountant_wf_step_owner %}
+                        {% set display_reason = t.accountant_wf_step_owner_reason %}
+                    {% elif 'Revenue Trend' in step.step_name %}
+                        {% set display_name = t.accountant_wf_step_revenue_trend %}
+                        {% set display_reason = t.accountant_wf_step_revenue_trend_reason %}
+                    {% elif 'Size' in step.step_name %}
+                        {% set display_name = t.accountant_wf_step_size %}
+                        {% set display_reason = t.accountant_wf_step_size_reason %}
+                    {% elif 'Liquidity' in step.step_name %}
+                        {% set display_name = t.accountant_wf_step_liquidity %}
+                        {% set display_reason = t.accountant_wf_step_liquidity_reason %}
+                    {% else %}
+                        {% set display_reason = step.calculation or step.rationale or step.step_name %}
+                    {% endif %}
+
+                    {% if is_final %}
+                        {# Final Step: Equity Value #}
+                        <tr class="row-final">
+                            <td>
+                                <div style="font-size: 9pt; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 3pt; opacity: 0.7;">{{ t.accountant_wf_conclusion_label }}</div>
+                                <div style="font-size: 13pt; font-weight: 700;">{{ step.step_name }}</div>
+                            </td>
+                            <td class="col-result">{{ step.after_value | format_currency if step.after_value is not none else '-' }}</td>
+                            <td class="col-multiple-cell" style="opacity: 0.9;">
+                                {% if ebitda and ebitda != 0 and step.after_value is not none %}
+                                    {{ safe_decimal_divide(step.after_value, ebitda, 0) | safe_round(2) }}×
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td class="col-ref" style="color: rgba(255,255,255,0.5);">-</td>
+                            <td class="col-formula">{{ t.accountant_wf_final_synthesized }}</td>
+                        </tr>
+                    {% else %}
+                        {# Standard Step #}
+                        <tr class="row-step">
+                            <td style="font-weight: 700; color: #2b303a;">{{ step_num }}. {{ display_name }}</td>
+                            <td class="col-result" style="font-size: 12pt; color: #6b7280;">
+                                {{ step.after_value | format_currency if step.after_value is not none else '-' }}
+                            </td>
+                            <td class="col-multiple-cell">
+                                {% if ebitda and ebitda != 0 and step.after_value is not none %}
+                                    {{ safe_decimal_divide(step.after_value, ebitda, 0) | safe_round(2) }}×
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td class="col-ref">
+                                {% if 'Consensus' in display_name or step_num == 1 %}<span class="academic-footnote">¹</span>
+                                {% elif 'Owner' in display_name %}<span class="academic-footnote">²</span>
+                                {% elif 'Size' in display_name %}<span class="academic-footnote">³</span>
+                                {% elif 'Liquidity' in display_name %}<span class="academic-footnote">⁴</span>
+                                {% endif %}
+                            </td>
+                            <td class="col-formula">
+                                {{ display_reason }}
+                            </td>
+                        </tr>
+                        
+                        {# Adjustment Row #}
+                        {% if adjustment_num is not none and adjustment_num != 0 %}
+                        <tr class="row-adjustment">
+                            <td style="padding-left: 24pt; position: relative; color: #6b7280;">
+                                <span style="position: absolute; left: 18pt; top: 0; color: #CBD5E1;">↳</span>
+                                {{ t.accountant_wf_impact_label }}
+                            </td>
+                            <td class="col-result" style="color: {% if adjustment_num < 0 %}#b85c56{% else %}#6b8e72{% endif %}; font-weight: 500; font-size: 10pt;">
+                                {{ adjustment_num | format_currency }}
+                            </td>
+                            <td class="col-multiple-cell" style="color: {% if adjustment_num < 0 %}#b85c56{% else %}#6b8e72{% endif %}; font-weight: 600; font-size: 11pt;">
+                                {% if ebitda and ebitda != 0 %}
+                                    {% set multiple_impact = safe_decimal_divide(adjustment_num, ebitda, 0) %}
+                                    {% if multiple_impact > 0 %}+{% endif %}{{ multiple_impact | safe_round(2) }}x
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td></td>
+                            <td style="font-size: 9pt; font-weight: 700; color: {% if adjustment_num < 0 %}#b85c56{% else %}#4a5d4f{% endif %}; text-transform: uppercase; letter-spacing: 0.05em;">
+                                {% if adjustment_num < 0 %}{{ t.accountant_wf_risk_discount }}{% else %}{{ t.accountant_wf_strength_premium }}{% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr class="row-adjustment"><td colspan="5" style="padding-top: 0;"></td></tr>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {# Application Summary Registry #}
+        <div style="margin-top: 24pt; padding: 18pt; background: #1e293b; color: #FFFFFF; border-radius: 8px; page-break-inside: avoid;">
+            <table style="width: 100%; border-collapse: collapse; border: none; border-top: none;">
+                <tr>
+                    <td style="text-align: center; border: none; vertical-align: middle; padding: 0;">
+                        <p style="font-size: 8pt; text-transform: uppercase; letter-spacing: 0.1em; color: #94A3B8; margin-bottom: 6pt;">{{ t.accountant_wf_earnings_label }}</p>
+                        <p style="font-size: 15pt; font-weight: 700; color: #FFFFFF; margin: 0;">{{ ebitda | format_currency if ebitda else '-' }}</p>
+                    </td>
+                    <td style="text-align: center; border: none; vertical-align: middle; width: 40pt; padding: 0;">
+                        <span style="font-size: 15pt; color: #94A3B8;">×</span>
+                    </td>
+                    <td style="text-align: center; border: none; vertical-align: middle; padding: 0;">
+                        <p style="font-size: 8pt; text-transform: uppercase; letter-spacing: 0.1em; color: #94A3B8; margin-bottom: 6pt;">{{ t.accountant_wf_final_multiple_label }}</p>
+                        <p style="font-size: 15pt; font-weight: 700; color: #FFFFFF; margin: 0;">
+                            {% if ebitda and ebitda != 0 and valuation_waterfall.steps[-1].after_value %}
+                                {{ safe_decimal_divide(valuation_waterfall.steps[-1].after_value, ebitda, 0) | safe_round(2) }}x
+                            {% else %}
+                                -
+                            {% endif %}
+                        </p>
+                    </td>
+                    <td style="text-align: center; border: none; vertical-align: middle; width: 40pt; padding: 0;">
+                        <span style="font-size: 15pt; color: #94A3B8;">=</span>
+                    </td>
+                    <td style="text-align: center; border: none; vertical-align: middle; padding: 0;">
+                        <p style="font-size: 8pt; text-transform: uppercase; letter-spacing: 0.1em; color: #94A3B8; margin-bottom: 6pt;">{{ t.accountant_wf_intrinsic_value_label }}</p>
+                        <p style="font-size: 18pt; font-weight: 800; color: #6b8e72; margin: 0;">{{ valuation_waterfall.steps[-1].after_value | format_currency if valuation_waterfall.steps[-1].after_value else '-' }}</p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        {# Footer Source Registry #}
+        <div style="margin-top: 24pt; border-left: 4px solid #2b303a; padding-left: 18pt;">
+            <h4 style="font-family: 'Inter', sans-serif; font-size: 11pt; font-weight: 700; color: #2b303a; margin: 0 0 12pt 0; text-transform: uppercase; letter-spacing: 0.05em;">
+                {{ t.accountant_wf_source_registry_title }}
+            </h4>
+            <div style="font-family: 'EB Garamond', 'Garamond', 'Georgia', serif; font-size: 10pt; color: #6b7280; line-height: 1.8;">
+                <p style="margin-bottom: 9pt;"><span class="academic-footnote">¹</span> <strong>{{ t.accountant_wf_footnote_market_consensus_label }}</strong> {{ t.accountant_wf_footnote_market_consensus_body }}</p>
+                <p style="margin-bottom: 9pt;"><span class="academic-footnote">²</span> <strong>{{ t.accountant_wf_footnote_unsystematic_label }}</strong> {{ t.accountant_wf_footnote_unsystematic_body }}</p>
+                <p style="margin-bottom: 9pt;"><span class="academic-footnote">³</span> <strong>{{ t.accountant_wf_footnote_size_label }}</strong> {{ t.accountant_wf_footnote_size_body }}</p>
+                <p style="margin-bottom: 9pt;"><span class="academic-footnote">⁴</span> <strong>{{ t.accountant_wf_footnote_illiquidity_label }}</strong> {{ t.accountant_wf_footnote_illiquidity_body }}</p>
+                <p style="margin-bottom: 9pt;"><span class="academic-footnote">⁵</span> <strong>{{ t.accountant_wf_footnote_normalization_label }}</strong> {{ t.accountant_wf_footnote_normalization_body }}</p>
+                <p style="margin-bottom: 9pt;"><span class="academic-footnote">⁶</span> <strong>{{ t.accountant_wf_footnote_revenue_trend_label }}</strong> {{ t.accountant_wf_footnote_revenue_trend_body }}</p>
+                <div style="margin-top: 12pt; padding-top: 12pt; border-top: 1px solid #e2e8f0; font-style: italic; font-size: 9pt;">
+                    <strong>{{ t.accountant_wf_methodology_note_label }}</strong> {{ t.accountant_wf_methodology_note_body }}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="report-callout warning">
+            <h4 style="color: #b85c56;">{{ t.accountant_wf_no_schedule_title }}</h4>
+            <p>{{ t.accountant_wf_no_schedule_text }}</p>
+        </div>
+    {% endif %}
+</div>
+</div>
+

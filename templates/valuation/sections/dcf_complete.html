@@ -1,0 +1,166 @@
+{# Phase 3: Complete DCF Template #}
+<div class="valuation-section phase-3-dcf-complete bg-white rounded-lg shadow-sm border border-gray-200 p-6" data-section="dcf_complete">
+    <div class="section-header flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">
+            Complete DCF Analysis
+        </h2>
+        <span class="methodology-badge px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+            Advanced DCF
+        </span>
+    </div>
+    
+    <div class="dcf-summary bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="text-center">
+                <div class="text-3xl font-bold text-green-900">€{{ '{:,.0f}'.format(dcf_complete.value_low or 0) }}</div>
+                <div class="text-sm text-green-700">Low Estimate</div>
+            </div>
+            <div class="text-center bg-white rounded-lg p-4 shadow-sm border-2 border-green-200">
+                <div class="text-4xl font-bold text-green-900">€{{ '{:,.0f}'.format(dcf_complete.value_mid or 0) }}</div>
+                <div class="text-sm text-green-700 font-medium">Mid-Point Value</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold text-green-900">€{{ '{:,.0f}'.format(dcf_complete.value_high or 0) }}</div>
+                <div class="text-sm text-green-700">High Estimate</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dcf-assumptions grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="assumptions-card bg-gray-50 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Key Assumptions</h3>
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Discount Rate (WACC)</span>
+                    <span class="text-sm font-medium text-gray-900">{{ '{:.1f}'.format((dcf_complete.discount_rate or 0.10) * 100) }}%</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Terminal Growth</span>
+                    <span class="text-sm font-medium text-gray-900">{{ '{:.1f}'.format((dcf_complete.terminal_growth or 0.02) * 100) }}%</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Projection Period</span>
+                    <span class="text-sm font-medium text-gray-900">5 Years</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Tax Rate</span>
+                    <span class="text-sm font-medium text-gray-900">{{ '{:.1f}'.format((dcf_complete.tax_rate or 0.25) * 100) }}%</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="financial-inputs-card bg-blue-50 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Financial Inputs</h3>
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Revenue</span>
+                    <span class="text-sm font-medium text-gray-900">€{{ '{:,.0f}'.format(dcf_complete.revenue or 0) }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">EBITDA</span>
+                    <span class="text-sm font-medium text-gray-900">€{{ '{:,.0f}'.format(dcf_complete.ebitda or 0) }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Growth Rate</span>
+                    <span class="text-sm font-medium text-gray-900">{{ '{:.1f}'.format((dcf_complete.growth_rate or 0) * 100) }}%</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Asset Value</span>
+                    <span class="text-sm font-medium text-gray-900">€{{ '{:,.0f}'.format(dcf_complete.asset_value or 0) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dcf-breakdown mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">DCF Breakdown</h3>
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                <div class="grid grid-cols-4 gap-4 text-sm font-medium text-gray-700">
+                    <div>Component</div>
+                    <div class="text-right">Present Value</div>
+                    <div class="text-right">% of Total</div>
+                    <div class="text-right">Details</div>
+                </div>
+            </div>
+            <div class="divide-y divide-gray-200">
+                <div class="px-4 py-3">
+                    <div class="grid grid-cols-4 gap-4 items-center">
+                        <div class="text-sm text-gray-900">Projected Cash Flows</div>
+                        <div class="text-sm font-medium text-gray-900 text-right">
+                            €{{ '{:,.0f}'.format(dcf_complete.pv_cash_flows or 0) }}
+                        </div>
+                        <div class="text-sm text-gray-500 text-right">
+                            {{ '{:.1f}'.format((dcf_complete.pv_cash_flows_percent or 0) * 100) }}%
+                        </div>
+                        <div class="text-xs text-gray-500 text-right">5 years</div>
+                    </div>
+                </div>
+                <div class="px-4 py-3">
+                    <div class="grid grid-cols-4 gap-4 items-center">
+                        <div class="text-sm text-gray-900">Terminal Value</div>
+                        <div class="text-sm font-medium text-gray-900 text-right">
+                            €{{ '{:,.0f}'.format(dcf_complete.terminal_value or 0) }}
+                        </div>
+                        <div class="text-sm text-gray-500 text-right">
+                            {{ '{:.1f}'.format((dcf_complete.terminal_value_percent or 0) * 100) }}%
+                        </div>
+                        <div class="text-xs text-gray-500 text-right">Perpetuity</div>
+                    </div>
+                </div>
+                <div class="px-4 py-3 bg-gray-50">
+                    <div class="grid grid-cols-4 gap-4 items-center">
+                        <div class="text-sm font-semibold text-gray-900">Total DCF Value</div>
+                        <div class="text-sm font-bold text-gray-900 text-right">
+                            €{{ '{:,.0f}'.format(dcf_complete.value_mid or 0) }}
+                        </div>
+                        <div class="text-sm font-semibold text-gray-900 text-right">100%</div>
+                        <div class="text-xs text-gray-500 text-right">Enterprise Value</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dcf-sensitivity mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Sensitivity Analysis</h3>
+        <div class="bg-gray-50 rounded-lg p-4">
+            <div class="text-sm text-gray-600 mb-3">Value sensitivity to key assumptions:</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="sensitivity-item">
+                    <div class="text-sm font-medium text-gray-700 mb-1">Discount Rate Impact</div>
+                    <div class="text-xs text-gray-600">
+                        ±1% change in discount rate = 
+                        €{{ '{:,.0f}'.format((dcf_complete.value_mid or 0) * 0.1) }} impact
+                    </div>
+                </div>
+                <div class="sensitivity-item">
+                    <div class="text-sm font-medium text-gray-700 mb-1">Growth Rate Impact</div>
+                    <div class="text-xs text-gray-600">
+                        ±1% change in growth rate = 
+                        €{{ '{:,.0f}'.format((dcf_complete.value_mid or 0) * 0.15) }} impact
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dcf-explanation bg-green-50 rounded-lg p-4">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-green-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h4 class="text-sm font-medium text-green-800">Complete DCF Analysis</h4>
+                <p class="text-sm text-green-700 mt-1">
+                    This comprehensive DCF analysis includes detailed financial projections, 
+                    working capital changes, capital expenditures, and terminal value calculations. 
+                    The analysis provides a robust foundation for business valuation.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,144 @@
+{#
+    STARTUP VALUATION — METHODOLOGY APPENDIX (PDF / WeasyPrint)
+
+    Table-flavoured mirror of main_report/pages/startup_methodology.html
+    so the PDF carries the same defensibility narrative every M&A
+    reviewer expects to find on the audit-trail page.
+#}
+
+<div class="a4-page">
+    {% include "main_report_pdf/partials/_page_header.html" ignore missing %}
+
+    <h1 style="font-size: 18pt; margin-bottom: 4pt;">{{ startup_report.t.methodology_section_title }}</h1>
+    <p style="font-size: 9pt; color: #4a5460; margin-bottom: 12pt;">
+        {{ startup_report.t.methodology_section_lead }}
+    </p>
+
+    <h2 style="font-size: 12pt; margin: 8pt 0 4pt;">
+        {{ startup_report.t.methodology_methods_title }}
+    </h2>
+
+    <table style="width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-bottom: 12pt;">
+        <thead>
+            <tr style="background: #f4f5f7;">
+                <th style="text-align: left; padding: 4pt; border: 1pt solid #e1e4ea; width: 24%;">{{ startup_report.t.methodology_col_method }}</th>
+                <th style="text-align: left; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.methodology_col_purpose }}</th>
+                <th style="text-align: left; padding: 4pt; border: 1pt solid #e1e4ea; width: 28%;">{{ startup_report.t.methodology_col_formula }}</th>
+                <th style="text-align: left; padding: 4pt; border: 1pt solid #e1e4ea; width: 22%;">{{ startup_report.t.methodology_col_source }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; vertical-align: top; font-weight: 700;">
+                    {{ startup_report.t.method_berkus }}
+                </td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; vertical-align: top; line-height: 1.5;">
+                    {{ startup_report.t.methodology_berkus_body }}
+                </td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; vertical-align: top; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-size: 7.5pt;">
+                    {{ startup_report.t.methodology_berkus_formula }}
+                </td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; vertical-align: top; color: #4a5460; font-size: 7.5pt;">
+                    {{ startup_report.t.methodology_berkus_source }}
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; vertical-align: top; font-weight: 700;">
+                    {{ startup_report.t.method_scorecard_payne }}
+                </td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; vertical-align: top; line-height: 1.5;">
+                    {{ startup_report.t.methodology_scorecard_body }}
+                </td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; vertical-align: top; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-size: 7.5pt;">
+                    {{ startup_report.t.methodology_scorecard_formula }}
+                </td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; vertical-align: top; color: #4a5460; font-size: 7.5pt;">
+                    {{ startup_report.t.methodology_scorecard_source }}
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; vertical-align: top; font-weight: 700;">
+                    {{ startup_report.t.method_vc }}
+                </td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; vertical-align: top; line-height: 1.5;">
+                    {{ startup_report.t.methodology_vc_body }}
+                </td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; vertical-align: top; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-size: 7.5pt;">
+                    {{ startup_report.t.methodology_vc_formula }}
+                </td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; vertical-align: top; color: #4a5460; font-size: 7.5pt;">
+                    {{ startup_report.t.methodology_vc_source }}
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; vertical-align: top; font-weight: 700;">
+                    {{ startup_report.t.method_saas_forward }}
+                </td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; vertical-align: top; line-height: 1.5;">
+                    {{ startup_report.t.methodology_saas_forward_body }}
+                </td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; vertical-align: top; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-size: 7.5pt;">
+                    {{ startup_report.t.methodology_saas_forward_formula }}
+                </td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; vertical-align: top; color: #4a5460; font-size: 7.5pt;">
+                    {{ startup_report.t.methodology_saas_forward_source }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 style="font-size: 12pt; margin: 8pt 0 4pt;">
+        {{ startup_report.t.methodology_canonical_title }}
+    </h2>
+    <p style="font-size: 9pt; line-height: 1.5; margin-bottom: 6pt;">
+        {{ startup_report.t.methodology_canonical_body }}
+    </p>
+    <table style="width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-bottom: 12pt;">
+        <tr>
+            <td style="padding: 4pt; border: 1pt solid #e1e4ea; width: 28%; font-weight: 700;">{{ startup_report.t.methodology_canonical_advisor_label }}</td>
+            <td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.methodology_canonical_advisor_body }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 4pt; border: 1pt solid #e1e4ea; font-weight: 700;">{{ startup_report.t.methodology_canonical_founder_label }}</td>
+            <td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.methodology_canonical_founder_body }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 4pt; border: 1pt solid #e1e4ea; font-weight: 700;">{{ startup_report.t.methodology_canonical_headline_label }}</td>
+            <td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.methodology_canonical_headline_body }}</td>
+        </tr>
+    </table>
+
+    <h2 style="font-size: 12pt; margin: 8pt 0 4pt;">
+        {{ startup_report.t.methodology_overlays_title }}
+    </h2>
+    <table style="width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-bottom: 12pt;">
+        <thead>
+            <tr style="background: #f4f5f7;">
+                <th style="text-align: left; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.methodology_overlay_col_layer }}</th>
+                <th style="text-align: left; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.methodology_overlay_col_what }}</th>
+                <th style="text-align: left; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.methodology_overlay_col_when }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea; font-weight: 700;">{{ startup_report.t.methodology_overlay_pedigree_layer }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.methodology_overlay_pedigree_what }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; color: #4a5460;">{{ startup_report.t.methodology_overlay_pedigree_when }}</td></tr>
+            <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea; font-weight: 700;">{{ startup_report.t.methodology_overlay_lens_layer }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.methodology_overlay_lens_what }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; color: #4a5460;">{{ startup_report.t.methodology_overlay_lens_when }}</td></tr>
+            <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea; font-weight: 700;">{{ startup_report.t.methodology_overlay_outlier_layer }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.methodology_overlay_outlier_what }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; color: #4a5460;">{{ startup_report.t.methodology_overlay_outlier_when }}</td></tr>
+            <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea; font-weight: 700;">{{ startup_report.t.methodology_overlay_sector_layer }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.methodology_overlay_sector_what }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; color: #4a5460;">{{ startup_report.t.methodology_overlay_sector_when }}</td></tr>
+        </tbody>
+    </table>
+
+    <h2 style="font-size: 12pt; margin: 8pt 0 4pt;">
+        {{ startup_report.t.methodology_sources_title }}
+    </h2>
+    <ul style="font-size: 9pt; line-height: 1.5; padding-left: 1rem; margin-bottom: 8pt;">
+        <li style="margin-bottom: 3pt;">{{ startup_report.t.methodology_source_atomico }}</li>
+        <li style="margin-bottom: 3pt;">{{ startup_report.t.methodology_source_dealroom }}</li>
+        <li style="margin-bottom: 3pt;">{{ startup_report.t.methodology_source_bessemer }}</li>
+        <li style="margin-bottom: 3pt;">{{ startup_report.t.methodology_source_keybanc }}</li>
+        <li>{{ startup_report.t.methodology_source_damodaran }}</li>
+    </ul>
+
+    <p style="font-size: 7.5pt; color: #4a5460; margin-top: 8pt; border-top: 1pt solid #e1e4ea; padding-top: 4pt;">
+        {{ startup_report.t.methodology_disclaimer }}
+    </p>
+</div>

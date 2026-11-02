@@ -1,0 +1,92 @@
+{
+  "$defs": {
+    "MethodEligibilityDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "eligible": {
+          "title": "Eligible",
+          "type": "boolean"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        },
+        "value_basis": {
+          "anyOf": [
+            {
+              "enum": [
+                "equity_value",
+                "enterprise_value"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value Basis"
+        }
+      },
+      "required": [
+        "eligible",
+        "value_basis",
+        "reason"
+      ],
+      "title": "MethodEligibilityDecision",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "equity_status": {
+      "enum": [
+        "available",
+        "unavailable_incomplete_bridge"
+      ],
+      "title": "Equity Status",
+      "type": "string"
+    },
+    "methods": {
+      "additionalProperties": {
+        "$ref": "#/$defs/MethodEligibilityDecision"
+      },
+      "title": "Methods",
+      "type": "object"
+    },
+    "policy_version": {
+      "enum": [
+        "source-evidence-required.v1",
+        "legacy-evidence-admission.v1"
+      ],
+      "title": "Policy Version",
+      "type": "string"
+    },
+    "resolved_weights": {
+      "items": {
+        "type": "object"
+      },
+      "title": "Resolved Weights",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "method-eligibility.v1",
+      "default": "method-eligibility.v1",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "policy_version",
+    "methods",
+    "equity_status"
+  ],
+  "title": "MethodEligibility",
+  "type": "object"
+}

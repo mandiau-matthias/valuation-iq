@@ -1,0 +1,102 @@
+{#
+    LIQUIDATION ANALYSIS — PAGE: REALISATION SCHEDULE (PDF version)
+
+    PDF twin of main_report/pages/liquidation_realisation_schedule.html.
+    Phase 1 §3 — 12-class statement of net realisable value.
+#}
+{% set lr = liquidation_report %}
+{% if lr.asset_schedule %}
+{% set s = lr.asset_schedule %}
+<section class="pdf-page liquidation-page">
+    <header class="pdf-section-header">
+        <span class="pdf-section-number">04</span>
+        <h1 class="pdf-section-title">{{ lr.t.schedule_section_title }}</h1>
+        <span class="pdf-badge">{{ lr.t.schedule_section_subtitle }}</span>
+    </header>
+
+    {# Split into two stacked tables — 8 columns at PDF body size
+       overflowed the A4 portrait content width and forced WeasyPrint
+       to cramp the EUR values (audit P1 #7).  Mirrors the screen
+       restructure. #}
+    <h2 class="pdf-h2">{{ lr.t.scenario_orderly }}</h2>
+    <table class="pdf-table pdf-table-compact">
+        <thead>
+            <tr>
+                <th>{{ lr.t.schedule_col_class }}</th>
+                <th class="pdf-num">{{ lr.t.schedule_col_book }}</th>
+                <th class="pdf-num">{{ lr.t.schedule_col_adjusted }}</th>
+                <th class="pdf-num">{{ lr.t.schedule_col_orderly_factor }}</th>
+                <th class="pdf-num">{{ lr.t.schedule_col_orderly }}</th>
+                <th class="pdf-num">{{ lr.t.schedule_col_orderly_month }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in s.lines %}
+            <tr>
+                <td>{{ line.class_label }}</td>
+                <td class="pdf-num">€{{ line.book_value|format_eur_amount }}</td>
+                <td class="pdf-num">€{{ line.adjusted_value|format_eur_amount }}</td>
+                <td class="pdf-num">{{ line.orderly_recovery_factor|format_factor_pct(0) }}</td>
+                <td class="pdf-num">€{{ line.orderly_realisable_value|format_eur_amount }}</td>
+                <td class="pdf-num">{{ line.orderly_disposal_month }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="pdf-row-total">
+                <td>{{ lr.t.schedule_total_label }}</td>
+                <td class="pdf-num">€{{ s.total_book|format_eur_amount }}</td>
+                <td class="pdf-num">€{{ s.total_adjusted|format_eur_amount }}</td>
+                <td></td>
+                <td class="pdf-num">€{{ s.total_orderly_realisable|format_eur_amount }}</td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 class="pdf-h2">{{ lr.t.scenario_forced }}</h2>
+    <table class="pdf-table pdf-table-compact">
+        <thead>
+            <tr>
+                <th>{{ lr.t.schedule_col_class }}</th>
+                <th class="pdf-num">{{ lr.t.schedule_col_adjusted }}</th>
+                <th class="pdf-num">{{ lr.t.schedule_col_forced_factor }}</th>
+                <th class="pdf-num">{{ lr.t.schedule_col_forced }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in s.lines %}
+            <tr>
+                <td>{{ line.class_label }}</td>
+                <td class="pdf-num">€{{ line.adjusted_value|format_eur_amount }}</td>
+                <td class="pdf-num">{{ line.forced_recovery_factor|format_factor_pct(0) }}</td>
+                <td class="pdf-num">€{{ line.forced_realisable_value|format_eur_amount }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="pdf-row-total">
+                <td>{{ lr.t.schedule_total_label }}</td>
+                <td class="pdf-num">€{{ s.total_adjusted|format_eur_amount }}</td>
+                <td></td>
+                <td class="pdf-num">€{{ s.total_forced_realisable|format_eur_amount }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    {% if s.unallocated_book and s.unallocated_book > 0 %}
+    <div class="pdf-card pdf-card-warning">
+        <div class="pdf-card-eyebrow">{{ lr.t.schedule_unallocated_label }}: €{{ s.unallocated_book|format_eur_amount }}</div>
+        <div class="pdf-prose">{{ lr.t.schedule_unallocated_warning }}</div>
+    </div>
+    {% endif %}
+
+    {% if s.warnings %}
+    <div class="pdf-card pdf-card-muted">
+        {% for w in s.warnings %}<div>{{ w }}</div>{% endfor %}
+    </div>
+    {% endif %}
+
+    {% if s.sources %}
+    <div class="pdf-sources">
+        {{ lr.t.sources_label }}: {{ s.sources|join(' · ') }}
+    </div>
+    {% endif %}
+</section>
+{% endif %}

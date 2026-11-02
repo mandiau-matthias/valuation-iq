@@ -1,0 +1,45 @@
+{#
+    LIQUIDATION ANALYSIS — PAGE: PREMISE OF VALUE (PDF version)
+
+    PDF twin of main_report/pages/liquidation_premise.html. Phase 1 §1.
+    Renders only when the engine emitted ``liquidation_report.premise``.
+#}
+{% set lr = liquidation_report %}
+{% if lr.premise %}
+{% set p = lr.premise %}
+<section class="pdf-page liquidation-page">
+    <header class="pdf-section-header">
+        <span class="pdf-section-number">02</span>
+        <h1 class="pdf-section-title">{{ lr.t.premise_section_title }}</h1>
+        <span class="pdf-badge">{{ lr.t.premise_section_subtitle }}</span>
+    </header>
+
+    <div class="pdf-grid pdf-grid-2">
+        <div class="pdf-card pdf-card-primary">
+            <div class="pdf-card-eyebrow">{{ lr.t.premise_primary_label }}</div>
+            <div class="pdf-card-headline">{{ p.primary_label }}</div>
+            <div class="pdf-card-meta">{{ p.trigger_label }}</div>
+        </div>
+        <div class="pdf-card pdf-card-muted">
+            <div class="pdf-card-eyebrow">{{ lr.t.premise_secondary_label }}</div>
+            <div class="pdf-card-subheadline">{{ p.secondary_label }}</div>
+        </div>
+    </div>
+
+    <div class="pdf-card pdf-card-muted">
+        <div class="pdf-card-eyebrow">{{ lr.t.premise_weights_label }}</div>
+        <div class="pdf-prose">{{ lr.t.premise_weights_unavailable }}</div>
+    </div>
+
+    <div class="pdf-card pdf-card-muted">
+        <div class="pdf-card-eyebrow">{{ lr.t.premise_rationale_label }}</div>
+        <div class="pdf-prose">{{ p.rationale }}</div>
+    </div>
+
+    {% if p.sources %}
+    <div class="pdf-sources">
+        {{ lr.t.sources_label }}: {{ p.sources|join(' · ') }}
+    </div>
+    {% endif %}
+</section>
+{% endif %}

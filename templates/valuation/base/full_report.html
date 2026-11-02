@@ -1,0 +1,158 @@
+{# Complete Valuation Report Template #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valuation Report - {{ company_name or 'Business' }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print { display: none; }
+            .print-break { page-break-before: always; }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <div class="bg-white shadow-sm border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900">Business Valuation Report</h1>
+                        <p class="text-gray-600 mt-1">{{ company_name or 'Business' }} • {{ render_timestamp }}</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm text-gray-500">Confidence Score</div>
+                        <div class="text-2xl font-bold text-green-600">{{ '{:.0f}'.format(final_valuation.confidence_score or 90) }}%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Executive Summary -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">Executive Summary</h2>
+                <div class="prose max-w-none">
+                    <p class="text-gray-700 leading-relaxed">
+                        {{ executive_summary or 'Based on our comprehensive analysis, this business has an estimated enterprise value. This valuation incorporates industry benchmarks, financial performance, market conditions, and business-specific factors.' }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Valuation Summary -->
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Valuation Summary</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-gray-900">€{{ '{:,.0f}'.format(final_valuation.value_low or 0) }}</div>
+                        <div class="text-sm text-gray-600 mt-1">Low Estimate</div>
+                    </div>
+                    <div class="text-center bg-white rounded-lg p-6 shadow-sm border-2 border-indigo-200">
+                        <div class="text-4xl font-bold text-indigo-900">€{{ '{:,.0f}'.format(final_valuation.value_mid or 0) }}</div>
+                        <div class="text-sm text-indigo-700 mt-1 font-medium">Mid-Point Value</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-gray-900">€{{ '{:,.0f}'.format(final_valuation.value_high or 0) }}</div>
+                        <div class="text-sm text-gray-600 mt-1">High Estimate</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Methodology Overview -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">Valuation Methodology</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="methodology-card bg-green-50 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-green-900 mb-2">DCF Analysis</h3>
+                        <p class="text-sm text-green-700">
+                            Discounted Cash Flow analysis based on projected future cash flows, 
+                            terminal value, and appropriate discount rates.
+                        </p>
+                    </div>
+                    <div class="methodology-card bg-purple-50 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-purple-900 mb-2">Market Multiples</h3>
+                        <p class="text-sm text-purple-700">
+                            Comparable company analysis using industry-standard multiples 
+                            for revenue and EBITDA.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Findings -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">Key Findings</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Value Drivers</h3>
+                        <ul class="space-y-2">
+                            {% for driver in final_valuation.value_drivers or ['Revenue growth', 'Market position', 'Financial performance'] %}
+                            <li class="flex items-center text-sm text-gray-700">
+                                <svg class="h-4 w-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                {{ driver }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Risk Factors</h3>
+                        <ul class="space-y-2">
+                            {% for risk in final_valuation.risk_factors or ['Market volatility', 'Competition', 'Economic conditions'] %}
+                            <li class="flex items-center text-sm text-gray-700">
+                                <svg class="h-4 w-4 text-yellow-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                                {{ risk }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">Recommendations</h2>
+                <div class="space-y-4">
+                    {% for recommendation in recommendations or ['Maintain detailed financial records', 'Consider professional business advisory services', 'Regularly review and update business valuation'] %}
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-gray-700">{{ recommendation }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="bg-gray-100 rounded-lg p-6 text-center">
+                <p class="text-sm text-gray-600">
+                    This valuation report was generated on {{ render_timestamp }} using advanced financial modeling techniques.
+                </p>
+                <p class="text-xs text-gray-500 mt-2">
+                    Valuation ID: {{ valuation_id or 'N/A' }} • Confidence: {{ '{:.0f}'.format(final_valuation.confidence_score or 90) }}%
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

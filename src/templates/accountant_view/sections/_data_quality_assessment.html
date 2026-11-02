@@ -1,0 +1,81 @@
+{% if data_quality_assessment %}
+<h3 style="font-family: 'Inter', sans-serif; font-size: 14pt; font-weight: 600; color: #2b303a; margin-top: 32pt; margin-bottom: 16pt;">Data Quality Assessment</h3>
+
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 32pt; border: none; border-top: none;">
+    <tr>
+        <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+            <div style="background: #2b303a; color: #FFFFFF; padding: 24pt; border-radius: 8px;">
+                <p style="font-size: 9pt; text-transform: uppercase; letter-spacing: 1pt; color: #94A3B8; margin-bottom: 8pt; font-weight: 700;">Overall Data Quality</p>
+                <p style="font-size: 32pt; font-weight: 800; margin: 0;">{{ data_quality_assessment.quality_score | round }}%</p>
+                <p style="font-size: 10pt; color: #94A3B8; margin-top: 8pt;">Integrity of inputs.</p>
+            </div>
+        </td>
+        <td style="width: 4%; border: none;"></td>
+        <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 24pt; border-radius: 8px;">
+                <p style="font-size: 9pt; text-transform: uppercase; letter-spacing: 1pt; color: #64748B; margin-bottom: 8pt; font-weight: 700;">Confidence Score</p>
+                <p style="font-size: 32pt; font-weight: 800; color: {% if data_quality_assessment.confidence_score >= 80 %}#6b8e72{% elif data_quality_assessment.confidence_score >= 60 %}#d9a558{% else %}#b85c56{% endif %}; margin: 0;">
+                    {{ data_quality_assessment.confidence_score }}%
+                </p>
+                <p style="font-size: 10pt; color: #64748B; margin-top: 8pt;">Defensibility rating.</p>
+            </div>
+        </td>
+    </tr>
+</table>
+
+{% if data_quality_assessment.dimension_scores %}
+<h4 style="font-family: 'Inter', sans-serif; font-size: 12pt; font-weight: 600; color: #2b303a; margin-bottom: 16pt;">Quality Dimensions</h4>
+<table style="width: 100%; border-collapse: collapse; margin-top: 0; border: none; border-top: none;">
+    {% for row in data_quality_assessment.dimension_scores.items() | batch(2) %}
+    <tr>
+        {% for dimension, score in row %}
+        {% set score_int = score | round | int %}
+        {% set dim_color = '#6b8e72' if score_int >= 80 else '#d9a558' if score_int >= 60 else '#b85c56' %}
+        <td style="width: 48%; padding: 0; border: none; vertical-align: top; padding-bottom: 16pt;">
+            <div style="background-color: #FFFFFF; border: 1px solid var(--border-light); padding: 16pt;">
+                <table style="width: 100%; border-collapse: collapse; margin: 0; border: none; border-top: none;">
+                    <tr>
+                        <td style="padding: 0; border: none; vertical-align: middle;">
+                            <span style="font-family: 'Inter', sans-serif; font-weight: 600; font-size: 11pt; color: #2b303a;">{{ dimension.replace('_', ' ').title() }}</span>
+                        </td>
+                        <td style="padding: 0; border: none; text-align: right; vertical-align: middle;">
+                            <span style="font-family: 'Inter', sans-serif; font-weight: 700; color: {{ dim_color }};">{{ score_int }}%</span>
+                        </td>
+                    </tr>
+                </table>
+                <div style="width: 100%; background-color: #F1F5F9; height: 4pt; overflow: hidden; margin-top: 8pt;">
+                    <div style="height: 100%; background-color: {{ dim_color }}; width: {{ score_int }}%;"></div>
+                </div>
+            </div>
+        </td>
+        {% if loop.first and not loop.last %}
+        <td style="width: 4%; border: none;"></td>
+        {% endif %}
+        {% endfor %}
+        {% if row|length == 1 %}
+        <td style="width: 4%; border: none;"></td>
+        <td style="width: 48%; border: none;"></td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+</table>
+{% endif %}
+
+{% if data_quality_assessment.quality_warnings %}
+<div class="report-callout warning" style="margin-top: 24pt;">
+    <h4 style="font-family: 'Inter', sans-serif; font-size: 12pt; margin-top: 0; margin-bottom: 12pt; color: #d9a558;">Data Quality Warnings</h4>
+    <ul style="margin: 0; padding-left: 14pt; font-family: 'Inter', sans-serif; font-size: 11pt; color: #d9a558;">
+        {% for warning in data_quality_assessment.quality_warnings %}
+        <li style="margin-bottom: 8pt;">
+            {% if warning.severity %}<strong>{{ warning.severity | title }}:</strong> {% endif %}
+            {{ warning.message if warning.message else warning }}
+            {% if warning.recommended_action %}
+            <br><em style="font-size: 11pt; color: #B45309;">Recommendation: {{ warning.recommended_action }}</em>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% endif %}

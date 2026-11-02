@@ -1,0 +1,80 @@
+{#
+    COMPARABLE-DEALS TABLE — screen version (Aurora design tokens)
+    ===============================================================
+    Renders the engine-supplied list of M&A comparables as a compact table.
+    Hidden silently when `comparables` is empty — caller doesn't need to
+    pre-gate the include.
+
+    M&A reviewers expect a peer-deals table on every multiple-driven dossier
+    (Pratt 2017 §8.2 — "the multiple is only as defensible as the comparables
+    behind it"). Without this table, a CFO has only the engine-supplied
+    `n=32 transactions` count to go on, which is not enough to challenge the
+    multiple. The aggregator already surfaces `comparables` (see
+    `main_report_data_aggregator.py:3087`) but no template iterated it
+    until now.
+
+    Each comparable carries:
+      - name (str)
+      - ev_ebitda_multiple (float, optional)
+      - ev_revenue_multiple (float, optional)
+      - pe_ratio (float, optional)
+
+    We cap rendering at 8 rows so the table stays scannable on a narrow
+    page; the n-count footnote already conveys the full sample size.
+
+    Expected context:
+      comparables  list[dict]
+      t            ReportTranslations
+      teal_hsl     str
+#}
+{% if comparables and comparables|length > 0 %}
+{% set _rows = comparables[:8] %}
+<div style="margin-top: var(--space-3); padding: var(--space-3); border: 1pt solid hsl(var(--report-slate-200)); border-radius: 6pt; background: white; page-break-inside: avoid; break-inside: avoid;">
+    <div style="display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2);">
+        <h4 style="font-size: 9pt; margin: 0; color: hsl(var(--report-slate-900));">
+            {{ t.comparables_table_title }}
+        </h4>
+        <span style="font-size: var(--font-size-xs); font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-text-muted));">
+            n={{ comparables|length }}
+            {% if comparables|length > 8 %}<span style="font-style: italic; color: hsl(var(--report-slate-500));"> · top 8</span>{% endif %}
+        </span>
+    </div>
+    <p style="margin: 0 0 var(--space-2) 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.45;">
+        {{ t.comparables_table_subtitle }}
+    </p>
+    <table style="width: 100%; border-collapse: collapse; font-size: var(--font-size-sm);">
+        <thead>
+            <tr style="border-bottom: 1pt solid hsl(var(--report-slate-200));">
+                <th style="text-align: left; padding: 4pt 6pt; font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-slate-700)); border: none;">
+                    {{ t.comparables_table_col_name }}
+                </th>
+                <th style="text-align: right; padding: 4pt 6pt; font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-slate-700)); border: none;">
+                    {{ t.comparables_table_col_ev_ebitda }}
+                </th>
+                <th style="text-align: right; padding: 4pt 6pt; font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-slate-700)); border: none;">
+                    {{ t.comparables_table_col_ev_revenue }}
+                </th>
+                <th style="text-align: right; padding: 4pt 6pt; font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-slate-700)); border: none;">
+                    {{ t.comparables_table_col_pe }}
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in _rows %}
+            <tr style="border-bottom: 1pt solid hsl(var(--report-slate-100));">
+                <td style="padding: 4pt 6pt; color: hsl(var(--report-slate-800)); border: none;">{{ c.name|default('—') }}</td>
+                <td style="padding: 4pt 6pt; text-align: right; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-slate-900)); border: none;">
+                    {% if c.ev_ebitda_multiple is not none %}{{ c.ev_ebitda_multiple|safe_round(2) }}×{% else %}—{% endif %}
+                </td>
+                <td style="padding: 4pt 6pt; text-align: right; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-slate-700)); border: none;">
+                    {% if c.ev_revenue_multiple is not none %}{{ c.ev_revenue_multiple|safe_round(2) }}×{% else %}—{% endif %}
+                </td>
+                <td style="padding: 4pt 6pt; text-align: right; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-slate-700)); border: none;">
+                    {% if c.pe_ratio is not none %}{{ c.pe_ratio|safe_round(2) }}×{% else %}—{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}

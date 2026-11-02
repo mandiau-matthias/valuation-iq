@@ -1,0 +1,8 @@
+{
+  "saas": {
+    "label": "Fictional software assumptions",
+    "exit_revenue_multiple": "3",
+    "typical_year5_revenue_pre_seed": "1250000",
+    "notes": "Invented inputs for demonstrating the data format."
+  }
+}

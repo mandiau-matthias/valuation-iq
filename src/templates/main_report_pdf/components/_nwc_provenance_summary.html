@@ -1,0 +1,71 @@
+{% set direct_sector_wacc = (dcf_wacc_buildup is defined and dcf_wacc_buildup and dcf_wacc_buildup.get('mode') == 'direct_sector_wacc') %}
+{% set show_market_provenance = has_market_data_provenance and has_dcf and not direct_sector_wacc %}
+{% if has_nwc_normalization or show_market_provenance %}
+<div style="margin-top: 10pt;">
+    {% if has_nwc_normalization %}
+    <div style="padding: 9pt 10pt; background: hsl(40, 15%, 98%); border: 1pt solid hsl(224, 10%, 91%); border-left: 3pt solid hsl(var(--pdf-teal)); border-radius: 8pt; margin-bottom: 8pt; page-break-inside: avoid; break-inside: avoid;">
+        <h4 style="margin: 0 0 6pt 0; font-size: 9pt; color: hsl(224, 17%, 12%);">
+            {{ t.nwc_normalization_title }}
+        </h4>
+        <p style="font-size: 8pt; margin: 0 0 6pt 0; color: hsl(224, 10%, 45%);">
+            {{ nwc_normalization.explanation or t.nwc_normalization_explanation_fallback }}
+        </p>
+        <table style="font-size: 8pt; line-height: 1.35; width: 100%; table-layout: fixed; border-collapse: collapse; margin: 0;">
+            <tbody>
+                <tr><td style="font-weight: 600; width: 36%; padding: 3pt 8pt 3pt 0; vertical-align: top; border: none; color: hsl(224, 12%, 42%);">{{ t.nwc_label_target_nwc }}</td><td style="padding: 3pt 0; vertical-align: top; border: none; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl(224, 17%, 12%); white-space: nowrap;">{{ nwc_normalization.target_nwc_pct|safe_round(2) }}%</td></tr>
+                <tr><td style="font-weight: 600; padding: 3pt 8pt 3pt 0; vertical-align: top; border: none; color: hsl(224, 12%, 42%);">{{ t.nwc_label_actual_nwc }}</td><td style="padding: 3pt 0; vertical-align: top; border: none; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl(224, 17%, 12%); white-space: nowrap;">{{ nwc_normalization.actual_nwc_pct|safe_round(2) }}%</td></tr>
+                <tr><td style="font-weight: 600; padding: 3pt 8pt 3pt 0; vertical-align: top; border: none; color: hsl(224, 12%, 42%);">{{ t.nwc_label_bridge_impact }}</td><td style="padding: 3pt 0; vertical-align: top; border: none; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl(224, 17%, 12%); white-space: nowrap;">{{ nwc_normalization.surplus_deficit|format_currency }}</td></tr>
+                <tr><td style="font-weight: 600; padding: 3pt 8pt 3pt 0; vertical-align: top; border: none; color: hsl(224, 12%, 42%);">{{ t.nwc_label_years_analyzed }}</td><td style="padding: 3pt 0; vertical-align: top; border: none; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl(224, 17%, 12%); white-space: nowrap;">{{ nwc_normalization.years_analyzed }}</td></tr>
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if show_market_provenance %}
+    {# Single-source the rf/ERP to the values the DCF ACTUALLY applied
+       (dcf_wacc_buildup), so this provenance box can never disagree with the
+       WACC build-up table on the same dossier. The market fetch is still cited as
+       the source row, and shown as a parenthetical reference only when it
+       differs from the applied (rounded/house) input — full transparency, no
+       contradiction, no engine-math change. #}
+    {% set _prov_en = ((locale|default('nl'))|lower)[:2] == 'en' %}
+    {% set _applied_rf = (dcf_wacc_buildup.risk_free_rate if (dcf_wacc_buildup and dcf_wacc_buildup.risk_free_rate is not none) else market_data_provenance.risk_free_rate) %}
+    {% set _applied_erp = (dcf_wacc_buildup.equity_risk_premium if (dcf_wacc_buildup and dcf_wacc_buildup.equity_risk_premium is not none) else market_data_provenance.equity_risk_premium) %}
+    {% set _ref_rf = market_data_provenance.risk_free_rate %}
+    {% set _ref_erp = market_data_provenance.equity_risk_premium %}
+    {% set _rf_differs = (_ref_rf is not none and _applied_rf is not none and ((_ref_rf|float - _applied_rf|float)|abs) > 0.0005) %}
+    {% set _erp_differs = (_ref_erp is not none and _applied_erp is not none and ((_ref_erp|float - _applied_erp|float)|abs) > 0.0005) %}
+    <div style="padding: 9pt 10pt; background: hsl(40, 15%, 98%); border: 1pt solid hsl(224, 10%, 91%); border-left: 3pt solid hsl(17, 50%, 59%); border-radius: 8pt; page-break-inside: avoid; break-inside: avoid;">
+        <h4 style="margin: 0 0 6pt 0; font-size: 9pt; color: hsl(224, 17%, 12%);">
+            {{ t.market_provenance_title }}
+        </h4>
+        <table style="font-size: 8pt; line-height: 1.35; width: 100%; table-layout: fixed; border-collapse: collapse; margin: 0;">
+            <tbody>
+                <tr><td style="font-weight: 600; width: 32%; padding: 3pt 8pt 3pt 0; vertical-align: top; border: none; color: hsl(224, 12%, 42%);">{{ t.market_label_risk_free_rate }}</td><td style="padding: 3pt 0; vertical-align: top; border: none; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl(224, 17%, 12%); white-space: nowrap;">{{ ((_applied_rf or 0)|float * 100)|safe_round(2) }}%{% if _rf_differs %} <span style="color: hsl(224, 10%, 55%); font-weight: 400;">({% if ((locale|default('nl'))|lower)[:2] == 'fr' %}réf. marché{% elif _prov_en %}mkt. ref.{% else %}marktref.{% endif %} {{ ((_ref_rf or 0)|float * 100)|safe_round(2) }}%)</span>{% endif %}</td></tr>
+                <tr><td style="font-weight: 600; padding: 3pt 8pt 3pt 0; vertical-align: top; border: none; color: hsl(224, 12%, 42%);">{{ t.market_label_source }}</td><td style="padding: 3pt 0; vertical-align: top; border: none; line-height: 1.35; overflow-wrap: break-word; color: hsl(224, 16%, 18%);">{{ market_data_provenance.risk_free_rate_source or '—' }}</td></tr>
+                {% if market_data_provenance.risk_free_rate_is_override %}
+                <tr><td style="font-weight: 600; padding: 3pt 8pt 3pt 0; vertical-align: top; border: none; color: hsl(224, 12%, 42%);">{{ t.market_label_manual_override }}</td><td style="padding: 3pt 0; vertical-align: top; border: none; color: hsl(224, 16%, 18%);">{{ t.market_label_applied }}</td></tr>
+                {% endif %}
+                <tr><td style="font-weight: 600; padding: 3pt 8pt 3pt 0; vertical-align: top; border: none; color: hsl(224, 12%, 42%);">{{ t.market_label_equity_risk_premium }}</td><td style="padding: 3pt 0; vertical-align: top; border: none; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl(224, 17%, 12%); white-space: nowrap;">{{ ((_applied_erp or 0)|float * 100)|safe_round(2) }}%{% if _erp_differs %} <span style="color: hsl(224, 10%, 55%); font-weight: 400;">({% if ((locale|default('nl'))|lower)[:2] == 'fr' %}réf. marché{% elif _prov_en %}mkt. ref.{% else %}marktref.{% endif %} {{ ((_ref_erp or 0)|float * 100)|safe_round(2) }}%)</span>{% endif %}</td></tr>
+                {# Humanize the engine's machine token "country_default:XX";
+                   client copy must never leak config identifiers. #}
+                {% set _erp_src_raw = market_data_provenance.equity_risk_premium_source %}
+                {% if _erp_src_raw and (_erp_src_raw|string).startswith('country_default:') %}
+                {% set _erp_src_cc = (_erp_src_raw|string).split(':', 1)[1] %}
+                {% set _erp_src_display = ('Valeur par défaut du pays (' ~ _erp_src_cc ~ ')') if ((locale|default('nl'))|lower)[:2] == 'fr' else (('Country default (' ~ _erp_src_cc ~ ')') if _prov_en else ('Landstandaard (' ~ _erp_src_cc ~ ')')) %}
+                {% else %}
+                {% set _erp_src_display = _erp_src_raw %}
+                {% endif %}
+                <tr><td style="font-weight: 600; padding: 3pt 8pt 3pt 0; vertical-align: top; border: none; color: hsl(224, 12%, 42%);">{{ t.market_label_erp_source }}</td><td style="padding: 3pt 0; vertical-align: top; border: none; line-height: 1.35; overflow-wrap: break-word; color: hsl(224, 16%, 18%);">{{ _erp_src_display or '—' }}</td></tr>
+                {% if market_data_provenance.gdp_growth_rate is not none %}
+                <tr><td style="font-weight: 600; padding: 3pt 8pt 3pt 0; vertical-align: top; border: none; color: hsl(224, 12%, 42%);">{{ t.market_label_gdp_growth }}</td><td style="padding: 3pt 0; vertical-align: top; border: none; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl(224, 17%, 12%); white-space: nowrap;">{{ (market_data_provenance.gdp_growth_rate * 100)|safe_round(2) }}%</td></tr>
+                {% endif %}
+                {% if market_data_provenance.valuation_date %}
+                <tr><td style="font-weight: 600; padding: 3pt 8pt 3pt 0; vertical-align: top; border: none; color: hsl(224, 12%, 42%);">{{ t.market_label_as_of }}</td><td style="padding: 3pt 0; vertical-align: top; border: none; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl(224, 17%, 12%); white-space: nowrap;">{{ market_data_provenance.valuation_date }}</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endif %}

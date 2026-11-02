@@ -1,0 +1,79 @@
+{% if growth_metrics and growth_metrics.has_historical_data %}
+<h3 style="margin-top: 32pt; margin-bottom: 16pt;">{{ t.accountant_growth_title }}</h3>
+
+{# CAGR & Growth Summary Cards - Robust Table Layout #}
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 32pt; border: none; border-top: none;">
+    <tr>
+        {% if growth_metrics.cagr_3y %}
+        <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+            <div class="stat-card">
+                <p class="label">{{ t.accountant_growth_cagr3y }}</p>
+                <p class="value" style="color: {% if growth_metrics.cagr_3y > 0 %}#6b8e72{% elif growth_metrics.cagr_3y < 0 %}#b85c56{% else %}var(--upswitch-navy){% endif %};">
+                    {{ growth_metrics.cagr_3y | format_percentage }}
+                </p>
+                <p style="font-size: 10pt; color: #64748B; margin-top: 8pt;">{{ t.accountant_growth_cagr_caption }}</p>
+            </div>
+        </td>
+        {% endif %}
+
+        {% if growth_metrics.cagr_3y and growth_metrics.revenue_growth %}
+        <td style="width: 4%; border: none;"></td>
+        {% endif %}
+
+        {% if growth_metrics.revenue_growth %}
+        <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+            <div class="stat-card">
+                <p class="label">{{ t.accountant_growth_yoy }}</p>
+                <p class="value">{{ growth_metrics.revenue_growth | format_percentage }}</p>
+                <p style="font-size: 10pt; color: #64748B; margin-top: 8pt;">{{ t.accountant_growth_yoy_caption }}</p>
+            </div>
+        </td>
+        {% endif %}
+    </tr>
+</table>
+
+{% if growth_metrics.historical_growth %}
+<h4 style="margin-bottom: 12pt;">{{ t.accountant_growth_historical_title }}</h4>
+<div class="table-card">
+    <table class="step-table">
+        <thead>
+            <tr>
+                <th style="padding-left: 16pt;">{{ t.accountant_growth_col_year }}</th>
+                <th class="text-right">{{ t.accountant_growth_col_revenue }}</th>
+                <th class="text-right" style="padding-right: 16pt;">{{ t.accountant_growth_col_growth }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for year_data in growth_metrics.historical_growth %}
+            <tr>
+                <td style="padding-left: 16pt; font-weight: 600; color: var(--upswitch-navy);">{{ year_data.year_display|default(year_data.year) }}</td>
+                <td class="currency">{{ year_data.revenue | format_currency }}</td>
+                <td class="percentage" style="padding-right: 16pt; color: {% if year_data.growth and year_data.growth < 0 %}#b85c56{% endif %};">
+                    {{ year_data.growth | format_percentage if year_data.growth else 'N/A' }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if growth_metrics.cagr_3y %}
+<div class="report-callout" style="margin-top: 24pt;">
+    <div style="font-size: 11pt; color: #475569; line-height: 1.5;">
+        {% if growth_metrics.cagr_3y > 0 %}
+        <p>{{ t.accountant_growth_trajectory_positive | safe }}</p>
+        {% elif growth_metrics.cagr_3y < 0 %}
+        <p>{{ t.accountant_growth_trajectory_negative | safe }}</p>
+        {% else %}
+        <p>{{ t.accountant_growth_trajectory_flat | safe }}</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% elif growth_metrics %}
+<div class="report-callout warning" style="margin-top: 24pt;">
+    <p>{{ t.accountant_growth_insufficient | safe }}</p>
+</div>
+{% endif %}

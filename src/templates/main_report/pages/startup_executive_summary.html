@@ -1,0 +1,356 @@
+{#
+    STARTUP VALUATION — EXECUTIVE SUMMARY (Screen/Browser version)
+
+    Replaces the SME executive summary when ``is_startup_valuation_report`` is true.
+    Shows the headline pre-money range, the stage, the active method blend,
+    and the founder's narrative.
+
+    PDF twin: main_report_pdf/pages/startup_executive_summary.html
+#}
+{# Canonical headline (April 2026 hardening) — single source of truth.
+   Same precedence chain as the PDF twin and the screen one-pager so the
+   three pages can never disagree on the headline pre-money (audit
+   issue #1). #}
+{% set canon = startup_report.canonical or {} %}
+{% set fv = startup_report.founder_view %}
+{% set head_mid  = (canon.pre_money_mid  if canon and canon.pre_money_mid  else (fv.equity_value_mid  if fv else startup_report.equity_value_mid))  | float %}
+{% set head_low  = (canon.pre_money_low  if canon and canon.pre_money_low  else (fv.equity_value_low  if fv else startup_report.equity_value_low))  | float %}
+{% set head_high = (canon.pre_money_high if canon and canon.pre_money_high else (fv.equity_value_high if fv else startup_report.equity_value_high)) | float %}
+
+{% set br = startup_report.berkus %}
+{% set sc = startup_report.scorecard %}
+{% set vc = startup_report.vc %}
+{% set sf = startup_report.saas_forward %}
+{% set bp_b = br.pre_money|default(0)|float %}
+{% set bp_s = sc.pre_money|default(0)|float %}
+{% set bp_v = vc.pre_money|default(0)|float %}
+{% set bp_f = (sf.pre_money|default(0)|float) if sf and sf.available else 0 %}
+{% set mx = [bp_b, bp_s, bp_v, bp_f]|max %}
+
+{# Defensibility score — parity with PDF executive summary.  Traffic-light
+   chip colours come from the centralised ``defensibility_traffic_*``
+   Jinja globals (``src/domain/startup_valuation/defensibility_traffic.py``)
+   so the screen one-pager / exec summary / PDF twins all render the same
+   palette.  Audit issue #17 — was previously inlined HSL × 4 templates. #}
+{% set defs = startup_report.defensibility_score or {} %}
+{% set traffic = defs.traffic_light or 'yellow' %}
+{% set defs_chip_bg = defensibility_traffic_bg(traffic) %}
+{% set defs_chip_fg = defensibility_traffic_fg(traffic) %}
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div class="section-header">
+        {# B11 — section badge bound to context (assign_startup_html_footer_page_numbers).
+           Falls back to the historical "02" so legacy snapshots keep rendering. #}
+        <span class="section-number">{{ startup_executive_summary_section_number|default('02') }}</span>
+        <h1 class="section-title" style="margin: 0; flex: 1;">{{ startup_report.t.pre_money_valuation_section }}</h1>
+        <div style="text-align: right; display: flex; flex-direction: column; gap: 4pt; align-items: flex-end;">
+            <span class="badge badge-primary" style="font-size: var(--font-size-xs);">
+                {# B3 — i18n the badge so NL founders aren't shown
+                   "Startup Valuation" on an otherwise NL summary. #}
+                {{ startup_report.t.section_badge_startup }} · {{ startup_report.stage_display }}
+            </span>
+            {# Method-family label — mirrors the panel's "EV/Revenue
+               valuation" branding so a reader skimming the exec summary
+               knows which engine produced these numbers. #}
+            <span style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); font-weight: 500; letter-spacing: 0.02em;">
+                {{ startup_report.t.method_family_ev_revenue }}
+            </span>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4);">
+        <div class="card" style="padding: var(--space-4);">
+            <div style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted));">
+                {{ startup_report.t.indicative_pre_money_valuation }}
+            </div>
+            <div style="font-size: 2.6rem; font-weight: 700; color: hsl(var(--report-primary)); margin-top: var(--space-1); line-height: 1.05;">
+                {{ head_mid|format_currency }}
+            </div>
+            <div style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted)); margin-top: var(--space-1);">
+                {{ startup_report.t.range }}: {{ head_low|format_currency }} — {{ head_high|format_currency }}
+            </div>
+            {% if canon and canon.basis %}
+            <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); margin-top: var(--space-1); font-style: italic;">
+                {{ canon.basis }}
+            </div>
+            {% endif %}
+            <p style="margin-top: var(--space-3); font-size: var(--font-size-sm); line-height: 1.5;">
+                {{ startup_report.narrative }}
+            </p>
+        </div>
+        <div class="card" style="padding: var(--space-4);">
+            {% if defs and defs.score_0_10 is not none %}
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-3); padding-bottom: var(--space-2); border-bottom: 1pt solid hsl(var(--report-border));">
+                <div>
+                    <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); text-transform: uppercase; letter-spacing: 0.04em;">
+                        {{ startup_report.t.defensibility_score_label }}
+                    </div>
+                    <div style="font-size: var(--font-size-lg); font-weight: 700; color: hsl(var(--report-text)); line-height: 1; margin-top: 2pt;">
+                        {{ defs.score_0_10|safe_round(1) }}<span style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted)); font-weight: 500;">/10</span>
+                    </div>
+                </div>
+                <span style="display: inline-block; padding: 4pt 10pt; background: {{ defs_chip_bg }}; color: {{ defs_chip_fg }}; border-radius: 999px; font-size: var(--font-size-xs); font-weight: 600; letter-spacing: 0.02em;">
+                    {{ defs.letter_grade }}
+                </span>
+            </div>
+            {% endif %}
+            <div style="font-size: var(--font-size-sm); font-weight: 600; margin-bottom: var(--space-2);">{{ startup_report.t.method_mix }}</div>
+            <table style="width: 100%; font-size: var(--font-size-sm);">
+                <tbody>
+                    {% for method, weight in startup_report.weights.items() %}
+                    <tr>
+                        <td style="padding: 4pt 0;">
+                            {% if method == 'berkus' %}{{ startup_report.t.method_berkus }}
+                            {% elif method == 'scorecard' %}{{ startup_report.t.method_scorecard_payne }}
+                            {% elif method == 'vc' %}{{ startup_report.t.method_vc }}
+                            {% elif method == 'saas_forward' %}{{ startup_report.t.method_saas_forward }}
+                            {% else %}{{ method|title }}{% endif %}
+                        </td>
+                        <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">
+                            {{ (weight * 100)|safe_round(0) }}%
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {# ------------------------------------------------------------------
+       "Asking too much" warning — the consortium-spec VC formula clamps
+       pre-money to zero when the round size exceeds the implied
+       post-money. Without this banner, the founder would just see a
+       missing VC leg with no explanation.
+       ------------------------------------------------------------------ #}
+    {% set ovr = startup_report.vc_oversubscribed %}
+    {% if ovr %}
+    <div class="card" style="padding: var(--space-3); border: 1pt solid hsl(48 96% 53%); background: rgba(252, 211, 77, 0.10); margin-bottom: var(--space-4);">
+        <div style="display: flex; gap: var(--space-2); align-items: flex-start;">
+            {# Font-safe warning glyph — the previous ⚠️ Variation-Selector-16
+               emoji rendered as a tofu box on PDF systems without an emoji
+               font (B12).  Inline SVG renders identically in screen + PDF +
+               WeasyPrint, no font fallback chain. #}
+            <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" style="flex: none; margin-top: 2px;">
+                <path d="M8 1.4 L15 14 H1 Z" fill="hsl(38 95% 50%)" stroke="hsl(38 100% 32%)" stroke-width="0.8" stroke-linejoin="round"/>
+                <rect x="7.3" y="5.5" width="1.4" height="4.6" rx="0.4" fill="hsl(38 100% 22%)"/>
+                <circle cx="8" cy="11.7" r="0.7" fill="hsl(38 100% 22%)"/>
+            </svg>
+            <div style="flex: 1;">
+                <div style="font-size: var(--font-size-sm); font-weight: 600; margin-bottom: 4px;">
+                    {{ startup_report.t.vc_oversubscribed_title }}
+                </div>
+                <p style="font-size: var(--font-size-xs); line-height: 1.55; margin: 0; color: hsl(var(--report-text-muted));">
+                    {% set _vc_body = startup_report.t.vc_oversubscribed_body %}
+                    {{ _vc_body.replace('{ask}', ovr.investment_amount|format_eur_amount).replace('{post}', ovr.implied_post_money|format_eur_amount).replace('{shortfall}', ovr.shortfall|format_eur_amount)|safe }}
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {# Football field — per-method pre-money anchors #}
+    {% if mx > 0 %}
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-4) 0 var(--space-1);">{{ startup_report.t.triangulation_per_method }}</h2>
+    {# Sub-caption — exec summary renders the 4-leg advisor blend
+       (Berkus + Scorecard + VC + SaaS).  Mirrors the founder-lens
+       label on the one-pager so readers can compare both lenses
+       without ambiguity.  Audit issue D2. #}
+    <p style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); margin: 0 0 var(--space-2); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600;">
+        {{ startup_report.t.football_field_lens_advisor }}
+    </p>
+    <p style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted)); margin-bottom: var(--space-3); max-width: 52rem;">
+        {% set _t_caption = startup_report.t.triangulation_caption %}
+        {{ _t_caption.replace('{mid}', head_mid|format_eur_amount) }}
+    </p>
+    {# Blended-value reference line position (% of max) — drives the
+       dashed marker overlaid on every bar so the founder sees instantly
+       which methods sit above / below the canonical headline. #}
+    {% set blend_pct = (head_mid|float / mx * 100)|round(1) %}
+    <div style="display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4);">
+        {% for leg in [
+            {'label': startup_report.t.method_berkus, 'value': bp_b, 'opacity': 1.0},
+            {'label': startup_report.t.method_scorecard, 'value': bp_s, 'opacity': 0.88},
+            {'label': startup_report.t.method_vc_short, 'value': bp_v, 'opacity': 0.72},
+            {'label': startup_report.t.method_saas_forward, 'value': bp_f, 'opacity': 0.6}
+        ] %}
+        <div>
+            <div style="display: flex; justify-content: space-between; font-size: var(--font-size-sm); margin-bottom: 4px;">
+                <span>{{ leg.label }}</span>
+                <span style="font-family: 'JetBrains Mono', monospace;">{% if leg.value > 0 %}{{ leg.value|format_currency_compact }}{% else %}—{% endif %}</span>
+            </div>
+            <div style="position: relative; height: 10px; background: rgba(148, 163, 184, 0.35); border-radius: 4px; overflow: visible;">
+                <div style="position: absolute; inset: 0; border-radius: 4px; overflow: hidden;">
+                    <div style="height: 100%; width: {% if leg.value > 0 %}{{ (leg.value / mx * 100)|round(1) }}{% else %}0{% endif %}%; background: hsl(var(--report-primary)); opacity: {{ leg.opacity }}; border-radius: 4px;"></div>
+                </div>
+                {# Blended-value reference marker (dashed vertical line). #}
+                <div style="position: absolute; top: -2px; bottom: -2px; left: {{ blend_pct }}%; width: 0; border-left: 1.5pt dashed hsl(var(--report-text)); opacity: 0.55;"></div>
+            </div>
+        </div>
+        {% endfor %}
+        <div style="display: flex; align-items: center; gap: 6px; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); margin-top: 2px;">
+            <span style="display: inline-block; width: 14px; height: 0; border-top: 1.5pt dashed hsl(var(--report-text)); opacity: 0.55;"></span>
+            <span>{% set _legend = startup_report.t.blended_pre_money_legend %}{{ _legend.replace('{mid}', head_mid|format_eur_amount) }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    {# B7 — Defensibility breakdown.  Surfaces the 5 sub-factor scores
+       the engine already computes (headline coherence, sector
+       consistency, pedigree evidence, forward inputs, traction signal)
+       so the M&A reader can audit *why* the headline got an A vs a C.
+       Without this table the chip earlier on the page is opaque — the
+       reader sees "8.2 / A" with no path to challenge it. The scoring
+       lives in `domain.startup_valuation.defensibility`; the labels are
+       localized in `startup_report_context.py`. #}
+    {% set defs_block = startup_report.defensibility_score or {} %}
+    {% set defs_factors = defs_block.factors or [] %}
+    {% if defs_factors|length > 0 %}
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-4) 0 var(--space-2);">{{ startup_report.t.defensibility_breakdown_title }}</h2>
+    <p style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted)); margin-bottom: var(--space-2); max-width: 52rem;">
+        {{ startup_report.t.defensibility_breakdown_caption }}
+    </p>
+    <table class="data-table" style="width: 100%; font-size: var(--font-size-sm); margin-bottom: var(--space-4);">
+        <thead>
+            <tr>
+                <th style="text-align: left;">{{ startup_report.t.defensibility_factor_col }}</th>
+                <th style="text-align: right;">{{ startup_report.t.defensibility_factor_score_col }}</th>
+                {# B14 — investor-expected anchor column. The literal 7/10
+                   threshold is the consortium-defensibility floor the
+                   engine already uses internally to flag fragile
+                   headlines.  Surfacing it next to each row gives an
+                   M&A reader an honest comparison anchor instead of
+                   an opaque score in isolation. #}
+                <th style="text-align: right;">{{ startup_report.t.defensibility_factor_sector_median_col }}</th>
+                <th style="text-align: left;">{{ startup_report.t.defensibility_factor_rationale_col }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in defs_factors %}
+            {# Precision aligned to 1 decimal (audit issue D13) — the
+               headline chip on this page renders ``8.5/10`` via
+               safe_round(1).  Showing ``8/10`` here on the same page
+               for the same metric drifted the precision and made the
+               table feel less defensible than the chip. #}
+            {% set score_raw = (f.score or 0) * 10 %}
+            {% set _below = score_raw < 7 %}
+            <tr>
+                <td style="padding: 4pt 0; vertical-align: top; font-weight: 600;">{{ f.label }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace; vertical-align: top; white-space: nowrap; color: {% if _below %}hsl(var(--report-warning)){% else %}hsl(var(--report-text)){% endif %};">
+                    {{ score_raw|safe_round(1) }}/10
+                </td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace; vertical-align: top; white-space: nowrap; color: hsl(var(--report-text-muted));">
+                    7/10
+                </td>
+                <td style="padding: 4pt 0 4pt var(--space-2); vertical-align: top; color: hsl(var(--report-text-muted)); font-size: var(--font-size-xs); line-height: 1.5;">
+                    {{ f.rationale }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {# Server-built defensibility row list — kept as the "data-room
+       export" view (key/value pairs).  Renders below the breakdown
+       above so the human-readable narrative comes first. #}
+    {% if startup_report.defensibility and startup_report.defensibility|length > 0 %}
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-4) 0 var(--space-2);">{{ startup_report.t.defensibility_section_title }}</h2>
+    <p style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted)); margin-bottom: var(--space-2); max-width: 52rem;">
+        {{ startup_report.t.defensibility_section_caption }}
+    </p>
+    <table class="data-table" style="width: 100%; font-size: var(--font-size-sm); margin-bottom: var(--space-4); max-width: 48rem;">
+        <tbody>
+            {% for row in startup_report.defensibility %}
+            <tr>
+                <td>{{ row.label }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ row.value }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {# VC assumptions table — REMOVED 2026-05-10 (audit issue D3).
+       Same three values (Y5 / multiple / ROI) already render on the
+       one-pager pill row directly above this exec summary, and the
+       method-breakdown page (next section) carries the full VC audit
+       trail with peer-source citations and rationale.  Two layouts of
+       the same data on adjacent pages was confusing investors. #}
+
+    {# Sensitivity mini-grid — three corner values from the full 3×3
+       grid that lives on method-breakdown.  Surfaced here (audit
+       issue D8) so investors reading exec summary first see the
+       headline's robustness without flipping pages.  Renders only
+       when the engine emitted vc_sensitivity (all three VC inputs
+       present). #}
+    {% set sens = startup_report.vc_sensitivity %}
+    {% if sens and sens.grid %}
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-4) 0 var(--space-1);">
+        {{ startup_report.t.sensitivity_mini_title }}
+    </h2>
+    <p style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted)); margin-bottom: var(--space-3); max-width: 52rem;">
+        {{ startup_report.t.sensitivity_mini_caption }}
+    </p>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin-bottom: var(--space-4); max-width: 48rem;">
+        <div class="card" style="padding: var(--space-3); border-left: 3pt solid hsl(355, 70%, 38%);">
+            <p style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 4pt 0;">
+                {{ startup_report.t.sensitivity_mini_worst }}
+            </p>
+            <p style="font-size: var(--font-size-md); font-weight: 700; tabular-nums; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-text)); margin: 0;">
+                {{ sens.grid[0][0]|format_currency }}
+            </p>
+        </div>
+        <div class="card" style="padding: var(--space-3); border-left: 3pt solid hsl(var(--report-primary)); background: rgba(244, 99, 35, 0.04);">
+            <p style="font-size: var(--font-size-xs); color: hsl(var(--report-primary)); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; margin: 0 0 4pt 0;">
+                {{ startup_report.t.sensitivity_mini_centre }}
+            </p>
+            <p style="font-size: var(--font-size-md); font-weight: 700; tabular-nums; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-primary)); margin: 0;">
+                {{ sens.grid[1][1]|format_currency }}
+            </p>
+        </div>
+        <div class="card" style="padding: var(--space-3); border-left: 3pt solid hsl(160, 60%, 28%);">
+            <p style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 4pt 0;">
+                {{ startup_report.t.sensitivity_mini_best }}
+            </p>
+            <p style="font-size: var(--font-size-md); font-weight: 700; tabular-nums; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-text)); margin: 0;">
+                {{ sens.grid[2][2]|format_currency }}
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    {# Traction snapshot #}
+    {% set tr = startup_report.traction %}
+    {% if tr.arr or tr.mrr_growth_rate_pct or tr.runway_months %}
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-4) 0 var(--space-2);">{{ startup_report.t.traction_snapshot }}</h2>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3);">
+        {% if tr.arr %}
+        <div class="card" style="padding: var(--space-3);">
+            <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">ARR</div>
+            <div style="font-weight: 600;">{{ tr.arr|format_currency }}</div>
+        </div>
+        {% endif %}
+        {% if tr.mrr_growth_rate_pct %}
+        <div class="card" style="padding: var(--space-3);">
+            <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">{{ startup_report.t.label_mom_growth }}</div>
+            <div style="font-weight: 600;">{{ tr.mrr_growth_rate_pct|safe_round(1) }}%</div>
+        </div>
+        {% endif %}
+        {% if tr.monthly_churn_pct %}
+        <div class="card" style="padding: var(--space-3);">
+            <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">{{ startup_report.t.label_monthly_churn }}</div>
+            <div style="font-weight: 600;">{{ tr.monthly_churn_pct|safe_round(1) }}%</div>
+        </div>
+        {% endif %}
+        {% if tr.runway_months %}
+        <div class="card" style="padding: var(--space-3);">
+            <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">{{ startup_report.t.label_runway }}</div>
+            <div style="font-weight: 600;">{{ tr.runway_months|safe_round(0) }} {{ startup_report.t.unit_months_short }}</div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% include "main_report/partials/_footer.html" ignore missing %}
+</div>

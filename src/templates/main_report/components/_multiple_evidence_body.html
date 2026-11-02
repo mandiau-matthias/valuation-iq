@@ -1,0 +1,172 @@
+{% if canonical_fallback_disclosure|default(false) %}
+{% with _saved_pricing_detail="reference" %}{% include "shared/canonical_saved_pricing.html" %}{% endwith %}
+{% else %}
+{#
+    MULTIPLE SOURCING & EVIDENCE — shared body (screen + PDF)
+
+    Full-transparency addendum: where the reference multiple comes from, the
+    benchmark provenance behind it (source, sample, band, scope, date), and the
+    path from the published sector median to the calibrated contract basis.
+    Renders from `advisor_multiple_transparency.benchmark_evidence` plus the
+    calibration context values. The applied multiple (after discounts) is
+    detailed in the discount-methodology addendum.
+#}
+{% set _is_en_me = (locale|default('nl'))|lower == 'en' %}
+{% set _is_fr_me = (locale|default('nl'))|lower == 'fr' %}
+{% set _is_be_me = (country_code|default('BE')|upper) == 'BE' %}
+{% set _me_be = (advisor_multiple_transparency|default({})).benchmark_evidence|default({}) %}
+{% set _me_base = (base_multiple|default(0))|float %}
+
+{% if is_disclosed_external_market_fallback|default(false) %}
+<div style="margin: 0 0 12pt 0; padding: 10pt 12pt; border-radius: 6pt; border-left: 3pt solid hsl(var(--report-teal)); background: hsl(var(--report-surface));">
+    <div style="font-size: 7pt; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-teal)); font-weight: 700; margin-bottom: 4pt;">{% if _is_fr_me %}Référence de marché externe — limite transparente{% elif _is_en_me %}External market reference — transparent limitation{% else %}Externe marktreferentie — transparante beperking{% endif %}</div>
+    <p style="margin: 0; font-size: 8pt; line-height: 1.55; color: hsl(var(--report-text));">
+        {% if _is_fr_me %}Aucun contrat Upswitch Index résolu n'est disponible pour {{ fallback_market_key }}. Le multiple de {{ fallback_applied_multiple|safe_round(2) }}× utilise uniquement la référence externe identifiée ci-dessous; il ne constitue ni une preuve de transactions comparables ni un benchmark Index.{% elif _is_en_me %}No resolved Upswitch Index contract is available for {{ fallback_market_key }}. The {{ fallback_applied_multiple|safe_round(2) }}× multiple uses only the external reference identified below; it is neither comparable-transaction evidence nor an Index benchmark.{% else %}Er is geen opgelost Upswitch Index-contract beschikbaar voor {{ fallback_market_key }}. De multiple van {{ fallback_applied_multiple|safe_round(2) }}× gebruikt uitsluitend de hieronder vermelde externe referentie; zij is geen bewijs van vergelijkbare transacties en geen Index-benchmark.{% endif %}
+    </p>
+</div>
+
+<table style="width: 100%; border-collapse: collapse; font-size: 8pt; margin-bottom: 12pt;">
+    <tbody>
+        <tr style="border-bottom: 1px solid hsl(var(--report-border));"><td style="padding: 5pt; color: hsl(var(--report-text-muted));">{% if _is_fr_me %}Référence appliquée{% elif _is_en_me %}Applied reference{% else %}Toegepaste referentie{% endif %}</td><td style="padding: 5pt; text-align: right; font-weight: 700;">{{ _me_base|safe_round(2) }}× {% if _is_fr_me %}EBITDA publié{% elif _is_en_me %}reported EBITDA{% else %}gerapporteerde EBITDA{% endif %}</td></tr>
+        <tr style="border-bottom: 1px solid hsl(var(--report-border));"><td style="padding: 5pt; color: hsl(var(--report-text-muted));">{% if _is_fr_me %}Source{% elif _is_en_me %}Source{% else %}Bron{% endif %}</td><td style="padding: 5pt; text-align: right; font-weight: 600;">{{ fallback_reference_title|default(('Référence externe divulguée' if _is_fr_me else ('Disclosed external reference' if _is_en_me else 'Bekendgemaakte externe referentie')), true) }}</td></tr>
+        <tr style="border-bottom: 1px solid hsl(var(--report-border));"><td style="padding: 5pt; color: hsl(var(--report-text-muted));">{% if _is_fr_me %}Fourchette de référence externe (pas des percentiles){% elif _is_en_me %}External reference range (not percentiles){% else %}Externe referentierange (geen percentielen){% endif %}</td><td style="padding: 5pt; text-align: right; font-weight: 600;">{% if fallback_reference_range_low and fallback_reference_range_high %}{{ fallback_reference_range_low|safe_round(2) }}× – {{ fallback_reference_range_high|safe_round(2) }}×{% else %}—{% endif %}</td></tr>
+        <tr><td style="padding: 5pt; color: hsl(var(--report-text-muted));">{% if _is_fr_me %}Données empiriques {{ fallback_market_key }}{% elif _is_en_me %}{{ fallback_market_key }} empirical data{% else %}Empirische gegevens {{ fallback_market_key }}{% endif %}</td><td style="padding: 5pt; text-align: right; font-weight: 600;">{% if _is_fr_me %}Non disponible{% elif _is_en_me %}Not available{% else %}Niet beschikbaar{% endif %}</td></tr>
+    </tbody>
+</table>
+
+<p style="margin: 0; font-size: 7.5pt; line-height: 1.55; color: hsl(var(--report-text-muted));">
+    {% if _is_fr_me %}Aucun ajustement spécifique à l’entreprise, à la marge, à la taille ou à la région n’a été appliqué. La fourchette de valeur principale découle exclusivement de la fourchette de référence externe ci-dessus; elle n’est pas une distribution de marché.{% elif _is_en_me %}No company-specific, margin, size or regional adjustment was applied. The headline value range is derived solely from the external reference range above; it is not a market distribution.{% else %}Er is geen bedrijfsspecifieke, marge-, omvang- of regiocorrectie toegepast. De hoofdwaarderingsrange volgt uitsluitend uit de externe referentierange hierboven; zij is geen marktverdeling.{% endif %}
+</p>
+{% elif is_governed_external_market_reference|default(false) %}
+{# Governed sealed external reference: the contract expressly leaves empirical
+   percentiles and sample size null, so this addendum presents the applied
+   observation and the advisor corridor under their own names — never as a
+   P25/median/P75 distribution. #}
+{% set _emrc_me = external_market_reference_contract|default({}) %}
+{% set _emrc_me_sources = _emrc_me.get('sources') if _emrc_me is mapping else [] %}
+<div style="margin: 0 0 12pt 0; padding: 10pt 12pt; border-radius: 6pt; border-left: 3pt solid hsl(var(--report-teal)); background: hsl(var(--report-surface));">
+    <div style="font-size: 7pt; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-teal)); font-weight: 700; margin-bottom: 4pt;">{% if _is_fr_me %}Référence de marché externe scellée{% elif _is_en_me %}Sealed external market reference{% else %}Verzegelde externe marktreferentie{% endif %}</div>
+    <p style="margin: 0; font-size: 8pt; line-height: 1.55; color: hsl(var(--report-text));">
+        {% if _is_fr_me %}La composante de marché repose sur une référence externe examinée et scellée avec le calcul, pas sur un contrat Upswitch Index. Aucun percentile empirique, taille d'échantillon spécifique à la cellule ou médiane de transactions clôturées n'est revendiqué; les valeurs ci-dessous sont des observations de marché divulguées.{% elif _is_en_me %}The market component rests on an external reference reviewed and sealed with the calculation, not on an Upswitch Index contract. No empirical percentiles, cell-specific sample size or closed-deal median are claimed; the values below are disclosed market observations.{% else %}De marktcomponent rust op een externe referentie die met de berekening is beoordeeld en verzegeld, niet op een Upswitch Index-contract. Er worden geen empirische percentielen, celspecifieke steekproefomvang of closed-dealmediaan geclaimd; onderstaande waarden zijn bekendgemaakte marktwaarnemingen.{% endif %}
+    </p>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8pt; margin-bottom: 12pt;">
+    <div style="border: 1px solid hsl(var(--report-border)); border-radius: 6pt; padding: 9pt 11pt; background: hsla({{ teal_hsl|default('172, 55%, 45%') }}, 0.06);">
+        <div style="font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-text-muted)); font-weight: 700;">{% if _is_fr_me %}Référence appliquée{% elif _is_en_me %}Applied reference{% else %}Toegepaste referentie{% endif %}</div>
+        <div style="font-size: 14pt; font-weight: 700; color: hsl(var(--report-teal)); font-family: 'JetBrains Mono', monospace;">{{ _me_base|safe_round(2) }}×</div>
+        <div style="font-size: 6.5pt; color: hsl(var(--report-text-muted));">{% if _is_fr_me %}EBITDA publié{% elif _is_en_me %}reported EBITDA{% else %}gerapporteerde EBITDA{% endif %}</div>
+    </div>
+    <div style="border: 1px solid hsl(var(--report-border)); border-radius: 6pt; padding: 9pt 11pt; background: hsl(var(--report-surface));">
+        <div style="font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-text-muted)); font-weight: 700;">{% if _is_fr_me %}Corridor de sensibilité (pas des percentiles){% elif _is_en_me %}Sensitivity corridor (not percentiles){% else %}Sensitiviteitscorridor (geen percentielen){% endif %}</div>
+        <div style="font-size: 14pt; font-weight: 700; color: hsl(var(--report-foreground)); font-family: 'JetBrains Mono', monospace;">{% if multiple_low and multiple_high %}{{ multiple_low|safe_round(2) }}× – {{ multiple_high|safe_round(2) }}×{% else %}—{% endif %}</div>
+        <div style="font-size: 6.5pt; color: hsl(var(--report-text-muted));">{% if _is_fr_me %}bande de sensibilité fixée dans le modèle{% elif _is_en_me %}model-set sensitivity band{% else %}in het model vastgelegde band{% endif %}</div>
+    </div>
+</div>
+
+<h3 style="margin: 10pt 0 5pt 0; font-size: 9pt;">{% if _is_fr_me %}Sources de la référence{% elif _is_en_me %}Reference sources{% else %}Bronnen van de referentie{% endif %}</h3>
+<table style="width: 100%; border-collapse: collapse; font-size: 7.5pt; margin-bottom: 8pt;">
+    <thead>
+        <tr style="border-bottom: 1pt solid hsl(var(--report-foreground));">
+            <th style="padding: 4pt; text-align: left; color: hsl(var(--report-text-muted)); font-weight: 700;">{% if _is_fr_me %}Source{% elif _is_en_me %}Source{% else %}Bron{% endif %}</th>
+            <th style="padding: 4pt; text-align: right; color: hsl(var(--report-text-muted)); font-weight: 700;">{% if _is_fr_me %}Observation{% elif _is_en_me %}Observation{% else %}Waarneming{% endif %}</th>
+            <th style="padding: 4pt; text-align: left; color: hsl(var(--report-text-muted)); font-weight: 700;">{% if _is_fr_me %}Portée{% elif _is_en_me %}Scope{% else %}Geografie{% endif %}</th>
+            <th style="padding: 4pt; text-align: right; color: hsl(var(--report-text-muted)); font-weight: 700;">{% if _is_fr_me %}Usage{% elif _is_en_me %}Use{% else %}Gebruik{% endif %}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for _src in _emrc_me_sources %}
+        {% set _obs = _src.get('observed_value') %}
+        {% set _applied = (_obs is not none and _emrc_me.get('applied_multiple') is not none and (_obs|float) == (_emrc_me.get('applied_multiple')|float)) %}
+        <tr style="border-bottom: 0.5pt solid hsl(var(--report-border));">
+            <td style="padding: 4pt; font-weight: 600;">{{ _src.get('source_title') or '—' }}{% if _src.get('published_on') %}<br><span style="color: hsl(var(--report-text-muted)); font-weight: 400;">{{ _src.get('published_on') }}</span>{% endif %}</td>
+            <td style="padding: 4pt; text-align: right; font-weight: 700; white-space: nowrap;">{% if _obs is not none %}{{ _obs|safe_round(2) }}×{% else %}—{% endif %}</td>
+            <td style="padding: 4pt; color: hsl(var(--report-text-muted));">{{ _src.get('geography') or '—' }}</td>
+            <td style="padding: 4pt; text-align: right; font-weight: 600; white-space: nowrap;">{% if _applied %}<span style="color: hsl(var(--report-teal));">{% if _is_fr_me %}Appliquée{% elif _is_en_me %}Applied{% else %}Toegepast{% endif %}</span>{% else %}<span style="color: hsl(37, 65%, 38%);">{% if _is_fr_me %}Contrôle{% elif _is_en_me %}Cross-check{% else %}Toets{% endif %}</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+        {# "Niet beschikbaar" was imprecise when the source DOES disclose its
+           survey basis: the total sample is published, only the cell-specific
+           count is not. Render the sealed sample_disclosure verbatim when the
+           contract carries one; keep the deliberate no-claim wording otherwise. #}
+        {% set _me_sample = (_emrc_me_sources[0].get('sample_disclosure') if _emrc_me_sources and _emrc_me_sources[0] is mapping else none) %}
+        <tr>
+            <td style="padding: 4pt; color: hsl(var(--report-text-muted));">{% if _is_fr_me %}Percentiles empiriques / échantillon{% elif _is_en_me %}Empirical percentiles / sample{% else %}Empirische percentielen / steekproef{% endif %}</td>
+            <td style="padding: 4pt; text-align: right; font-weight: 600;" colspan="3">{% if _me_sample %}{% if _is_fr_me %}Pas de percentiles.{% elif _is_en_me %}No percentiles.{% else %}Geen percentielen.{% endif %} {{ _me_sample }}{% else %}{% if _is_fr_me %}Non disponibles — délibérément non revendiqués{% elif _is_en_me %}Not available — deliberately not claimed{% else %}Niet beschikbaar — bewust niet geclaimd{% endif %}{% endif %}</td>
+        </tr>
+    </tbody>
+</table>
+
+{% if sustainable_ebitda %}
+<div style="margin: 0 0 10pt 0; padding: 8pt 10pt; border-radius: 6pt; background: hsla({{ teal_hsl|default('172, 55%, 45%') }}, 0.07); border: 1px solid hsla({{ teal_hsl|default('172, 55%, 45%') }}, 0.30); font-size: 7.5pt; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-text));">
+    {{ sustainable_ebitda|format_currency }} × {{ _me_base|safe_round(2) }}× = {{ governed_market_enterprise_value_mid|default(((sustainable_ebitda|float) * _me_base), true)|format_currency }} {% if _is_fr_me %}(valeur d'entreprise, jambe marché){% elif _is_en_me %}(enterprise value, market leg){% else %}(ondernemingswaarde, marktcomponent){% endif %}
+</div>
+{% endif %}
+
+<p style="margin: 0; font-size: 7.5pt; line-height: 1.55; color: hsl(var(--report-text-muted));">
+    {% if _is_fr_me %}Seule l'observation appliquée détermine la valeur; les autres références sont des contrôles de vraisemblance sur une base de résultat ou une période différente. Aucun ajustement spécifique à l'entreprise, à la taille ou à la liquidité n'a été appliqué — voir l'annexe « Passerelle du multiple et ajustements spécifiques ».{% elif _is_en_me %}Only the applied observation drives value; the other references are reasonableness checks on a different earnings basis or period. No company-specific, size or liquidity adjustment was quantified — see the multiple-bridge addendum.{% else %}Uitsluitend de toegepaste waarneming bepaalt de waarde; de overige referenties zijn redelijkheidstoetsen op een andere resultaatsbasis of periode. Er is geen bedrijfsspecifieke, omvang- of liquiditeitsaanpassing gekwantificeerd — zie de bijlage « Multiplebrug en bedrijfsspecifieke aanpassingen ».{% endif %}
+</p>
+{% else %}
+
+<p style="margin: 0 0 12pt 0; font-size: 8pt; line-height: 1.55; color: hsl(var(--report-text-muted));">
+    {% if _is_fr_me %}Cette annexe retrace l'origine du multiple : la médiane sectorielle publiée, l'échantillon et la source derrière elle, puis la calibration vers la base contractuelle (taille &amp; marge). Les décotes spécifiques sont détaillées dans l'annexe « Passerelle du multiple et ajustements spécifiques ».{% elif _is_en_me %}This appendix traces where the multiple comes from: the published sector median, the sample and source behind it, then the calibration to the contract basis (size &amp; margin). Company-specific discounts are detailed in the discount build-up addendum.{% else %}Deze bijlage toont de herkomst van de multiple: de gepubliceerde sectormediaan, de steekproef en bron erachter, en vervolgens de kalibratie naar de contractbasis (omvang &amp; marge). Bedrijfsspecifieke kortingen staan in de bijlage « Passerelle du multiple et ajustements spécifiques ».{% endif %}
+</p>
+
+{# Reference / base headline #}
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8pt; margin-bottom: 12pt;">
+    <div style="border: 1px solid hsl(var(--report-border)); border-radius: 6pt; padding: 9pt 11pt; background: hsl(var(--report-surface));">
+        <div style="font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-text-muted)); font-weight: 700;">{% if _is_fr_me %}Médiane sectorielle{% elif _is_en_me %}Sector median{% else %}Sectormediaan{% endif %}</div>
+        <div style="font-size: 14pt; font-weight: 700; color: hsl(var(--report-foreground)); font-family: 'JetBrains Mono', monospace;">{% if _me_be.mid is not none %}{{ _me_be.mid|safe_round(2) }}×{% else %}—{% endif %}</div>
+        <div style="font-size: 6.5pt; color: hsl(var(--report-text-muted));">{% if _me_be.basis_label %}{{ _me_be.basis_label }}{% else %}EV / EBITDA{% endif %}</div>
+    </div>
+    <div style="border: 1px solid hsl(var(--report-border)); border-radius: 6pt; padding: 9pt 11pt; background: hsla({{ teal_hsl|default('172, 55%, 45%') }}, 0.06);">
+        <div style="font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-text-muted)); font-weight: 700;">{% if _is_fr_me %}Base calibrée (référence){% elif _is_en_me %}Calibrated basis (reference){% else %}Gekalibreerde basis (referentie){% endif %}</div>
+        <div style="font-size: 14pt; font-weight: 700; color: hsl(var(--report-teal)); font-family: 'JetBrains Mono', monospace;">{{ _me_base|safe_round(2) }}×</div>
+        <div style="font-size: 6.5pt; color: hsl(var(--report-text-muted));">{% if _is_fr_me %}taille &amp; marge, avant décotes{% elif _is_en_me %}size &amp; margin, before discounts{% else %}omvang &amp; marge, vóór kortingen{% endif %}</div>
+    </div>
+</div>
+
+{# Market evidence table #}
+<h3 style="margin: 10pt 0 5pt 0; font-size: 9pt;">{% if _is_fr_me %}Preuves de marché{% elif _is_en_me %}Market evidence{% else %}Marktbewijs{% endif %}</h3>
+<table style="width: 100%; border-collapse: collapse; font-size: 8pt; margin-bottom: 12pt;">
+    <tbody>
+        <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+            <td style="padding: 5pt; color: hsl(var(--report-text-muted)); width: 38%;">{% if _is_fr_me %}Ancrage{% elif _is_en_me %}Anchor{% else %}Anker{% endif %}</td>
+            <td style="padding: 5pt; text-align: right; font-weight: 600;">{% if _me_be.basis_label %}{{ _me_be.basis_label }}{% endif %}{% if _me_be.business_type_title %} · {{ _me_be.business_type_title }}{% endif %}{% if _me_be.nace_code %} · NACE {{ _me_be.nace_code }}{% endif %}{% if not (_me_be.basis_label or _me_be.business_type_title or _me_be.nace_code) %}—{% endif %}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+            <td style="padding: 5pt; color: hsl(var(--report-text-muted));">{% if _is_fr_me %}Bande (P25 / médiane / P75){% elif _is_en_me %}Band (P25 / median / P75){% else %}Bandbreedte (P25 / mediaan / P75){% endif %}</td>
+            <td style="padding: 5pt; text-align: right; font-weight: 600;">{% if _me_be.low is not none %}{{ _me_be.low|safe_round(2) }}×{% else %}—{% endif %} / {% if _me_be.mid is not none %}{{ _me_be.mid|safe_round(2) }}×{% else %}—{% endif %} / {% if _me_be.high is not none %}{{ _me_be.high|safe_round(2) }}×{% else %}—{% endif %}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+            <td style="padding: 5pt; color: hsl(var(--report-text-muted));">{% if _is_fr_me %}Source / échantillon / date{% elif _is_en_me %}Source / sample / date{% else %}Bron / steekproef / datum{% endif %}</td>
+            <td style="padding: 5pt; text-align: right; font-weight: 600;">{{ _me_be.data_source or '—' }}{% if _me_be.sample_size %} · n={{ _me_be.sample_size }}{% endif %}{% if _me_be.as_of %} · {{ _me_be.as_of }}{% endif %}</td>
+        </tr>
+        {% if _me_be.region or _me_be.tier or _me_be.scope_stage %}
+        <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+            <td style="padding: 5pt; color: hsl(var(--report-text-muted));">{% if _is_fr_me %}Portée{% elif _is_en_me %}Scope{% else %}Scope{% endif %}</td>
+            <td style="padding: 5pt; text-align: right; font-weight: 600;">{% if _me_be.region %}{{ _me_be.region }}{% endif %}{% if _me_be.tier %} · {{ _me_be.tier }}{% endif %}{% if _me_be.scope_stage %} · {{ _me_be.scope_stage }}{% endif %}</td>
+        </tr>
+        {% endif %}
+    </tbody>
+</table>
+
+{# Calibration path narrative #}
+<h3 style="margin: 10pt 0 5pt 0; font-size: 9pt;">{% if _is_fr_me %}De la médiane à la base contractuelle{% elif _is_en_me %}From median to contract basis{% else %}Van mediaan naar contractbasis{% endif %}</h3>
+<p style="margin: 0 0 10pt 0; font-size: 7.5pt; line-height: 1.5; color: hsl(var(--report-text));">
+    {% if _is_fr_me %}Le point de départ est la médiane sectorielle{% if _me_be.mid is not none %} ({{ _me_be.mid|safe_round(2) }}×){% endif %}. Elle est calibrée vers la base contractuelle{% if _me_base %} ({{ _me_base|safe_round(2) }}×){% endif %} en fonction de la taille de l'entreprise et de sa marge EBITDA par rapport aux pairs : une marge supérieure à la médiane justifie une prime, une taille plus petite une décote. Les décotes spécifiques (dépendance, illiquidité, taille) sont ensuite appliquées — voir l'annexe suivante.{% elif _is_en_me %}The starting point is the sector median{% if _me_be.mid is not none %} ({{ _me_be.mid|safe_round(2) }}×){% endif %}. It is calibrated to the contract basis{% if _me_base %} ({{ _me_base|safe_round(2) }}×){% endif %} for company size and EBITDA margin versus peers: an above-median margin earns a premium, smaller size a discount. Company-specific discounts (dependency, illiquidity, size) are then applied — see the next addendum.{% else %}Het vertrekpunt is de sectormediaan{% if _me_be.mid is not none %} ({{ _me_be.mid|safe_round(2) }}×){% endif %}. Deze wordt gekalibreerd naar de contractbasis{% if _me_base %} ({{ _me_base|safe_round(2) }}×){% endif %} op basis van bedrijfsomvang en EBITDA-marge t.o.v. peers: een marge boven de mediaan verdient een premie, een kleinere omvang een korting. De bedrijfsspecifieke kortingen (afhankelijkheid, illiquiditeit, omvang) volgen daarna — zie de volgende bijlage.{% endif %}
+</p>
+
+{# Methodology & sources #}
+<div style="margin-top: 10pt; padding: 9pt 11pt; border-radius: 6pt; background: hsl(var(--report-surface)); border: 1px solid hsl(var(--report-border));">
+    <div style="font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-teal)); font-weight: 700; margin-bottom: 4pt;">{% if _is_fr_me %}Méthodologie &amp; sources{% elif _is_en_me %}Methodology &amp; sources{% else %}Methodologie &amp; bronnen{% endif %}</div>
+    <ul style="margin: 0; padding-left: 12pt; font-size: 7pt; line-height: 1.55; color: hsl(var(--report-text-muted));">
+        <li>{% if _is_fr_me %}Multiples de transactions privées comparables (EV/EBITDA), résolus par secteur × bande de chiffre d'affaires × région.{% elif _is_en_me %}Comparable private-transaction multiples (EV/EBITDA), resolved by sector × revenue band × region.{% else %}Vergelijkbare private transactie-multiples (EV/EBITDA), opgelost per sector × omzetband × regio.{% endif %}</li>
+        {% if _is_be_me %}<li>Marktlink + Vlerick (2024) — {% if _is_fr_me %}manuel des multiples PME belges.{% elif _is_en_me %}Belgian SME multiples handbook.{% else %}Belgisch KMO-multiples-handboek.{% endif %}</li>{% endif %}
+        <li>Pepperdine Private Capital Markets Report (2024) · IBBA Market Pulse (2024).</li>
+        <li>Koller, Goedhart &amp; Wessels (2020) — McKinsey, <em>Valuation</em>.</li>
+    </ul>
+</div>
+{% endif %}
+
+{% endif %}

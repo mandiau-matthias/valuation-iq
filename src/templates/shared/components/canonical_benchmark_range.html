@@ -1,0 +1,9 @@
+{# Benchmark percentiles are source observations, not a post-discount company
+   multiple range. Do not borrow the applied multiple's adjustment label. #}
+{% if benchmark_multiple_low is defined and benchmark_multiple_low is not none and benchmark_multiple_high is defined and benchmark_multiple_high is not none %}
+{% set _benchmark_lang = (locale|default('nl')|lower)[:2] %}
+<p class="stat-card-subtext" data-multiple-basis="benchmark">
+    {% if _benchmark_lang == 'fr' %}Fourchette de référence{% elif _benchmark_lang == 'en' %}Benchmark reference range{% else %}Benchmarkreferentieband{% endif %}:
+    <span class="stat-card-subtext-value">{{ benchmark_multiple_low|safe_round(1) }}–{{ benchmark_multiple_high|safe_round(1) }}×</span>
+</p>
+{% endif %}

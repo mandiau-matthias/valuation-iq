@@ -1,0 +1,76 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "assumptions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Assumptions",
+      "type": "array"
+    },
+    "calibration_status": {
+      "const": "unverified",
+      "default": "unverified",
+      "title": "Calibration Status",
+      "type": "string"
+    },
+    "eligible_holdout_count": {
+      "const": 0,
+      "default": 0,
+      "title": "Eligible Holdout Count",
+      "type": "integer"
+    },
+    "empirical_coverage": {
+      "default": null,
+      "title": "Empirical Coverage",
+      "type": "null"
+    },
+    "excluded_methods": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Excluded Methods",
+      "type": "object"
+    },
+    "kind": {
+      "enum": [
+        "model_band",
+        "benchmark_percentile_band",
+        "simulation_interval"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "resolved_weights": {
+      "items": {
+        "type": "object"
+      },
+      "title": "Resolved Weights",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "range-provenance.v1",
+      "default": "range-provenance.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_vintages": {
+      "items": {
+        "type": "object"
+      },
+      "title": "Source Vintages",
+      "type": "array"
+    },
+    "transaction_relative_error": {
+      "default": null,
+      "title": "Transaction Relative Error",
+      "type": "null"
+    }
+  },
+  "required": [
+    "kind",
+    "assumptions"
+  ],
+  "title": "RangeProvenance",
+  "type": "object"
+}

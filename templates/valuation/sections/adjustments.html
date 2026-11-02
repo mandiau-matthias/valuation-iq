@@ -1,0 +1,159 @@
+{# Phase 3: Adjustments Template #}
+<div class="valuation-section phase-3-adjustments bg-white rounded-lg shadow-sm border border-gray-200 p-6" data-section="adjustments">
+    <div class="section-header flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">
+            Valuation Adjustments
+        </h2>
+        <span class="methodology-badge px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+            Market Adjustments
+        </span>
+    </div>
+    
+    <div class="adjustments-overview bg-gradient-to-r from-orange-50 to-red-50 rounded-lg p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Adjustment Summary</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="adjustment-item text-center">
+                <div class="text-2xl font-bold text-orange-900">
+                    {{ '{:+.1f}'.format((adjustments.size_adjustment or 0) * 100) }}%
+                </div>
+                <div class="text-sm text-orange-700">Size Adjustment</div>
+                <div class="text-xs text-orange-600">Based on company size</div>
+            </div>
+            <div class="adjustment-item text-center">
+                <div class="text-2xl font-bold text-orange-900">
+                    {{ '{:+.1f}'.format((adjustments.liquidity_adjustment or 0) * 100) }}%
+                </div>
+                <div class="text-sm text-orange-700">Liquidity Adjustment</div>
+                <div class="text-xs text-orange-600">Based on marketability</div>
+            </div>
+            <div class="adjustment-item text-center">
+                <div class="text-2xl font-bold text-orange-900">
+                    {{ '{:+.1f}'.format(((adjustments.size_adjustment or 0) + (adjustments.liquidity_adjustment or 0)) * 100) }}%
+                </div>
+                <div class="text-sm text-orange-700">Total Adjustment</div>
+                <div class="text-xs text-orange-600">Combined impact</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="adjustments-details grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="size-adjustment bg-blue-50 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-blue-900 mb-4">Size Adjustment</h3>
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-sm text-blue-700">Adjustment Factor</span>
+                    <span class="text-sm font-medium text-blue-900">
+                        {{ '{:+.1f}'.format((adjustments.size_adjustment or 0) * 100) }}%
+                    </span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-blue-700">Reason</span>
+                    <span class="text-sm text-blue-900">Company size relative to market</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-blue-700">Impact</span>
+                    <span class="text-sm text-blue-900">
+                        €{{ '{:,.0f}'.format((adjustments.base_value or 0) * (adjustments.size_adjustment or 0)) }}
+                    </span>
+                </div>
+            </div>
+            <div class="mt-3 p-2 bg-blue-100 rounded text-xs text-blue-800">
+                <strong>Note:</strong> Smaller companies typically trade at discounts due to 
+                higher risk and lower liquidity compared to larger enterprises.
+            </div>
+        </div>
+        
+        <div class="liquidity-adjustment bg-purple-50 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-purple-900 mb-4">Liquidity Adjustment</h3>
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-sm text-purple-700">Adjustment Factor</span>
+                    <span class="text-sm font-medium text-purple-900">
+                        {{ '{:+.1f}'.format((adjustments.liquidity_adjustment or 0) * 100) }}%
+                    </span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-purple-700">Reason</span>
+                    <span class="text-sm text-purple-900">Market liquidity and transferability</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-purple-700">Impact</span>
+                    <span class="text-sm text-purple-900">
+                        €{{ '{:,.0f}'.format((adjustments.base_value or 0) * (adjustments.liquidity_adjustment or 0)) }}
+                    </span>
+                </div>
+            </div>
+            <div class="mt-3 p-2 bg-purple-100 rounded text-xs text-purple-800">
+                <strong>Note:</strong> Private companies typically trade at discounts due to 
+                limited marketability and higher transaction costs.
+            </div>
+        </div>
+    </div>
+    
+    <div class="risk-factors mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Risk Factors</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for risk in adjustments.risk_factors or ['Market volatility', 'Industry competition', 'Economic conditions'] %}
+            <div class="risk-item bg-red-50 rounded-lg p-3 flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-4 w-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="ml-2">
+                    <span class="text-sm text-red-800">{{ risk }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="adjustment-calculation bg-gray-50 rounded-lg p-4 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Adjustment Calculation</h3>
+        <div class="space-y-2">
+            <div class="flex justify-between">
+                <span class="text-sm text-gray-600">Base Valuation</span>
+                <span class="text-sm font-medium text-gray-900">€{{ '{:,.0f}'.format(adjustments.base_value or 0) }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-sm text-gray-600">Size Adjustment ({{ '{:+.1f}'.format((adjustments.size_adjustment or 0) * 100) }}%)</span>
+                <span class="text-sm font-medium text-gray-900">
+                    €{{ '{:,.0f}'.format((adjustments.base_value or 0) * (adjustments.size_adjustment or 0)) }}
+                </span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-sm text-gray-600">Liquidity Adjustment ({{ '{:+.1f}'.format((adjustments.liquidity_adjustment or 0) * 100) }}%)</span>
+                <span class="text-sm font-medium text-gray-900">
+                    €{{ '{:,.0f}'.format((adjustments.base_value or 0) * (adjustments.liquidity_adjustment or 0)) }}
+                </span>
+            </div>
+            <div class="border-t border-gray-300 pt-2">
+                <div class="flex justify-between">
+                    <span class="text-sm font-semibold text-gray-900">Adjusted Valuation</span>
+                    <span class="text-sm font-bold text-gray-900">
+                        €{{ '{:,.0f}'.format((adjustments.base_value or 0) * (1 + (adjustments.size_adjustment or 0) + (adjustments.liquidity_adjustment or 0))) }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="adjustment-explanation bg-orange-50 rounded-lg p-4">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-orange-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h4 class="text-sm font-medium text-orange-800">Valuation Adjustments</h4>
+                <p class="text-sm text-orange-700 mt-1">
+                    These adjustments account for market-specific factors that affect business valuations. 
+                    Size and liquidity adjustments ensure the valuation reflects real-world market conditions 
+                    and transaction costs.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,29 @@
+{# PDF tree: hardcoded pt/hsl only. The screen tokens (var(--space-*),
+   var(--font-size-*), var(--report-*)) are UNDEFINED in main_report_pdf/base.html,
+   so WeasyPrint dropped every declaration that referenced one — the panel lost
+   its padding, font sizes and warning colour and rendered as unstyled body text.
+   Values below mirror the screen twin's resolved tokens (space-2=8pt, space-3=12pt,
+   space-4=16pt, font-size-xs=7pt, font-size-sm=8pt, report-warning=37 65% 55%,
+   report-text=225 18% 12%). #}
+{% if show_limited_scope_advisory_panel|default(false) %}
+<div style="margin: 8pt 0; padding: 8pt 12pt; border-radius: 6pt; border: 1pt solid hsla(37, 65%, 55%, 0.35); background: hsla(37, 65%, 55%, 0.08); break-inside: avoid; page-break-inside: avoid;">
+    <p style="margin: 0 0 4pt; font-size: 8pt; font-weight: 700; color: hsl(37, 65%, 38%);">
+        {% if is_seller_report|default(false) %}{{ t.seller_limited_scope_title }}{% else %}{{ t.advisor_limited_scope_title }}{% endif %}
+    </p>
+    <p style="margin: 0 0 4pt; font-size: 7pt; color: hsl(225, 18%, 12%); line-height: 1.55;">
+        {% if is_seller_report|default(false) %}{{ t.seller_limited_scope_intro }}{% else %}{{ t.advisor_limited_scope_intro }}{% endif %}
+    </p>
+    <ul style="margin: 0; padding-left: 16pt; font-size: 7pt; line-height: 1.6; color: hsl(225, 18%, 12%);">
+        {% if limited_scope_years|default(1) < 2 %}
+        <li style="margin-bottom: 3pt;">{% if is_seller_report|default(false) %}{{ t.seller_limited_scope_li_year }}{% else %}{{ t.advisor_limited_scope_li_year }}{% endif %}</li>
+        {% endif %}
+        {% if limited_scope_no_balance|default(false) %}
+        <li style="margin-bottom: 3pt;">{% if is_seller_report|default(false) %}{{ t.seller_limited_scope_li_balance }}{% else %}{{ t.advisor_limited_scope_li_balance }}{% endif %}</li>
+        {% endif %}
+        {% if limited_scope_thin_benchmark|default(false) %}
+        <li style="margin-bottom: 3pt;">{% if is_seller_report|default(false) %}{{ t.exec_thin_benchmark_seller_escalation }}{% else %}{{ t.exec_thin_benchmark_advisor_escalation }}{% endif %}</li>
+        {% endif %}
+        <li style="margin-bottom: 3pt;">{% if is_seller_report|default(false) %}{{ t.seller_limited_scope_li_advisor }}{% else %}{{ t.advisor_limited_scope_li_client }}{% endif %}</li>
+    </ul>
+</div>
+{% endif %}

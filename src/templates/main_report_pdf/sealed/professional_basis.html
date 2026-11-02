@@ -1,0 +1,13 @@
+<div class="a4-page sealed-professional-basis-page" style="page-break-before:always;">
+    <div class="section-header"><span class="section-number">01B</span><h1 class="section-title">{{ sealed_memorandum.labels.professional_basis }}</h1></div>
+    <table class="keep-together"><tbody><tr><td style="width:34%; color:#737985;">{{ sealed_memorandum.labels.issue_date }}</td><td data-sealed-field-id="scope.issue_date">{{ sealed_memorandum.scope.professional.issue_date }}</td></tr><tr><td style="color:#737985;">{{ sealed_memorandum.labels.legal_rights }}</td><td data-sealed-field-id="scope.legal_rights">{{ sealed_memorandum.scope.professional.legal_rights }}</td></tr></tbody></table>
+    <div class="pdf-grid pdf-grid-2" style="margin-top:12pt;">
+        <div class="pdf-card"><div class="pdf-card-eyebrow">{{ sealed_memorandum.labels.investigations_performed }}</div><ul>{% for item in sealed_memorandum.scope.professional.investigations_performed %}<li>{{ item }}</li>{% endfor %}</ul></div>
+        <div class="pdf-card"><div class="pdf-card-eyebrow">{{ sealed_memorandum.labels.investigations_not_performed }}</div>{% if sealed_memorandum.scope.professional.investigations_not_performed %}<ul>{% for item in sealed_memorandum.scope.professional.investigations_not_performed %}<li>{{ item }}</li>{% endfor %}</ul>{% else %}<p>{{ sealed_memorandum.labels.none }}</p>{% endif %}</div>
+    </div>
+    <h2>{{ sealed_memorandum.labels.assumptions }}</h2>
+    <ul>{% for item in sealed_memorandum.scope.professional.assumptions %}<li>{{ item }}</li>{% endfor %}</ul>
+    {% if sealed_memorandum.scope.professional.special_assumptions %}<h2>{{ sealed_memorandum.labels.special_assumptions }}</h2><ul>{% for item in sealed_memorandum.scope.professional.special_assumptions %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+    <div class="callout callout-warning" style="margin-top:14pt;"><h4>{{ sealed_memorandum.labels.material_uncertainty }}</h4><p>{{ sealed_memorandum.scope.professional.material_uncertainty }}</p></div>
+    {% if sealed_memorandum.scope.professional.material_esg_factors %}<h2>{{ sealed_memorandum.labels.material_esg_factors }}</h2><ul>{% for item in sealed_memorandum.scope.professional.material_esg_factors %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+</div>

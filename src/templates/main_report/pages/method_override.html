@@ -1,0 +1,162 @@
+{# 
+    METHOD OVERRIDE PAGE (Screen version)
+    Conditional page — only when show_method_override is true.
+    Expected context: t (ReportTranslations), method_override_*, upswitch_adaptive_equity_value, equity_value, show_dcf_before_calibration, show_fiscal_reference
+#}
+
+<div class="report-page" style="page-break-before: always;">
+    <div style="max-width: 680px; margin: 0 auto; padding: 40px 0;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+            <span style="background: hsl(var(--primary)); color: white; font-size: 11px; font-weight: 700; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                {{ method_override_section_number }}
+            </span>
+            <div>
+                <h2 style="font-size: 18px; font-weight: 700; color: hsl(var(--foreground)); margin: 0;">
+                    {{ t.method_override_title }}
+                </h2>
+                <p style="font-size: 13px; color: hsl(var(--muted-foreground)); margin: 4px 0 0 0;">
+                    {{ t.method_override_subtitle_screen }}
+                </p>
+            </div>
+        </div>
+
+        <div style="background: hsl(210, 80%, 96%); border: 1px solid hsl(210, 60%, 85%); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;">
+            <p style="font-size: 12px; color: hsl(210, 50%, 30%); margin: 0; font-weight: 600;">
+                {{ t.method_override_info_banner }}
+            </p>
+        </div>
+
+        <div style="background: hsl(var(--muted)); border-radius: 10px; padding: 18px 20px; margin-bottom: 20px;">
+            <h3 style="font-size: 14px; font-weight: 700; color: hsl(var(--foreground)); margin: 0 0 12px 0;">
+                {{ t.method_override_selected_method_heading }}
+            </h3>
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <tr style="border-bottom: 1px solid hsl(var(--foreground) / 0.10);">
+                    <td style="padding: 8px 0; color: hsl(var(--muted-foreground));">{{ t.method_override_col_method }}</td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 600; color: hsl(var(--foreground));">
+                        {{ method_override_label or method_override_selected_method or '—' }}
+                    </td>
+                </tr>
+                <tr style="border-bottom: 1px solid hsl(var(--foreground) / 0.10);">
+                    <td style="padding: 8px 0; color: hsl(var(--muted-foreground));">{{ t.method_override_col_manual_value }}</td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 600; color: hsl(var(--foreground));">
+                        {% if method_override_value is not none %}
+                        {{ method_override_value|format_currency_compact }}
+                        {% else %}
+                        —
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px 0 8px; font-weight: 700; color: hsl(var(--foreground));">
+                        {{ t.method_override_row_adaptive_reference }}
+                    </td>
+                    <td style="padding: 10px 0 8px; text-align: right; font-weight: 800; font-size: 15px; color: hsl(var(--primary));">
+                        {{ (upswitch_adaptive_equity_value or equity_value)|format_currency_compact }}
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 12px;">
+            <div style="background: hsl(var(--muted)); border-radius: 12px; padding: 20px; text-align: center;">
+                <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: hsl(var(--muted-foreground)); margin-bottom: 8px;">
+                    {{ t.synthesis_adaptive_label }}
+                </p>
+                <p style="font-size: 22px; font-weight: 700; color: hsl(var(--foreground)); margin: 0; font-variant-numeric: tabular-nums;">
+                    {{ (upswitch_adaptive_equity_value or equity_value)|format_currency_compact }}
+                </p>
+            </div>
+            <div style="background: hsl(var(--primary) / 0.08); border: 1px solid hsl(var(--primary) / 0.2); border-radius: 12px; padding: 20px; text-align: center;">
+                <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: hsl(var(--primary)); margin-bottom: 8px;">
+                    {{ t.method_override_label_manual_choice }}
+                </p>
+                <p style="font-size: 22px; font-weight: 700; color: hsl(var(--primary)); margin: 0; font-variant-numeric: tabular-nums;">
+                    {% if method_override_value is not none %}
+                        {{ method_override_value|format_currency_compact }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </p>
+                <p style="font-size: 11px; color: hsl(var(--muted-foreground)); margin-top: 6px;">
+                    {{ method_override_label or '—' }}
+                </p>
+            </div>
+        </div>
+
+        {# % delta between manual choice and adaptive reference. M&A defensibility:
+           reviewers shouldn't have to compute "(€X − €Y) / €Y" mentally — surface
+           the delta with a colour-banded chip below the side-by-side cards.
+           Threshold: |delta| ≥ 0.5% prints a real value; below that we say
+           "within 0.5%" so rounding noise doesn't trigger a misleading badge. #}
+        {% set _adaptive_ref = (upswitch_adaptive_equity_value or equity_value)|default(0)|float %}
+        {% set _override_value = method_override_value|default(0)|float %}
+        {% if _adaptive_ref and _adaptive_ref > 0 and _override_value and _override_value > 0 %}
+        {% set _delta_pct = ((_override_value - _adaptive_ref) / _adaptive_ref) * 100 %}
+        {% set _delta_abs = (_delta_pct|abs)|safe_round(1) %}
+        <div style="margin-bottom: 24px; padding: 12px 16px; border-radius: 8px;
+                    {% if _delta_pct|abs < 0.5 %}background: hsl(224, 12%, 96%); border: 1px solid hsl(224, 10%, 88%);
+                    {% elif _delta_pct > 0 %}background: hsl(143, 30%, 96%); border: 1px solid hsl(143, 30%, 78%);
+                    {% else %}background: hsl(6, 35%, 97%); border: 1px solid hsl(6, 35%, 82%);
+                    {% endif %}
+                    display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--foreground));">
+                {{ t.method_override_delta_label }}
+            </span>
+            <span style="font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; font-family: 'JetBrains Mono', monospace;
+                         {% if _delta_pct|abs < 0.5 %}color: hsl(var(--muted-foreground));
+                         {% elif _delta_pct > 0 %}color: hsl(143, 50%, 28%);
+                         {% else %}color: hsl(6, 50%, 36%);
+                         {% endif %}">
+                {% if _delta_pct|abs < 0.5 %}
+                {{ t.method_override_delta_match }}
+                {% elif _delta_pct > 0 %}
+                {{ t.method_override_delta_premium.replace('{percent}', _delta_abs|string) }}
+                {% else %}
+                {{ t.method_override_delta_discount.replace('{percent}', _delta_abs|string) }}
+                {% endif %}
+            </span>
+        </div>
+        {% endif %}
+
+        {% if method_override_reason or method_override_note %}
+        {% set reason_labels = {
+            'fiscal_compliance': t.method_override_reason_fiscal_compliance,
+            'asset_heavy_business': t.method_override_reason_asset_heavy_business,
+            'internal_transfer': t.method_override_reason_internal_transfer,
+            'conservative_anchor': t.method_override_reason_conservative_anchor,
+            'client_preference': t.method_override_reason_client_preference,
+            'regulatory_requirement': t.method_override_reason_regulatory_requirement,
+            'other': t.method_override_reason_other,
+        } %}
+        <div style="margin-bottom: 24px;">
+            <h3 style="font-size: 14px; font-weight: 700; color: hsl(var(--foreground)); margin-bottom: 10px;">
+                {{ t.method_override_section_rationale }}
+            </h3>
+            <div style="background: hsl(var(--muted)); border-radius: 8px; padding: 16px; font-size: 13px; color: hsl(var(--foreground)); line-height: 1.6;">
+                {% if method_override_reason %}
+                <p style="margin: 0 0 8px 0;">
+                    <strong>{{ t.method_override_reason_label }}</strong> {{ reason_labels.get(method_override_reason, method_override_reason) }}
+                </p>
+                {% endif %}
+                {% if method_override_note %}
+                <p style="margin: 0;">
+                    <strong>{{ t.method_override_note_label }}</strong> {{ method_override_note }}
+                </p>
+                {% endif %}
+                {% if method_override_date %}
+                <p style="margin: 8px 0 0 0; font-size: 12px; color: hsl(var(--muted-foreground)); font-style: italic;">
+                    {{ t.method_override_recorded_on }} {{ method_override_date|format_date }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div style="background: hsl(35, 90%, 96%); border: 1px solid hsl(35, 70%, 85%); border-radius: 8px; padding: 12px 16px;">
+            <p style="font-size: 12px; color: hsl(35, 50%, 30%); margin: 0;">
+                <strong>{{ t.synthesis_disclaimer_title }}:</strong> {{ t.method_override_disclaimer_screen }}
+            </p>
+        </div>
+    </div>
+</div>

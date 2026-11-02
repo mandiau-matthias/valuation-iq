@@ -1,0 +1,25 @@
+{# A canonical value conclusion is not a second cash/debt deduction or an
+   estimate of transaction consideration/net seller proceeds. #}
+{% set _proceeds_lang = (locale|default('nl')|lower)[:2] %}
+{% set _has_equity_conclusion = equity_value is defined and equity_value is not none %}
+<div class="callout callout-info canonical-proceeds-notice" data-equity-concluded="{{ 'true' if _has_equity_conclusion else 'false' }}" style="margin-top: 8pt; padding: 12pt; break-inside: avoid; page-break-inside: avoid;">
+    <p style="font-size: 8pt; margin: 0 0 4pt; font-weight: 600;">
+        {% if _has_equity_conclusion %}
+            {% if _proceeds_lang == 'fr' %}La conclusion en capitaux propres est distincte du prix convenu et du produit net du vendeur.
+            {% elif _proceeds_lang == 'en' %}The equity conclusion is separate from agreed consideration and net seller proceeds.
+            {% else %}De eigenvermogensconclusie staat los van de overeengekomen prijs en de netto-opbrengst voor de verkoper.
+            {% endif %}
+        {% else %}
+            {% if _proceeds_lang == 'fr' %}Aucune conclusion sur les capitaux propres ou le produit net du vendeur n’est disponible sans rapprochement étayé.
+            {% elif _proceeds_lang == 'en' %}Equity value and net seller proceeds cannot be concluded without a supported reconciliation.
+            {% else %}Zonder onderbouwde aansluiting is geen conclusie over de eigenvermogenswaarde of netto-opbrengst voor de verkoper beschikbaar.
+            {% endif %}
+        {% endif %}
+    </p>
+    <p style="font-size: 7.5pt; margin: 0; line-height: 1.5;">
+        {% if _proceeds_lang == 'fr' %}Les ajustements propres à la transaction, les frais et les impôts doivent être confirmés séparément. Ne déduisez pas une seconde fois les éléments de dette, de trésorerie, d’impôt ou de fonds de roulement déjà inclus dans la conclusion.
+        {% elif _proceeds_lang == 'en' %}Transaction-specific adjustments, costs and taxes require separate confirmation. Do not deduct debt, cash, tax or working-capital items already included in the conclusion a second time.
+        {% else %}Transactiespecifieke correcties, kosten en belastingen vereisen afzonderlijke bevestiging. Trek schuld-, kas-, belasting- of werkkapitaalposten die al in de conclusie zijn verwerkt niet nogmaals af.
+        {% endif %}
+    </p>
+</div>

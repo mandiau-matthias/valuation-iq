@@ -1,0 +1,382 @@
+{#
+    STARTUP VALUATION — EXECUTIVE SUMMARY (PDF / WeasyPrint)
+    Table-based mirror of main_report/pages/startup_executive_summary.html.
+
+    April 2026 hardening: all headline numbers come from
+    ``startup_report.canonical`` so this page and the one-pager show the
+    same pre-money.  The advisor 4-leg blend and the founder 3-leg
+    triangulation are presented as supporting evidence under
+    "Triangulatie per methode", not as competing headlines.
+#}
+{% set br = startup_report.berkus %}
+{% set sc = startup_report.scorecard %}
+{% set vc = startup_report.vc %}
+{% set sf = startup_report.saas_forward %}
+{% set bp_b = br.pre_money|default(0)|float %}
+{% set bp_s = sc.pre_money|default(0)|float %}
+{% set bp_v = vc.pre_money|default(0)|float %}
+{% set bp_f = (sf.pre_money|default(0)|float) if sf and sf.available else 0 %}
+{% set mx = [bp_b, bp_s, bp_v, bp_f]|max %}
+
+{# Canonical headline — single source of truth.  Falls back to the
+   advisor 4-leg block on legacy engine responses that lack the
+   ``canonical`` key. #}
+{% set canon = startup_report.canonical or {} %}
+{% set head_mid = (canon.pre_money_mid if canon and canon.pre_money_mid else startup_report.equity_value_mid) | float %}
+{% set head_low = (canon.pre_money_low if canon and canon.pre_money_low else startup_report.equity_value_low) | float %}
+{% set head_high = (canon.pre_money_high if canon and canon.pre_money_high else startup_report.equity_value_high) | float %}
+
+{% set defs = startup_report.defensibility_score or {} %}
+{% set traffic = defs.traffic_light or 'yellow' %}
+{# Solid PDF chip colour — same source as screen + PDF one-pager
+   (audit issue #17). #}
+{% set badge_bg = defensibility_traffic_pdf_bg(traffic) %}
+{% set badge_fg = defensibility_traffic_pdf_fg(traffic) %}
+
+<div class="a4-page">
+    {% include "main_report_pdf/partials/_page_header.html" ignore missing %}
+
+    <table style="width: 100%; margin-bottom: 8pt;">
+        <tr>
+            <td style="font-size: 18pt; font-weight: 700;">{{ startup_report.t.pre_money_valuation_section }}</td>
+            <td style="text-align: right; font-size: 8pt; color: #4a5460;">
+                {# B3 — i18n the badge (PDF mirror). #}
+                {{ startup_report.t.section_badge_startup }} · {{ startup_report.stage_display }}<br/>
+                {# Method-family label — mirrors the screen exec summary
+                   so the printed PDF identifies the engine on the cover. #}
+                <span style="font-weight: 600;">{{ startup_report.t.method_family_ev_revenue }}</span>
+            </td>
+        </tr>
+    </table>
+
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 12pt;">
+        <tr>
+            <td style="vertical-align: top; padding: 10pt; border: 1pt solid #e1e4ea; width: 60%;">
+                <div style="font-size: 9pt; color: #4a5460;">{{ startup_report.t.indicative_pre_money_canonical }}</div>
+                <div style="font-size: 24pt; font-weight: 700; color: #2a8a82; margin-top: 4pt;">
+                    {{ head_mid|format_currency }}
+                </div>
+                <div style="font-size: 9pt; color: #4a5460; margin-top: 2pt;">
+                    {{ startup_report.t.range }}: {{ head_low|format_currency }} — {{ head_high|format_currency }}
+                </div>
+                {% if canon and canon.basis %}
+                <div style="font-size: 7.5pt; color: #4a5460; margin-top: 4pt; font-style: italic;">
+                    {{ canon.basis }}
+                </div>
+                {% endif %}
+                <p style="margin-top: 8pt; font-size: 9pt; line-height: 1.5;">
+                    {{ startup_report.narrative }}
+                </p>
+            </td>
+            <td style="vertical-align: top; padding: 10pt; border: 1pt solid #e1e4ea;">
+                {% if defs and defs.score_0_10 is not none %}
+                <div style="font-size: 8pt; color: #4a5460; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4pt;">
+                    {{ startup_report.t.defensibility_score_label }}
+                </div>
+                <table style="width: 100%; margin-bottom: 8pt;">
+                    <tr>
+                        <td style="font-size: 22pt; font-weight: 700; color: #1f2937;">
+                            {{ defs.score_0_10|safe_round(1) }}
+                            <span style="font-size: 11pt; color: #4a5460;">/10</span>
+                        </td>
+                        <td style="text-align: right;">
+                            <span style="display: inline-block; padding: 3pt 8pt; background: {{ badge_bg }}; color: {{ badge_fg }}; border-radius: 3pt; font-size: 9pt; font-weight: 700;">
+                                {{ defs.letter_grade }} · {{ traffic|upper }}
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+                {# B7 — 2-row-per-factor layout: label+score on row 1,
+                   rationale spanning both columns on row 2. WeasyPrint
+                   handles `colspan` reliably; nesting a description
+                   under each factor row gives the M&A reader the
+                   "why this score" line without expanding the chip's
+                   width. #}
+                {# Precision aligned to 1 decimal (audit issue D13).
+                   Mirrors the screen exec summary so PDF readers see
+                   the same precision as the chip above. #}
+                <table style="width: 100%; font-size: 7.5pt; line-height: 1.4;">
+                    {% for f in defs.factors or [] %}
+                    <tr>
+                        <td style="padding: 2pt 4pt 1pt 0; color: #1f2937; font-weight: 600;">{{ f.label }}</td>
+                        <td style="text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; padding: 2pt 0 1pt 0; white-space: nowrap;">
+                            {{ ((f.score or 0) * 10)|safe_round(1) }}/10
+                        </td>
+                    </tr>
+                    {% if f.rationale %}
+                    <tr>
+                        <td colspan="2" style="padding: 0 0 4pt 0; color: #4a5460; font-size: 7pt; line-height: 1.45;">
+                            {{ f.rationale }}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </table>
+                {% else %}
+                <div style="font-size: 9pt; font-weight: 600; margin-bottom: 6pt;">{{ startup_report.t.method_mix_advisor }}</div>
+                <table style="width: 100%; font-size: 9pt;">
+                    {% for method, weight in startup_report.weights.items() %}
+                    <tr>
+                        <td style="padding: 2pt 0;">
+                            {% if method == 'berkus' %}{{ startup_report.t.method_berkus }}
+                            {% elif method == 'scorecard' %}{{ startup_report.t.method_scorecard_payne }}
+                            {% elif method == 'vc' %}{{ startup_report.t.method_vc }}
+                            {% elif method == 'saas_forward' %}{{ startup_report.t.method_saas_forward }}
+                            {% else %}{{ method|title }}{% endif %}
+                        </td>
+                        <td style="text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ (weight * 100)|safe_round(0) }}%</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+
+    {# "Asking too much" warning — surfaced when the consortium VC
+       formula clamps pre to 0 because the round size > implied post. #}
+    {% set ovr = startup_report.vc_oversubscribed %}
+    {% if ovr %}
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10pt;">
+        <tr>
+            <td style="padding: 8pt; border: 1pt solid #f59e0b; background: #fef9e7;">
+                <div style="font-size: 9pt; font-weight: 600; margin-bottom: 3pt;">
+                    {# B12 — font-safe SVG warning glyph (replaces ⚠ which
+                       renders as tofu in PDFs without the canonical font). #}
+                    <svg width="10" height="10" viewBox="0 0 16 16" aria-hidden="true" style="vertical-align: -1pt; margin-right: 3pt;">
+                        <path d="M8 1.4 L15 14 H1 Z" fill="#f59e0b" stroke="#a1640d" stroke-width="0.8" stroke-linejoin="round"/>
+                        <rect x="7.3" y="5.5" width="1.4" height="4.6" rx="0.4" fill="#5a3d05"/>
+                        <circle cx="8" cy="11.7" r="0.7" fill="#5a3d05"/>
+                    </svg>{{ startup_report.t.vc_oversubscribed_title }}
+                </div>
+                <p style="font-size: 8pt; color: #4a5460; line-height: 1.45; margin: 0;">
+                    {% set _vc_pdf = startup_report.t.vc_oversubscribed_pdf_body %}
+                    {{ _vc_pdf.replace('{ask}', ovr.investment_amount|format_eur_amount).replace('{post}', ovr.implied_post_money|format_eur_amount).replace('{shortfall}', ovr.shortfall|format_eur_amount)|safe }}
+                </p>
+            </td>
+        </tr>
+    </table>
+    {% endif %}
+
+    {# Outlier-policy cap warnings — when one leg sits far outside the
+       median of the others, the engine caps it and surfaces the audit
+       trail.  Render the warning explicitly so a sophisticated reader
+       sees the cap rather than wondering why the headline is lower
+       than the largest leg. #}
+    {% set op = startup_report.outlier_policy or {} %}
+    {% if op.any_capped %}
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10pt;">
+        <tr>
+            <td style="padding: 8pt; border: 1pt solid #f59e0b; background: #fef9e7;">
+                <div style="font-size: 9pt; font-weight: 600; margin-bottom: 3pt;">
+                    {# B12 — font-safe SVG warning glyph (mirror of the
+                       oversubscribed banner above). #}
+                    <svg width="10" height="10" viewBox="0 0 16 16" aria-hidden="true" style="vertical-align: -1pt; margin-right: 3pt;">
+                        <path d="M8 1.4 L15 14 H1 Z" fill="#f59e0b" stroke="#a1640d" stroke-width="0.8" stroke-linejoin="round"/>
+                        <rect x="7.3" y="5.5" width="1.4" height="4.6" rx="0.4" fill="#5a3d05"/>
+                        <circle cx="8" cy="11.7" r="0.7" fill="#5a3d05"/>
+                    </svg>{{ startup_report.t.outlier_capped_title }}
+                </div>
+                <p style="font-size: 8pt; color: #4a5460; line-height: 1.45; margin: 0 0 4pt;">
+                    {% set _o_body = startup_report.t.outlier_capped_body %}
+                    {{ _o_body.replace('{k}', op.tukey_k|safe_round(1)|string).replace('{median}', op.median|format_eur_amount).replace('{fence}', op.upper_fence|format_eur_amount) }}
+                </p>
+                <table style="width: 100%; font-size: 7.5pt;">
+                    {% for r in op.cap_records or [] if r.was_capped %}
+                    <tr>
+                        <td style="padding: 1pt 4pt 1pt 0;">{{ r.label }}</td>
+                        <td style="text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">
+                            {{ r.original_pre_money|format_currency }} → {{ r.capped_pre_money|format_currency }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </td>
+        </tr>
+    </table>
+    {% endif %}
+
+    {# Sector-consistency notice — when the SaaS Forward leg was
+       hard-disabled because the founder-picked sector isn't recurring-
+       revenue compatible.  Surfaced so the founder knows the engine
+       skipped a leg by design rather than by missing data. #}
+    {% set sec = startup_report.sector_consistency or {} %}
+    {% if sec.saas_forward_sector_skipped %}
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10pt;">
+        <tr>
+            <td style="padding: 8pt; border: 1pt solid #6b7280; background: #f3f4f6;">
+                <div style="font-size: 9pt; font-weight: 600; margin-bottom: 3pt;">
+                    {{ startup_report.t.sector_consistency_title }}
+                </div>
+                <p style="font-size: 8pt; color: #4a5460; line-height: 1.45; margin: 0;">
+                    {% set _sc_body = startup_report.t.sector_consistency_body %}
+                    {{ _sc_body.replace('{sector}', sec.sector|string)|safe }}
+                </p>
+            </td>
+        </tr>
+    </table>
+    {% endif %}
+
+    {% if mx > 0 %}
+    <h2 style="font-size: 12pt; margin: 12pt 0 2pt;">{{ startup_report.t.triangulation_per_method }}</h2>
+    {# Sub-caption — exec summary PDF renders the 4-leg advisor blend.
+       Mirrors the screen exec summary so PDF readers see the same
+       lens label.  Audit issue D2. #}
+    <p style="font-size: 7pt; color: #4a5460; margin: 0 0 6pt; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700;">
+        {{ startup_report.t.football_field_lens_advisor }}
+    </p>
+    <p style="font-size: 8pt; color: #4a5460; margin-bottom: 8pt;">
+        {% set _ad = (startup_report.advisor_view.equity_value_mid|format_eur_amount if startup_report.advisor_view else startup_report.equity_value_mid|format_eur_amount) %}
+        {% set _fd = (startup_report.founder_view.equity_value_mid|format_eur_amount if startup_report.founder_view else "0") %}
+        {% set _tri_pdf = startup_report.t.triangulation_pdf_caption %}
+        {{ _tri_pdf.replace('{head}', head_mid|format_eur_amount).replace('{advisor}', _ad).replace('{founder}', _fd) }}
+    </p>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10pt; font-size: 9pt;">
+        <tr>
+            <td style="padding: 4pt 0;">{{ startup_report.t.method_berkus }}</td>
+            <td style="text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ bp_b|format_currency }}</td>
+        </tr>
+        <tr>
+            <td colspan="2" style="padding: 0 0 6pt 0;">
+                <div style="height: 8pt; background: #e1e4ea; border-radius: 2pt;">
+                    <div style="height: 100%; width: {{ (bp_b / mx * 100)|round(1) }}%; background: #2a8a82; border-radius: 2pt;"></div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 4pt 0;">{{ startup_report.t.method_scorecard }}</td>
+            <td style="text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ bp_s|format_currency }}</td>
+        </tr>
+        <tr>
+            <td colspan="2" style="padding: 0 0 6pt 0;">
+                <div style="height: 8pt; background: #e1e4ea; border-radius: 2pt;">
+                    <div style="height: 100%; width: {{ (bp_s / mx * 100)|round(1) }}%; background: #238276; border-radius: 2pt;"></div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 4pt 0;">{{ startup_report.t.method_vc_short }}</td>
+            <td style="text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{% if bp_v > 0 %}{{ bp_v|format_currency }}{% else %}—{% endif %}</td>
+        </tr>
+        <tr>
+            <td colspan="2" style="padding: 0 0 6pt 0;">
+                <div style="height: 8pt; background: #e1e4ea; border-radius: 2pt;">
+                    <div style="height: 100%; width: {% if bp_v > 0 %}{{ (bp_v / mx * 100)|round(1) }}{% else %}0{% endif %}%; background: #1c6b64; border-radius: 2pt;"></div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 4pt 0;">{{ startup_report.t.method_saas_forward }}</td>
+            <td style="text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{% if bp_f > 0 %}{{ bp_f|format_currency }}{% else %}—{% endif %}</td>
+        </tr>
+        <tr>
+            <td colspan="2" style="padding: 0 0 6pt 0;">
+                <div style="height: 8pt; background: #e1e4ea; border-radius: 2pt;">
+                    <div style="height: 100%; width: {% if bp_f > 0 %}{{ (bp_f / mx * 100)|round(1) }}{% else %}0{% endif %}%; background: #155752; border-radius: 2pt;"></div>
+                </div>
+            </td>
+        </tr>
+        {# Bold canonical-headline footer row so the headline number isn't
+           lost at the bottom of the football-field table. #}
+        <tr style="border-top: 1pt solid #2a8a82;">
+            <td style="padding: 6pt 0 2pt; font-weight: 700;">{{ startup_report.t.canonical_pre_money_blended_median }}</td>
+            <td style="padding: 6pt 0 2pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 700; color: #2a8a82;">{{ head_mid|format_currency }}</td>
+        </tr>
+    </table>
+    {% endif %}
+
+    {% if startup_report.defensibility and startup_report.defensibility|length > 0 %}
+    <h2 style="font-size: 12pt; margin: 12pt 0 6pt;">{{ startup_report.t.defensibility_section_title }}</h2>
+    <p style="font-size: 8pt; color: #4a5460; margin-bottom: 6pt;">
+        {{ startup_report.t.defensibility_data_room_caption }}
+    </p>
+    <table style="width: 100%; max-width: 360pt; font-size: 9pt; border-collapse: collapse; margin-bottom: 12pt;">
+        <tbody>
+            {% for row in startup_report.defensibility %}
+            <tr>
+                <td style="padding: 3pt 0; border-bottom: 0.5pt solid #e1e4ea;">{{ row.label }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; border-bottom: 0.5pt solid #e1e4ea;">{{ row.value }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {# VC assumptions table — REMOVED 2026-05-10 (audit issue D3, PDF
+       twin).  Same three values render on the one-pager pill row and
+       in the method-breakdown VC audit table; two layouts of the same
+       data on adjacent pages was confusing investors. #}
+
+    {# Sensitivity mini-grid (PDF twin) — three corner values from the
+       full 3×3 grid on method-breakdown.  Audit issue D8. #}
+    {% set sens = startup_report.vc_sensitivity %}
+    {% if sens and sens.grid %}
+    <h2 style="font-size: 12pt; margin: 10pt 0 4pt;">{{ startup_report.t.sensitivity_mini_title }}</h2>
+    <p style="font-size: 8pt; color: #4a5460; margin-bottom: 6pt;">
+        {{ startup_report.t.sensitivity_mini_caption }}
+    </p>
+    <table style="width: 100%; max-width: 480pt; border-collapse: collapse; margin-bottom: 10pt;">
+        <tr>
+            <td style="padding: 8pt; border: 1pt solid #e1e4ea; border-left: 3pt solid #b04545; vertical-align: top; width: 33%;">
+                <div style="font-size: 7pt; color: #4a5460; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3pt;">
+                    {{ startup_report.t.sensitivity_mini_worst }}
+                </div>
+                <div style="font-size: 10pt; font-weight: 700; color: #1f2937; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">
+                    {{ sens.grid[0][0]|format_currency }}
+                </div>
+            </td>
+            <td style="padding: 8pt; border: 1pt solid #e1e4ea; border-left: 3pt solid #2a8a82; background: rgba(244, 99, 35, 0.04); vertical-align: top; width: 33%;">
+                <div style="font-size: 7pt; color: #2a8a82; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; margin-bottom: 3pt;">
+                    {{ startup_report.t.sensitivity_mini_centre }}
+                </div>
+                <div style="font-size: 10pt; font-weight: 700; color: #2a8a82; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">
+                    {{ sens.grid[1][1]|format_currency }}
+                </div>
+            </td>
+            <td style="padding: 8pt; border: 1pt solid #e1e4ea; border-left: 3pt solid #1d7268; vertical-align: top; width: 33%;">
+                <div style="font-size: 7pt; color: #4a5460; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3pt;">
+                    {{ startup_report.t.sensitivity_mini_best }}
+                </div>
+                <div style="font-size: 10pt; font-weight: 700; color: #1f2937; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">
+                    {{ sens.grid[2][2]|format_currency }}
+                </div>
+            </td>
+        </tr>
+    </table>
+    {% endif %}
+
+    {% set tr = startup_report.traction %}
+    {% if tr.arr or tr.mrr_growth_rate_pct or tr.runway_months %}
+    <h2 style="font-size: 12pt; margin: 12pt 0 6pt;">{{ startup_report.t.traction_snapshot }}</h2>
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            {% if tr.arr %}
+            <td style="padding: 8pt; border: 1pt solid #e1e4ea;">
+                <div style="font-size: 8pt; color: #4a5460;">ARR</div>
+                <div style="font-weight: 600;">{{ tr.arr|format_currency }}</div>
+            </td>
+            {% endif %}
+            {% if tr.mrr_growth_rate_pct %}
+            <td style="padding: 8pt; border: 1pt solid #e1e4ea;">
+                <div style="font-size: 8pt; color: #4a5460;">{{ startup_report.t.label_mom_growth }}</div>
+                <div style="font-weight: 600;">{{ tr.mrr_growth_rate_pct|safe_round(1) }}%</div>
+            </td>
+            {% endif %}
+            {% if tr.monthly_churn_pct %}
+            <td style="padding: 8pt; border: 1pt solid #e1e4ea;">
+                <div style="font-size: 8pt; color: #4a5460;">{{ startup_report.t.label_monthly_churn }}</div>
+                <div style="font-weight: 600;">{{ tr.monthly_churn_pct|safe_round(1) }}%</div>
+            </td>
+            {% endif %}
+            {% if tr.runway_months %}
+            <td style="padding: 8pt; border: 1pt solid #e1e4ea;">
+                <div style="font-size: 8pt; color: #4a5460;">{{ startup_report.t.label_runway }}</div>
+                <div style="font-weight: 600;">{{ tr.runway_months|safe_round(0) }} {{ startup_report.t.unit_months_short }}</div>
+            </td>
+            {% endif %}
+        </tr>
+    </table>
+    {% endif %}
+
+    {% include "main_report_pdf/partials/_footer.html" ignore missing %}
+</div>

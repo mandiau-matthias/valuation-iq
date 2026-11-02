@@ -1,0 +1,95 @@
+{#
+    LIQUIDATION ANALYSIS — PAGE: DISCLOSURES (PDF version)
+
+    PDF twin of main_report/pages/liquidation_disclosure.html.
+    Phase 4 §10 — framework references and engagement limitations.
+#}
+{% set lr = liquidation_report %}
+{% if lr.disclosure %}
+{% set d = lr.disclosure %}
+<section class="pdf-page liquidation-page">
+    <header class="pdf-section-header">
+        <span class="pdf-section-number">10</span>
+        <h1 class="pdf-section-title">{{ lr.t.disclosure_section_title }}</h1>
+        <span class="pdf-badge">{{ lr.t.disclosure_section_subtitle }}</span>
+    </header>
+
+    <h2 class="pdf-h2">{{ lr.t.disclosure_bases_title }}</h2>
+    <ul class="pdf-list">{% for b in d.bases_of_value %}<li>{{ b }}</li>{% endfor %}</ul>
+
+    <h2 class="pdf-h2">{{ lr.t.disclosure_premise_title }}</h2>
+    <div class="pdf-prose">{{ d.premise_of_value }}</div>
+
+    <h2 class="pdf-h2">{{ lr.t.disclosure_approaches_title }}</h2>
+    <ul class="pdf-list">{% for a in d.approaches_used %}<li>{{ a }}</li>{% endfor %}</ul>
+
+    <h2 class="pdf-h2">{{ lr.t.disclosure_compliance_title }}</h2>
+    <div class="pdf-prose">{{ d.methodology_compliance }}</div>
+
+    <h2 class="pdf-h2">{{ lr.t.disclosure_fv_hierarchy_title }}</h2>
+    <table class="pdf-table pdf-table-compact">
+        <thead>
+            <tr>
+                <th>{{ lr.t.disclosure_fv_col_item }}</th>
+                <th>{{ lr.t.disclosure_fv_col_level }}</th>
+                <th>{{ lr.t.disclosure_fv_col_rationale }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in d.fair_value_hierarchy %}
+            <tr>
+                <td>{{ entry.item_label }}</td>
+                <td class="pdf-emphasis">{{ entry.level_label }}</td>
+                <td class="pdf-prose-small">{{ entry.rationale }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2 class="pdf-h2">{{ lr.t.disclosure_limitations_title }}</h2>
+    <ul class="pdf-list pdf-list-small">{% for limit in d.limitations %}<li>{{ limit }}</li>{% endfor %}</ul>
+
+    <h2 class="pdf-h2">{{ lr.t.disclosure_out_of_scope_title }}</h2>
+    <ul class="pdf-list pdf-list-small">{% for item in d.out_of_scope %}<li>{{ item }}</li>{% endfor %}</ul>
+
+    <h2 class="pdf-h2">{{ lr.t.disclosure_assumptions_title }}</h2>
+    <ul class="pdf-list pdf-list-small">{% for a in d.assumptions %}<li>{{ a }}</li>{% endfor %}</ul>
+
+    {% if d.independence_statement %}
+    <h2 class="pdf-h2">{{ lr.t.disclosure_independence_title }}</h2>
+    <div class="pdf-prose">{{ d.independence_statement }}</div>
+    {% endif %}
+    {% if d.conflicts_disclosure %}
+    <h2 class="pdf-h2">{{ lr.t.disclosure_conflicts_title }}</h2>
+    <div class="pdf-prose">{{ d.conflicts_disclosure }}</div>
+    {% endif %}
+
+    <div class="pdf-card pdf-card-muted">
+        <div class="pdf-card-eyebrow">{{ lr.t.disclosure_signatory_title }}</div>
+        <div class="pdf-emphasis">{{ d.signatory.name }}</div>
+        <div class="pdf-prose-small">{{ d.signatory.qualification }}</div>
+        <div class="pdf-prose-small">{{ d.signatory.date }}</div>
+    </div>
+
+    {# Audit-trail panel — tamper-evident metadata for digitalised M&A. #}
+    {% if lr.audit_trail %}
+    <div class="pdf-card pdf-card-primary">
+        <div class="pdf-card-eyebrow">{{ lr.t.audit_trail_title }}</div>
+        <table class="pdf-table pdf-table-compact">
+            <tbody>
+                <tr><td>{{ lr.t.audit_trail_run_id }}</td><td class="pdf-mono">{{ lr.audit_trail.short_run_id }}</td></tr>
+                <tr><td>{{ lr.t.audit_trail_effective_date }}</td><td class="pdf-mono">{{ lr.audit_trail.effective_date }}</td></tr>
+                <tr><td>{{ lr.t.audit_trail_computed_at }}</td><td class="pdf-mono">{{ lr.audit_trail.computed_at }}</td></tr>
+                <tr><td>{{ lr.t.audit_trail_engine_version }}</td><td class="pdf-mono">{{ lr.audit_trail.engine_version }}</td></tr>
+                <tr><td>{{ lr.t.audit_trail_payload_hash }}</td><td class="pdf-mono">{{ lr.audit_trail.payload_hash_short }}…</td></tr>
+            </tbody>
+        </table>
+        <div class="pdf-prose-small">{{ lr.t.audit_trail_explainer }}</div>
+    </div>
+    {% endif %}
+
+    {% if d.sources %}
+    <div class="pdf-sources">{{ lr.t.sources_label }}: {{ d.sources|join(' · ') }}</div>
+    {% endif %}
+</section>
+{% endif %}

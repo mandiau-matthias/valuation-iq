@@ -1,0 +1,169 @@
+{#
+    OWNER RISK LEDGER — M&A-grade reconciliation block.
+
+    Renders the single auditable record built by
+    `src/domain/owner_risk_ledger.py` and exposed on
+    `valuation.owner_risk_ledger`. The block reconciles the structural
+    (multiple-side, Step-4) and behavioural (equity-side, post-Step-7)
+    owner-risk discounts on one ledger so an M&A reader can audit the
+    full owner-related haircut at a glance — without re-deriving the
+    no-double-count invariant from upstream code.
+
+    Context expectations:
+      • t                       — ReportTranslations (owner_risk_ledger_*).
+      • valuation.owner_risk_ledger — typed `OwnerRiskLedger` model OR
+                                      None when neither structural nor
+                                      behavioural data is available.
+
+    Render contract:
+      • If the ledger is None → render nothing (skip the section).
+      • Audit-quality chip:
+          DEFENSIBLE      → green (good band)
+          HEURISTIC_ONLY  → amber (caution band) + advisor next-action
+      • Each row shows side label, risk-level chip, % impact, € impact,
+        methodology marker, and citation markers (numeric superscripts
+        keyed into the global citations partial).
+
+    The block deliberately does NOT recompute any number — it consumes
+    the typed ledger model verbatim. That contract is enforced by the
+    ledger's pydantic schema and by the unit tests in
+    tests/unit/domain/test_owner_risk_ledger.py.
+#}
+
+{# Resolve from the flat aggregator key. The aggregator exposes the
+   typed `OwnerRiskLedger` model dumped to a plain dict for Jinja-
+   friendly attribute access (`ledger.entries`, `ledger.audit_quality`,
+   etc.); when the synthesis path didn't build one the key is None and
+   this block becomes a no-op. #}
+{% set ledger = owner_risk_ledger %}
+{% if ledger %}
+{% set is_defensible = ledger.audit_quality == 'DEFENSIBLE' %}
+{% set chip_bg     = 'hsl(143, 40%, 94%)' if is_defensible else 'hsl(35, 70%, 94%)' %}
+{% set chip_border = 'hsl(143, 40%, 65%)' if is_defensible else 'hsl(35, 70%, 65%)' %}
+{% set chip_color  = 'hsl(143, 40%, 30%)' if is_defensible else 'hsl(35, 50%, 30%)' %}
+{% set chip_label  = t.owner_risk_ledger_audit_defensible if is_defensible else t.owner_risk_ledger_audit_heuristic %}
+
+<div style="margin-top: 14pt; padding: 12pt; background: hsl(var(--report-surface)); border: 1px solid hsl(var(--report-slate-200)); border-radius: 6pt; page-break-inside: avoid; break-inside: avoid;">
+    {# ── Header: title + audit-quality chip ── #}
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12pt; flex-wrap: wrap; margin-bottom: 8pt;">
+        <div style="flex: 1 1 320pt; min-width: 0;">
+            <h3 style="margin: 0 0 2pt 0; font-size: 9.5pt; font-weight: 700; color: hsl(var(--report-slate-900));">
+                {{ t.owner_risk_ledger_title }}
+            </h3>
+            <p style="margin: 0; font-size: 7.5pt; color: hsl(var(--report-text-muted)); line-height: 1.5;">
+                {{ t.owner_risk_ledger_subtitle }}
+            </p>
+        </div>
+        <div style="text-align: right;">
+            <span style="display: inline-block; padding: 3pt 8pt; border-radius: 999pt; background: {{ chip_bg }}; border: 1px solid {{ chip_border }}; color: {{ chip_color }}; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">
+                {{ t.owner_risk_ledger_audit_quality_label }}: {{ chip_label }}
+            </span>
+        </div>
+    </div>
+
+    {# ── Ledger table ── #}
+    <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt; color: hsl(var(--report-slate-900)); margin-top: 6pt;">
+        <thead>
+            <tr style="border-bottom: 1px solid hsl(var(--report-slate-200));">
+                <th style="text-align: left;  padding: 4pt 4pt; font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-text-muted)); font-weight: 600;">{{ t.owner_risk_ledger_side_multiple if false else '' }}{# placeholder so emitter doesn't dedupe #}</th>
+                <th style="text-align: left;  padding: 4pt 4pt; font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-text-muted)); font-weight: 600;">{{ t.owner_risk_ledger_item_label }}</th>
+                <th style="text-align: right; padding: 4pt 4pt; font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-text-muted)); font-weight: 600;">%</th>
+                <th style="text-align: right; padding: 4pt 4pt; font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-text-muted)); font-weight: 600;">€</th>
+                <th style="text-align: left;  padding: 4pt 8pt; font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-text-muted)); font-weight: 600;">{{ t.owner_risk_ledger_methodology_title }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in ledger.entries %}
+            {% set side_label = t.owner_risk_ledger_side_multiple if entry.side == 'multiple' else t.owner_risk_ledger_side_equity %}
+            {% set heuristic_marker = '★' if entry.is_heuristic else '◆' %}
+            <tr style="border-bottom: 1px solid hsl(var(--report-slate-100));">
+                <td style="padding: 5pt 4pt; font-weight: 600; white-space: nowrap; color: hsl(var(--report-slate-700));">
+                    <span style="display: inline-block; padding: 1pt 5pt; border-radius: 3pt; background: hsl(var(--report-surface)); border: 1px solid hsl(var(--report-slate-200)); font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.04em;">
+                        {{ side_label }}
+                    </span>
+                </td>
+                <td style="padding: 5pt 4pt;">
+                    <div style="font-weight: 600; line-height: 1.35;">{{ entry.label }}</div>
+                    <div style="margin-top: 1pt; font-size: 6.5pt; color: hsl(var(--report-text-muted));">
+                        <span title="{{ t.owner_risk_ledger_heuristic_marker_title if entry.is_heuristic else t.owner_risk_ledger_profile_marker_title }}" style="margin-right: 3pt;">{{ heuristic_marker }}</span>
+                        {{ entry.risk_level }}
+                        {% if entry.evidence_grade == 'UNCORROBORATED' %}
+                        <span style="display: inline-block; margin-left: 4pt; padding: 0 4pt; border-radius: 3pt; background: hsl(35, 90%, 94%); border: 1px solid hsl(35, 70%, 70%); color: hsl(35, 50%, 28%); font-size: 6pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;">{{ t.owner_risk_ledger_unverified_input }}</span>
+                        {% endif %}
+                    </div>
+                    {% if entry.input_basis %}
+                    <div style="margin-top: 1pt; font-size: 6.5pt; color: hsl(var(--report-text-muted));">
+                        {{ t.owner_risk_ledger_basis_label }}: {{ entry.input_basis }}
+                    </div>
+                    {% endif %}
+                </td>
+                <td style="padding: 5pt 4pt; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600;">
+                    {{ '%.1f'|format(entry.adjustment_pct|float) }}%
+                </td>
+                <td style="padding: 5pt 4pt; text-align: right; font-variant-numeric: tabular-nums; color: hsl(var(--report-slate-700));">
+                    {% set _monetary_impact = entry.monetary_impact|float if entry.monetary_impact is defined and entry.monetary_impact is not none else 0 %}
+                    {% if _monetary_impact != 0 %}
+                        {% if _monetary_impact < 0 %}−{% endif %}€{{ '{:,.0f}'.format(_monetary_impact|abs|float) }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td style="padding: 5pt 8pt; color: hsl(var(--report-text-muted)); line-height: 1.45; font-size: 7pt;">
+                    {{ entry.methodology }}
+                    {% if entry.citation_keys %}
+                    <sup style="font-size: 6pt; color: hsl(var(--report-teal)); font-weight: 700; margin-left: 2pt;">{{ entry.citation_keys|length }}</sup>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr style="border-top: 1.5px solid hsl(var(--report-slate-300));">
+                <td colspan="2" style="padding: 6pt 4pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; font-size: 7pt; color: hsl(var(--report-slate-900));">
+                    {{ t.owner_risk_ledger_total_label }}
+                </td>
+                <td colspan="2" style="padding: 6pt 4pt; text-align: right; font-variant-numeric: tabular-nums; font-weight: 800; font-size: 8.5pt; color: hsl(var(--report-slate-900));">
+                    {% set _total_monetary_impact = ledger.total_monetary_impact|float if ledger.total_monetary_impact is defined and ledger.total_monetary_impact is not none else 0 %}
+                    {% if _total_monetary_impact != 0 %}
+                        {% if _total_monetary_impact < 0 %}−{% endif %}€{{ '{:,.0f}'.format(_total_monetary_impact|abs|float) }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td style="padding: 6pt 8pt;"></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    {# ── Methodology summary (renderable verbatim from ledger) ── #}
+    <div style="margin-top: 10pt; padding: 8pt 10pt; background: hsl(var(--report-surface)); border-left: 2pt solid hsl(var(--report-teal)); border-radius: 0 4pt 4pt 0;">
+        <p style="margin: 0 0 3pt 0; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-teal));">
+            {{ t.owner_risk_ledger_methodology_title }}
+        </p>
+        <p style="margin: 0; font-size: 7.5pt; line-height: 1.55; color: hsl(var(--report-slate-900));">
+            {{ ledger.methodology_summary }}
+        </p>
+    </div>
+
+    {# ── No-double-count invariant — quoted verbatim so an auditor never has to re-derive it. ── #}
+    <div style="margin-top: 6pt; padding: 8pt 10pt; background: hsl(var(--report-slate-50, var(--report-surface))); border: 1px dashed hsl(var(--report-slate-200)); border-radius: 4pt;">
+        <p style="margin: 0 0 3pt 0; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-slate-700));">
+            {{ t.owner_risk_ledger_no_double_count_title }}
+        </p>
+        <p style="margin: 0; font-size: 7pt; line-height: 1.55; color: hsl(var(--report-text-muted)); font-style: italic;">
+            {{ ledger.cross_reference_note }}
+        </p>
+    </div>
+
+    {# ── Heuristic-only path: surface the advisor next action so the
+       reader sees the bridge from the structural-only ledger to a
+       defensible dossier on the same page they read the discount. ── #}
+    {% if not is_defensible and ledger.next_action %}
+    <div style="margin-top: 6pt; padding: 8pt 10pt; background: hsl(35, 90%, 97%); border: 1px solid hsl(35, 70%, 80%); border-radius: 4pt;">
+        <p style="margin: 0; font-size: 7pt; line-height: 1.55; color: hsl(35, 50%, 25%); font-weight: 600;">
+            → {{ ledger.next_action }}
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endif %}

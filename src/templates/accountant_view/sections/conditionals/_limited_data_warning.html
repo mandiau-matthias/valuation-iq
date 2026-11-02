@@ -1,0 +1,17 @@
+{# Warning box for limited data scenarios #}
+<div class="report-callout warning" style="background-color: #faf5eb; border-left: 4pt solid #d9a558; padding: 12pt; margin: 12pt 0;">
+    <p style="font-family: 'Inter', sans-serif; margin: 0; color: #d9a558;"><strong>{{ t.accountant_cond_limited_data_title }}</strong></p>
+    {% if warning_message %}
+    <p style="font-family: 'Inter', sans-serif; margin: 8pt 0 0 0; color: #d9a558;">{{ warning_message }}</p>
+    {% else %}
+    <p style="font-family: 'Inter', sans-serif; margin: 8pt 0 0 0; color: #d9a558;">{{ t.accountant_cond_limited_data_default }}</p>
+    {% endif %}
+    {% if impacts %}
+    <p style="font-family: 'Inter', sans-serif; margin: 8pt 0 4pt 0; color: #d9a558;"><strong>{{ t.accountant_cond_limited_data_impact }}</strong></p>
+    <ul style="font-family: 'Inter', sans-serif; margin: 0 0 0 24pt; color: #d9a558;">
+        {% for impact in impacts %}
+        <li>{{ impact }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</div>

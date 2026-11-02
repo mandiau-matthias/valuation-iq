@@ -1,0 +1,154 @@
+{#
+  Canonical holding-company SOTP schedule shared by screen and PDF.
+  Every monetary amount is read from `holding_sotp`, the object committed in
+  ValuationRun.response_snapshot. This template performs no valuation math.
+#}
+{% set _lang = (locale|default('nl')|lower)[:2] %}
+{% set _copy = {
+  'en': {
+    'intro': 'The group conclusion is the ownership-weighted sum of each separately valued entity. Participation book values and governed intercompany value effects are eliminated once. Entity and group bridge adjustments enter only when their evidence and decision metadata are verified.',
+    'entity_schedule': 'Entity valuation schedule',
+    'entity': 'Entity / source',
+    'method': 'Method / basis',
+    'ownership': 'Ownership',
+    'owned_ev': 'Owned EV',
+    'owned_equity': 'Owned equity range',
+    'eliminations': 'Eliminations and equity bridge',
+    'participation': 'Participation book-value elimination',
+    'other_equity': 'Other equity-value elimination',
+    'operating': 'Governed operating-elimination value impact',
+    'group_bridge': 'Group equity bridge',
+    'enterprise_range': 'Enterprise value range',
+    'equity_range': 'Equity value range',
+    'low': 'Low', 'mid': 'Mid', 'high': 'High',
+    'authority': 'Calculation authority',
+    'sources': 'Method sources: IVS 2022; Koller, Goedhart and Wessels 2020; IFRS 10.',
+    'unpriced': 'Unverified entity bridge rows were excluded from priced totals.',
+    'point': 'Point estimate at entity level',
+    'canonical_run': 'Canonical child run',
+    'formula': 'Reconciliation: owned entity values, less participation and governed intercompany eliminations, plus the verified group equity bridge.',
+  },
+  'nl': {
+    'intro': 'De groepsconclusie is de eigendomsgewogen som van elke afzonderlijk gewaardeerde entiteit. Boekwaarden van participaties en geverifieerde intercompany-waarde-effecten worden exact eenmaal geëlimineerd. Entiteits- en groepscorrecties tellen alleen mee wanneer hun bewijs- en beslissingsmetadata geverifieerd zijn.',
+    'entity_schedule': 'Waarderingsschema per entiteit',
+    'entity': 'Entiteit / bron',
+    'method': 'Methode / basis',
+    'ownership': 'Eigendom',
+    'owned_ev': 'Gewogen EV',
+    'owned_equity': 'Gewogen eigenvermogensband',
+    'eliminations': 'Eliminaties en eigenvermogensbrug',
+    'participation': 'Eliminatie boekwaarde participaties',
+    'other_equity': 'Overige eliminatie eigen vermogen',
+    'operating': 'Geverifieerd waarde-effect operationele eliminaties',
+    'group_bridge': 'Eigenvermogensbrug op groepsniveau',
+    'enterprise_range': 'Bandbreedte ondernemingswaarde',
+    'equity_range': 'Bandbreedte eigen vermogen',
+    'low': 'Laag', 'mid': 'Midden', 'high': 'Hoog',
+    'authority': 'Berekeningsautoriteit',
+    'sources': 'Methodologische bronnen: IVS 2022; Koller, Goedhart en Wessels 2020; IFRS 10.',
+    'unpriced': 'Niet-geverifieerde entiteitscorrecties zijn uitgesloten van de geprijsde totalen.',
+    'point': 'Puntschatting op entiteitsniveau',
+    'canonical_run': 'Canonieke entiteitsrun',
+    'formula': 'Reconciliatie: gewogen entiteitswaarden, min participatie- en geverifieerde intercompany-eliminaties, plus de geverifieerde eigenvermogensbrug op groepsniveau.',
+  },
+  'fr': {
+    'intro': 'La conclusion du groupe est la somme pondérée par la participation de chaque entité valorisée séparément. Les valeurs comptables des participations et les effets intragroupe vérifiés sont éliminés une seule fois. Les ajustements par entité et au niveau du groupe ne sont valorisés que si leurs preuves et décisions sont vérifiées.',
+    'entity_schedule': 'Tableau de valorisation par entité',
+    'entity': 'Entité / source',
+    'method': 'Méthode / base',
+    'ownership': 'Participation',
+    'owned_ev': 'VE détenue',
+    'owned_equity': 'Fourchette de capitaux propres détenue',
+    'eliminations': 'Éliminations et pont vers les capitaux propres',
+    'participation': 'Élimination de la valeur comptable des participations',
+    'other_equity': 'Autre élimination de capitaux propres',
+    'operating': 'Impact valorisé et vérifié des éliminations opérationnelles',
+    'group_bridge': 'Pont des capitaux propres du groupe',
+    'enterprise_range': "Fourchette de valeur d'entreprise",
+    'equity_range': 'Fourchette de capitaux propres',
+    'low': 'Basse', 'mid': 'Centrale', 'high': 'Haute',
+    'authority': 'Autorité de calcul',
+    'sources': 'Sources méthodologiques : IVS 2022 ; Koller, Goedhart et Wessels 2020 ; IFRS 10.',
+    'unpriced': 'Les ajustements non vérifiés par entité ont été exclus des montants valorisés.',
+    'point': 'Estimation ponctuelle au niveau de l’entité',
+    'canonical_run': 'Exécution canonique de l’entité',
+    'formula': 'Rapprochement : valeurs détenues des entités, moins les éliminations de participations et intragroupe vérifiées, plus le pont de capitaux propres du groupe vérifié.',
+  }
+} %}
+{% set _c = _copy.get(_lang, _copy['en']) %}
+{% set _sotp = holding_sotp|default({}) %}
+
+<div style="margin: 6pt 0 12pt; padding: 9pt 11pt; border: 1pt solid hsl(var(--report-slate-200, 224 10% 91%)); border-left: 3pt solid hsl(var(--report-teal, 172 55% 45%)); border-radius: 6pt; background: hsl(var(--report-surface, 40 15% 98%)); page-break-inside: avoid;">
+  <p style="margin: 0; font-size: 8pt; line-height: 1.55; color: hsl(var(--report-text-default, 224 12% 35%));">{{ _c.intro }}</p>
+</div>
+
+<h3 style="margin: 10pt 0 6pt; font-size: 9pt;">{{ _c.entity_schedule }}</h3>
+<table style="width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 6.8pt; margin-bottom: 12pt;">
+  <thead style="display: table-header-group;">
+    <tr style="background: hsl(var(--report-slate-100, 224 12% 96%)); color: hsl(var(--report-text-muted, 224 10% 45%));">
+      <th style="width: 23%; padding: 5pt 4pt; text-align: left; border-bottom: 1pt solid hsl(var(--report-slate-200, 224 10% 91%));">{{ _c.entity }}</th>
+      <th style="width: 19%; padding: 5pt 4pt; text-align: left; border-bottom: 1pt solid hsl(var(--report-slate-200, 224 10% 91%));">{{ _c.method }}</th>
+      <th style="width: 10%; padding: 5pt 4pt; text-align: right; border-bottom: 1pt solid hsl(var(--report-slate-200, 224 10% 91%));">{{ _c.ownership }}</th>
+      <th style="width: 18%; padding: 5pt 4pt; text-align: right; border-bottom: 1pt solid hsl(var(--report-slate-200, 224 10% 91%));">{{ _c.owned_ev }}</th>
+      <th style="width: 30%; padding: 5pt 4pt; text-align: right; border-bottom: 1pt solid hsl(var(--report-slate-200, 224 10% 91%));">{{ _c.owned_equity }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in _sotp.entity_rows|default([]) %}
+    <tr style="page-break-inside: avoid; border-bottom: 0.5pt solid hsl(var(--report-slate-100, 224 12% 96%));">
+      <td style="padding: 6pt 4pt; vertical-align: top;">
+        <strong>{{ row.entity_name|default('—') }}</strong>
+        {% if row.valuation_run_id %}<br><span style="font-size: 5.7pt; color: hsl(var(--report-text-muted, 224 10% 52%));">Run {{ row.valuation_run_id }}</span>{% endif %}
+      </td>
+      <td style="padding: 6pt 4pt; vertical-align: top; color: hsl(var(--report-text-muted, 224 10% 45%));">
+        {% if row.method|default('')|upper == 'SOTP_CHILD_CANONICAL' %}{{ _c.canonical_run }}{% else %}{{ row.method|default('—') }}{% endif %}<br><span style="font-size: 5.7pt;">{{ row.value_basis|default('—') }} · {{ row.value_basis_stage|default('—') }}</span>
+      </td>
+      <td style="padding: 6pt 4pt; vertical-align: top; text-align: right; font-family: 'JetBrains Mono', monospace;">{{ row.ownership_pct|default(0)|safe_round(2) }}%</td>
+      <td style="padding: 6pt 4pt; vertical-align: top; text-align: right; font-family: 'JetBrains Mono', monospace; white-space: nowrap;">{{ row.enterprise_value_mid_contribution|format_currency_compact }}</td>
+      <td style="padding: 6pt 4pt; vertical-align: top; text-align: right; font-family: 'JetBrains Mono', monospace; white-space: nowrap;">
+        {{ row.equity_value_low_contribution|format_currency_compact }} / <strong>{{ row.equity_value_mid_contribution|format_currency_compact }}</strong> / {{ row.equity_value_high_contribution|format_currency_compact }}
+        {% if row.range_is_point_only %}<br><span style="font-family: 'Satoshi', sans-serif; font-size: 5.7pt; color: hsl(var(--report-text-muted, 224 10% 52%));">{{ _c.point }}</span>{% endif %}
+      </td>
+    </tr>
+    {% if row.unpriced_entity_adjustments %}
+    <tr style="page-break-inside: avoid;">
+      <td colspan="5" style="padding: 0 4pt 5pt; font-size: 5.8pt; color: hsl(35 55% 38%);">{{ _c.unpriced }}</td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+  </tbody>
+</table>
+
+<div style="page-break-inside: avoid;">
+  <h3 style="margin: 8pt 0 6pt; font-size: 9pt;">{{ _c.eliminations }}</h3>
+  <table style="width: 100%; border-collapse: collapse; font-size: 7.2pt; margin-bottom: 11pt;">
+    <tr><td style="padding: 3pt 0; color: hsl(var(--report-text-muted, 224 10% 45%));">{{ _c.participation }}</td><td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace;">- {{ _sotp.participation_book_value_elimination|default(0)|abs|format_currency }}</td></tr>
+    <tr><td style="padding: 3pt 0; color: hsl(var(--report-text-muted, 224 10% 45%));">{{ _c.other_equity }}</td><td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace;">- {{ _sotp.other_equity_value_elimination|default(0)|abs|format_currency }}</td></tr>
+    <tr><td style="padding: 3pt 0; color: hsl(var(--report-text-muted, 224 10% 45%));">{{ _c.operating }}</td><td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace;">- {{ _sotp.sotp_value_impact_elimination|default(0)|abs|format_currency }}</td></tr>
+    {% if _sotp.group_equity_bridge %}
+    <tr><td style="padding: 3pt 0; color: hsl(var(--report-text-muted, 224 10% 45%));">{{ _c.group_bridge }}</td><td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace;">{{ _sotp.group_equity_bridge.total_net_impact|default(0)|format_currency }}</td></tr>
+    {% endif %}
+  </table>
+</div>
+
+<table style="width: 100%; border-collapse: separate; border-spacing: 6pt 0; margin: 0 -6pt 10pt; page-break-inside: avoid;">
+  <tr>
+    {% if _sotp.enterprise_value_available|default(true) %}
+    <td style="width: 50%; padding: 9pt; border: 1pt solid hsl(var(--report-slate-200, 224 10% 91%)); border-radius: 6pt; vertical-align: top;">
+      <p style="margin: 0 0 5pt; font-size: 6pt; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-text-muted, 224 10% 45%));">{{ _c.enterprise_range }}</p>
+      <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 8pt; white-space: nowrap;">{{ _sotp.enterprise_value_low|format_currency_compact }} / <strong>{{ _sotp.enterprise_value_mid|format_currency_compact }}</strong> / {{ _sotp.enterprise_value_high|format_currency_compact }}</p>
+      <p style="margin: 4pt 0 0; font-size: 5.8pt; color: hsl(var(--report-text-muted, 224 10% 52%));">{{ _c.low }} / {{ _c.mid }} / {{ _c.high }}</p>
+    </td>
+    {% endif %}
+    <td style="width: {% if _sotp.enterprise_value_available|default(true) %}50{% else %}100{% endif %}%; padding: 9pt; border: 1pt solid hsl(var(--report-teal, 172 55% 45%)); border-radius: 6pt; background: hsl(var(--report-teal-light, 172 45% 96%)); vertical-align: top;">
+      <p style="margin: 0 0 5pt; font-size: 6pt; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-teal-dark, 172 60% 32%));">{{ _c.equity_range }}</p>
+      <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 8pt; white-space: nowrap; color: hsl(var(--report-teal-dark, 172 60% 32%));">{{ _sotp.equity_value_low|format_currency_compact }} / <strong>{{ _sotp.equity_value_mid|format_currency_compact }}</strong> / {{ _sotp.equity_value_high|format_currency_compact }}</p>
+      <p style="margin: 4pt 0 0; font-size: 5.8pt; color: hsl(var(--report-teal-dark, 172 50% 38%));">{{ _c.low }} / {{ _c.mid }} / {{ _c.high }}</p>
+    </td>
+  </tr>
+</table>
+
+<div style="padding: 7pt 9pt; border-radius: 5pt; background: hsl(var(--report-slate-100, 224 12% 96%)); page-break-inside: avoid;">
+  <p style="margin: 0; font-size: 6.3pt; line-height: 1.5; color: hsl(var(--report-text-muted, 224 10% 45%));"><strong>{{ _c.authority }}:</strong> {{ _sotp.calculation_authority|default('valuation_iq') }} · {{ _sotp.version|default('holding_sotp.v2') }} · {{ _sotp.currency|default('—') }}. {{ _c.formula }}</p>
+  <p style="margin: 3pt 0 0; font-size: 5.8pt; line-height: 1.4; color: hsl(var(--report-text-muted, 224 10% 52%));">{{ _c.sources }}</p>
+</div>

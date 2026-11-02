@@ -1,0 +1,231 @@
+<div class="page">
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 24pt; border: none; border-top: none;">
+        <tr>
+            <td style="padding: 0; border: none; vertical-align: middle;" colspan="2">
+                <h1 id="section-4-1" style="margin: 0 0 32pt 0; page-break-before: always; break-before: page;">{{ t.accountant_vitality_section_title }}</h1>
+            </td>
+        </tr>
+    </table>
+
+    <div class="report-section" style="margin-bottom: 32pt;">
+        <p style="font-size: 12pt; line-height: 1.6; color: #334155; margin-bottom: 16pt;">
+            {{ t.accountant_vitality_intro | safe }}
+        </p>
+        <p style="font-size: 11pt; line-height: 1.5; color: #475569; margin-bottom: 24pt;">
+            {{ t.accountant_vitality_market_context | safe }}
+        </p>
+    </div>
+
+    <div class="report-section">
+        <h2 style="margin-bottom: 24pt; color: #2b303a;">{{ t.accountant_vitality_liquidity_title }}</h2>
+
+        <p style="font-size: 11pt; line-height: 1.6; color: #334155; margin-bottom: 24pt;">
+            {{ t.accountant_vitality_liquidity_intro }}
+        </p>
+
+        <!-- Liquidity & Solvency Analysis -->
+        {% if financial_analysis and financial_analysis.financial_health %}
+            <div class="table-card" style="margin-bottom: 32pt;">
+            <table class="step-table">
+                <caption>{{ t.accountant_vitality_caption }}</caption>
+                <thead>
+                    <tr>
+                        <th style="width: 35%;">{{ t.accountant_vitality_col_indicator }}</th>
+                        <th class="text-right" style="width: 20%;">{{ t.accountant_vitality_col_value }}</th>
+                        <th style="width: 25%;">{{ t.accountant_vitality_col_assessment }}</th>
+                        <th style="width: 20%;">{{ t.accountant_vitality_col_impact }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {# Liquidity - Access from nested array structure #}
+                    {% if financial_analysis.financial_health and financial_analysis.financial_health.liquidity_metrics %}
+                        {% for metric in financial_analysis.financial_health.liquidity_metrics %}
+                            {% if metric.metric == 'Current Ratio' %}
+                            <tr>
+                                <td style="font-weight: 600; color: #2b303a;">
+                                    Current Ratio
+                                    <div style="font-size: 9pt; font-weight: 400; color: #64748B; margin-top: 2pt;">Short-term liquidity position</div>
+                                </td>
+                                <td class="text-right font-bold">{{ metric.value | round(2) }}</td>
+                                <td style="padding-left: 16pt;">
+                                    {% set assessment = metric.assessment %}
+                                    {% set color = '#6b8e72' if assessment in ['Good', 'Strong', 'Healthy'] else '#d9a558' if assessment in ['Adequate', 'Moderate'] else '#b85c56' %}
+                                    <span style="color: {{ color }}; font-weight: 700; text-transform: uppercase; font-size: 9pt; letter-spacing: 0.05em;">{{ assessment }}</span>
+                                </td>
+                                <td style="color: {% if assessment in ['Good', 'Strong', 'Healthy'] %}#6b8e72{% elif assessment in ['Adequate', 'Moderate'] %}#d9a558{% else %}#b85c56{% endif %}; font-weight: 600;">
+                                    {% if assessment in ['Good', 'Strong', 'Healthy'] %}
+                                        +0.1x premium
+                                    {% elif assessment in ['Adequate', 'Moderate'] %}
+                                        Neutral
+                                    {% else %}
+                                        -0.2x discount
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+
+                    {# Solvency - Access from nested array structure #}
+                    {% if financial_analysis.financial_health and financial_analysis.financial_health.solvency_metrics %}
+                        {% for metric in financial_analysis.financial_health.solvency_metrics %}
+                            {% if metric.metric == 'Debt to Equity' %}
+                            <tr>
+                                <td style="font-weight: 600; color: #2b303a;">
+                                    Debt-to-Equity Ratio
+                                    <div style="font-size: 9pt; font-weight: 400; color: #64748B; margin-top: 2pt;">Long-term solvency position</div>
+                                </td>
+                                <td class="text-right font-bold">{{ metric.value | round(2) }}</td>
+                                <td style="padding-left: 16pt;">
+                                    {% set assessment = metric.assessment %}
+                                    {% set color = '#6b8e72' if assessment in ['Low', 'Strong', 'Good'] else '#d9a558' if assessment in ['Moderate', 'Average', 'Adequate'] else '#b85c56' %}
+                                    <span style="color: {{ color }}; font-weight: 700; text-transform: uppercase; font-size: 9pt; letter-spacing: 0.05em;">{{ assessment }}</span>
+                                </td>
+                                <td style="color: {% if assessment in ['Low', 'Strong', 'Good'] %}#6b8e72{% elif assessment in ['Moderate', 'Average', 'Adequate'] %}#d9a558{% else %}#b85c56{% endif %}; font-weight: 600;">
+                                    {% if assessment in ['Low', 'Strong', 'Good'] %}
+                                        +0.15x premium
+                                    {% elif assessment in ['Moderate', 'Average', 'Adequate'] %}
+                                        Neutral
+                                    {% else %}
+                                        -0.25x discount
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+
+                    {# Efficiency #}
+                    {% if financial_analysis.key_metrics and financial_analysis.key_metrics.roa %}
+                    <tr>
+                        <td style="font-weight: 600; color: #2b303a;">
+                            Return on Assets (ROA)
+                            <div style="font-size: 9pt; font-weight: 400; color: #64748B; margin-top: 2pt;">Asset utilization efficiency</div>
+                        </td>
+                        <td class="text-right font-bold">{{ financial_analysis.key_metrics.roa | format_percentage }}</td>
+                        <td style="padding-left: 16pt;">
+                            {% set roa_value = financial_analysis.key_metrics.roa %}
+                            {% set assessment = 'Strong' if roa_value > 15 else 'Moderate' if roa_value > 8 else 'Weak' %}
+                            {% set color = '#6b8e72' if assessment == 'Strong' else '#d9a558' if assessment == 'Moderate' else '#b85c56' %}
+                            <span style="color: {{ color }}; font-weight: 700; text-transform: uppercase; font-size: 9pt; letter-spacing: 0.05em;">{{ assessment }}</span>
+                        </td>
+                        <td style="color: {% if assessment == 'Strong' %}#6b8e72{% elif assessment == 'Moderate' %}#d9a558{% else %}#b85c56{% endif %}; font-weight: 600;">
+                            {% if assessment == 'Strong' %}
+                                +0.2x premium
+                            {% elif assessment == 'Moderate' %}
+                                Neutral
+                            {% else %}
+                                -0.15x discount
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+            </div>
+
+            <!-- Vitality Score Summary -->
+            <div style="margin-top: 32pt; padding: 24pt; background-color: #f8fafc; border: 1px solid #E2E8F0; border-radius: 8px;">
+                <h3 style="font-family: 'Inter', sans-serif; font-size: 12pt; font-weight: 700; color: #2b303a; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16pt;">{{ t.accountant_vitality_score_summary_title }}</h3>
+
+                {% set vitality_score = 0 %}
+                {% set total_metrics = 0 %}
+
+                {# Calculate score from liquidity metrics array #}
+                {% if financial_analysis.financial_health and financial_analysis.financial_health.liquidity_metrics %}
+                    {% for metric in financial_analysis.financial_health.liquidity_metrics %}
+                        {% if metric.metric == 'Current Ratio' %}
+                            {% set total_metrics = total_metrics + 1 %}
+                            {% set assessment = metric.assessment %}
+                            {% if assessment in ['Good', 'Strong', 'Healthy'] %}
+                                {% set vitality_score = vitality_score + 25 %}
+                            {% elif assessment in ['Adequate', 'Moderate'] %}
+                                {% set vitality_score = vitality_score + 15 %}
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+
+                {# Calculate score from solvency metrics array #}
+                {% if financial_analysis.financial_health and financial_analysis.financial_health.solvency_metrics %}
+                    {% for metric in financial_analysis.financial_health.solvency_metrics %}
+                        {% if metric.metric == 'Debt to Equity' %}
+                            {% set total_metrics = total_metrics + 1 %}
+                            {% set assessment = metric.assessment %}
+                            {% if assessment in ['Low', 'Strong', 'Good'] %}
+                                {% set vitality_score = vitality_score + 25 %}
+                            {% elif assessment in ['Moderate', 'Average', 'Adequate'] %}
+                                {% set vitality_score = vitality_score + 15 %}
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+
+                {# Calculate score from key metrics #}
+                {% if financial_analysis.key_metrics and financial_analysis.key_metrics.roa %}
+                    {% set total_metrics = total_metrics + 1 %}
+                    {% set roa_value = financial_analysis.key_metrics.roa %}
+                    {% if roa_value > 15 %}
+                        {% set vitality_score = vitality_score + 25 %}
+                    {% elif roa_value > 8 %}
+                        {% set vitality_score = vitality_score + 15 %}
+                    {% endif %}
+                {% endif %}
+
+                {% if total_metrics > 0 %}
+                    {% set final_score = (vitality_score / total_metrics) | round(0) %}
+                {% else %}
+                    {% set final_score = 0 %}
+                {% endif %}
+
+                <div style="display: table; width: 100%; margin-bottom: 16pt;">
+                    <div style="display: table-cell; width: 30%; vertical-align: middle;">
+                        <div style="font-size: 36pt; font-weight: 800; color: {% if final_score >= 75 %}#6b8e72{% elif final_score >= 50 %}#d9a558{% else %}#b85c56{% endif %};">
+                            {{ final_score }}%
+                        </div>
+                        <div style="font-size: 10pt; color: #64748B; margin-top: 4pt;">{{ t.accountant_vitality_score_label }}</div>
+                    </div>
+                    <div style="display: table-cell; width: 70%; vertical-align: middle; padding-left: 24pt;">
+                        <div style="width: 100%; height: 8px; background: #ebe7de; border-radius: 4px; overflow: hidden;">
+                            <div style="width: {{ final_score }}%; height: 100%; background: {% if final_score >= 75 %}#6b8e72{% elif final_score >= 50 %}#d9a558{% else %}#b85c56{% endif %}; border-radius: 4px;"></div>
+                        </div>
+                        <div style="font-size: 9pt; color: #64748B; margin-top: 8pt;">
+                            {% if final_score >= 75 %}
+                                {{ t.accountant_vitality_excellent | safe }}
+                            {% elif final_score >= 50 %}
+                                {{ t.accountant_vitality_moderate | safe }}
+                            {% else %}
+                                {{ t.accountant_vitality_weak | safe }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="report-callout warning">
+                <h4 style="color: #d9a558;">{{ t.accountant_vitality_unavailable_title }}</h4>
+                <p>{{ t.accountant_vitality_unavailable_body }}</p>
+            </div>
+        {% endif %}
+
+        {# Growth Analysis #}
+        {% if financial_analysis and financial_analysis.growth_metrics %}
+        <div style="margin-top: 48pt;">
+            <h2 style="margin-bottom: 24pt; color: #2b303a;">{{ t.accountant_vitality_growth_title }}</h2>
+            <p style="font-size: 11pt; line-height: 1.6; color: #334155; margin-bottom: 24pt;">
+                {{ t.accountant_vitality_growth_intro }}
+            </p>
+            {% set growth_metrics = financial_analysis.growth_metrics %}
+            {% include "accountant_view/sections/_growth_metrics.html" %}
+        </div>
+        {% endif %}
+
+        <!-- Professional Standards Callout -->
+        <div style="margin-top: 48pt; padding: 20pt; background-color: #f4f1ea; border: 1px solid #E2E8F0; border-radius: 4px;">
+            <h4 style="font-family: 'Inter', sans-serif; font-size: 9pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1pt; color: #64748B; margin: 0 0 12pt 0;">{{ t.accountant_vitality_primitive_title }}</h4>
+            <p style="font-size: 9pt; color: #475569; line-height: 1.6; margin: 0;">
+                {{ t.accountant_vitality_primitive_body | safe }}
+            </p>
+        </div>
+    </div>
+</div>

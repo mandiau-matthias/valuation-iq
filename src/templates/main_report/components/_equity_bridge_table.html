@@ -1,0 +1,141 @@
+{#
+    Equity Bridge Table — Screen version (flex/grid layout)
+
+    Renders an itemized table showing the EV → Equity bridge.
+    Uses CSS variables for theming (dark/light mode compatible).
+
+    Same context variables as main_report_pdf version.
+#}
+{% if show_ev_equity_bridge %}
+<div style="margin-top: var(--space-4); padding: var(--space-3); background: hsl(var(--report-surface)); border-radius: 4pt; border: 1pt solid hsl(var(--report-slate-200));">
+    <p style="font-size: var(--font-size-xs); margin: 0 0 var(--space-2) 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-text-muted));">
+        {{ t.exec_ev_bridge_title }}{% if equity_bridge_is_illustrative|default(false) and financial_reference_date %} per {{ financial_reference_date|format_date(locale|default('nl')) }}{% endif %}
+    </p>
+    {% if equity_bridge_is_illustrative|default(false) %}
+    <p style="font-size: var(--font-size-xs); margin: 0 0 var(--space-2) 0; line-height: 1.4; color: hsl(35, 60%, 38%);">
+        Uitsluitend illustratief — geen raming van de netto-verkoopopbrengst. Vóór minimum operationele kas; te bevestigen voor geblokkeerde kasmiddelen, leases, schuldachtige posten, genormaliseerd werkkapitaal en completion accounts.
+    </p>
+    {% endif %}
+
+    {# EV row #}
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 3pt 0; font-size: var(--font-size-xs); font-family: 'JetBrains Mono', monospace;">
+        <span style="color: hsl(var(--report-text-muted));">{{ t.exec_ev_bridge_ev_label }}</span>
+        <span style="font-weight: 600;">{{ enterprise_value_mid|format_currency }}</span>
+    </div>
+
+    {# Net debt row — render whenever the engine flagged the bridge has a
+       net-debt component, regardless of magnitude. (Older threshold of >=1
+       silently dropped sub-€1 values that were still meaningful when paired
+       with sign-bearing operators.) #}
+    {% if has_net_debt_adjustment and bridge_net_debt_amount is not none and bridge_net_debt_amount != 0 %}
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 3pt 0; font-size: var(--font-size-xs); font-family: 'JetBrains Mono', monospace;">
+        <span style="color: hsl(var(--report-text-muted));">
+            {{ bridge_net_debt_operator }}
+            {% if bridge_uses_net_cash_label %}{{ t.exec_ev_bridge_net_cash_label }}{% else %}{{ t.exec_ev_bridge_net_debt_label }}{% endif %}
+        </span>
+        <span style="font-weight: 600;">{{ bridge_net_debt_amount|format_currency }}</span>
+    </div>
+    {% endif %}
+
+    {# Tax latencies row #}
+    {% if has_tax_latencies and tax_latency_net_impact and (tax_latency_net_impact|float) != 0 %}
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 3pt 0; font-size: var(--font-size-xs); font-family: 'JetBrains Mono', monospace;">
+        <span style="color: hsl(var(--report-text-muted));">
+            {% if (tax_latency_net_impact|float) >= 0 %}+{% else %}−{% endif %}
+            {{ t.tax_latency_title }}{{ t.tax_latency_equity_bridge_qualifier }}
+        </span>
+        <span style="font-weight: 600;">{{ tax_latency_net_impact|float|abs|format_currency }}</span>
+    </div>
+    {% endif %}
+
+    {# Balance sheet adjustments #}
+    {% if has_balance_sheet_adjustments %}
+    {% for adj in balance_sheet_adjustments %}
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 3pt 0; font-size: var(--font-size-xs); font-family: 'JetBrains Mono', monospace;">
+        <span style="color: hsl(var(--report-text-muted));">
+            {% if adj.type == 'add' %}+{% else %}−{% endif %}
+            {{ adj.label }}
+            {% if adj.account_code %}
+            <span style="margin-left: 4pt; color: hsl(var(--report-text-soft)); font-size: 7pt;">
+                ({{ adj.account_code }})
+            </span>
+            {% endif %}
+        </span>
+        <span style="font-weight: 600;">{{ adj.amount|abs|format_currency }}</span>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {# NWC adjustment row #}
+    {% if bridge_nwc_adjustment and bridge_nwc_adjustment != 0 %}
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 3pt 0; font-size: var(--font-size-xs); font-family: 'JetBrains Mono', monospace;">
+        <span style="color: hsl(var(--report-text-muted));">
+            {% if bridge_nwc_adjustment >= 0 %}+{% else %}−{% endif %}
+            {{ t.exec_ev_bridge_nwc_label }}
+        </span>
+        <span style="font-weight: 600;">{{ bridge_nwc_adjustment|abs|format_currency }}</span>
+    </div>
+    {% endif %}
+
+    {# Reconciliation residual: closes the gap when an engine-side line item
+       (off-balance adjustment, deferred-tax, etc.) didn't survive transport
+       to the template. Without this, EV + cash − tax + NWC ≠ equity_value
+       prints visibly on the page. The aggregator sets has_bridge_residual
+       when the gap exceeds 0.5% of EV, so rounding noise — and any
+       sub-percent residual a CFO would dismiss — is suppressed. #}
+    {% if has_bridge_residual %}
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 3pt 0; font-size: var(--font-size-xs); font-family: 'JetBrains Mono', monospace;">
+        <span style="color: hsl(var(--report-text-muted));">
+            {{ bridge_residual_operator }} {{ bridge_residual_label|default(t.exec_ev_bridge_residual_label) }}
+        </span>
+        <span style="font-weight: 600;">{{ bridge_residual_amount|format_currency }}</span>
+    </div>
+    {% endif %}
+
+    {# Equity total row #}
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 5pt 0 3pt 0; margin-top: 4pt; border-top: 1pt solid hsl(var(--report-slate-200)); font-size: 9pt; font-family: 'JetBrains Mono', monospace;">
+        <span style="font-weight: 700; color: hsl(var(--report-teal));">
+            = {{ t.exec_ev_bridge_equity_label }}
+            {% if is_nav_methodology|default(false) %} ({{ t.ledger_equity_adjusted_parenthetical }}){% endif %}
+        </span>
+        <span style="font-weight: 700; color: hsl(var(--report-teal));">{{ equity_value|format_currency }}</span>
+    </div>
+
+    {# Consolidated group with a booked third-party (minority) interest: deduct
+       it explicitly so the seller-attributable equity is shown as a number,
+       not only disclosed in prose. The booked
+       amount is the current best estimate; the final figure depends on the
+       confirmed ownership %. Mirror of the main_report_pdf component. #}
+    {% if minority_interest_amount and minority_interest_amount > 0 and minority_seller_equity %}
+    {% set _br_en = ((locale|default('nl'))|lower)[:2] == 'en' %}
+    {% set _br_fr = ((locale|default('nl'))|lower)[:2] == 'fr' %}
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 3pt 0; font-size: var(--font-size-xs); font-family: 'JetBrains Mono', monospace;">
+        <span style="color: hsl(35, 55%, 40%);">
+            − {% if _br_fr %}Intérêts minoritaires (part du résultat comptabilisée — indicative){% elif _br_en %}Minority interest (booked result share — indicative){% else %}Minderheidsbelang (geboekt resultaataandeel — indicatief){% endif %}
+        </span>
+        <span style="font-weight: 600; color: hsl(35, 55%, 40%);">{{ minority_interest_amount|format_currency }}</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 5pt 0 3pt 0; margin-top: 4pt; border-top: 1pt solid hsl(var(--report-slate-200)); font-size: 9pt; font-family: 'JetBrains Mono', monospace;">
+        <span style="font-weight: 700; color: hsl(35, 55%, 36%);">
+            = {% if _br_fr %}Capitaux propres attribuables au vendeur (après minoritaires){% elif _br_en %}Seller-attributable equity (after minority){% else %}Verkoper-toerekenbaar eigen vermogen (na minderheid){% endif %}
+        </span>
+        <span style="font-weight: 700; color: hsl(35, 55%, 36%);">{{ minority_seller_equity|format_currency }}</span>
+    </div>
+    {% endif %}
+    {# Ownership-% + flow-vs-stock caveat: the deduction uses the BOOKED
+       current-year result share (a P&L flow) as an indicative proxy. The
+       definitive minority haircut is the third party's share of consolidated
+       EQUITY (a balance-sheet stock) at the confirmed ownership % — typically
+       larger, so this proxy is conservative. Stated precisely so a buyer's
+       advisor cannot mistake the proxy for definitive seller equity. #}
+    {% if minority_interest_pending %}
+    {% set _brf_en = ((locale|default('nl'))|lower)[:2] == 'en' %}
+    {% set _brf_fr = ((locale|default('nl'))|lower)[:2] == 'fr' %}
+    <p style="margin: 6pt 0 0 0; font-size: 7pt; line-height: 1.45; color: hsl(35, 60%, 38%);">
+        {% if _brf_fr %}La déduction utilise la part minoritaire comptabilisée du résultat de l'exercice comme approximation indicative ; la valeur définitive attribuable au vendeur correspond à la part des tiers dans les capitaux propres consolidés au pourcentage de détention confirmé, à valider avec le conseiller.{% elif _brf_en %}The deduction uses the booked current-year minority share of result as an indicative proxy; the definitive seller-attributable value is the third-party share of consolidated equity at the confirmed ownership %, to be agreed with the advisor.{% else %}De aftrek gebruikt het geboekte minderheidsaandeel in het resultaat van het boekjaar als indicatieve benadering; de definitieve verkoper-toerekenbare waarde is het belang van derden in het geconsolideerde eigen vermogen tegen het bevestigde eigendomspercentage, af te stemmen met de adviseur.{% endif %}
+    </p>
+    {% endif %}
+</div>
+{% endif %}
+
+{% include "shared/components/sde_synthesis_disclosure.html" %}

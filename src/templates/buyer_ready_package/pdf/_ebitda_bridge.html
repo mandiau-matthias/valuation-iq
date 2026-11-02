@@ -1,0 +1,76 @@
+{#
+    Normalised EBITDA bridge — PDF twin.
+    BET-241 / F1 scaffold. Mirrors screen payload contract;
+    visual treatment refined in F3.
+#}
+
+<section class="brp-ebitda-bridge brp-pdf" data-section="ebitda_bridge"
+         data-confidence="{{ package.ebitda_bridge.aggregate_confidence }}"
+         style="page-break-inside: avoid;">
+    <h2>Normalised EBITDA bridge</h2>
+
+    <div class="brp-bridge-waterfall">
+        <div class="brp-bridge-anchor">
+            <span class="brp-bridge-label">Reported EBITDA</span>
+            <span class="brp-bridge-value">€{{ '{:,.0f}'.format(package.ebitda_bridge.reported_ebitda_eur) }}</span>
+        </div>
+
+        {% for step in package.ebitda_bridge.steps %}
+            {% set status_label = step.evidence_status | replace('_', ' ') | title %}
+            <div class="brp-bridge-step"
+                 data-step-confidence="{{ step.step_confidence }}"
+                 data-evidence-status="{{ step.evidence_status }}"
+                 data-buyer-belief-status="{{ step.buyer_belief_status }}">
+                <span class="brp-bridge-label">
+                    {{ step.label }}
+                    <span class="brp-bridge-chip brp-bridge-chip-{{ step.evidence_status }}">
+                        {{ status_label }}
+                    </span>
+                </span>
+                <span class="brp-bridge-delta">
+                    {% set _delta_eur = step.delta_eur|default(0)|float %}
+                    {% if _delta_eur >= 0 %}+{% endif %}€{{ '{:,.0f}'.format(_delta_eur) }}
+                </span>
+                <span class="brp-bridge-rationale">{{ step.rationale }}</span>
+                <span class="brp-bridge-confidence-reason">
+                    Confidence: {{ step.step_confidence }} — {{ step.confidence_reason }}
+                </span>
+                {% if step.buyer_belief_warning %}
+                    <span class="brp-bridge-warning">{{ step.buyer_belief_warning }}</span>
+                {% endif %}
+                {% if step.evidence_refs %}
+                    <span class="brp-bridge-evidence-label">Citation-ready provenance</span>
+                    <ul class="brp-bridge-evidence-list">
+                        {% for evidence in step.evidence_refs %}
+                            <li>
+                                {% if evidence.document_id %}
+                                    <strong>{{ evidence.document_id }}</strong>
+                                {% elif evidence.source_ref %}
+                                    <strong>{{ evidence.source_ref }}</strong>
+                                {% else %}
+                                    <strong>{{ evidence.source_category | replace('_', ' ') | title }}</strong>
+                                {% endif %}
+                                <span>{{ evidence.source_category | replace('_', ' ') }}</span>
+                                {% if evidence.line_item %}<span>{{ evidence.line_item }}</span>{% endif %}
+                                <span>{{ evidence.source_fact }}</span>
+                                <span>{{ '{:.0%}'.format(evidence.confidence) }} confidence</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <div class="brp-bridge-anchor brp-bridge-final">
+            <span class="brp-bridge-label">Normalised EBITDA</span>
+            <span class="brp-bridge-value">€{{ '{:,.0f}'.format(package.ebitda_bridge.normalised_ebitda_eur) }}</span>
+        </div>
+    </div>
+
+    <p class="brp-bridge-confidence">
+        Buyer-believability confidence: <strong>{{ package.ebitda_bridge.aggregate_confidence }}</strong>
+        ({{ package.ebitda_bridge.steps | length }} normalisation step{{ 's' if package.ebitda_bridge.steps | length != 1 else '' }};
+        {{ package.ebitda_bridge.buyer_belief_status | replace('_', ' ') }}).
+        {{ package.ebitda_bridge.buyer_belief_summary }}
+    </p>
+</section>

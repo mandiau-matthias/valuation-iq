@@ -1,0 +1,22 @@
+{% if show_limited_scope_advisory_panel|default(false) %}
+<div style="margin: var(--space-3) 0; padding: var(--space-3); border-radius: 6pt; border: 1pt solid hsla(37, 65%, 55%, 0.35); background: hsla(37, 65%, 55%, 0.08);">
+    <p style="margin: 0 0 var(--space-2); font-size: var(--font-size-sm); font-weight: 700; color: hsl(var(--report-warning));">
+        {% if is_seller_report|default(false) %}{{ t.seller_limited_scope_title }}{% else %}{{ t.advisor_limited_scope_title }}{% endif %}
+    </p>
+    <p style="margin: 0 0 var(--space-2); font-size: var(--font-size-xs); color: hsl(var(--report-text)); line-height: 1.55;">
+        {% if is_seller_report|default(false) %}{{ t.seller_limited_scope_intro }}{% else %}{{ t.advisor_limited_scope_intro }}{% endif %}
+    </p>
+    <ul style="margin: 0; padding-left: var(--space-4); font-size: var(--font-size-xs); line-height: 1.6; color: hsl(var(--report-text));">
+        {% if limited_scope_years|default(1) < 2 %}
+        <li>{% if is_seller_report|default(false) %}{{ t.seller_limited_scope_li_year }}{% else %}{{ t.advisor_limited_scope_li_year }}{% endif %}</li>
+        {% endif %}
+        {% if limited_scope_no_balance|default(false) %}
+        <li>{% if is_seller_report|default(false) %}{{ t.seller_limited_scope_li_balance }}{% else %}{{ t.advisor_limited_scope_li_balance }}{% endif %}</li>
+        {% endif %}
+        {% if limited_scope_thin_benchmark|default(false) %}
+        <li>{% if is_seller_report|default(false) %}{{ t.exec_thin_benchmark_seller_escalation }}{% else %}{{ t.exec_thin_benchmark_advisor_escalation }}{% endif %}</li>
+        {% endif %}
+        <li>{% if is_seller_report|default(false) %}{{ t.seller_limited_scope_li_advisor }}{% else %}{{ t.advisor_limited_scope_li_client }}{% endif %}</li>
+    </ul>
+</div>
+{% endif %}

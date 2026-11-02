@@ -1,0 +1,473 @@
+{# 
+    EBITDA NORMALIZATION PAGE
+    Page 3 of 5
+    
+    Contents:
+    - Normalization explanation
+    - Summary stats (Reported, Adjustments, Normalized)
+    - Waterfall chart (SVG)
+    - Detailed adjustments table
+    - Multi-year EBITDA breakdown (if available)
+    
+    All inline styles use hardcoded values for WeasyPrint compatibility.
+    Stats grid uses table layout instead of CSS Grid.
+#}
+
+<div class="a4-page" id="ebitda-normalization-page">
+    {% set is_sde = is_sde_methodology|default(has_sde|default(false)) %}
+    {% set is_asset_method = is_asset_anchored_methodology|default(is_asset_methodology|default(false)) %}
+    {% set is_yield_method = is_yield_methodology|default(false) %}
+    {% set _sealed_ebitda = sealed_display.ebitda if sealed_display is defined else none %}
+    {% set _display_multi_year_ebitda = _sealed_ebitda.rows if _sealed_ebitda else multi_year_ebitda %}
+    {# Page Header #}
+    {% include "main_report_pdf/partials/_page_header.html" %}
+    
+    {# Section Header - Adapts to methodology #}
+    <div class="section-header">
+        <span class="section-number">{{ ebitda_normalization_section_number }}</span>
+        <h1 class="section-title">
+            {% if is_sde %}
+            {{ t.ebitda_sde_title }}
+            {% else %}
+            {% if headline_ebitda_is_reported|default(false) %}{% if locale == 'fr' %}EBITDA déclaré et évolution historique{% elif locale == 'en' %}Reported EBITDA and historical development{% else %}Gerapporteerde EBITDA en historische evolutie{% endif %}{% elif is_asset_method or is_yield_method %}{% if (locale|default('nl'))|lower == 'fr' %}Contrôle croisé EBITDA (pas la base de valorisation){% elif (locale|default('nl'))|lower == 'en' %}EBITDA cross-check (not the valuation basis){% else %}EBITDA-kruiscontrole (geen waarderingsbasis){% endif %}{% else %}{{ t.ebitda_normalization_title }}{% endif %}
+            {% endif %}
+        </h1>
+    </div>
+
+    {# Methodology-specific introduction #}
+    {% if is_sde %}
+    <p>
+        <strong>{{ t.ebitda_sde_description }}</strong>
+        {{ t.ebitda_sde_formula }}
+    </p>
+    <div class="callout callout-info" style="margin-bottom: 10pt; margin-top: 8pt;">
+        <p style="font-size: 8pt; margin: 0;">
+            <strong>{{ t.ebitda_sde_vs_ebitda }}:</strong> {{ t.ebitda_sde_multiples_note }}
+        </p>
+    </div>
+    {% elif is_dcf_only_methodology %}
+    <p>
+        {{ t.ebitda_dcf_description }}
+        {{ t.ebitda_dcf_projections_note }}
+    </p>
+    {% elif headline_ebitda_is_reported|default(false) %}
+    <p>
+        {% if locale == 'fr' %}Aucun ajustement de normalisation n’a été admis dans la base de résultat sauvegardée. Les observations annuelles et les pondérations appliquées sont présentées séparément ci-dessous.{% elif locale == 'en' %}No normalization adjustments were admitted to the saved earnings basis. Annual observations and applied year weights are disclosed separately below.{% else %}Er zijn geen normalisatieaanpassingen toegelaten tot de opgeslagen resultaatbasis. Jaarlijkse waarnemingen en toegepaste jaargewichten worden hieronder afzonderlijk weergegeven.{% endif %}
+    </p>
+    {% else %}
+    <p>
+        {{ t.ebitda_normalization_description }}
+    </p>
+    {% endif %}
+    
+    {# Real adjustments only — `ebitda_adjustments` always carries synthetic
+       base/result rows even on a clean ledger. Disclaimers must key off real
+       deltas. #}
+    {% set _real_adjustments = ebitda_adjustments|default([])|rejectattr('type', 'in', ['base', 'result'])|list %}
+
+    {# Review-required normalisation disclaimer (PDF twin). Mirrors the screen
+       version. Silent when the bridge has no real normalisations. #}
+    {% if _real_adjustments|length > 0 %}
+    {# Aurora-aligned: drop the hard-coded Tailwind amber-600/cream and let
+       ``.callout-warning`` apply the Aurora warning palette. #}
+    <div class="callout callout-warning" style="margin-bottom: 8pt; margin-top: 8pt; padding: 6pt 8pt;">
+        <p style="font-size: 8pt; margin: 0;">
+            <strong>{{ t.ebitda_ai_disclaimer_title }}</strong> {{ t.ebitda_ai_disclaimer_body }}
+        </p>
+    </div>
+    {% endif %}
+
+    {# Owner-led pending-normalisation prompt (Three Towers regression).
+       Fires when no normalisations were entered for an owner-managed
+       micro-SME. Sits ABOVE the AI-suggestions disclaimer so a sophisticated
+       reader sees the prompt before the bridge — making the €0
+       "Totale Aanpassingen" line explicitly preparer-pending instead of
+       silently signing off the reported EBITDA as the sustainable basis. #}
+    {% if show_owner_comp_pending_note and not show_normalization_candidates_note|default(false) and not is_sde and not is_dcf_only_methodology %}
+    {# Aurora-aligned: same `.callout-warning` style as the AI disclaimer. #}
+    <div class="callout callout-warning" style="margin-bottom: 10pt; margin-top: 8pt; padding: 8pt 10pt;">
+        <p style="font-size: 8.5pt; margin: 0 0 3pt 0; font-weight: 700; color: hsl(35, 60%, 25%);">
+            {% if report_scope|default('standard') == 'client_indicative' %}{% if (locale|default('nl'))|lower == 'fr' %}Périmètre limité : EBITDA non normalisé{% elif (locale|default('nl'))|lower == 'en' %}Limited scope: unnormalized EBITDA{% else %}Beperkte scope: niet-genormaliseerde EBITDA{% endif %}{% else %}{{ t.ebitda_owner_led_pending_title }}{% endif %}
+        </p>
+        <p style="font-size: 8pt; margin: 0; color: hsl(35, 50%, 28%); line-height: 1.5;">
+            {# When the weighted basis embeds prior-year normalisations, the
+               default body ("reported EBITDA used as basis without normalisation")
+               contradicts the multi-year table. Render an accurate body instead. #}
+            {% if report_scope|default('standard') == 'client_indicative' %}
+            {% if (locale|default('nl'))|lower == 'fr' %}La rémunération et l’implication du dirigeant/pharmacien titulaire ainsi que le coût de remplacement au marché ne sont pas vérifiés. La conclusion est donc expressément indicative et fondée sur l’EBITDA déclaré; une normalisation constitue une phase de suivi distincte.{% elif (locale|default('nl'))|lower == 'en' %}Owner/titular-pharmacist remuneration, operating involvement and market replacement cost remain unverified. The conclusion is therefore expressly indicative and based on reported EBITDA; normalization is a separate follow-up phase.{% else %}De vergoeding en inzet van de eigenaar/titularis en de marktconforme vervangingskost zijn niet geverifieerd. De conclusie is daarom uitdrukkelijk indicatief en gebaseerd op gerapporteerde EBITDA; normalisatie vormt een afzonderlijke vervolgfase.{% endif %}
+            {% elif multi_year_basis_has_normalizations %}
+            {{ t.ebitda_owner_led_pending_body_prior_year_norms }}
+            {% else %}
+            {{ t.ebitda_owner_led_pending_body }}
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+
+    {% if _real_adjustments|length > 0 %}
+    <div class="callout callout-info" style="margin-bottom: 10pt; margin-top: 8pt;">
+        <p style="font-size: 8pt; margin: 0; font-style: italic;">
+            {{ t.ebitda_adjustments_disclaimer }}
+        </p>
+    </div>
+    {% elif show_normalization_candidates_note|default(false) %}
+    {# Hermes/ledger surfaced normalization candidates (e.g. related-party rent)
+       flagged for advisor review — NOT applied. Explains the €0 applied total
+       without the "+€X total but normalized == reported" contradiction. #}
+    <div class="callout callout-warning" style="margin-bottom: 10pt; margin-top: 8pt; padding: 6pt 8pt;">
+        <p style="font-size: 8pt; margin: 0;">
+            {{ t.ebitda_normalization_candidates_note|replace('{count}', normalization_candidate_count|default(0)|string)|replace('{amount}', (normalization_candidate_total|default(0))|abs|format_currency) }}
+        </p>
+    </div>
+    {% elif not (show_owner_comp_pending_note and not is_sde and not is_dcf_only_methodology) %}
+    <div class="callout callout-info" style="margin-bottom: 10pt; margin-top: 8pt;">
+        <p style="font-size: 8pt; margin: 0; font-style: italic;">
+            {{ t.ebitda_no_adjustments_note }}
+        </p>
+    </div>
+    {% endif %}
+    {% if exclude_real_estate and (real_estate_book_value or estimated_market_rent) %}
+    <div class="callout callout-info" style="margin-bottom: 10pt;">
+        <p style="font-size: 8pt; margin: 0;">
+            {{ t.ebitda_real_estate_carve_out_note
+                |replace('{book_value}', real_estate_book_value|default(0)|format_currency)
+                |replace('{market_rent}', estimated_market_rent|default(0)|format_currency) }}
+        </p>
+    </div>
+    {% endif %}
+
+    {# Summary Stats - TABLE-BASED instead of CSS Grid #}
+    <div class="stats-grid">
+        <table class="stats-grid-table">
+            <tr>
+                <td>
+                    <div class="stat-card" style="background: #faf9f7; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                        <p class="stat-card-label">
+                            {{ t.ebitda_reported_label }} ({{ latest_year|default(current_year) }})
+                        </p>
+                        <p class="stat-card-value tabular" style="color: #1a1d23;">{% if reported_ebitda is not none %}{{ reported_ebitda|format_currency_compact }}{% else %}—{% endif %}</p>
+                    </div>
+                </td>
+                <td>
+                    <div class="stat-card" style="background: #faf9f7; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                        <p class="stat-card-label">
+                            {% if is_sde %}{{ t.ebitda_owner_adjustments }}{% elif headline_ebitda_is_reported|default(false) and not total_adjustments %}{# Reported basis, nothing normalised: "Totale aanpassingen €0" reads as a completed exercise — name it as normalisations applied (none). #}{% if (locale|default('nl'))|lower == 'fr' %}Normalisations appliquées{% elif (locale|default('nl'))|lower == 'en' %}Normalisations applied{% else %}Toegepaste normalisaties{% endif %}{% else %}{{ t.ebitda_total_adjustments }}{% endif %}
+                        </p>
+                        {# €0 must read neutral, not as a green positive — see screen twin. #}
+                        <p class="stat-card-value tabular" style="color: {% if total_adjustments and total_adjustments < 0 %}hsl(6, 55%, 50%){% elif total_adjustments and total_adjustments > 0 %}hsl(143, 40%, 42%){% else %}hsl(225, 18%, 20%){% endif %};">
+                            {% if total_adjustments and total_adjustments > 0 %}+{% endif %}{{ total_adjustments|default(0)|format_currency_compact }}
+                        </p>
+                    </div>
+                </td>
+                <td>
+                    <div class="stat-card" style="background: #faf9f7; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                        <p class="stat-card-label">
+                            {% if is_sde %}{{ t.ebitda_sde_year_label }} ({{ latest_year|default(current_year) }})
+                            {% elif headline_ebitda_is_reported|default(false) %}{{ t.ebitda_reported_label }} ({{ latest_year|default(current_year) }})
+                            {% else %}{{ t.ebitda_normalized_year_label }} ({{ latest_year|default(current_year) }}){% endif %}
+                        </p>
+                        <p class="stat-card-value tabular" style="color: hsl({{ teal_hsl }});">
+                            {{ latest_normalized_ebitda|format_currency_compact }}
+                        </p>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    {% if show_ebitda_weighting_footnote|default(false) %}
+    <div class="callout callout-info" style="margin-top: 8pt; margin-bottom: 4pt;">
+        <p style="font-size: 7pt; margin: 0; color: hsl(224, 10%, 45%);">
+            {% if multi_year_basis_has_normalizations %}
+            {{ t.ebitda_weighting_basis_note_prior_year_norms|replace('{amount}', (valuation_basis_ebitda|default(sustainable_ebitda))|format_currency) }}
+            {% else %}
+            {{ t.ebitda_weighting_basis_note|replace('{amount}', (valuation_basis_ebitda|default(sustainable_ebitda))|format_currency) }}
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+
+    {# A two-column "waterfall" with no real adjustments adds no analytical
+       information and produces cramped labels in print. Keep the bridge table
+       (which proves reported EBITDA == market EBITDA) and reserve the chart for
+       dossiers with at least one actual normalization. #}
+    {% if _real_adjustments|length > 0 %}
+    {% include "main_report_pdf/components/_waterfall_chart.html" %}
+    {% endif %}
+
+    {# Adjustments Table #}
+    <h3>{{ t.ebitda_adjustments_overview }}</h3>
+    {% include "main_report_pdf/components/_adjustments_table.html" %}
+    {% include "main_report_pdf/components/_anomaly_detection_summary.html" %}
+    
+    {% include "main_report_pdf/components/_ebitda_source_legend.html" %}
+    
+    {# Source-reconciled actuals for governed advisor dossiers.  This replaces
+       the generic weighted-history table: these years are evidence, not a
+       synthetic normalization or an undisclosed contribution to value. #}
+    {% if is_governed_external_market_reference|default(false) and source_reconciled_actuals|default([])|length >= 2 %}
+    <div style="margin-top: 14pt; page-break-inside: avoid; break-inside: avoid;">
+        <h3 style="margin-bottom: 6pt;">{% if (locale|default('nl'))|lower == 'fr' %}Rapprochement des résultats historiques{% elif (locale|default('nl'))|lower == 'en' %}Historical results reconciliation{% else %}Bronreconciliatie historische resultaten{% endif %}</h3>
+        <p style="font-size: 8pt; color: hsl(224, 10%, 45%); margin-bottom: 8pt;">{% if (locale|default('nl'))|lower == 'fr' %}Les montants ci-dessous proviennent des faits rapportés et des références de source scellées du dossier. Ce tableau est une réconciliation de preuves et ne constitue pas un calcul de valorisation distinct.{% elif (locale|default('nl'))|lower == 'en' %}The amounts below come from the dossier’s reported facts and sealed source references. This table is an evidence reconciliation, not a separate valuation calculation.{% else %}De onderstaande bedragen komen uit de gerapporteerde feiten en verzegelde bronverwijzingen van het dossier. Deze tabel is een bewijsreconciliatie en geen afzonderlijke waarderingsberekening.{% endif %}</p>
+        <table style="font-size: 7.5pt; width: 100%; table-layout: fixed; page-break-inside: avoid; break-inside: avoid;">
+            <thead>
+                <tr>
+                    <th style="width: 10%; white-space: nowrap;">Jaar</th>
+                    <th class="text-right" style="width: 25%; white-space: nowrap;">Omzet</th>
+                    <th class="text-right" style="width: 17%; white-space: nowrap;">EBIT</th>
+                    <th class="text-right" style="width: 16%; white-space: nowrap;">D&amp;A</th>
+                    <th class="text-right" style="width: 20%; white-space: nowrap;">EBITDA</th>
+                    <th class="text-right" style="width: 12%; white-space: nowrap;">Marge</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in source_reconciled_actuals %}
+                <tr>
+                    <td style="font-weight: 600; white-space: nowrap;">{{ row.year }}</td>
+                    <td class="text-right tabular" style="white-space: nowrap;">{{ row.revenue|format_currency }}</td>
+                    <td class="text-right tabular" style="white-space: nowrap;">{{ row.ebit|format_currency }}</td>
+                    <td class="text-right tabular" style="white-space: nowrap;">{{ row.depreciation_amortization|format_currency }}</td>
+                    <td class="text-right tabular" style="font-weight: 600; color: hsl({{ teal_hsl }}); white-space: nowrap;">{{ row.reported_ebitda|format_currency }}</td>
+                    <td class="text-right tabular" style="white-space: nowrap;">{{ row.ebitda_margin_pct|safe_round(2) }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if ebitda_maintainability_check|default(none) %}
+        {% set _mc = ebitda_maintainability_check %}
+        <div style="margin-top: 8pt; padding: 7pt 9pt; border-left: 3pt solid hsl(37, 65%, 45%); background: hsl(40, 15%, 98%); border-radius: 4pt; page-break-inside: avoid; break-inside: avoid;">
+            <p style="font-size: 7.5pt; line-height: 1.5; color: hsl(224, 10%, 38%); margin: 0;">
+                {% if (locale|default('nl'))|lower == 'fr' %}<strong>Test de maintenabilité :</strong> l’EBITDA déclaré de {{ _mc.latest_year }} a progressé de {{ _mc.yoy_pct|safe_round(1) }} % par rapport à {{ _mc.previous_year }} et se situe {{ _mc.vs_prior_average_pct|safe_round(1) }} % au-dessus de la moyenne {{ _mc.prior_years_label }} ({{ _mc.prior_average|format_currency }}). Il s’agit d’un indicateur de risque, pas d’une normalisation : l’approche de marché conserve {{ _mc.latest_year }} tel que déclaré et le DCF utilise son scénario de modèle distinct.{% elif (locale|default('nl'))|lower == 'en' %}<strong>Maintainability check:</strong> reported EBITDA for {{ _mc.latest_year }} increased {{ _mc.yoy_pct|safe_round(1) }}% versus {{ _mc.previous_year }} and is {{ _mc.vs_prior_average_pct|safe_round(1) }}% above the {{ _mc.prior_years_label }} average ({{ _mc.prior_average|format_currency }}). This is a risk indicator, not a normalization: the market approach retains {{ _mc.latest_year }} as reported and DCF uses its separately disclosed model scenario.{% else %}<strong>Onderhoudbaarheidstoets:</strong> de gerapporteerde EBITDA van {{ _mc.latest_year }} steeg {{ _mc.yoy_pct|safe_round(1) }}% tegenover {{ _mc.previous_year }} en ligt {{ _mc.vs_prior_average_pct|safe_round(1) }}% boven het gemiddelde van {{ _mc.prior_years_label }} ({{ _mc.prior_average|format_currency }}). Dit is een risico-indicator, geen normalisatie: de marktbenadering behoudt {{ _mc.latest_year }} ongewijzigd en de DCF gebruikt het afzonderlijk toegelichte modelscenario.{% endif %}
+            </p>
+        </div>
+        {% endif %}
+        {# ── Where the latest EBITDA movement came from ────────────────────
+           The maintainability note above states THAT earnings jumped; a buyer's
+           first question is WHY. Splitting the movement into trading drivers
+           (volume, gross-margin rate) and cost drivers (overheads, personnel)
+           is the difference between a defensible earnings base and one that is
+           withdrawn in diligence. #}
+        {% if reported_ebitda_movement_bridge|default(none) %}
+        {% set _mb = reported_ebitda_movement_bridge %}
+        <h3 style="margin: 10pt 0 4pt 0; font-size: 8.5pt; page-break-after: avoid; break-after: avoid;">{% if (locale|default('nl'))|lower == 'fr' %}Origine de la variation d'EBITDA {{ _mb.previous_year }} &rarr; {{ _mb.current_year }}{% elif (locale|default('nl'))|lower == 'en' %}Source of the {{ _mb.previous_year }} &rarr; {{ _mb.current_year }} EBITDA movement{% else %}Herkomst van de EBITDA-beweging {{ _mb.previous_year }} &rarr; {{ _mb.current_year }}{% endif %}</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt; page-break-inside: avoid; break-inside: avoid;">
+            <tbody>
+                <tr style="border-bottom: 0.5pt solid hsl(224, 15%, 92%);">
+                    <td style="padding: 3.5pt 4pt; color: hsl(224, 10%, 40%);">{% if (locale|default('nl'))|lower == 'fr' %}EBITDA déclaré{% elif (locale|default('nl'))|lower == 'en' %}Reported EBITDA{% else %}Gerapporteerde EBITDA{% endif %} {{ _mb.previous_year }}</td>
+                    <td style="padding: 3.5pt 4pt; text-align: right; font-weight: 600; white-space: nowrap;">{{ _mb.previous_ebitda|format_currency }}</td>
+                </tr>
+                <tr style="border-bottom: 0.5pt solid hsl(224, 15%, 92%);">
+                    <td style="padding: 3.5pt 4pt; color: hsl(224, 10%, 40%);">+ {% if (locale|default('nl'))|lower == 'fr' %}Volume (chiffre d'affaires {{ _mb.revenue_growth_pct|safe_round(1) }} % au taux de marge {{ _mb.previous_year }}){% elif (locale|default('nl'))|lower == 'en' %}Volume (revenue {{ _mb.revenue_growth_pct|safe_round(1) }}% at the {{ _mb.previous_year }} margin rate){% else %}Volume (omzet {{ _mb.revenue_growth_pct|safe_round(1) }}% tegen het margepercentage {{ _mb.previous_year }}){% endif %}</td>
+                    <td style="padding: 3.5pt 4pt; text-align: right; white-space: nowrap;">{{ _mb.volume|format_currency }}</td>
+                </tr>
+                <tr style="border-bottom: 0.5pt solid hsl(224, 15%, 92%);">
+                    <td style="padding: 3.5pt 4pt; color: hsl(224, 10%, 40%);">+ {% if (locale|default('nl'))|lower == 'fr' %}Taux de marge brute{% elif (locale|default('nl'))|lower == 'en' %}Gross-margin rate{% else %}Brutomargepercentage{% endif %} ({{ _mb.previous_gross_margin_pct|safe_round(2) }}% &rarr; {{ _mb.current_gross_margin_pct|safe_round(2) }}%)</td>
+                    <td style="padding: 3.5pt 4pt; text-align: right; white-space: nowrap;">{{ _mb.margin_rate|format_currency }}</td>
+                </tr>
+                <tr style="border-bottom: 0.5pt solid hsl(224, 15%, 92%);">
+                    <td style="padding: 3.5pt 4pt; color: hsl(224, 10%, 40%);">+ {% if (locale|default('nl'))|lower == 'fr' %}Charges d'exploitation nettes{% elif (locale|default('nl'))|lower == 'en' %}Net operating overheads{% else %}Netto bedrijfskosten{% endif %} ({{ _mb.previous_operating_expense_ratio_pct|safe_round(2) }}% &rarr; {{ _mb.current_operating_expense_ratio_pct|safe_round(2) }}% {% if (locale|default('nl'))|lower == 'en' %}of revenue{% elif (locale|default('nl'))|lower == 'fr' %}du CA{% else %}van de omzet{% endif %})</td>
+                    <td style="padding: 3.5pt 4pt; text-align: right; white-space: nowrap; {% if _mb.operating_expenses > 0 %}color: hsl(37, 65%, 38%); font-weight: 700;{% endif %}">{{ _mb.operating_expenses|format_currency }}</td>
+                </tr>
+                <tr style="border-bottom: 0.5pt solid hsl(224, 15%, 92%);">
+                    <td style="padding: 3.5pt 4pt; color: hsl(224, 10%, 40%);">+ {% if (locale|default('nl'))|lower == 'fr' %}Frais de personnel{% elif (locale|default('nl'))|lower == 'en' %}Personnel costs{% else %}Personeelskosten{% endif %}</td>
+                    <td style="padding: 3.5pt 4pt; text-align: right; white-space: nowrap;">{{ _mb.personnel|format_currency }}</td>
+                </tr>
+                {% if _mb.unallocated is not none %}
+                <tr style="border-bottom: 0.5pt solid hsl(224, 15%, 92%);">
+                    <td style="padding: 3.5pt 4pt; color: hsl(224, 10%, 40%);">+ {% if (locale|default('nl'))|lower == 'fr' %}Non affecté{% elif (locale|default('nl'))|lower == 'en' %}Unallocated{% else %}Niet toegewezen{% endif %}</td>
+                    <td style="padding: 3.5pt 4pt; text-align: right; white-space: nowrap;">{{ _mb.unallocated|format_currency }}</td>
+                </tr>
+                {% endif %}
+                <tr style="border-top: 0.75pt solid hsl(224, 25%, 12%);">
+                    <td style="padding: 4pt; font-weight: 700;">{% if (locale|default('nl'))|lower == 'fr' %}EBITDA déclaré{% elif (locale|default('nl'))|lower == 'en' %}Reported EBITDA{% else %}Gerapporteerde EBITDA{% endif %} {{ _mb.current_year }}</td>
+                    <td style="padding: 4pt; text-align: right; font-weight: 700; color: hsl({{ teal_hsl }}); white-space: nowrap;">{{ _mb.current_ebitda|format_currency }}</td>
+                </tr>
+            </tbody>
+        </table>
+        {% if _mb.cost_driven_share_pct is not none and _mb.cost_driven_share_pct >= 40 %}
+        <div style="margin-top: 6pt; padding: 7pt 9pt; border-left: 3pt solid hsl(37, 65%, 45%); background: hsl(40, 15%, 98%); border-radius: 4pt; page-break-inside: avoid; break-inside: avoid;">
+            <p style="font-size: 7.5pt; line-height: 1.5; color: hsl(224, 10%, 38%); margin: 0;">
+                {% if (locale|default('nl'))|lower == 'fr' %}<strong>Point d'attention :</strong> {{ _mb.cost_driven_share_pct|safe_round(0) }} % de la hausse d'EBITDA provient de postes de coûts, non du commerce. Un acquéreur demandera la preuve que ce niveau de charges est structurel. Tant que cette preuve manque, la base de résultat retenue reste exposée à un retour au niveau de charges antérieur.{% elif (locale|default('nl'))|lower == 'en' %}<strong>Attention:</strong> {{ _mb.cost_driven_share_pct|safe_round(0) }}% of the EBITDA increase comes from cost lines rather than trading. A buyer will ask for evidence that this cost level is structural. Until that evidence exists, the priced earnings base remains exposed to a reversion to the earlier cost level.{% else %}<strong>Aandachtspunt:</strong> {{ _mb.cost_driven_share_pct|safe_round(0) }}% van de EBITDA-stijging komt uit kostenposten en niet uit handel. Een koper zal bewijs vragen dat dit kostenniveau structureel is. Zolang dat bewijs ontbreekt, blijft de gehanteerde resultaatsbasis blootgesteld aan terugkeer naar het eerdere kostenniveau.{% endif %}
+            </p>
+        </div>
+        {% endif %}
+        {% endif %}
+        {% if source_reconciliation_notes|default([]) %}
+        <div style="margin-top: 8pt; padding: 7pt 9pt; border: .5pt solid hsl(224, 10%, 88%); background: hsl(0, 0%, 100%); border-radius: 4pt; page-break-inside: avoid; break-inside: avoid;">
+            <p style="font-size: 6.8pt; line-height: 1.5; color: hsl(224, 10%, 42%); margin: 0;">
+                {% for note in source_reconciliation_notes %}{% if not loop.first %}<br>{% endif %}{{ note }}{% endfor %}
+            </p>
+        </div>
+        {% endif %}
+        <p style="font-size: 7pt; color: hsl(224, 10%, 45%); margin-top: 8pt; line-height: 1.45;">{% if (locale|default('nl'))|lower == 'fr' %}Toute différence ou donnée manquante reste qualifiée dans le registre de preuves ; le modèle n’invente aucun montant de rapprochement.{% elif (locale|default('nl'))|lower == 'en' %}Any difference or missing field remains qualified in the evidence register; the model does not invent reconciliation amounts.{% else %}Elk verschil of ontbrekend veld blijft gekwalificeerd in het bewijsregister; het model verzint geen reconciliatiebedragen.{% endif %}</p>
+    </div>
+    {# Multi-Year EBITDA Summary (if available) #}
+    {% elif _display_multi_year_ebitda and _display_multi_year_ebitda|length >= 1 %}
+    {# Detect a non-recurring outlier year up front (one year > 55% of the
+       multi-year normalized total across 3+ years = almost always a one-off,
+       e.g. a holding's participation sale) so it can be EXCLUDED from the
+       "genormaliseerde EBITDA" everywhere — a figure cannot be called
+       normalised while it is dominated by a row the table itself flags
+       non-recurring. Compute the recurring average for display. #}
+    {# ``suppress_outlier_exclusion`` lets the caller disable the crude
+       >55%-of-sum heuristic for a profile where the high year is a genuine
+       operating result (not a one-off). The 55% rule can mis-fire on a volatile
+       SME whose strongest year is real: it would
+       wrongly drop the best operating year and keep a near-zero start-up year,
+       producing a phantom "recurring reference" that contradicts the basis the
+       valuation actually uses. Default false → unchanged behaviour everywhere
+       else. #}
+    {% if _sealed_ebitda %}
+    {% set _has_ebitda_outlier = _sealed_ebitda.has_outlier %}
+    {% set _recurring_ebitda = _sealed_ebitda.recurring_reference %}
+    {% else %}
+    {% set _mny = namespace(sum=0, recurring=0, n=0) %}
+    {% for _yd in multi_year_ebitda %}{% set _mny.sum = _mny.sum + (_yd.normalized_ebitda|default(0)|float) %}{% endfor %}
+    {% for _yd in multi_year_ebitda %}
+        {% set _v = _yd.normalized_ebitda|default(0)|float %}
+        {% if not (multi_year_ebitda|length >= 3 and _mny.sum > 0 and _v > (_mny.sum * 0.55)) %}
+            {% set _mny.recurring = _mny.recurring + _v %}{% set _mny.n = _mny.n + 1 %}
+        {% endif %}
+    {% endfor %}
+    {% set _has_ebitda_outlier = (_mny.n < (multi_year_ebitda|length)) and not suppress_outlier_exclusion|default(false) %}
+    {% set _recurring_ebitda = (_mny.recurring / _mny.n) if (_has_ebitda_outlier and _mny.n > 0) else (weighted_ebitda_total if weighted_ebitda_total is defined else sustainable_ebitda) %}
+    {% endif %}
+    <div style="margin-top: 14pt; page-break-inside: avoid; break-inside: avoid;">
+        <h3 style="margin-bottom: 6pt;">{% if is_asset_method or is_yield_method %}{% if (locale|default('nl'))|lower == 'fr' %}Vue pluriannuelle — contrôle opérationnel{% elif (locale|default('nl'))|lower == 'en' %}Multi-year overview — operational cross-check{% else %}Meerjarig overzicht — operationele kruiscontrole{% endif %}{% else %}{{ t.ebitda_multi_year_title }}{% endif %}</h3>
+        <p style="font-size: 8pt; color: hsl(224, 10%, 45%); margin-bottom: 8pt;">
+            {% if _has_ebitda_outlier %}{% if (locale|default('nl'))|lower == 'fr' %}L’EBITDA normalisé récurrent, hors année non récurrente signalée ci-dessous, est de <strong>{{ _recurring_ebitda|format_currency }}</strong>. Inclure l’année ponctuelle dans une moyenne ne représenterait pas un niveau de résultat récurrent ; la moyenne pluriannuelle est donc présentée uniquement comme référence, pas comme base de valorisation.{% elif (locale|default('nl'))|lower == 'en' %}Recurring normalized EBITDA, excluding the non-recurring year flagged below, is <strong>{{ _recurring_ebitda|format_currency }}</strong>. Including the one-off year in an average would not represent a recurring earnings level, so the multi-year average is shown for reference only — not as a valuation basis.{% else %}De recurrente genormaliseerde EBITDA, exclusief het hieronder gemarkeerde eenmalige jaar, bedraagt <strong>{{ _recurring_ebitda|format_currency }}</strong>. Opname van het eenmalige jaar in een gemiddelde zou geen recurrent winstniveau weergeven; het meerjarengemiddelde wordt daarom louter ter referentie getoond, niet als waarderingsbasis.{% endif %}
+            {% elif is_yield_method %}{# Panel BLOCKER (D2): do not call the 3-yr weighted average "de genormaliseerde EBITDA" when the FY figure differs — label both distinctly as a cross-check (the basis is rent ÷ cap-rate). #}{% if (locale|default('nl'))|lower == 'fr' %}Pour cette société immobilière, la base de valorisation est le loyer net ÷ cap-rate, pas l’EBITDA. L’EBITDA moyen pondéré sur {{ multi_year_ebitda|length }} ans (<strong>{{ (weighted_ebitda_total if weighted_ebitda_total is defined else sustainable_ebitda)|format_currency }}</strong>) et l’EBITDA normalisé FY{{ latest_year|default(current_year) }} (<strong>{{ (valuation_basis_ebitda|default(sustainable_ebitda))|format_currency }}</strong>) sont présentés uniquement comme contrôle opérationnel.{% elif (locale|default('nl'))|lower == 'en' %}For this property company the valuation basis is net rent ÷ cap-rate, not EBITDA. The {{ multi_year_ebitda|length }}-year weighted-average EBITDA (<strong>{{ (weighted_ebitda_total if weighted_ebitda_total is defined else sustainable_ebitda)|format_currency }}</strong>) and the FY{{ latest_year|default(current_year) }} normalized EBITDA (<strong>{{ (valuation_basis_ebitda|default(sustainable_ebitda))|format_currency }}</strong>) are shown only as an operational cross-check.{% else %}Voor deze vastgoedvennootschap is de waarderingsbasis netto huur ÷ cap-rate, niet EBITDA. Het {{ multi_year_ebitda|length }}-jaars gewogen gemiddelde EBITDA (<strong>{{ (weighted_ebitda_total if weighted_ebitda_total is defined else sustainable_ebitda)|format_currency }}</strong>) en de genormaliseerde EBITDA FY{{ latest_year|default(current_year) }} (<strong>{{ (valuation_basis_ebitda|default(sustainable_ebitda))|format_currency }}</strong>) dienen louter als operationele kruiscontrole.{% endif %}
+            {% elif is_asset_method %}{% if (locale|default('nl'))|lower == 'fr' %}Pour ce profil à forte intensité d’actifs, la base de valorisation est la valeur nette d’actif ajustée (NAV), pas l’EBITDA. L’EBITDA moyen pondéré sur {{ multi_year_ebitda|length }} ans (<strong>{{ (weighted_ebitda_total if weighted_ebitda_total is defined else sustainable_ebitda)|format_currency }}</strong>) et l’EBITDA normalisé FY{{ latest_year|default(current_year) }} (<strong>{{ (valuation_basis_ebitda|default(sustainable_ebitda))|format_currency }}</strong>) sont présentés uniquement comme contrôle opérationnel.{% elif (locale|default('nl'))|lower == 'en' %}For this asset-heavy profile the valuation basis is the adjusted net asset value (NAV), not EBITDA. The {{ multi_year_ebitda|length }}-year weighted-average EBITDA (<strong>{{ (weighted_ebitda_total if weighted_ebitda_total is defined else sustainable_ebitda)|format_currency }}</strong>) and the FY{{ latest_year|default(current_year) }} normalized EBITDA (<strong>{{ (valuation_basis_ebitda|default(sustainable_ebitda))|format_currency }}</strong>) are shown only as an operational cross-check.{% else %}Voor dit activumzware profiel is de waarderingsbasis de gecorrigeerde intrinsieke waarde (NAV), niet EBITDA. Het {{ multi_year_ebitda|length }}-jaars gewogen gemiddelde EBITDA (<strong>{{ (weighted_ebitda_total if weighted_ebitda_total is defined else sustainable_ebitda)|format_currency }}</strong>) en de genormaliseerde EBITDA FY{{ latest_year|default(current_year) }} (<strong>{{ (valuation_basis_ebitda|default(sustainable_ebitda))|format_currency }}</strong>) dienen louter als operationele kruiscontrole.{% endif %}
+            {% elif is_dcf_only_methodology %}{# Same label-collision guard as the yield/asset branches: the 3-yr weighted average is NOT "de genormaliseerde EBITDA" (that label belongs to the FY basis on the cover) — name it distinctly. #}{% if (locale|default('nl'))|lower == 'fr' %}L'EBITDA moyen pondéré sur {{ multi_year_ebitda|length }} ans (<strong>{{ (weighted_ebitda_total if weighted_ebitda_total is defined else sustainable_ebitda)|format_currency }}</strong>) sert de référence ; les projections FCFF de l'analyse DCF partent de la base de valorisation indiquée dans ce tableau.{% elif (locale|default('nl'))|lower == 'en' %}The {{ multi_year_ebitda|length }}-year weighted-average EBITDA (<strong>{{ (weighted_ebitda_total if weighted_ebitda_total is defined else sustainable_ebitda)|format_currency }}</strong>) serves as a reference; the FCFF projections in the DCF analysis start from the valuation basis shown in this table.{% else %}Het {{ multi_year_ebitda|length }}-jaars gewogen gemiddelde EBITDA (<strong>{{ (weighted_ebitda_total if weighted_ebitda_total is defined else sustainable_ebitda)|format_currency }}</strong>) dient als referentie; de FCFF-projecties in de DCF-analyse vertrekken van de waarderingsbasis vermeld in deze tabel.{% endif %}
+            {% elif headline_ebitda_is_reported|default(false) %}{% if locale == 'fr' %}La base de résultat sauvegardée {% if show_ebitda_weighting_footnote|default(false) %}(EBITDA pondéré sur {{ multi_year_ebitda|length }} ans){% else %}(EBITDA annuel){% endif %} est <strong>{{ (valuation_basis_ebitda|default(sustainable_ebitda))|format_currency }}</strong>. Aucun ajustement de normalisation n’a été admis ; les observations annuelles restent distinctes de la base pondérée.{% elif locale == 'en' %}The saved pricing earnings basis {% if show_ebitda_weighting_footnote|default(false) %}({{ multi_year_ebitda|length }}-year weighted EBITDA){% else %}(annual EBITDA){% endif %} is <strong>{{ (valuation_basis_ebitda|default(sustainable_ebitda))|format_currency }}</strong>. No normalization adjustments were admitted; annual observations remain distinct from the weighted basis.{% else %}De opgeslagen prijsbepalende resultaatbasis {% if show_ebitda_weighting_footnote|default(false) %}({{ multi_year_ebitda|length }}-jaars gewogen EBITDA){% else %}(jaarlijkse EBITDA){% endif %} is <strong>{{ (valuation_basis_ebitda|default(sustainable_ebitda))|format_currency }}</strong>. Er zijn geen normalisatieaanpassingen toegelaten; jaarlijkse waarnemingen blijven afzonderlijk van de gewogen basis.{% endif %}
+            {% elif show_ebitda_weighting_footnote|default(false) %}{# weighted 3-yr average IS the valuation basis #}{{ t.ebitda_sustainable_description }} <strong>({{ (weighted_ebitda_total if weighted_ebitda_total is defined else sustainable_ebitda)|format_currency }})</strong> {{ t.ebitda_valuation_basis|replace('{count}', multi_year_ebitda|length|string) }}
+            {% else %}{# Basis = most-recent-year normalized EBITDA, NOT the multi-year average. Show the authoritative basis; present the 3-yr average as reference only so cover/hero/EV stay consistent. #}{% if (locale|default('nl'))|lower == 'fr' %}La base de valorisation est l’EBITDA normalisé de {{ latest_year|default(current_year) }} : <strong>{{ (valuation_basis_ebitda|default(sustainable_ebitda))|format_currency }}</strong>. La vue pluriannuelle ci-dessous montre la tendance EBITDA sur {{ multi_year_ebitda|length }} ans en appui ; la moyenne est présentée uniquement comme référence.{% elif (locale|default('nl'))|lower == 'en' %}The valuation basis is the normalized EBITDA for {{ latest_year|default(current_year) }}: <strong>{{ (valuation_basis_ebitda|default(sustainable_ebitda))|format_currency }}</strong>. The multi-year overview below shows the {{ multi_year_ebitda|length }}-year EBITDA trend in support; the average is shown for reference only.{% else %}De waarderingsbasis is de genormaliseerde EBITDA van {{ latest_year|default(current_year) }}: <strong>{{ (valuation_basis_ebitda|default(sustainable_ebitda))|format_currency }}</strong>. Het meerjarenoverzicht hieronder toont de {{ multi_year_ebitda|length }}-jarige EBITDA-evolutie ter onderbouwing; het gemiddelde is louter ter referentie.{% endif %}{% endif %}
+        </p>
+        {# Optional basis note: explain when the headline uses a forward run-rate
+           while the multi-year recurrent average is a lower floor reference.
+           Other dossiers render nothing here. #}
+        {% if basis_runrate_note %}
+        <p style="font-size: 7.6pt; line-height: 1.5; color: hsl(224, 10%, 38%); margin: 0 0 10pt 0; padding: 8pt 10pt; border-left: 3pt solid hsl(37, 65%, 45%); background: hsl(40, 15%, 98%); border-radius: 4pt;">
+            {{ basis_runrate_note }}
+        </p>
+        {% endif %}
+
+        <table class="multi-year-earnings" style="font-size: 7.5pt; width: 100%; table-layout: fixed; page-break-inside: avoid; break-inside: avoid;">
+            <thead>
+                <tr>
+                    <th style="width: 14%;">{{ t.ebitda_year_column }}</th>
+                    <th class="text-right" style="width: 24%;">{{ t.ebitda_reported_column }}</th>
+                    <th class="text-right" style="width: 24%;">{% if headline_ebitda_is_reported|default(false) %}{% if locale == 'fr' %}EBITDA (sans ajustements){% elif locale == 'en' %}EBITDA (no adjustments){% else %}EBITDA (geen normalisaties){% endif %}{% else %}{{ t.ebitda_normalized_column }}{% endif %}</th>
+                    <th class="text-right" style="width: 12%;">{{ t.ebitda_weight_column }}</th>
+                    <th class="text-right" style="width: 26%;">{{ t.ebitda_weighted_column }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {# Per-row non-recurring flag reuses the up-front outlier
+                   detection (_mny) so a one-off line is not read as run-rate. #}
+                {% for year_data in _display_multi_year_ebitda %}
+                {% set _yr_norm = year_data.normalized_ebitda|default(0)|float %}
+                {% set _is_nonrecurring = year_data.sealed_is_nonrecurring if _sealed_ebitda else ((not suppress_outlier_exclusion|default(false)) and (multi_year_ebitda|length >= 3 and _mny.sum > 0 and _yr_norm > (_mny.sum * 0.55))) %}
+                <tr>
+                    <td style="font-weight: 600;">{{ year_data.year_display|default(year_data.year) }}</td>
+                    <td class="text-right tabular">{{ year_data.reported_ebitda|format_currency }}</td>
+                    <td class="text-right tabular" style="color: hsl({{ teal_hsl }});">
+                        {{ year_data.normalized_ebitda|format_currency }}
+                        {% if year_data.has_adjustments and year_data.adjustment_total != 0 %}
+                        <span style="display: block; font-size: 6pt; color: {% if year_data.adjustment_total < 0 %}hsl(6, 55%, 50%){% else %}hsl(143, 40%, 42%){% endif %};">
+                            {% if year_data.adjustment_total > 0 %}+{% endif %}{{ year_data.adjustment_total|format_currency }} {{ t.ebitda_adjustments_suffix }}
+                        </span>
+                        {% endif %}
+                        {# EBITDA-margin sub-line — buyers always check
+                           "how did the margin trend?". Hidden when revenue
+                           is missing or zero. #}
+                        {# Suppress the margin sub-line on a year flagged
+                           non-recurring: printing e.g. "64,0% marge" next to a
+                           misclassified one-off dignifies a phantom operating result
+                           and implies an inconsistent revenue base. #}
+                        {% if year_data.ebitda_margin is not none and year_data.ebitda_margin > 0 and not _is_nonrecurring %}
+                        <span style="display: block; font-size: 6pt; color: hsl(224, 10%, 45%); font-style: italic; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">
+                            {{ year_data.ebitda_margin|safe_round(1) }}% {{ t.ebitda_margin_suffix|default('margin') }}
+                        </span>
+                        {% endif %}
+                        {% if _is_nonrecurring %}
+                        <span style="display: block; font-size: 6pt; color: hsl(35, 60%, 35%); font-style: italic;">
+                            {% if (locale|default('nl'))|lower == 'fr' %}incl. éléments non récurrents — pas une base récurrente{% elif (locale|default('nl'))|lower == 'en' %}incl. non-recurring items — not a recurring basis{% else %}incl. eenmalige posten — geen recurrente basis{% endif %}
+                        </span>
+                        {% endif %}
+                    </td>
+                    {# A year flagged non-recurring is given ZERO weight so it
+                       cannot contribute to the reference average — showing it at
+                       33% with a multi-€M weighted contribution beside a small
+                       recurring base is self-contradictory. #}
+                    <td class="text-right tabular">{% if _is_nonrecurring %}{% if (locale|default('nl'))|lower == 'fr' %}exclu{% elif (locale|default('nl'))|lower == 'en' %}excluded{% else %}uitgesloten{% endif %}{% elif _sealed_ebitda %}{{ year_data.sealed_weight_pct|safe_round(0) }}%{% elif _has_ebitda_outlier and _mny.n > 0 %}{{ (100 / _mny.n)|safe_round(0) }}%{% else %}{{ (year_data.weight|default(0) * 100)|safe_round(0) }}%{% endif %}</td>
+                    <td class="text-right tabular" style="font-weight: 500;">
+                        {% if _is_nonrecurring %}—{% elif _sealed_ebitda %}{{ year_data.sealed_weighted_contribution|format_currency }}{% elif _has_ebitda_outlier and _mny.n > 0 %}{{ (year_data.normalized_ebitda|default(0) / _mny.n)|format_currency }}{% else %}{{ (year_data.normalized_ebitda|default(0) * year_data.weight|default(0))|format_currency }}{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                
+                {# Calculated total row — the arithmetic sum of the weighted column
+                   (= the multi-year average). When the average is NOT the
+                   valuation basis (basis = most-recent year), mark it a reference. #}
+                <tr style="background: hsl(40, 15%, 98%);">
+                    <td style="font-weight: 500; color: hsl(224, 10%, 45%);">{% if _has_ebitda_outlier %}{% if (locale|default('nl'))|lower == 'fr' %}Référence récurrente (hors année non récurrente){% elif (locale|default('nl'))|lower == 'en' %}Recurring reference (excl. non-recurring year){% else %}Recurrente referentie (excl. eenmalig jaar){% endif %}{% else %}{{ t.ebitda_calculated_total }}{% if not show_ebitda_weighting_footnote|default(false) %} {% if (locale|default('nl'))|lower == 'fr' %}(référence){% elif (locale|default('nl'))|lower == 'en' %}(reference){% else %}(referentie){% endif %}{% endif %}{% endif %}</td>
+                    <td></td>
+                    <td></td>
+                    <td class="text-right" style="font-weight: 500; color: hsl(224, 10%, 45%);">100%</td>
+                    <td class="text-right tabular" style="font-weight: 500; color: hsl(224, 10%, 45%);">
+                        {% if _has_ebitda_outlier %}{{ _recurring_ebitda|format_currency }}{% else %}{{ (weighted_ebitda_total if weighted_ebitda_total is defined else sustainable_ebitda)|format_currency }}{% endif %}
+                    </td>
+                </tr>
+
+                {# Valuation-basis row — always the authoritative basis the EV uses
+                   (valuation_basis_ebitda). When weighting IS the basis this equals
+                   the calculated total above; otherwise it is the most-recent-year
+                   normalized EBITDA, keeping cover/hero/EV internally consistent. #}
+                <tr style="background: hsla({{ teal_hsl }}, 0.08); font-weight: 700; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                    <td>{% if show_ebitda_weighting_footnote|default(false) %}{{ t.ebitda_rounded_for_valuation }}{% elif is_yield_method or is_asset_method %}{# Panel BLOCKER (D1/D2): EBITDA is NOT the valuation basis on a yield/NAV method — label it a reference/operational check, never "Waarderingsbasis". #}{% if (locale|default('nl'))|lower == 'fr' %}Référence EBITDA (contrôle opérationnel — pas la base de valorisation){% elif (locale|default('nl'))|lower == 'en' %}EBITDA reference (operational check — not the valuation basis){% else %}EBITDA-referentie (operationele toets — geen waarderingsbasis){% endif %}{% else %}{% if (locale|default('nl'))|lower == 'fr' %}Base de valorisation ({{ latest_year|default(current_year) }}){% elif (locale|default('nl'))|lower == 'en' %}Valuation basis ({{ latest_year|default(current_year) }}){% else %}Waarderingsbasis ({{ latest_year|default(current_year) }}){% endif %}{% endif %}</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="text-right tabular" style="color: hsl({{ teal_hsl }});">
+                        {{ (valuation_basis_ebitda|default(weighted_ebitda_total)|default(sustainable_ebitda))|format_currency }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        
+        {% if duplicate_consecutive_years %}
+        <p style="font-size: 7.5pt; color: hsl(37, 60%, 38%); background: hsla(37, 65%, 55%, 0.10); border-radius: 3pt; padding: 5pt 7pt; margin-top: 8pt; line-height: 1.4;">
+            {% set _dy_en = (locale|default('nl'))|lower == 'en' %}
+            {% set _dy_fr = (locale|default('nl'))|lower == 'fr' %}
+            {% if _dy_fr %}À vérifier : {{ duplicate_consecutive_years.year_a }} et {{ duplicate_consecutive_years.year_b }} présentent un chiffre d'affaires et un EBITDA identiques — vérifiez qu'un exercice n'a pas été saisi en double.{% elif _dy_en %}To verify: {{ duplicate_consecutive_years.year_a }} and {{ duplicate_consecutive_years.year_b }} show identical revenue and EBITDA — confirm a book year was not entered twice.{% else %}Ter controle: {{ duplicate_consecutive_years.year_a }} en {{ duplicate_consecutive_years.year_b }} tonen identieke omzet én EBITDA — controleer of een boekjaar niet dubbel is ingevoerd.{% endif %}
+        </p>
+        {% endif %}
+        <p style="font-size: 7pt; color: hsl(224, 10%, 45%); margin-top: 8pt; font-style: italic;">
+            {% if headline_ebitda_is_reported|default(false) %}{% if show_ebitda_weighting_footnote|default(false) %}{% if locale == 'fr' %}Ces pondérations proviennent de la base de résultat sauvegardée ; le tableau ne sélectionne ni n’exclut aucune année supplémentaire.{% elif locale == 'en' %}These year weights come from the saved earnings basis; this table does not select or exclude additional years.{% else %}Deze jaargewichten komen uit de opgeslagen resultaatbasis; deze tabel selecteert of sluit geen extra jaren uit.{% endif %}{% else %}{% if locale == 'fr' %}Les observations historiques sont présentées séparément de la base utilisée dans le calcul sauvegardé.{% elif locale == 'en' %}Historical observations are disclosed separately from the saved pricing basis.{% else %}Historische waarnemingen worden afzonderlijk van de opgeslagen prijsbepalende basis vermeld.{% endif %}{% endif %}
+            {% elif has_custom_historical_ebitda_weighting|default(false) %}
+            {{ t.ebitda_weighted_average_note }}
+            {{ t.ebitda_advisor_weighting_audit_note }}
+            {% else %}
+            {{ t.ebitda_weighted_average_note }}
+            {{ t.ebitda_recent_years_note }}
+            {% if multi_year_ebitda|length == 3 %} (50% / 33% / 17%){% elif multi_year_ebitda|length == 2 %} (67% / 33%){% endif %}
+            {% endif %}
+            {{ t.ebitda_amounts_rounded_note }}
+        </p>
+    </div>
+    {% else %}
+    {# Fallback when only single-year data available. Quieted 2026-05-15
+       (mirror of screen template) — plain methodology disclosure, not a
+       warning. Actionable "add more years" prompt lives in Studio Co-pilot. #}
+    <div style="margin-top: 20pt; padding: 12pt 16pt; background: hsl(40, 15%, 98%); border-radius: 6pt;">
+        <p style="font-size: 8pt; margin: 0; color: hsl(224, 10%, 45%);">
+            {{ t.ebitda_single_year_note }}
+        </p>
+    </div>
+    {% endif %}
+
+    {# Tax Latencies (Belastinglatenties) #}
+    {% include "main_report_pdf/components/_tax_latencies_table.html" %}
+
+</div>

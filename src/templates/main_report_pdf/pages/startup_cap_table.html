@@ -1,0 +1,145 @@
+{#
+    STARTUP VALUATION — CAP TABLE & DILUTION (PDF / WeasyPrint)
+
+    The cap-table simulator card is intentionally NOT rendered here.
+    It already lives on ``startup_one_pager.html`` (the page founders
+    actually hand to investors), and showing the same simulator twice
+    confused QA readers ("which one is the real one?") even though the
+    numbers were always identical.  This page is the deeper breakdown:
+    cap-table summary, SAFE notes, and the next-round dilution scenario.
+#}
+{% set ct = startup_report.cap_table %}
+{% set di = startup_report.dilution_scenario %}
+
+<div class="a4-page">
+    {% include "main_report_pdf/partials/_page_header.html" ignore missing %}
+
+    <h1 style="font-size: 18pt; margin-bottom: 8pt;">{{ startup_report.t.cap_table_and_dilution }}</h1>
+
+    <h2 style="font-size: 12pt; margin: 8pt 0 4pt;">{{ startup_report.t.cap_table_summary }}</h2>
+    {# Sparse-row hiding (PDF twin).  Mirrors the screen template:
+       last-round trio is optional historical context that's a wall
+       of em-dashes for fresh first raises.  Audit issue D4. #}
+    <table style="width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 12pt;">
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.next_round_pre_money_target }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{% if ct.pre_money_target %}{{ ct.pre_money_target|format_currency }}{% else %}—{% endif %}</td></tr>
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.option_pool_reserved }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ ct.option_pool_pct|safe_round_or_dash(1) }}%</td></tr>
+        {% if ct.last_round_amount %}
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.last_round_amount }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ ct.last_round_amount|format_currency }}</td></tr>
+        {% endif %}
+        {% if ct.last_round_post_money %}
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.last_round_post_money }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ ct.last_round_post_money|format_currency }}</td></tr>
+        {% endif %}
+        {% if ct.last_round_date %}
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.last_round_date }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ ct.last_round_date }}</td></tr>
+        {% endif %}
+    </table>
+
+    {# Visual share-distribution bar — same 4-segment split the founder
+       saw in the Venus wizard. Renders below the summary table so the
+       eye sees the picture before the SAFE / dilution tables that
+       follow. #}
+    {% include "main_report_pdf/partials/_startup_share_distribution_bar.html" ignore missing %}
+
+    {% if ct.safe_notes and ct.safe_notes|length > 0 %}
+    <h2 style="font-size: 12pt; margin: 8pt 0 4pt;">{{ startup_report.t.safe_notes_and_convertibles }}</h2>
+    <table style="width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 12pt;">
+        <thead>
+            <tr style="background: #f4f5f7;">
+                <th style="text-align: left; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.holder }}</th>
+                <th style="text-align: right; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.amount }}</th>
+                <th style="text-align: right; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.discount }}</th>
+                <th style="text-align: right; padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.cap }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in ct.safe_notes %}
+            <tr>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ s.holder_label or '—' }}</td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ s.amount|format_currency }}</td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{% if s.discount_pct %}{{ s.discount_pct|safe_round(0) }}%{% else %}—{% endif %}</td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{% if s.valuation_cap %}{{ s.valuation_cap|format_currency }}{% else %}—{% endif %}</td>
+            </tr>
+            {% endfor %}
+            <tr style="font-weight: 600; background: #f4f5f7;">
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.total }}</td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ ct.safe_notes_total|format_currency }}</td>
+                <td colspan="2" style="padding: 4pt; border: 1pt solid #e1e4ea;"></td>
+            </tr>
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if di and (di.post_money or 0) > 0 %}
+    <h2 style="font-size: 12pt; margin: 8pt 0 4pt;">{{ startup_report.t.next_round_dilution_scenario }}</h2>
+    <p style="font-size: 8pt; color: #4a5460; margin-bottom: 4pt;">
+        {{ startup_report.t.indicative_dilution_caption }}
+    </p>
+    <table style="width: 100%; border-collapse: collapse; font-size: 9pt;">
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.expected_post_money_with_safes }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ di.post_money|format_currency }}</td></tr>
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.safe_dilution }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ di.safe_dilution_amount|format_currency }}</td></tr>
+        <tr><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.option_pool }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ di.option_pool_pct|safe_round(1) }}%</td></tr>
+        <tr style="font-weight: 600; background: #f4f5f7;"><td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t.total_founder_dilution }}</td><td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ di.founder_dilution_pct|safe_round(1) }}%</td></tr>
+    </table>
+    {% endif %}
+
+    {# Dilution scenarios — negotiation aid (PDF twin). Same 4-row
+       table the screen template renders: current + lead-at-P75 +
+       smaller pool + smaller round. Founder row highlighted so the
+       angel reads "you are here" before the three alternates. #}
+    {% set ds = startup_report.dilution_scenarios %}
+    {% if ds and ds|length > 0 %}
+    <h2 style="font-size: 12pt; margin: 12pt 0 4pt;">{{ startup_report.t.dilution_scenarios_title }}</h2>
+    <p style="font-size: 8pt; color: #4a5460; margin-bottom: 4pt;">
+        {{ startup_report.t.dilution_scenarios_caption }}
+    </p>
+    <table style="width: 100%; border-collapse: collapse; font-size: 8.5pt;">
+        <thead>
+            <tr style="background: #f4f5f7;">
+                <th style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: left;">{{ startup_report.t.scenario_label_current.replace(' — as entered', '').replace(' — zoals je het hebt ingegeven', '') }}</th>
+                <th style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right;">{{ startup_report.t.scenario_col_pre_money }}</th>
+                <th style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right;">{{ startup_report.t.scenario_col_raise }}</th>
+                <th style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right;">{{ startup_report.t.scenario_col_pool }}</th>
+                <th style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right;">{{ startup_report.t.scenario_col_new_investor }}</th>
+                <th style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-weight: 700;">{{ startup_report.t.scenario_col_founders_remaining }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in ds %}
+            {% set is_current = row.label_key == 'scenario_current' %}
+            <tr {% if is_current %}style="background: #f0f7f6; font-weight: 600;"{% endif %}>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea;">{{ startup_report.t['scenario_label_' + row.label_key.replace('scenario_', '')] }}</td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ row.pre_money|format_currency }}</td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ row.investment_amount|format_currency }}</td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ row.option_pool_pct|safe_round(0) }}%</td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ row.investor_dilution_pct|safe_round(1) }}%</td>
+                <td style="padding: 4pt; border: 1pt solid #e1e4ea; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: #2a8a82;">{{ row.founders_remaining_pct|safe_round(1) }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {# Founder-floor advisory — PDF twin of the screen card. Fires
+       only when this priced close lands founders below ~30%. See
+       startup_cap_table.html (screen) for full rationale. #}
+    {% set ff = startup_report.founder_floor_advisory %}
+    {% if ff %}
+    <table style="width: 100%; margin-top: 8pt; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 8pt; border: 1pt solid #b04545; background: #fdf2f2;">
+                <div style="font-size: 9pt; font-weight: 700; color: #8a3636; margin-bottom: 3pt;">
+                    {{ startup_report.t.founder_floor_advisory_title }}
+                </div>
+                <p style="font-size: 8pt; line-height: 1.5; margin: 0 0 4pt; color: #1f2937;">
+                    {{ startup_report.t.founder_floor_advisory_body.replace('{foundersPct}', ff.founders_pct|safe_round(0)|string) }}
+                </p>
+                <p style="font-size: 8pt; line-height: 1.5; margin: 0; color: #4a5460;">
+                    {{ startup_report.t.founder_floor_advisory_action }}
+                </p>
+            </td>
+        </tr>
+    </table>
+    {% endif %}
+
+    {% include "main_report_pdf/partials/_footer.html" ignore missing %}
+</div>

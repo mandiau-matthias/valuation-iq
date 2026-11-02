@@ -1,0 +1,133 @@
+# ==========================================
+# Upswitch Valuation Engine - Dependencies
+# ==========================================
+# Python 3.11+ Required
+# Last Updated: October 3, 2025
+
+# Core API Framework
+# Updated to FastAPI 0.136.1 for Starlette security fixes and current App Router parity
+# Note: Verified compatibility with the critical quality gate
+fastapi==0.136.1
+uvicorn[standard]==0.46.0
+pydantic==2.10.4
+pydantic-settings==2.6.1
+python-multipart==0.0.31
+
+# HTTP Clients & Async Support
+# Updated to 3.14.3 for 2026 aiohttp advisory fixes
+aiohttp==3.14.3
+httpx==0.27.2
+asyncio-throttle==1.0.2
+requests==2.33.0
+
+# Financial Data Processing
+numpy==1.26.4
+pandas==2.2.3
+scipy==1.13.1
+statsmodels==0.14.4
+
+# Machine Learning & AI
+scikit-learn==1.5.2
+xgboost==2.1.3
+shap==0.46.0
+joblib==1.5.2
+tenacity==8.2.3  # Retry logic with exponential backoff
+msgpack==1.2.1  # Efficient serialization for ML features
+
+# Database & ORM
+sqlalchemy==2.0.36
+alembic==1.16.5
+psycopg2-binary==2.9.10
+asyncpg==0.29.0
+
+# Caching & Storage
+redis==5.2.0
+hiredis==3.0.0
+
+# Time-Series Database (optional - for historical data)
+# timescaledb==0.0.4
+
+# Authentication & Security
+passlib[bcrypt]==1.7.4
+cryptography==50.0.0
+rfc8785==0.1.4
+
+# External API Clients
+# OECD, ECB, Eurostat data
+requests-cache==1.2.1
+pysdmx==1.1.0
+
+# Rate Limiting & Throttling
+slowapi==0.1.9
+limits==3.13.0
+
+# Monitoring & Observability
+prometheus-client==0.21.1
+structlog==24.1.0
+python-json-logger==3.2.1
+psutil==6.1.0
+sentry-sdk==2.68.1
+
+# Environment & Configuration
+python-dotenv==1.2.2
+pyyaml==6.0.2
+toml==0.10.2
+
+# Data Validation & Parsing
+email-validator==2.2.0
+phonenumbers==8.13.51
+python-dateutil==2.9.0
+
+# Report Generation
+babel==2.18.0  # Locale-aware decimal formatting in safety-net reports
+jinja2==3.1.6
+# 70.0 restores restrictive URL fetchers for stylesheet and metadata options.
+# The affected presentational-hints path is explicitly disabled in production.
+weasyprint==70.0
+matplotlib==3.9.3
+plotly==5.24.1
+kaleido==0.2.1  # Required for Plotly static image export (PDF generation)
+
+# PDF Enhancement - Bank-Grade Compliance
+pikepdf==9.4.2  # PDF manipulation, metadata, encryption (PDF/A, security)
+reportlab==4.2.5  # PDF/A generation support
+python-xmp-toolkit==2.0.2  # XMP metadata for archival compliance
+
+# Utilities
+click==8.3.3
+typer==0.15.1
+rich==13.9.4
+tqdm==4.67.1
+python-slugify==8.0.4
+
+# Production Server
+gunicorn==26.0.0
+uvloop==0.21.0
+httptools==0.6.4
+
+# Phase 2: Document Parsing Dependencies
+# 6.19.0 includes the September 2026 parser/resource-limit security fixes.
+pypdf==6.19.0
+openpyxl==3.1.5
+Pillow==12.3.0
+pytesseract==0.3.13
+
+# Phase 2: AI for Document Extraction
+# NOTE: OpenAI REMOVED - Brain & Muscle Architecture (AI moved to Titan)
+
+# Streaming Conversation System Dependencies
+sse-starlette==1.6.5
+
+# Phase 2: Workflow Orchestration - Prefect (Ilara Pattern)
+# Note: Prefect 2.14.21 compatible with FastAPI 0.104.1 (both use starlette <0.33.0)
+# TEMPORARILY DISABLED: Conflicts with FastAPI 0.115.6 (starlette version mismatch)
+# TODO: Upgrade to Prefect 3.x after launch for FastAPI 0.115.6 compatibility
+# prefect==2.14.21
+# prefect-sqlalchemy==0.4.1
+
+# Phase 2: Company Lookup (optional)
+# Companies House API, OpenCorporates work with httpx already included
+
+# Registry-First Architecture Dependencies
+beautifulsoup4==4.12.3
+lxml==6.1.0

@@ -1,0 +1,10 @@
+<div class="a4-page last-report-page sealed-attestation-page" style="page-break-before:always;">
+    <div class="section-header"><span class="section-number">B</span><h1 class="section-title">{{ sealed_memorandum.labels.attestation }}</h1></div>
+    <div class="pdf-card pdf-card-primary"><p>{{ sealed_memorandum.attestation.body }}</p></div>
+    <div class="callout callout-warning" style="margin-top:14pt;"><p>{{ sealed_memorandum.identity.approval_disclosure }}</p></div>
+    <h2>{{ sealed_memorandum.labels.prepared_by }}</h2>
+    <table><tbody><tr><td>{{ sealed_memorandum.labels.prepared_by }}</td><td>{% if sealed_memorandum.attestation.reviewer_name != '—' %}{{ sealed_memorandum.attestation.reviewer_name }} · {% endif %}{{ sealed_memorandum.identity.advisor_firm }}{% if sealed_memorandum.attestation.reviewer_credentials %}<br><small>{{ sealed_memorandum.attestation.reviewer_credentials|join(', ') }}</small>{% endif %}</td></tr><tr><td>{{ sealed_memorandum.labels.supported_by }}</td><td>Upswitch</td></tr><tr><td>{{ sealed_memorandum.labels.reference }}</td><td>{{ sealed_memorandum.identity.report_id }}</td></tr><tr><td>{{ sealed_memorandum.labels.fingerprint }}</td><td class="pdf-mono">{{ sealed_memorandum.identity.verification_id }}</td></tr></tbody></table>
+    <p class="pdf-prose" style="margin-top:16pt;">{{ sealed_memorandum.attestation.no_ivs }}</p>
+    {% if sealed_memorandum.attestation.limitations %}<h2>{{ sealed_memorandum.labels.limitations }}</h2><ul>{% for limitation in sealed_memorandum.attestation.limitations %}<li>{{ limitation }}</li>{% endfor %}</ul>{% endif %}
+    <div class="pdf-card pdf-card-muted" style="margin-top:14pt;"><div class="pdf-card-eyebrow">{{ sealed_memorandum.attestation.standards_profile_label }}</div><p>{{ sealed_memorandum.attestation.claim_state }}</p><p class="pdf-mono">{{ sealed_memorandum.attestation.standards_profile }}</p></div>
+</div>

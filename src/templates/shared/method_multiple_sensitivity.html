@@ -1,0 +1,20 @@
+{# Only explicit, saved-method scenarios enter this renderer. Financial arithmetic stays in Python. #}
+{% set matrix = multiple_sensitivity_matrix_2d|default(none) %}
+{% set _lang = (locale|default('en')|lower)[:2] %}
+{% if matrix and matrix.currency and matrix.source_run_hash %}
+<section class="method-sensitivity" data-calculation-id="{{ matrix.calculation_id }}" data-source-run-hash="{{ matrix.source_run_hash }}" data-method-key="{{ matrix.method_key }}" style="margin-top:12pt;page-break-inside:avoid;break-inside:avoid;">
+  <h4 style="font-size:9pt;">{{ t.multiple_sensitivity_matrix_title }} — {{ metric_label|default('EBITDA') }} × {{ multiple_axis_label|default('Multiple') }}</h4>
+  <p style="font-size:7pt;">
+    {% if _lang == 'fr' %}Scénario illustratif : variation de ±15 % de la base financière valorisée et de ±20 % du multiple appliqué. Autres hypothèses inchangées. Valeur d’entreprise uniquement ; aucune couverture statistique. Les axes sont arrondis à l’affichage ; les cellules utilisent les données exactes. Ce scénario ne remplace pas la fourchette enregistrée.
+    {% elif _lang == 'nl' %}Illustratief scenario: de geprijsde financiële maatstaf varieert ±15% en de toegepaste multiple ±20%. Overige aannames blijven gelijk. Alleen ondernemingswaarde; geen statistische dekking. De assen zijn afgerond voor weergave; de cellen gebruiken exacte invoer. Dit scenario vervangt het opgeslagen waarderingsbereik niet.
+    {% else %}Illustrative scenario: vary the pricing metric by ±15% and the applied multiple by ±20%. Other assumptions remain fixed. Enterprise value only; no statistical coverage. Axes are rounded for display; cells use exact inputs. This scenario does not replace the saved valuation range.{% endif %}
+  </p>
+  <table style="width:100%;font-size:7pt;border-collapse:collapse;">
+    <thead><tr><th>{{ metric_label|default('Metric') }} / {{ matrix.currency }}</th>{% for sv in matrix.secondary_axis_values %}<th style="text-align:right;" data-axis-value="{{ sv }}">≈{{ sv|safe_round(4) }}×</th>{% endfor %}</tr></thead>
+    <tbody>{% for pv in matrix.primary_axis_values %}{% set base_row = pv == matrix.metric_base %}<tr><th data-axis-value="{{ pv }}" style="text-align:left;">≈{{ pv|format_currency(matrix.currency) }}</th>{% for sv in matrix.secondary_axis_values %}{% set value = matrix.matrix[pv|string][sv|string] %}{% set center = base_row and sv == matrix.multiple_base %}<td data-value="{{ value }}"{% if center %} data-base-cell="true"{% endif %} style="text-align:right;padding:3pt;{% if center %}background:#e9f6f3;font-weight:700;{% endif %}">{{ value|format_currency(matrix.currency) }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+  </table>
+  <p style="font-size:6pt;overflow-wrap:anywhere;word-break:break-all;">{% if _lang == 'fr' %}Calcul du scénario{% elif _lang == 'nl' %}Scenarioberekening{% else %}Scenario calculation{% endif %}: {{ matrix.calculation_id }}<br>{% if _lang == 'fr' %}Calcul source{% elif _lang == 'nl' %}Bronberekening{% else %}Source calculation{% endif %}: {{ matrix.source_run_id }}</p>
+</section>
+{% else %}
+<p class="method-sensitivity-unavailable" style="font-size:7pt;">{% if _lang == 'fr' %}Scénario indisponible : les données exactes du calcul enregistré ne sont pas suffisamment documentées.{% elif _lang == 'nl' %}Scenario niet beschikbaar: de exacte geprijsde invoer van de opgeslagen berekening is onvoldoende vastgelegd.{% else %}Scenario unavailable: the saved method does not contain sufficient exact pricing evidence.{% endif %}</p>
+{% endif %}

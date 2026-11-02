@@ -1,0 +1,157 @@
+{#
+    ADVISOR ANALYSIS — INDICATIVE DCF CROSS-CHECK (feedback #3)
+    Renders from context.advisor_dcf_crosscheck. Multiples-primary dossiers only;
+    gated by show_dcf_crosscheck. NON-WEIGHTED triangulation of the headline.
+#}
+{% set dcf = advisor_dcf_crosscheck or {} %}
+{% set wb = dcf.wacc_buildup or {} %}
+{% set _adc_is_fr = ((locale|default('nl'))|lower)[:2] == 'fr' %}
+{% set _adc_is_en = ((locale|default('nl'))|lower)[:2] == 'en' %}
+<div class="a4-page">
+    {% include "main_report_pdf/partials/_page_header.html" %}
+
+    <div class="section-header">
+        <span class="section-number">{{ advisor_dcf_crosscheck_section_number }}</span>
+        <h1 class="section-title">{% if _adc_is_fr %}Contrôle croisé DCF indicatif{% elif _adc_is_en %}Indicative DCF cross-check{% else %}Indicatieve DCF-kruistoets{% endif %}</h1>
+    </div>
+
+    <div style="margin-top: 6pt; margin-bottom: 12pt; padding: 8pt 10pt; border-radius: 6pt; border: 1pt solid hsl(224, 10%, 91%); background: hsl(40, 15%, 98%); page-break-inside: avoid;">
+        <p style="margin: 0; font-size: 8pt; color: hsl(224, 12%, 35%); line-height: 1.55;">
+            {% if _adc_is_fr %}
+            Comme contrôle indépendant à côté de l’ancrage de marché VE/EBITDA, un DCF a été construit.
+            Il est <strong>volontairement NON pondéré dans la valeur principale</strong> — le multiple de marché reste la méthode directrice.
+            Le DCF utilise des hypothèses de modèle explicites (CapEx ≈ amortissements, charge fiscale 25 %, hypothèses de fonds de roulement) et sert de triangulation indicative.
+            {% elif _adc_is_en %}
+            As an independent cross-check alongside the EV/EBITDA market anchor, a discounted-cash-flow (DCF) view has been prepared.
+            It is <strong>deliberately NOT weighted into the headline value</strong> — the market multiple remains the lead method.
+            The DCF uses explicit model assumptions (CapEx ≈ depreciation, 25% tax charge and working-capital assumptions) and serves as indicative triangulation.
+            {% else %}
+            Als onafhankelijke controle naast het EV/EBITDA-marktanker is een verdisconteerde-kasstroom (DCF) opgesteld.
+            Deze is <strong>bewust NIET in de headline gewogen</strong> — de marktmultiple blijft de leidende methode.
+            De DCF gebruikt expliciete modelassumpties (CapEx ≈ afschrijvingen, belastingdruk 25%, werkkapitaalaannames) en dient als richtinggevende triangulatie.
+            {% endif %}
+        </p>
+    </div>
+
+    {# FCFF projection #}
+    <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt; table-layout: fixed;">
+        <thead>
+            <tr style="background: hsl(224, 15%, 20%); color: white;">
+                <th style="width: 13%; padding: 3pt 6pt; text-align: left;">{% if _adc_is_fr %}Année{% elif _adc_is_en %}Year{% else %}Jaar{% endif %}</th>
+                <th style="width: 13%; padding: 3pt 6pt; text-align: right;">{% if _adc_is_fr %}Croissance{% elif _adc_is_en %}Growth{% else %}Groei{% endif %}</th>
+                <th style="width: 20%; padding: 3pt 6pt; text-align: right;">{% if _adc_is_fr %}Chiffre d’affaires{% elif _adc_is_en %}Revenue{% else %}Omzet{% endif %}</th>
+                <th style="width: 18%; padding: 3pt 6pt; text-align: right;">EBITDA</th>
+                <th style="width: 18%; padding: 3pt 6pt; text-align: right;">{% if _adc_is_fr %}Flux de trésorerie disponible{% elif _adc_is_en %}Free cash flow{% else %}Vrije kasstroom{% endif %}</th>
+                <th style="width: 18%; padding: 3pt 6pt; text-align: right;">PV</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in dcf.rows %}
+            <tr>
+                <td style="padding: 3pt 6pt; font-weight: 700; border: 1pt solid hsl(224, 10%, 88%);">{{ r.year }}</td>
+                <td style="padding: 3pt 6pt; text-align: right; border: 1pt solid hsl(224, 10%, 88%);">{{ r.growth }}</td>
+                <td style="padding: 3pt 6pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; border: 1pt solid hsl(224, 10%, 88%);">{{ r.revenue }}</td>
+                <td style="padding: 3pt 6pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; border: 1pt solid hsl(224, 10%, 88%);">{{ r.ebitda }}</td>
+                <td style="padding: 3pt 6pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; border: 1pt solid hsl(224, 10%, 88%);">{{ r.fcf }}</td>
+                <td style="padding: 3pt 6pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; border: 1pt solid hsl(224, 10%, 88%);">{{ r.pv }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {# Bridge to EV + cross-check vs multiples #}
+    <table style="width: 100%; margin-top: 10pt; border-collapse: collapse; font-size: 8pt;">
+        <tbody>
+            <tr><td style="padding: 3pt 6pt; color: hsl(224,10%,45%);">{% if _adc_is_fr %}VA des flux de trésorerie disponibles (explicites, période de projection){% elif _adc_is_en %}PV of free cash flows (explicit projection period){% else %}PV vrije kasstromen (expliciet, projectieperiode){% endif %}</td><td style="padding: 3pt 6pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ dcf.pv_explicit }}</td></tr>
+            <tr><td style="padding: 3pt 6pt; color: hsl(224,10%,45%);">+ {% if _adc_is_fr %}VA de la valeur terminale{% elif _adc_is_en %}PV of terminal value{% else %}PV terminale waarde{% endif %} <span style="color: hsl(224,10%,60%);">({% if _adc_is_fr %}valeur terminale {{ dcf.terminal_value }} non actualisée{% elif _adc_is_en %}undiscounted terminal value {{ dcf.terminal_value }}{% else %}terminale waarde {{ dcf.terminal_value }} ongedisconteerd{% endif %})</span></td><td style="padding: 3pt 6pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ dcf.pv_terminal }}</td></tr>
+            <tr style="border-top: 1pt solid hsl(224,10%,85%); font-weight: 700;"><td style="padding: 4pt 6pt; color: hsl(224,16%,18%);">= {% if _adc_is_fr %}Valeur d’entreprise DCF (indicative){% elif _adc_is_en %}DCF enterprise value (indicative){% else %}DCF-ondernemingswaarde (indicatief){% endif %}</td><td style="padding: 4pt 6pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl(172,55%,32%);">{{ dcf.enterprise_value }}</td></tr>
+            <tr><td style="padding: 3pt 6pt; color: hsl(224,10%,45%);">{% if _adc_is_fr %}Valeur d’entreprise par multiple de marché (référence principale){% elif _adc_is_en %}Market-multiple enterprise value (headline reference){% else %}Marktmultiple-ondernemingswaarde (headline){% endif %}</td><td style="padding: 3pt 6pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ dcf.multiples_ev }}</td></tr>
+            <tr style="border-top: 1pt solid hsl(224,10%,85%); font-weight: 700;"><td style="padding: 4pt 6pt; color: hsl(224,16%,18%);">{% if _adc_is_fr %}Écart DCF − multiple{% elif _adc_is_en %}DCF − multiple spread{% else %}Verschil DCF − multiple{% endif %}</td><td style="padding: 4pt 6pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">{{ dcf.delta_vs_multiples_pct }}</td></tr>
+        </tbody>
+    </table>
+
+    <div style="margin-top: 8pt; padding: 7pt 10pt; border-left: 3pt solid {% if dcf.corroborates %}hsl(172, 55%, 45%){% else %}hsl(37, 65%, 45%){% endif %}; background: hsl(224, 15%, 97%);">
+        <p style="margin: 0; font-size: 7.5pt; line-height: 1.45; color: hsl(224, 12%, 35%);">
+            {% if dcf.corroborates %}
+            {% if _adc_is_fr %}
+            Le DCF indépendant ({{ dcf.enterprise_value }}, implicite {{ dcf.implied_multiple }} VE/EBITDA) se situe dans une marge de ±25 % de
+            l’ancrage de marché ({{ dcf.multiples_ev }}, {{ dcf.applied_multiple }}) et <strong>étaye l’ordre de grandeur</strong> de la valeur principale.
+            L’écart de {{ dcf.delta_vs_multiples_pct }} reste dans la marge habituelle DCF-vs-multiple et reflète la sensibilité
+            du DCF aux hypothèses terminales ; le multiple de marché reste la méthode directrice. WACC {{ dcf.wacc_pct }}, croissance terminale {{ dcf.terminal_growth_pct }}.
+            {% elif _adc_is_en %}
+            The independent DCF ({{ dcf.enterprise_value }}, implied {{ dcf.implied_multiple }} EV/EBITDA) sits within ±25% of the
+            market anchor ({{ dcf.multiples_ev }}, {{ dcf.applied_multiple }}) and <strong>supports the order of magnitude</strong> of the headline value.
+            The {{ dcf.delta_vs_multiples_pct }} spread remains within the usual DCF-vs-multiple range and reflects the DCF’s sensitivity
+            to terminal assumptions; the market multiple remains the lead method. WACC {{ dcf.wacc_pct }}, terminal growth {{ dcf.terminal_growth_pct }}.
+            {% else %}
+            De onafhankelijke DCF ({{ dcf.enterprise_value }}, impliciet {{ dcf.implied_multiple }} EV/EBITDA) ligt binnen ±25% van het
+            marktanker ({{ dcf.multiples_ev }}, {{ dcf.applied_multiple }}) en <strong>onderbouwt de orde van grootte</strong> van de headline.
+            Het verschil van {{ dcf.delta_vs_multiples_pct }} valt binnen de gebruikelijke DCF-vs-multiple-marge en weerspiegelt de gevoeligheid
+            van de DCF voor de terminale aannames; de marktmultiple blijft de leidende methode. WACC {{ dcf.wacc_pct }}, terminale groei {{ dcf.terminal_growth_pct }}.
+            {% endif %}
+            {% else %}
+            {% if _adc_is_fr %}
+            Le DCF ({{ dcf.enterprise_value }}, implicite {{ dcf.implied_multiple }} VE/EBITDA) se situe {{ dcf.delta_vs_multiples_pct }}
+            {% if dcf.dcf_above %}au-dessus{% else %}en dessous{% endif %} de l’ancrage de marché ({{ dcf.multiples_ev }}, {{ dcf.applied_multiple }}).
+            {% if dcf.dcf_above %}Cela indique que le multiple appliqué n’est pas agressif{% else %}Cela indique que le multiple intègre croissance/qualité au-delà des flux de trésorerie modélisés{% endif %};
+            l’écart mérite une discussion avec le conseiller. Le multiple de marché reste la méthode directrice. WACC {{ dcf.wacc_pct }}, croissance terminale {{ dcf.terminal_growth_pct }}.
+            {% elif _adc_is_en %}
+            The DCF ({{ dcf.enterprise_value }}, implied {{ dcf.implied_multiple }} EV/EBITDA) is {{ dcf.delta_vs_multiples_pct }}
+            {% if dcf.dcf_above %}above{% else %}below{% endif %} the market anchor ({{ dcf.multiples_ev }}, {{ dcf.applied_multiple }}).
+            {% if dcf.dcf_above %}This suggests the applied multiple is not aggressive{% else %}This suggests the multiple prices in growth/quality beyond the modelled cash flows{% endif %};
+            the spread deserves advisor discussion. The market multiple remains the lead method. WACC {{ dcf.wacc_pct }}, terminal growth {{ dcf.terminal_growth_pct }}.
+            {% else %}
+            De DCF ({{ dcf.enterprise_value }}, impliciet {{ dcf.implied_multiple }} EV/EBITDA) ligt {{ dcf.delta_vs_multiples_pct }}
+            {% if dcf.dcf_above %}boven{% else %}onder{% endif %} het marktanker ({{ dcf.multiples_ev }}, {{ dcf.applied_multiple }}).
+            {% if dcf.dcf_above %}Dat wijst erop dat de toegepaste multiple niet agressief is{% else %}Dat wijst erop dat de multiple groei/kwaliteit inprijst voorbij de gemodelleerde kasstromen{% endif %};
+            het verschil verdient bespreking met de adviseur. De marktmultiple blijft de leidende methode. WACC {{ dcf.wacc_pct }}, terminale groei {{ dcf.terminal_growth_pct }}.
+            {% endif %}
+            {% endif %}
+        </p>
+    </div>
+
+    {# WACC × terminal-growth sensitivity (Jan: "multiple vs WACC") #}
+    <h3 style="margin: 14pt 0 4pt 0; font-size: 9pt; color: hsl(224, 16%, 18%);">{% if _adc_is_fr %}Sensibilité : WACC × croissance terminale (valeur d’entreprise DCF){% elif _adc_is_en %}Sensitivity: WACC × terminal growth (DCF enterprise value){% else %}Sensitiviteit: WACC × terminale groei (DCF-ondernemingswaarde){% endif %}</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt; table-layout: fixed;">
+        <thead>
+            <tr style="background: hsl(224, 15%, 20%); color: white;">
+                <th style="width: 22%; padding: 3pt 6pt; text-align: left;">WACC \ {% if _adc_is_fr %}croissance{% elif _adc_is_en %}growth{% else %}groei{% endif %}</th>
+                {% for g in dcf.matrix_growth_labels %}
+                <th style="padding: 3pt 6pt; text-align: right;">{{ g }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for mr in dcf.matrix %}
+            <tr>
+                <td style="padding: 3pt 6pt; font-weight: 700; border: 1pt solid hsl(224, 10%, 88%);">{{ mr.wacc }}</td>
+                {% for cell in mr.cells %}
+                <td style="padding: 3pt 6pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; border: 1pt solid hsl(224, 10%, 88%);">{{ cell }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p style="margin-top: 10pt; font-size: 7pt; line-height: 1.45; color: hsl(224, 10%, 45%);">
+        {% if _adc_is_fr %}
+        Construction WACC (CAPM) : sans risque {{ wb.risk_free }} + β {{ wb.beta }} × ERP {{ wb.erp }} + prime de taille {{ wb.size_premium }}
+        + spécifique entreprise {{ wb.company_specific }} = coût des capitaux propres {{ wb.cost_of_equity }}. Coût de la dette
+        {{ wb.cost_of_debt }} avant impôt → {{ wb.cost_of_debt_after_tax }} après impôt. Pondéré :
+        {{ wb.cost_of_equity }} × {{ wb.equity_weight }} (capitaux propres) + {{ wb.cost_of_debt_after_tax }} × {{ wb.debt_weight }} (dette)
+        = WACC {{ dcf.wacc_pct }}. Indicatif — un DCF signable exige des détails audités par année sur CapEx, fiscalité et fonds de roulement.
+        {% elif _adc_is_en %}
+        WACC buildup (CAPM): risk-free {{ wb.risk_free }} + β {{ wb.beta }} × ERP {{ wb.erp }} + size premium {{ wb.size_premium }}
+        + company-specific premium {{ wb.company_specific }} = cost of equity {{ wb.cost_of_equity }}. Cost of debt
+        {{ wb.cost_of_debt }} pre-tax → {{ wb.cost_of_debt_after_tax }} after tax. Weighted:
+        {{ wb.cost_of_equity }} × {{ wb.equity_weight }} (equity) + {{ wb.cost_of_debt_after_tax }} × {{ wb.debt_weight }} (debt)
+        = WACC {{ dcf.wacc_pct }}. Indicative — a signable DCF requires audited year-by-year detail on CapEx, tax and working capital.
+        {% else %}
+        WACC-opbouw (CAPM): risicovrij {{ wb.risk_free }} + β {{ wb.beta }} × ERP {{ wb.erp }} + omvangspremie {{ wb.size_premium }}
+        + ondernemingsspecifiek {{ wb.company_specific }} = eigen-vermogenskost {{ wb.cost_of_equity }}. Vreemd-vermogenskost
+        {{ wb.cost_of_debt }} vóór belasting → {{ wb.cost_of_debt_after_tax }} na belasting. Gewogen:
+        {{ wb.cost_of_equity }} × {{ wb.equity_weight }} (eigen vermogen) + {{ wb.cost_of_debt_after_tax }} × {{ wb.debt_weight }} (vreemd vermogen)
+        = WACC {{ dcf.wacc_pct }}. Indicatief — een handtekenbare DCF vereist geauditeerde CapEx-, belasting- en werkkapitaaldetails per jaar.
+        {% endif %}
+    </p>
+</div>

@@ -1,0 +1,61 @@
+{#
+    LIQUIDATION ANALYSIS — PAGE: STATEMENT OF AFFAIRS (PDF version)
+
+    PDF twin of main_report/pages/liquidation_statement_of_affairs.html.
+    EY/KPMG-format Section 00 — the M&A cover doc.
+#}
+{% set lr = liquidation_report %}
+{% if lr.statement_of_affairs %}
+{% set soa = lr.statement_of_affairs %}
+<section class="pdf-page liquidation-page">
+    <header class="pdf-section-header">
+        <span class="pdf-section-number">00</span>
+        <h1 class="pdf-section-title">{{ lr.t.soa_section_title }}</h1>
+        <span class="pdf-badge">{{ lr.t.soa_section_subtitle }}</span>
+    </header>
+
+    <div class="pdf-grid pdf-grid-3">
+        <div class="pdf-card pdf-card-primary">
+            <div class="pdf-card-eyebrow">{{ lr.t.soa_headline_net_orderly }}</div>
+            <div class="pdf-card-headline">€{{ soa.headline_net_orderly|format_eur_amount }}</div>
+        </div>
+        <div class="pdf-card">
+            <div class="pdf-card-eyebrow">{{ lr.t.soa_headline_net_forced }}</div>
+            <div class="pdf-card-subheadline">€{{ soa.headline_net_forced|format_eur_amount }}</div>
+        </div>
+        <div class="pdf-card pdf-card-muted">
+            <div class="pdf-card-eyebrow">{{ lr.t.soa_headline_book_equity }}</div>
+            <div class="pdf-card-subheadline">€{{ soa.headline_book_equity|format_eur_amount }}</div>
+        </div>
+    </div>
+
+    <h2 class="pdf-h2">{{ lr.t.soa_waterfall_title_orderly }}</h2>
+    <table class="pdf-table pdf-table-compact">
+        <tbody>
+            {% for step in soa.waterfall_orderly %}
+            <tr class="{% if step.kind == 'subtotal' %}pdf-row-subtotal{% elif step.kind == 'net' %}pdf-row-headline{% endif %}">
+                <td class="{% if step.kind == 'deduction' %}pdf-cell-indent{% endif %}">
+                    <div>{{ step.label }}</div>
+                    {% if step.rationale %}
+                    <div class="pdf-prose-small">{{ step.rationale }}</div>
+                    {% endif %}
+                </td>
+                <td class="pdf-num">
+                    {% if step.kind == 'gross' or step.kind == 'subtotal' or step.kind == 'net' %}
+                    €{{ step.running_total|format_eur_amount }}
+                    {% else %}
+                    €{{ step.amount|format_eur_amount }}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p data-buyer-range-status="not_assessed">{{ lr.t.buyer_range_not_assessed }}</p>
+
+    {% if soa.sources %}
+    <div class="pdf-sources">{{ lr.t.sources_label }}: {{ soa.sources|join(' · ') }}</div>
+    {% endif %}
+</section>
+{% endif %}

@@ -1,0 +1,47 @@
+{#
+    Due diligence checklist — D3 deliverable summary (appendix block).
+    BET-241 / F1 scaffold; computation owned by F2 (BET-242);
+    interactive UI lives in Mercury, NOT here.
+
+    Renders one row per category with R/Y/G chip + plain-language
+    reason. Categories that were advisor-overridden show a small chip
+    indicating manual confirmation.
+#}
+
+<section class="brp-missing-docs" data-section="missing_doc_checklist"
+         data-overall-status="{{ package.missing_doc_checklist.overall_status }}">
+    <h2>Due diligence checklist</h2>
+
+    <p class="brp-checklist-summary">
+        {{ package.missing_doc_checklist.green_count }} ready ·
+        {{ package.missing_doc_checklist.yellow_count }} need attention ·
+        {{ package.missing_doc_checklist.red_count }} missing
+    </p>
+
+    <p class="brp-checklist-note">
+        This is the buyer-facing diligence evidence gate. It identifies what is ready,
+        what needs advisor review, and what must be resolved before counsel-led legal diligence.
+    </p>
+
+    <table class="brp-checklist-table">
+        <thead>
+            <tr><th>Category</th><th>Status</th><th>Reason</th></tr>
+        </thead>
+        <tbody>
+            {% for item in package.missing_doc_checklist.items %}
+                <tr data-status="{{ item.status }}">
+                    <td>{{ item.category | replace('_', ' ') | title }}</td>
+                    <td>
+                        <span class="brp-status-chip brp-status-{{ item.status }}">
+                            {{ item.status }}
+                        </span>
+                        {% if item.advisor_override %}
+                            <span class="brp-override-chip">override</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.reason }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>

@@ -1,0 +1,4107 @@
+{
+  "status": "WARNINGS",
+  "valuation_id": "val_1000000000_canalworks",
+  "calculation_timestamp": "2026-11-02T14:02:25.525762Z",
+  "valuation_run": {
+    "schema_version": "valuation_run.v2",
+    "integrity_version": "valuation_run_integrity.v2",
+    "execution_id": "exec_94c80f8a56d34bcaad865ae705e11607",
+    "run_id": "vrun_dadad3e8249ac8b5fec596f2",
+    "run_hash": "dadad3e8249ac8b5fec596f201c776f0da50ca9be9d0b1e1064812e1be197711",
+    "valuation_id": "val_1000000000_canalworks",
+    "case_id": "val_1000000000_canalworks",
+    "company_id": null,
+    "company_name": "Canal Works — fictional company",
+    "country_code": "BE",
+    "company_profile_snapshot": {
+      "company_name": "Canal Works — fictional company",
+      "country_code": "BE",
+      "industry": "technology",
+      "business_model": "services",
+      "founding_year": 2015,
+      "number_of_employees": null,
+      "registration_number": null,
+      "nace_code": null,
+      "legal_form": null,
+      "city": null,
+      "incorporated_on": null,
+      "business_type_id": "software",
+      "business_type_label": "Software"
+    },
+    "scenario_id": "observed",
+    "evidence_revision_id": null,
+    "calculation_timestamp": "2026-11-02T14:02:25.525762Z",
+    "recording_timestamp": "2026-11-02T14:02:25.525762Z",
+    "fiscal_effective_date": "2025-12-31",
+    "valuation_lens_date": "2026-11-02",
+    "source_as_of": null,
+    "currency": "EUR",
+    "value_basis": "mixed",
+    "engine_version": "valuation-iq/1.0.0",
+    "policy_version": "evidence_first_2026_08",
+    "confidence_model_version": "evidence_confidence.v1",
+    "methodology_used": "EBITDA_MULTIPLE",
+    "input_hash": "bdbd2779c13018d3f252dd2bbc8e62ef5d990cedf19e0bdd5008c4b576c98996",
+    "evidence_hash": "a90e0278500d2b8fa2bdf7e360a7b8ecda992b751ea7cfb4691fd1d0b4df6658",
+    "evidence_hash_source": "derived_from_request_reported_facts",
+    "benchmark_hash": "267e178f8b02d9923a03c81f283c67dc7ddb8458aa3892c652913f181a8cf705",
+    "benchmark_hash_source": "governed_benchmark_contract",
+    "calculation_hash": "4440177362ce09c73d7f0e04f3bece2091dcc535a2403e4a67999e039c90bd50",
+    "review_scope_hash": "23e7b1d710c7de9e0d1fb3f18df348eaee75f72245c492fe2a272c04c007f3e2",
+    "audit_hash": "44e9083ab8251130f1ebf97ea73b05c6ae2d38e8e79959a7152d64e9783462d5",
+    "valuation_range": {
+      "low": "642060.00",
+      "mid": "821325.00",
+      "high": "1000590.00",
+      "currency": "EUR",
+      "value_basis": "equity_value",
+      "uncertainty_type": "valuation_range"
+    },
+    "enterprise_value_range": {
+      "low": "717060.00",
+      "mid": "896325.00",
+      "high": "1075590.00",
+      "currency": "EUR",
+      "value_basis": "enterprise_value",
+      "uncertainty_type": "valuation_range"
+    },
+    "method_mix": [
+      {
+        "method_key": "dcf",
+        "weight": "0",
+        "eligible": false,
+        "value_basis": "equity_value"
+      },
+      {
+        "method_key": "market_approach",
+        "weight": "1",
+        "eligible": true,
+        "value_basis": "equity_value"
+      }
+    ],
+    "method_results": {
+      "upswitch_adaptive": {
+        "value_basis": "equity_value",
+        "value": "821325.00",
+        "enterprise_value": null,
+        "enterprise_value_low": null,
+        "enterprise_value_high": null,
+        "equity_value": null,
+        "equity_value_low": null,
+        "equity_value_high": null,
+        "label": "UpSwitch Adaptive",
+        "multiple_used": "6.0",
+        "wacc": null,
+        "available": true,
+        "unavailable_reason": null,
+        "details": {
+          "description": "Market approach with calibrated transaction multiples; DCF is not included as a weighted valuation leg for this profile.",
+          "primary_basis": "market",
+          "methodology_justification": "DCF is not included for this profile: DCF requires a sealed, source-dated economic_snapshot.v1; missing or ungoverned: schema_version, snapshot_id, snapshot_hash, snapshot_issuer, risk_free_rate_observed_at, equity_risk_premium_observed_at, growth_rates_observed_at, source_references",
+          "equity_range_low": "642060.0",
+          "equity_range_high": "1000590.0",
+          "saas_metrics": {},
+          "saas_adjustment_breakdown": [],
+          "multiples_source": "DELPHI_BENCHMARK_CONTRACT",
+          "is_delphi_benchmark_sourced": true,
+          "benchmark_contract": {
+            "status": "resolved",
+            "source": "DELPHI_BENCHMARK_CONTRACT",
+            "primary_metric": "ev_ebitda",
+            "benchmark_id": "fictional-software-be",
+            "dataset_version_id": "fictional-tutorial-v1",
+            "country_code": "BE",
+            "region_key": "BE",
+            "tier": "native",
+            "walk_step": null,
+            "walk_proximity": 0,
+            "sample_size": 58,
+            "confidence_band": "high",
+            "confidence_score": "0.91",
+            "source_mix": {
+              "transaction": 40,
+              "listing_proxy": 14,
+              "public_market_proxy": 4
+            },
+            "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+            "published_at": "2026-05-01T00:00:00Z",
+            "methodology_version": "delphi-benchmark-v1",
+            "benchmark_scope": "country",
+            "benchmark_kind": "native",
+            "is_borrowed": false,
+            "scope_stage": "native_benelux",
+            "metrics": {
+              "ev_ebitda": {
+                "benchmark_id": "bench-software-be-2026q2",
+                "sample_size": 58,
+                "confidence_band": "high",
+                "business_type_id": "software",
+                "p25": "4.8",
+                "median": "6.0",
+                "p75": "7.2"
+              },
+              "ev_revenue": {
+                "benchmark_id": "bench-software-revenue-be-2026q2",
+                "sample_size": 41,
+                "confidence_band": "medium",
+                "business_type_id": "software",
+                "median": "1.5"
+              }
+            },
+            "business_type_id": "software"
+          },
+          "benchmark_provenance": {
+            "benchmark_id": "fictional-software-be",
+            "dataset_version_id": "fictional-tutorial-v1",
+            "country_code": "BE",
+            "region_key": "BE",
+            "tier": "native",
+            "walk_step": null,
+            "walk_proximity": 0,
+            "sample_size": 58,
+            "confidence_band": "high",
+            "confidence_score": "0.91",
+            "source_mix": {
+              "transaction": 40,
+              "listing_proxy": 14,
+              "public_market_proxy": 4
+            },
+            "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+            "published_at": "2026-05-01T00:00:00Z",
+            "methodology_version": "delphi-benchmark-v1",
+            "benchmark_scope": "country",
+            "benchmark_kind": "native",
+            "is_borrowed": false,
+            "scope_stage": "native_benelux",
+            "benchmark_scope_stage": "native_benelux"
+          },
+          "fallback_used": false,
+          "fallback_reason": null
+        },
+        "method_key": "upswitch_adaptive",
+        "confidence": null,
+        "value_low": "642060.0",
+        "value_high": "1000590.0",
+        "engine_version": null
+      },
+      "ebitda_multiple": {
+        "value_basis": "equity_value",
+        "value": "821325.00",
+        "enterprise_value": "896325.00",
+        "enterprise_value_low": "717060.00",
+        "enterprise_value_high": "1075590.00",
+        "equity_value": "821325.00",
+        "equity_value_low": "642060.00",
+        "equity_value_high": "1000590.00",
+        "label": "EBITDA-multiple",
+        "multiple_used": "4.8450",
+        "wacc": null,
+        "available": true,
+        "unavailable_reason": null,
+        "details": {
+          "pricing_metric": "185000.0000000000000000000000",
+          "pricing_multiple": "4.845000",
+          "enterprise_value": "896325.00",
+          "enterprise_value_low": "717060.00",
+          "enterprise_value_high": "1075590.00",
+          "p25_multiple": "4.8",
+          "p75_multiple": "7.2",
+          "equity_range_low": "642060.00",
+          "equity_range_high": "1000590.00",
+          "reference_enterprise_value": "1110000.00",
+          "reference_multiple": "6.0",
+          "method_adjustment_factor": "0.80750",
+          "range_basis": {
+            "schema_version": "valuation_range_basis.v1",
+            "kind": "supplied_multiple_bounds",
+            "empirical_percentiles": false,
+            "lower_bound_supplied": true,
+            "upper_bound_supplied": true,
+            "assumed_spread": null,
+            "statistical_coverage": null
+          },
+          "saas_metrics": {},
+          "saas_adjustment_factor": "1",
+          "multiples_source": "DELPHI_BENCHMARK_CONTRACT",
+          "is_delphi_benchmark_sourced": true,
+          "benchmark_contract": {
+            "status": "resolved",
+            "source": "DELPHI_BENCHMARK_CONTRACT",
+            "primary_metric": "ev_ebitda",
+            "benchmark_id": "fictional-software-be",
+            "dataset_version_id": "fictional-tutorial-v1",
+            "country_code": "BE",
+            "region_key": "BE",
+            "tier": "native",
+            "walk_step": null,
+            "walk_proximity": 0,
+            "sample_size": 58,
+            "confidence_band": "high",
+            "confidence_score": "0.91",
+            "source_mix": {
+              "transaction": 40,
+              "listing_proxy": 14,
+              "public_market_proxy": 4
+            },
+            "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+            "published_at": "2026-05-01T00:00:00Z",
+            "methodology_version": "delphi-benchmark-v1",
+            "benchmark_scope": "country",
+            "benchmark_kind": "native",
+            "is_borrowed": false,
+            "scope_stage": "native_benelux",
+            "metrics": {
+              "ev_ebitda": {
+                "benchmark_id": "bench-software-be-2026q2",
+                "sample_size": 58,
+                "confidence_band": "high",
+                "business_type_id": "software",
+                "p25": "4.8",
+                "median": "6.0",
+                "p75": "7.2"
+              },
+              "ev_revenue": {
+                "benchmark_id": "bench-software-revenue-be-2026q2",
+                "sample_size": 41,
+                "confidence_band": "medium",
+                "business_type_id": "software",
+                "median": "1.5"
+              }
+            },
+            "business_type_id": "software"
+          },
+          "benchmark_provenance": {
+            "benchmark_id": "fictional-software-be",
+            "dataset_version_id": "fictional-tutorial-v1",
+            "country_code": "BE",
+            "region_key": "BE",
+            "tier": "native",
+            "walk_step": null,
+            "walk_proximity": 0,
+            "sample_size": 58,
+            "confidence_band": "high",
+            "confidence_score": "0.91",
+            "source_mix": {
+              "transaction": 40,
+              "listing_proxy": 14,
+              "public_market_proxy": 4
+            },
+            "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+            "published_at": "2026-05-01T00:00:00Z",
+            "methodology_version": "delphi-benchmark-v1",
+            "benchmark_scope": "country",
+            "benchmark_kind": "native",
+            "is_borrowed": false,
+            "scope_stage": "native_benelux",
+            "benchmark_scope_stage": "native_benelux"
+          },
+          "fallback_used": false,
+          "fallback_reason": null
+        },
+        "method_key": "ebitda_multiple",
+        "confidence": null,
+        "value_low": "642060.00",
+        "value_high": "1000590.00",
+        "engine_version": null
+      },
+      "dcf": {
+        "value_basis": "equity_value",
+        "value": null,
+        "enterprise_value": null,
+        "enterprise_value_low": null,
+        "enterprise_value_high": null,
+        "equity_value": null,
+        "equity_value_low": null,
+        "equity_value_high": null,
+        "label": "Discounted Cash Flow (DCF)",
+        "multiple_used": null,
+        "wacc": null,
+        "available": false,
+        "unavailable_reason": "DCF requires a sealed, source-dated economic_snapshot.v1; missing or ungoverned: schema_version, snapshot_id, snapshot_hash, snapshot_issuer, risk_free_rate_observed_at, equity_risk_premium_observed_at, growth_rates_observed_at, source_references",
+        "details": null,
+        "method_key": "dcf",
+        "confidence": null,
+        "value_low": null,
+        "value_high": null,
+        "engine_version": null
+      },
+      "sde_multiple": {
+        "value_basis": "equity_value",
+        "value": null,
+        "enterprise_value": null,
+        "enterprise_value_low": null,
+        "enterprise_value_high": null,
+        "equity_value": null,
+        "equity_value_low": null,
+        "equity_value_high": null,
+        "label": "SDE-multiple",
+        "multiple_used": null,
+        "wacc": null,
+        "available": false,
+        "unavailable_reason": "SDE vereist geaccepteerde, bewijsgekoppelde eigenaarcompensatie; een omzetheuristiek wordt niet geprijsd.",
+        "details": null,
+        "method_key": "sde_multiple",
+        "confidence": null,
+        "value_low": null,
+        "value_high": null,
+        "engine_version": null
+      },
+      "omzet_multiple": {
+        "value_basis": "equity_value",
+        "value": "1136250.00",
+        "enterprise_value": "1211250.00",
+        "enterprise_value_low": "969000.00",
+        "enterprise_value_high": "1453500.00",
+        "equity_value": "1136250.00",
+        "equity_value_low": "894000.00",
+        "equity_value_high": "1378500.00",
+        "label": "Omzetmultiple",
+        "multiple_used": "1.2112",
+        "wacc": null,
+        "available": true,
+        "unavailable_reason": null,
+        "details": {
+          "pricing_metric": "1000000",
+          "pricing_multiple": "1.211250",
+          "enterprise_value": "1211250.00",
+          "enterprise_value_low": "969000.00",
+          "enterprise_value_high": "1453500.00",
+          "revenue": "1000000.00",
+          "equity_range_low": "894000.00",
+          "equity_range_high": "1378500.00",
+          "reference_enterprise_value": "1500000.00",
+          "reference_multiple": "1.5",
+          "method_adjustment_factor": "0.80750",
+          "range_basis": {
+            "schema_version": "valuation_range_basis.v1",
+            "kind": "assumed_multiple_spread",
+            "empirical_percentiles": false,
+            "lower_bound_supplied": false,
+            "upper_bound_supplied": false,
+            "assumed_spread": "0.20",
+            "statistical_coverage": null
+          },
+          "multiples_source": "DELPHI_BENCHMARK_CONTRACT",
+          "is_delphi_benchmark_sourced": true,
+          "benchmark_contract": {
+            "status": "resolved",
+            "source": "DELPHI_BENCHMARK_CONTRACT",
+            "primary_metric": "ev_ebitda",
+            "benchmark_id": "fictional-software-be",
+            "dataset_version_id": "fictional-tutorial-v1",
+            "country_code": "BE",
+            "region_key": "BE",
+            "tier": "native",
+            "walk_step": null,
+            "walk_proximity": 0,
+            "sample_size": 58,
+            "confidence_band": "high",
+            "confidence_score": "0.91",
+            "source_mix": {
+              "transaction": 40,
+              "listing_proxy": 14,
+              "public_market_proxy": 4
+            },
+            "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+            "published_at": "2026-05-01T00:00:00Z",
+            "methodology_version": "delphi-benchmark-v1",
+            "benchmark_scope": "country",
+            "benchmark_kind": "native",
+            "is_borrowed": false,
+            "scope_stage": "native_benelux",
+            "metrics": {
+              "ev_ebitda": {
+                "benchmark_id": "bench-software-be-2026q2",
+                "sample_size": 58,
+                "confidence_band": "high",
+                "business_type_id": "software",
+                "p25": "4.8",
+                "median": "6.0",
+                "p75": "7.2"
+              },
+              "ev_revenue": {
+                "benchmark_id": "bench-software-revenue-be-2026q2",
+                "sample_size": 41,
+                "confidence_band": "medium",
+                "business_type_id": "software",
+                "median": "1.5"
+              }
+            },
+            "business_type_id": "software"
+          },
+          "benchmark_provenance": {
+            "benchmark_id": "fictional-software-be",
+            "dataset_version_id": "fictional-tutorial-v1",
+            "country_code": "BE",
+            "region_key": "BE",
+            "tier": "native",
+            "walk_step": null,
+            "walk_proximity": 0,
+            "sample_size": 58,
+            "confidence_band": "high",
+            "confidence_score": "0.91",
+            "source_mix": {
+              "transaction": 40,
+              "listing_proxy": 14,
+              "public_market_proxy": 4
+            },
+            "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+            "published_at": "2026-05-01T00:00:00Z",
+            "methodology_version": "delphi-benchmark-v1",
+            "benchmark_scope": "country",
+            "benchmark_kind": "native",
+            "is_borrowed": false,
+            "scope_stage": "native_benelux",
+            "benchmark_scope_stage": "native_benelux"
+          },
+          "fallback_used": false,
+          "fallback_reason": null
+        },
+        "method_key": "revenue_multiple",
+        "confidence": null,
+        "value_low": "894000.00",
+        "value_high": "1378500.00",
+        "engine_version": null
+      },
+      "arr_multiple": {
+        "value_basis": "equity_value",
+        "value": null,
+        "enterprise_value": null,
+        "enterprise_value_low": null,
+        "enterprise_value_high": null,
+        "equity_value": null,
+        "equity_value_low": null,
+        "equity_value_high": null,
+        "label": "ARR multiple",
+        "multiple_used": null,
+        "wacc": null,
+        "available": false,
+        "unavailable_reason": "ARR ontbreekt of is nul. Vul Annual Recurring Revenue, MRR, of een aandeel terugkerende omzet in om de ARR-multiple te activeren. Aanbevolen alternatief: ebitda_multiple.",
+        "details": {
+          "arr": "0.0",
+          "enterprise_value": "0.0",
+          "saas_metrics": {},
+          "saas_adjustment_breakdown": [],
+          "eligibility": {
+            "eligible": false,
+            "recurring_share": null,
+            "arr": null,
+            "blocking_reasons": [
+              "ARR ontbreekt of is nul. Vul Annual Recurring Revenue, MRR, of een aandeel terugkerende omzet in om de ARR-multiple te activeren."
+            ],
+            "warnings": [],
+            "signals": {
+              "arr_eur": null,
+              "recurring_share": null,
+              "min_recurring_share_threshold": "0.5",
+              "min_arr_eur_threshold": "100000.0",
+              "validation_error_count": 0,
+              "validation_warning_count": 0
+            },
+            "suggested_alternative_method": "ebitda_multiple"
+          }
+        },
+        "method_key": "arr_multiple",
+        "confidence": null,
+        "value_low": null,
+        "value_high": null,
+        "engine_version": null
+      },
+      "adjusted_nav": {
+        "value_basis": "equity_value",
+        "value": null,
+        "enterprise_value": null,
+        "enterprise_value_low": null,
+        "enterprise_value_high": null,
+        "equity_value": null,
+        "equity_value_low": null,
+        "equity_value_high": null,
+        "label": "Gecorrigeerde NAV (Intrinsieke Waarde)",
+        "multiple_used": null,
+        "wacc": null,
+        "available": false,
+        "unavailable_reason": "Balansgegevens vereist — totale activa ontbreken.",
+        "details": {
+          "modeled_asset_components": [],
+          "value_basis": "equity_value",
+          "ownership_multiplier": "1",
+          "range_basis": {
+            "schema_version": "valuation_range_basis.v1",
+            "kind": "assumed_nav_spread",
+            "assumed_spread": "0.10",
+            "empirical_percentiles": false,
+            "statistical_coverage": null
+          },
+          "additional_ev_to_equity_bridge_required": false
+        },
+        "method_key": "adjusted_nav",
+        "confidence": null,
+        "value_low": null,
+        "value_high": null,
+        "engine_version": null
+      },
+      "real_estate_yield": {
+        "value_basis": "equity_value",
+        "value": null,
+        "enterprise_value": null,
+        "enterprise_value_low": null,
+        "enterprise_value_high": null,
+        "equity_value": null,
+        "equity_value_low": null,
+        "equity_value_high": null,
+        "label": "Real-estate yield (income capitalisation)",
+        "multiple_used": null,
+        "wacc": null,
+        "available": false,
+        "unavailable_reason": "Canonical property yield requires a signed, source-bound evidence contract.",
+        "details": null,
+        "method_key": "real_estate_yield",
+        "confidence": null,
+        "value_low": null,
+        "value_high": null,
+        "engine_version": "real_estate_yield.v1"
+      },
+      "fiscal_4x": {
+        "value_basis": "equity_value",
+        "value": null,
+        "enterprise_value": null,
+        "enterprise_value_low": null,
+        "enterprise_value_high": null,
+        "equity_value": null,
+        "equity_value_low": null,
+        "equity_value_high": null,
+        "label": "Fiscale Referentiewaarde (4× EBITDA)",
+        "multiple_used": null,
+        "wacc": null,
+        "available": false,
+        "unavailable_reason": "Fiscale referentie vereist boekhoudkundig eigen vermogen of een volledige balans.",
+        "details": null,
+        "method_key": "fiscal_4x",
+        "confidence": null,
+        "value_low": null,
+        "value_high": null,
+        "engine_version": null
+      },
+      "startup_valuation": {
+        "value_basis": "equity_value",
+        "value": null,
+        "enterprise_value": null,
+        "enterprise_value_low": null,
+        "enterprise_value_high": null,
+        "equity_value": null,
+        "equity_value_low": null,
+        "equity_value_high": null,
+        "label": "Startup Valuation",
+        "multiple_used": null,
+        "wacc": null,
+        "available": false,
+        "unavailable_reason": "Startup-waardering vereist kwalitatieve invoer (sliders, traction, cap-table) — niet beschikbaar voor klassieke KMO-flows.",
+        "details": null,
+        "method_key": "startup_valuation",
+        "confidence": null,
+        "value_low": null,
+        "value_high": null,
+        "engine_version": null
+      },
+      "liquidation_analysis": {
+        "value_basis": "equity_value",
+        "value": null,
+        "enterprise_value": null,
+        "enterprise_value_low": null,
+        "enterprise_value_high": null,
+        "equity_value": null,
+        "equity_value_low": null,
+        "equity_value_high": null,
+        "label": "Liquidatiewaarde (Geordende & Gedwongen)",
+        "multiple_used": null,
+        "wacc": null,
+        "available": false,
+        "unavailable_reason": "Balansgegevens vereist — totale activa moeten positief zijn.",
+        "details": {
+          "unavailable_code": "LIQUIDATION_TOTAL_ASSETS_NON_POSITIVE",
+          "missing_fields": [
+            "current_year_data.total_assets"
+          ],
+          "remediation": "Corrigeer totale activa naar een positief bedrag uit de balans."
+        },
+        "method_key": "liquidation_analysis",
+        "confidence": null,
+        "value_low": null,
+        "value_high": null,
+        "engine_version": null
+      }
+    },
+    "weighted_valuation": null,
+    "methodology_weights": {
+      "dcf": "0",
+      "multiples": "1"
+    },
+    "financial_metrics": {
+      "revenue": "1000000.0",
+      "revenue_source": null,
+      "ebitda": "185000.0",
+      "reported_ebitda": "200000.0",
+      "normalized_ebitda": "200000.0",
+      "valuation_basis_ebitda": "185000.0",
+      "valuation_basis_mode": "recency_weighted",
+      "ebitda_margin": "0.2",
+      "revenue_growth": "0.08108108108108108108108108108",
+      "shares_for_sale": "100.0",
+      "ownership_multiplier": "1.0",
+      "financial_health_score": 80,
+      "financial_health_description": "Financial health is high",
+      "revenue_growth_evidence": {
+        "rate": "0.08108108108108108108108108108",
+        "unit": "decimal_ratio",
+        "available": true,
+        "start_year": 2024,
+        "end_year": 2025,
+        "elapsed_years": 1,
+        "basis": "year_over_year",
+        "period_basis": "annual_fiscal_input_contract",
+        "unavailable_reason": null
+      },
+      "revenue_cagr_3y": null,
+      "revenue_cagr_3y_evidence": {
+        "rate": null,
+        "unit": "decimal_ratio",
+        "available": false,
+        "start_year": 2022,
+        "end_year": 2025,
+        "elapsed_years": 3,
+        "basis": "unavailable",
+        "period_basis": "annual_fiscal_input_contract",
+        "unavailable_reason": "three_year_endpoint_missing"
+      },
+      "cash": "25000.0",
+      "total_debt": "100000.0",
+      "reported_cash": "25000",
+      "restricted_cash": null,
+      "available_cash": null,
+      "financial_debt": "100000",
+      "lease_liabilities": null,
+      "debt_like_items": null,
+      "normalized_nwc_target": null,
+      "total_debt_like": null,
+      "completion_accounts_complete": false,
+      "completion_account_unresolved_fields": [
+        "restricted_cash",
+        "lease_liabilities",
+        "debt_like_items",
+        "normalized_nwc_target"
+      ],
+      "equity_bridge_is_illustrative": true
+    },
+    "dcf_results": null,
+    "multiples_results": {
+      "ev_ebitda_valuation": "1110000.0",
+      "ebitda_multiple": "6.0",
+      "valuation_range_basis": "empirical_benchmark_percentiles",
+      "p25_ebitda_multiple": "4.8",
+      "p75_ebitda_multiple": "7.2",
+      "range_low_multiple": "4.8",
+      "range_high_multiple": "7.2",
+      "range_statistical_coverage": null,
+      "benchmark_contract_resolved": true,
+      "size_discount": "0.05",
+      "liquidity_discount": "0.15",
+      "country_adjustment": "0.0",
+      "total_adjustment": "0.1925",
+      "discount_build_up": {
+        "enabled": true,
+        "floor_factor": "0.45",
+        "pre_floor_factor": "0.80750",
+        "floor_applied": false,
+        "total_adjustment_factor": "0.80750",
+        "total_adjustment": "-0.19250",
+        "rows": [
+          {
+            "key": "size_discount",
+            "label": "Size discount",
+            "model_adjustment": "-0.05",
+            "advisor_weight": "1",
+            "effective_adjustment": "-0.05",
+            "factor_before": "1",
+            "factor_after": "0.95",
+            "enabled": true
+          },
+          {
+            "key": "liquidity_discount",
+            "label": "Liquidity discount",
+            "model_adjustment": "-0.15",
+            "advisor_weight": "1",
+            "effective_adjustment": "-0.15",
+            "factor_before": "0.95",
+            "factor_after": "0.8075",
+            "enabled": true
+          },
+          {
+            "key": "country_adjustment",
+            "label": "Country adjustment",
+            "model_adjustment": "0.0",
+            "advisor_weight": "1",
+            "effective_adjustment": "0.0",
+            "factor_before": "0.8075",
+            "factor_after": "0.80750",
+            "enabled": true
+          }
+        ],
+        "composition": "multiplicative",
+        "basis": "pre-adjustment comparable multiple",
+        "owner_concentration_policy": "excluded_from_stateless_discount_stack",
+        "owner_concentration_policy_reason": "Owner concentration is handled by the owner-dependency pipeline; the stateless discount stack must not double-count it as liquidity/DLOM."
+      },
+      "base_value": "1110000.0",
+      "adjusted_equity_value": "821325.0",
+      "business_type_id": "software",
+      "primary_business_type_id": "software",
+      "business_type_mix": [
+        {
+          "business_type_id": "software",
+          "weight": 100
+        }
+      ],
+      "business_type_weights": {
+        "software": 100
+      },
+      "business_type_mix_policy": "single_business_type",
+      "benchmark_contract": {
+        "status": "resolved",
+        "source": "DELPHI_BENCHMARK_CONTRACT",
+        "primary_metric": "ev_ebitda",
+        "benchmark_id": "fictional-software-be",
+        "dataset_version_id": "fictional-tutorial-v1",
+        "country_code": "BE",
+        "region_key": "BE",
+        "tier": "native",
+        "walk_step": null,
+        "walk_proximity": 0,
+        "sample_size": 58,
+        "confidence_band": "high",
+        "confidence_score": "0.91",
+        "source_mix": {
+          "transaction": 40,
+          "listing_proxy": 14,
+          "public_market_proxy": 4
+        },
+        "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+        "published_at": "2026-05-01T00:00:00Z",
+        "methodology_version": "delphi-benchmark-v1",
+        "benchmark_scope": "country",
+        "benchmark_kind": "native",
+        "is_borrowed": false,
+        "scope_stage": "native_benelux",
+        "metrics": {
+          "ev_ebitda": {
+            "benchmark_id": "bench-software-be-2026q2",
+            "sample_size": 58,
+            "confidence_band": "high",
+            "business_type_id": "software",
+            "p25": "4.8",
+            "median": "6.0",
+            "p75": "7.2"
+          },
+          "ev_revenue": {
+            "benchmark_id": "bench-software-revenue-be-2026q2",
+            "sample_size": 41,
+            "confidence_band": "medium",
+            "business_type_id": "software",
+            "median": "1.5"
+          }
+        },
+        "business_type_id": "software"
+      },
+      "benchmark_provenance": {
+        "benchmark_id": "fictional-software-be",
+        "dataset_version_id": "fictional-tutorial-v1",
+        "country_code": "BE",
+        "region_key": "BE",
+        "tier": "native",
+        "walk_step": null,
+        "walk_proximity": 0,
+        "sample_size": 58,
+        "confidence_band": "high",
+        "confidence_score": "0.91",
+        "source_mix": {
+          "transaction": 40,
+          "listing_proxy": 14,
+          "public_market_proxy": 4
+        },
+        "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+        "published_at": "2026-05-01T00:00:00Z",
+        "methodology_version": "delphi-benchmark-v1",
+        "benchmark_scope": "country",
+        "benchmark_kind": "native",
+        "is_borrowed": false,
+        "scope_stage": "native_benelux",
+        "benchmark_scope_stage": "native_benelux"
+      },
+      "earnings_basis_ledger": {
+        "version": "stateless_earnings_basis_v1",
+        "basis": "EBITDA",
+        "mode": "recency_weighted",
+        "reported_ebitda": "185000.0000000000000000000000",
+        "normalized_ebitda": "185000.0000000000000000000000",
+        "current_reported_ebitda": "200000",
+        "current_normalized_ebitda": "200000",
+        "total_adjustments": "0.0000000000000000000000",
+        "rows": [
+          {
+            "fiscal_year": 2023,
+            "reported_ebitda": "150000",
+            "normalized_ebitda": "150000",
+            "applied_adjustments": [],
+            "pending_adjustments": [],
+            "normalization_source": "reported_ebitda",
+            "reported_basis_missing_for_adjustments": false,
+            "weight": "0.1666666666666666666666666667",
+            "weighted_reported_ebitda": "25000.00000000000000000000000",
+            "weighted_normalized_ebitda": "25000.00000000000000000000000"
+          },
+          {
+            "fiscal_year": 2024,
+            "reported_ebitda": "180000",
+            "normalized_ebitda": "180000",
+            "applied_adjustments": [],
+            "pending_adjustments": [],
+            "normalization_source": "reported_ebitda",
+            "reported_basis_missing_for_adjustments": false,
+            "weight": "0.3333333333333333333333333333",
+            "weighted_reported_ebitda": "59999.99999999999999999999999",
+            "weighted_normalized_ebitda": "59999.99999999999999999999999"
+          },
+          {
+            "fiscal_year": 2025,
+            "reported_ebitda": "200000",
+            "normalized_ebitda": "200000",
+            "applied_adjustments": [],
+            "pending_adjustments": [],
+            "normalization_source": "reported_ebitda",
+            "reported_basis_missing_for_adjustments": false,
+            "weight": "0.5",
+            "weighted_reported_ebitda": "100000.0",
+            "weighted_normalized_ebitda": "100000.0"
+          }
+        ],
+        "weights_sum": "1.000000000000000000000000000",
+        "sde_basis": {
+          "version": "stateless_sde_annual_basis_v2",
+          "available": false,
+          "sde_base_ebitda": "185000.0000000000000000000000",
+          "actual_owner_compensation": "0.0000000000000000000000000000",
+          "replacement_owner_compensation": "0.0000000000000000000000000000",
+          "owner_compensation_addback": "0.0000000000000000000000000000",
+          "weighted_sde": "185000.0000000000000000000000",
+          "rows": [
+            {
+              "fiscal_year": 2023,
+              "weight": "0.1666666666666666666666666667",
+              "normalized_ebitda": "150000",
+              "owner_compensation_normalization": "0",
+              "actual_owner_compensation": "0",
+              "replacement_owner_compensation": "0",
+              "owner_compensation_addback": "0",
+              "sde_base_ebitda": "150000",
+              "annual_sde": "150000",
+              "weighted_annual_sde": "25000.00000000000000000000000",
+              "evidence_ids": []
+            },
+            {
+              "fiscal_year": 2024,
+              "weight": "0.3333333333333333333333333333",
+              "normalized_ebitda": "180000",
+              "owner_compensation_normalization": "0",
+              "actual_owner_compensation": "0",
+              "replacement_owner_compensation": "0",
+              "owner_compensation_addback": "0",
+              "sde_base_ebitda": "180000",
+              "annual_sde": "180000",
+              "weighted_annual_sde": "59999.99999999999999999999999",
+              "evidence_ids": []
+            },
+            {
+              "fiscal_year": 2025,
+              "weight": "0.5",
+              "normalized_ebitda": "200000",
+              "owner_compensation_normalization": "0",
+              "actual_owner_compensation": "0",
+              "replacement_owner_compensation": "0",
+              "owner_compensation_addback": "0",
+              "sde_base_ebitda": "200000",
+              "annual_sde": "200000",
+              "weighted_annual_sde": "100000.0",
+              "evidence_ids": []
+            }
+          ],
+          "missing_compensation_years": [
+            2023,
+            2024,
+            2025
+          ],
+          "calculation_sequence": "annual normalized EBITDA + governed replacement compensation, equivalent to reported EBITDA + actual owner compensation, then historical weighting"
+        }
+      },
+      "multiples_source": "DELPHI_BENCHMARK_CONTRACT",
+      "is_delphi_benchmark_sourced": true,
+      "fallback_used": false,
+      "fallback_reason": null,
+      "multiple_type_blend": {
+        "source": "sector_aware_default",
+        "model_source": "sector_aware_default",
+        "weighted_enterprise_value": "1240000.000000000000000000000",
+        "weights": {
+          "ev_ebitda": "0.6666666666666666666666666667",
+          "ev_revenue": "0.3333333333333333333333333333"
+        },
+        "model_weights": {
+          "ev_ebitda": "0.6666666666666666666666666667",
+          "ev_revenue": "0.3333333333333333333333333333"
+        },
+        "rows": [
+          {
+            "key": "ev_ebitda",
+            "label": "EV/EBITDA",
+            "enterprise_value": "1110000.000000000000000000000",
+            "weight": "0.6666666666666666666666666667",
+            "model_weight": "0.6666666666666666666666666667",
+            "advisor_delta": "0.0000000000000000000000000000",
+            "contribution": "740000.0000000000000000000000",
+            "included": true
+          },
+          {
+            "key": "ev_revenue",
+            "label": "EV/Revenue",
+            "enterprise_value": "1500000.0",
+            "weight": "0.3333333333333333333333333333",
+            "model_weight": "0.3333333333333333333333333333",
+            "advisor_delta": "0.0000000000000000000000000000",
+            "contribution": "500000.0000000000000000000000",
+            "included": true
+          }
+        ]
+      },
+      "multiple_build_up": {
+        "version": "multiple_build_up_v2",
+        "tier": "firm",
+        "earnings_basis": {
+          "projection_version": "earnings_basis_build_up.v2",
+          "basis": "EBITDA",
+          "rationale": "Reported EBITDA basis: no normalization adjustments were applied. Year weights (2023: 16.66666666666666666666666667%, 2024: 33.33333333333333333333333333%, 2025: 50%).",
+          "reported_earnings": "185000.0000000000000000000000",
+          "adjusted_earnings": "185000.0000000000000000000000",
+          "total_adjustments": "0",
+          "add_backs": [],
+          "is_adjusted": false,
+          "applied_adjustment_count": 0,
+          "pending_adjustment_count": 0,
+          "source": "stateless_earnings_basis_v1"
+        },
+        "segments": [
+          {
+            "index": 0,
+            "business_type_id": "software",
+            "business_type_title": "technology",
+            "nace_code": null,
+            "basis": "EBITDA",
+            "earnings": null,
+            "multiple": "6.0",
+            "enterprise_value": "896325.0000000000000000000000",
+            "weight": "1",
+            "source_tier": "native",
+            "observation_count": 58,
+            "multiple_p25": "4.8",
+            "multiple_median": "6.0",
+            "multiple_p75": "7.2",
+            "as_of": "2026-05-01T00:00:00Z",
+            "confidence": null,
+            "is_advisor_override": false
+          }
+        ],
+        "is_multi_segment": false,
+        "segment_mode": "single_segment",
+        "multiple_type_blend": {
+          "source": "sector_aware_default",
+          "model_source": "sector_aware_default",
+          "weighted_enterprise_value": "1240000.000000000000000000000",
+          "rows": [
+            {
+              "key": "ev_ebitda",
+              "label": "EV/EBITDA",
+              "enterprise_value": "1110000.000000000000000000000",
+              "weight": "0.6666666666666666666666666667",
+              "model_weight": "0.6666666666666666666666666667",
+              "advisor_delta": "0",
+              "contribution": "740000.0000000000000000000000",
+              "included": true
+            },
+            {
+              "key": "ev_revenue",
+              "label": "EV/Revenue",
+              "enterprise_value": "1500000.0",
+              "weight": "0.3333333333333333333333333333",
+              "model_weight": "0.3333333333333333333333333333",
+              "advisor_delta": "0",
+              "contribution": "500000.0000000000000000000000",
+              "included": true
+            }
+          ]
+        },
+        "discounts": {
+          "enabled": true,
+          "composition": "multiplicative",
+          "floor_factor": "0.45",
+          "pre_floor_factor": "0.80750",
+          "floor_applied": false,
+          "total_adjustment_factor": "0.80750",
+          "total_adjustment": "-0.19250",
+          "rows": [
+            {
+              "key": "size_discount",
+              "label": "Size discount",
+              "parameter": "-0.05",
+              "advisor_weight": "1",
+              "magnitude": "-0.05",
+              "euro_impact": null,
+              "factor_before": "1",
+              "factor_after": "0.95",
+              "rationale": null,
+              "source": null,
+              "multiple_discount_key": null,
+              "strength_factor_multiple_discount_keys": [],
+              "strength_factor_keys": [],
+              "strength_factor_mapped_inputs": [],
+              "strength_factor_valuation_effects": [],
+              "strength_factor_captured_input_ids": [],
+              "strength_factor_data_point_ids": [],
+              "strength_factor_evidence_count": 0,
+              "enabled": true
+            },
+            {
+              "key": "liquidity_discount",
+              "label": "Liquidity discount",
+              "parameter": "-0.15",
+              "advisor_weight": "1",
+              "magnitude": "-0.15",
+              "euro_impact": null,
+              "factor_before": "0.95",
+              "factor_after": "0.8075",
+              "rationale": null,
+              "source": null,
+              "multiple_discount_key": null,
+              "strength_factor_multiple_discount_keys": [],
+              "strength_factor_keys": [],
+              "strength_factor_mapped_inputs": [],
+              "strength_factor_valuation_effects": [],
+              "strength_factor_captured_input_ids": [],
+              "strength_factor_data_point_ids": [],
+              "strength_factor_evidence_count": 0,
+              "enabled": true
+            },
+            {
+              "key": "country_adjustment",
+              "label": "Country adjustment",
+              "parameter": "0",
+              "advisor_weight": "1",
+              "magnitude": "0",
+              "euro_impact": null,
+              "factor_before": "0.8075",
+              "factor_after": "0.80750",
+              "rationale": null,
+              "source": null,
+              "multiple_discount_key": null,
+              "strength_factor_multiple_discount_keys": [],
+              "strength_factor_keys": [],
+              "strength_factor_mapped_inputs": [],
+              "strength_factor_valuation_effects": [],
+              "strength_factor_captured_input_ids": [],
+              "strength_factor_data_point_ids": [],
+              "strength_factor_evidence_count": 0,
+              "enabled": true
+            }
+          ],
+          "owner_concentration_policy": "excluded_from_stateless_discount_stack",
+          "owner_concentration_policy_reason": "Owner concentration is handled by the owner-dependency pipeline; the stateless discount stack must not double-count it as liquidity/DLOM.",
+          "strength_factor_policy": null,
+          "strength_factor_evidence": []
+        },
+        "advisor_override": null,
+        "risk_analysis_enabled": true,
+        "risk_analysis_reference_only": false,
+        "equity_bridge": {
+          "enterprise_value": "896325.0000000000000000000000",
+          "lines": [
+            {
+              "key": "total_debt",
+              "label": "Less: total debt",
+              "amount": "100000.0",
+              "operator": "-",
+              "kind": "debt",
+              "detail": null
+            },
+            {
+              "key": "cash",
+              "label": "Add: cash & equivalents",
+              "amount": "25000.0",
+              "operator": "+",
+              "kind": "cash",
+              "detail": null
+            }
+          ],
+          "equity_value": "821325.0000000000000000000000",
+          "net_debt": "75000.0",
+          "equity_status": null,
+          "unresolved_fields": [],
+          "nwc_status": "not_assessed",
+          "nwc_note": "Net working capital not assessed - no balance sheet.",
+          "is_phantom_suppressed": false,
+          "notes": []
+        },
+        "adjusted_earnings": "185000.0000000000000000000000",
+        "effective_multiple": "4.845000",
+        "enterprise_value": "896325.0000000000000000000000",
+        "equity_value": "821325.0000000000000000000000",
+        "band_low": "717060.0000000000000000000000",
+        "band_high": "1075590.000000000000000000000"
+      },
+      "enterprise_value": "896325.0000000000000000000000",
+      "enterprise_value_low": "717060.0000000000000000000000",
+      "enterprise_value_high": "1075590.000000000000000000000",
+      "equity_value": "821325.0000000000000000000000"
+    },
+    "response_snapshot": {
+      "recommended_asking_price": "821325.00",
+      "recommended_multiple": "4.8450",
+      "methodology_selection_reason": "Selected eligible ebitda_multiple method is the canonical headline.",
+      "dcf_exclusion_reason": "DCF requires a sealed, source-dated economic_snapshot.v1; missing or ungoverned: schema_version, snapshot_id, snapshot_hash, snapshot_issuer, risk_free_rate_observed_at, equity_risk_premium_observed_at, growth_rates_observed_at, source_references",
+      "confidence_level": "HIGH",
+      "confidence_score": 80,
+      "earnings_basis": "EBITDA",
+      "earnings_basis_rationale": "selected_ebitda_multiple",
+      "multiple_build_up": {
+        "version": "multiple_build_up_v2",
+        "tier": "firm",
+        "earnings_basis": {
+          "projection_version": "earnings_basis_build_up.v2",
+          "basis": "EBITDA",
+          "rationale": "Reported EBITDA basis: no normalization adjustments were applied. Year weights (2023: 16.66666666666666666666666667%, 2024: 33.33333333333333333333333333%, 2025: 50%).",
+          "reported_earnings": "185000.0000000000000000000000",
+          "adjusted_earnings": "185000.0000000000000000000000",
+          "total_adjustments": "0",
+          "add_backs": [],
+          "is_adjusted": false,
+          "applied_adjustment_count": 0,
+          "pending_adjustment_count": 0,
+          "source": "stateless_earnings_basis_v1"
+        },
+        "segments": [
+          {
+            "index": 0,
+            "business_type_id": "software",
+            "business_type_title": "technology",
+            "nace_code": null,
+            "basis": "EBITDA",
+            "earnings": null,
+            "multiple": "6.0",
+            "enterprise_value": "896325.0000000000000000000000",
+            "weight": "1",
+            "source_tier": "native",
+            "observation_count": 58,
+            "multiple_p25": "4.8",
+            "multiple_median": "6.0",
+            "multiple_p75": "7.2",
+            "as_of": "2026-05-01T00:00:00Z",
+            "confidence": null,
+            "is_advisor_override": false
+          }
+        ],
+        "is_multi_segment": false,
+        "segment_mode": "single_segment",
+        "multiple_type_blend": {
+          "source": "sector_aware_default",
+          "model_source": "sector_aware_default",
+          "weighted_enterprise_value": "1240000.000000000000000000000",
+          "rows": [
+            {
+              "key": "ev_ebitda",
+              "label": "EV/EBITDA",
+              "enterprise_value": "1110000.000000000000000000000",
+              "weight": "0.6666666666666666666666666667",
+              "model_weight": "0.6666666666666666666666666667",
+              "advisor_delta": "0",
+              "contribution": "740000.0000000000000000000000",
+              "included": true
+            },
+            {
+              "key": "ev_revenue",
+              "label": "EV/Revenue",
+              "enterprise_value": "1500000.0",
+              "weight": "0.3333333333333333333333333333",
+              "model_weight": "0.3333333333333333333333333333",
+              "advisor_delta": "0",
+              "contribution": "500000.0000000000000000000000",
+              "included": true
+            }
+          ]
+        },
+        "discounts": {
+          "enabled": true,
+          "composition": "multiplicative",
+          "floor_factor": "0.45",
+          "pre_floor_factor": "0.80750",
+          "floor_applied": false,
+          "total_adjustment_factor": "0.80750",
+          "total_adjustment": "-0.19250",
+          "rows": [
+            {
+              "key": "size_discount",
+              "label": "Size discount",
+              "parameter": "-0.05",
+              "advisor_weight": "1",
+              "magnitude": "-0.05",
+              "euro_impact": null,
+              "factor_before": "1",
+              "factor_after": "0.95",
+              "rationale": null,
+              "source": null,
+              "multiple_discount_key": null,
+              "strength_factor_multiple_discount_keys": [],
+              "strength_factor_keys": [],
+              "strength_factor_mapped_inputs": [],
+              "strength_factor_valuation_effects": [],
+              "strength_factor_captured_input_ids": [],
+              "strength_factor_data_point_ids": [],
+              "strength_factor_evidence_count": 0,
+              "enabled": true
+            },
+            {
+              "key": "liquidity_discount",
+              "label": "Liquidity discount",
+              "parameter": "-0.15",
+              "advisor_weight": "1",
+              "magnitude": "-0.15",
+              "euro_impact": null,
+              "factor_before": "0.95",
+              "factor_after": "0.8075",
+              "rationale": null,
+              "source": null,
+              "multiple_discount_key": null,
+              "strength_factor_multiple_discount_keys": [],
+              "strength_factor_keys": [],
+              "strength_factor_mapped_inputs": [],
+              "strength_factor_valuation_effects": [],
+              "strength_factor_captured_input_ids": [],
+              "strength_factor_data_point_ids": [],
+              "strength_factor_evidence_count": 0,
+              "enabled": true
+            },
+            {
+              "key": "country_adjustment",
+              "label": "Country adjustment",
+              "parameter": "0",
+              "advisor_weight": "1",
+              "magnitude": "0",
+              "euro_impact": null,
+              "factor_before": "0.8075",
+              "factor_after": "0.80750",
+              "rationale": null,
+              "source": null,
+              "multiple_discount_key": null,
+              "strength_factor_multiple_discount_keys": [],
+              "strength_factor_keys": [],
+              "strength_factor_mapped_inputs": [],
+              "strength_factor_valuation_effects": [],
+              "strength_factor_captured_input_ids": [],
+              "strength_factor_data_point_ids": [],
+              "strength_factor_evidence_count": 0,
+              "enabled": true
+            }
+          ],
+          "owner_concentration_policy": "excluded_from_stateless_discount_stack",
+          "owner_concentration_policy_reason": "Owner concentration is handled by the owner-dependency pipeline; the stateless discount stack must not double-count it as liquidity/DLOM.",
+          "strength_factor_policy": null,
+          "strength_factor_evidence": []
+        },
+        "advisor_override": null,
+        "risk_analysis_enabled": true,
+        "risk_analysis_reference_only": false,
+        "equity_bridge": {
+          "enterprise_value": "896325.0000000000000000000000",
+          "lines": [
+            {
+              "key": "total_debt",
+              "label": "Less: total debt",
+              "amount": "100000.0",
+              "operator": "-",
+              "kind": "debt",
+              "detail": null
+            },
+            {
+              "key": "cash",
+              "label": "Add: cash & equivalents",
+              "amount": "25000.0",
+              "operator": "+",
+              "kind": "cash",
+              "detail": null
+            }
+          ],
+          "equity_value": "821325.0000000000000000000000",
+          "net_debt": "75000.0",
+          "equity_status": null,
+          "unresolved_fields": [],
+          "nwc_status": "not_assessed",
+          "nwc_note": "Net working capital not assessed - no balance sheet.",
+          "is_phantom_suppressed": false,
+          "notes": []
+        },
+        "adjusted_earnings": "185000.0000000000000000000000",
+        "effective_multiple": "4.845000",
+        "enterprise_value": "896325.0000000000000000000000",
+        "equity_value": "821325.0000000000000000000000",
+        "band_low": "717060.0000000000000000000000",
+        "band_high": "1075590.000000000000000000000"
+      },
+      "earnings_basis_ledger": {
+        "version": "stateless_earnings_basis_v1",
+        "basis": "EBITDA",
+        "mode": "recency_weighted",
+        "reported_ebitda": "185000.0000000000000000000000",
+        "normalized_ebitda": "185000.0000000000000000000000",
+        "current_reported_ebitda": "200000",
+        "current_normalized_ebitda": "200000",
+        "total_adjustments": "0.0000000000000000000000",
+        "rows": [
+          {
+            "fiscal_year": 2023,
+            "reported_ebitda": "150000",
+            "normalized_ebitda": "150000",
+            "applied_adjustments": [],
+            "pending_adjustments": [],
+            "normalization_source": "reported_ebitda",
+            "reported_basis_missing_for_adjustments": false,
+            "weight": "0.1666666666666666666666666667",
+            "weighted_reported_ebitda": "25000.00000000000000000000000",
+            "weighted_normalized_ebitda": "25000.00000000000000000000000"
+          },
+          {
+            "fiscal_year": 2024,
+            "reported_ebitda": "180000",
+            "normalized_ebitda": "180000",
+            "applied_adjustments": [],
+            "pending_adjustments": [],
+            "normalization_source": "reported_ebitda",
+            "reported_basis_missing_for_adjustments": false,
+            "weight": "0.3333333333333333333333333333",
+            "weighted_reported_ebitda": "59999.99999999999999999999999",
+            "weighted_normalized_ebitda": "59999.99999999999999999999999"
+          },
+          {
+            "fiscal_year": 2025,
+            "reported_ebitda": "200000",
+            "normalized_ebitda": "200000",
+            "applied_adjustments": [],
+            "pending_adjustments": [],
+            "normalization_source": "reported_ebitda",
+            "reported_basis_missing_for_adjustments": false,
+            "weight": "0.5",
+            "weighted_reported_ebitda": "100000.0",
+            "weighted_normalized_ebitda": "100000.0"
+          }
+        ],
+        "weights_sum": "1.000000000000000000000000000",
+        "sde_basis": {
+          "version": "stateless_sde_annual_basis_v2",
+          "available": false,
+          "sde_base_ebitda": "185000.0000000000000000000000",
+          "actual_owner_compensation": "0.0000000000000000000000000000",
+          "replacement_owner_compensation": "0.0000000000000000000000000000",
+          "owner_compensation_addback": "0.0000000000000000000000000000",
+          "weighted_sde": "185000.0000000000000000000000",
+          "rows": [
+            {
+              "fiscal_year": 2023,
+              "weight": "0.1666666666666666666666666667",
+              "normalized_ebitda": "150000",
+              "owner_compensation_normalization": "0",
+              "actual_owner_compensation": "0",
+              "replacement_owner_compensation": "0",
+              "owner_compensation_addback": "0",
+              "sde_base_ebitda": "150000",
+              "annual_sde": "150000",
+              "weighted_annual_sde": "25000.00000000000000000000000",
+              "evidence_ids": []
+            },
+            {
+              "fiscal_year": 2024,
+              "weight": "0.3333333333333333333333333333",
+              "normalized_ebitda": "180000",
+              "owner_compensation_normalization": "0",
+              "actual_owner_compensation": "0",
+              "replacement_owner_compensation": "0",
+              "owner_compensation_addback": "0",
+              "sde_base_ebitda": "180000",
+              "annual_sde": "180000",
+              "weighted_annual_sde": "59999.99999999999999999999999",
+              "evidence_ids": []
+            },
+            {
+              "fiscal_year": 2025,
+              "weight": "0.5",
+              "normalized_ebitda": "200000",
+              "owner_compensation_normalization": "0",
+              "actual_owner_compensation": "0",
+              "replacement_owner_compensation": "0",
+              "owner_compensation_addback": "0",
+              "sde_base_ebitda": "200000",
+              "annual_sde": "200000",
+              "weighted_annual_sde": "100000.0",
+              "evidence_ids": []
+            }
+          ],
+          "missing_compensation_years": [
+            2023,
+            2024,
+            2025
+          ],
+          "calculation_sequence": "annual normalized EBITDA + governed replacement compensation, equivalent to reported EBITDA + actual owner compensation, then historical weighting"
+        }
+      },
+      "equity_bridge_adjustments": {
+        "version": "stateless_equity_bridge_adjustments_v1",
+        "value_basis": "equity_value",
+        "currency_treatment": "request_currency",
+        "rows": [],
+        "tax_latency_net_impact": "0",
+        "balance_sheet_adjustment_net_impact": "0",
+        "total_net_impact": "0"
+      },
+      "holdings_consolidation": null,
+      "size_discount": "0.05",
+      "liquidity_discount": "0.15",
+      "owner_dependency_adjustment": "0",
+      "owner_dependency_result": null,
+      "country_adjustment": "0.0",
+      "total_adjustment": "0.19250",
+      "nwc_normalization": null,
+      "trial_balance_anomalies": {
+        "has_anomalies": false,
+        "anomaly_count": 0,
+        "accounts_scanned": 3,
+        "years_scanned": 3,
+        "supported_accounts": [
+          "60",
+          "61",
+          "63"
+        ],
+        "unsupported_accounts": [],
+        "anomaly_flags": []
+      },
+      "valuation_summary": "Canal Works — fictional company is valued at €821,325 using the EBITDA_MULTIPLE methodology. This valuation has high confidence based on data quality and comparables.",
+      "key_value_drivers": [
+        "Stable business operations"
+      ],
+      "risk_factors": [
+        "No major risk factors identified"
+      ],
+      "fiscal_4x_anchor": "740000.0",
+      "data_quality": {
+        "multiples_source": "DELPHI_BENCHMARK_CONTRACT",
+        "is_delphi_benchmark_sourced": true,
+        "enrichment_complete": true,
+        "fallback_used": false,
+        "fallback_reason": null,
+        "business_type_id": "software",
+        "primary_business_type_id": "software",
+        "business_type_mix": [
+          {
+            "business_type_id": "software",
+            "weight": 100
+          }
+        ],
+        "business_type_weights": {
+          "software": 100
+        },
+        "business_type_mix_policy": "single_business_type",
+        "category_id": "technology",
+        "data_quality_score": null,
+        "benchmark_contract": {
+          "status": "resolved",
+          "source": "DELPHI_BENCHMARK_CONTRACT",
+          "primary_metric": "ev_ebitda",
+          "benchmark_id": "fictional-software-be",
+          "dataset_version_id": "fictional-tutorial-v1",
+          "country_code": "BE",
+          "region_key": "BE",
+          "tier": "native",
+          "walk_step": null,
+          "walk_proximity": 0,
+          "sample_size": 58,
+          "confidence_band": "high",
+          "confidence_score": "0.91",
+          "source_mix": {
+            "transaction": 40,
+            "listing_proxy": 14,
+            "public_market_proxy": 4
+          },
+          "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+          "published_at": "2026-05-01T00:00:00Z",
+          "methodology_version": "delphi-benchmark-v1",
+          "benchmark_scope": "country",
+          "benchmark_kind": "native",
+          "is_borrowed": false,
+          "scope_stage": "native_benelux",
+          "metrics": {
+            "ev_ebitda": {
+              "benchmark_id": "bench-software-be-2026q2",
+              "sample_size": 58,
+              "confidence_band": "high",
+              "business_type_id": "software",
+              "p25": "4.8",
+              "median": "6.0",
+              "p75": "7.2"
+            },
+            "ev_revenue": {
+              "benchmark_id": "bench-software-revenue-be-2026q2",
+              "sample_size": 41,
+              "confidence_band": "medium",
+              "business_type_id": "software",
+              "median": "1.5"
+            }
+          },
+          "business_type_id": "software"
+        },
+        "benchmark_provenance": {
+          "benchmark_id": "fictional-software-be",
+          "dataset_version_id": "fictional-tutorial-v1",
+          "country_code": "BE",
+          "region_key": "BE",
+          "tier": "native",
+          "walk_step": null,
+          "walk_proximity": 0,
+          "sample_size": 58,
+          "confidence_band": "high",
+          "confidence_score": "0.91",
+          "source_mix": {
+            "transaction": 40,
+            "listing_proxy": 14,
+            "public_market_proxy": 4
+          },
+          "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+          "published_at": "2026-05-01T00:00:00Z",
+          "methodology_version": "delphi-benchmark-v1",
+          "benchmark_scope": "country",
+          "benchmark_kind": "native",
+          "is_borrowed": false,
+          "scope_stage": "native_benelux",
+          "benchmark_scope_stage": "native_benelux"
+        }
+      },
+      "data_tier": "defensible",
+      "data_tier_rationale": "Grounded in a resolved Upswitch index benchmark contract.",
+      "publication_allowed": false,
+      "publication_blocked": true,
+      "report_readiness_state": "calculation_uncertified",
+      "defensibility_review_state": "approved",
+      "valuation_method_label": "Earnings multiple on your connected financials",
+      "confidence_label": "Defensible estimate — grounded in your financials",
+      "present_point_estimate": true,
+      "valuation_disclaimer": "Grounded in your real financials; the range tightens as your data quality rises.",
+      "market_context": null,
+      "public_valuation_audit": null,
+      "negative_ebitda_resolution": null
+    },
+    "benchmark_snapshot": {
+      "status": "resolved",
+      "source": "DELPHI_BENCHMARK_CONTRACT",
+      "primary_metric": "ev_ebitda",
+      "benchmark_id": "fictional-software-be",
+      "dataset_version_id": "fictional-tutorial-v1",
+      "country_code": "BE",
+      "region_key": "BE",
+      "tier": "native",
+      "walk_step": null,
+      "walk_proximity": 0,
+      "sample_size": 58,
+      "confidence_band": "high",
+      "confidence_score": "0.91",
+      "source_mix": {
+        "transaction": 40,
+        "listing_proxy": 14,
+        "public_market_proxy": 4
+      },
+      "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+      "published_at": "2026-05-01T00:00:00Z",
+      "methodology_version": "delphi-benchmark-v1",
+      "benchmark_scope": "country",
+      "benchmark_kind": "native",
+      "is_borrowed": false,
+      "scope_stage": "native_benelux",
+      "metrics": {
+        "ev_ebitda": {
+          "benchmark_id": "bench-software-be-2026q2",
+          "sample_size": 58,
+          "confidence_band": "high",
+          "business_type_id": "software",
+          "p25": "4.8",
+          "median": "6.0",
+          "p75": "7.2"
+        },
+        "ev_revenue": {
+          "benchmark_id": "bench-software-revenue-be-2026q2",
+          "sample_size": 41,
+          "confidence_band": "medium",
+          "business_type_id": "software",
+          "median": "1.5"
+        }
+      },
+      "business_type_id": "software"
+    },
+    "calculation_lineage": {
+      "version": "valuation_calculation_lineage.v1",
+      "nodes": [
+        {
+          "id": "reported_facts",
+          "kind": "reported_evidence",
+          "hash": "a90e0278500d2b8fa2bdf7e360a7b8ecda992b751ea7cfb4691fd1d0b4df6658"
+        },
+        {
+          "id": "input_decisions",
+          "kind": "accepted_or_verified_decisions"
+        },
+        {
+          "id": "normalized_history",
+          "kind": "annual_normalization_then_weighting"
+        },
+        {
+          "id": "method_calibration",
+          "kind": "method_level_ev_calibration"
+        },
+        {
+          "id": "method_results",
+          "kind": "method_specific_calculations"
+        },
+        {
+          "id": "enterprise_to_equity",
+          "kind": "equity_bridge"
+        },
+        {
+          "id": "shareholder_transaction",
+          "kind": "structural_adjustments"
+        },
+        {
+          "id": "valuation_range",
+          "kind": "canonical_result"
+        }
+      ],
+      "edges": [
+        {
+          "from": "reported_facts",
+          "to": "input_decisions"
+        },
+        {
+          "from": "input_decisions",
+          "to": "normalized_history"
+        },
+        {
+          "from": "normalized_history",
+          "to": "method_calibration"
+        },
+        {
+          "from": "method_calibration",
+          "to": "method_results"
+        },
+        {
+          "from": "method_results",
+          "to": "enterprise_to_equity"
+        },
+        {
+          "from": "enterprise_to_equity",
+          "to": "shareholder_transaction"
+        },
+        {
+          "from": "shareholder_transaction",
+          "to": "valuation_range"
+        }
+      ],
+      "dcf_input_mode": null,
+      "method_eligibility": {
+        "schema_version": "method-eligibility.v1",
+        "policy_version": "legacy-evidence-admission.v1",
+        "methods": {
+          "upswitch_adaptive": {
+            "eligible": true,
+            "value_basis": "equity_value",
+            "reason": null
+          },
+          "ebitda_multiple": {
+            "eligible": true,
+            "value_basis": "equity_value",
+            "reason": null
+          },
+          "dcf": {
+            "eligible": false,
+            "value_basis": "equity_value",
+            "reason": "DCF requires a sealed, source-dated economic_snapshot.v1; missing or ungoverned: schema_version, snapshot_id, snapshot_hash, snapshot_issuer, risk_free_rate_observed_at, equity_risk_premium_observed_at, growth_rates_observed_at, source_references"
+          },
+          "sde_multiple": {
+            "eligible": false,
+            "value_basis": "equity_value",
+            "reason": "SDE vereist geaccepteerde, bewijsgekoppelde eigenaarcompensatie; een omzetheuristiek wordt niet geprijsd."
+          },
+          "omzet_multiple": {
+            "eligible": true,
+            "value_basis": "equity_value",
+            "reason": null
+          },
+          "arr_multiple": {
+            "eligible": false,
+            "value_basis": "equity_value",
+            "reason": "ARR ontbreekt of is nul. Vul Annual Recurring Revenue, MRR, of een aandeel terugkerende omzet in om de ARR-multiple te activeren. Aanbevolen alternatief: ebitda_multiple."
+          },
+          "adjusted_nav": {
+            "eligible": false,
+            "value_basis": "equity_value",
+            "reason": "Balansgegevens vereist — totale activa ontbreken."
+          },
+          "real_estate_yield": {
+            "eligible": false,
+            "value_basis": "equity_value",
+            "reason": "Canonical property yield requires a signed, source-bound evidence contract."
+          },
+          "fiscal_4x": {
+            "eligible": false,
+            "value_basis": "equity_value",
+            "reason": "Fiscale referentie vereist boekhoudkundig eigen vermogen of een volledige balans."
+          },
+          "startup_valuation": {
+            "eligible": false,
+            "value_basis": "equity_value",
+            "reason": "Startup-waardering vereist kwalitatieve invoer (sliders, traction, cap-table) — niet beschikbaar voor klassieke KMO-flows."
+          },
+          "liquidation_analysis": {
+            "eligible": false,
+            "value_basis": "equity_value",
+            "reason": "Balansgegevens vereist — totale activa moeten positief zijn."
+          }
+        },
+        "equity_status": "available",
+        "resolved_weights": [
+          {
+            "method_key": "dcf",
+            "weight": "0",
+            "eligible": false,
+            "value_basis": "equity_value"
+          },
+          {
+            "method_key": "market_approach",
+            "weight": "1",
+            "eligible": true,
+            "value_basis": "equity_value"
+          }
+        ]
+      },
+      "range_provenance": {
+        "schema_version": "range-provenance.v1",
+        "kind": "model_band",
+        "calibration_status": "unverified",
+        "eligible_holdout_count": 0,
+        "empirical_coverage": null,
+        "transaction_relative_error": null,
+        "assumptions": [
+          "Range endpoints are the sealed method/synthesis output.",
+          "Model and benchmark assumptions determine the band; transaction-price coverage is unverified.",
+          "Historical cash-flow and capex proxies are diagnostics, not verified forecasts."
+        ],
+        "source_vintages": [
+          {
+            "metric": "ev_ebitda",
+            "benchmark_id": "bench-software-be-2026q2",
+            "snapshot_hash": "3972df015b9eec1016881dfc7404a58534828d1bdc5ea7296419683045bc3c44",
+            "resolution_contract_id": "bench-software-be-2026q2",
+            "resolution_contract_hash": "3972df015b9eec1016881dfc7404a58534828d1bdc5ea7296419683045bc3c44",
+            "dataset_version_id": null,
+            "source_dataset_version_id": null,
+            "resolution_level": null,
+            "source_benchmark_id": "bench-software-be-2026q2",
+            "borrowed_from_country": null,
+            "borrowed_from_business_type": null,
+            "adjustments": [],
+            "evidence_window": null,
+            "confidence": "high",
+            "review_state": null,
+            "published_at": null
+          }
+        ],
+        "excluded_methods": {
+          "dcf": "DCF requires a sealed, source-dated economic_snapshot.v1; missing or ungoverned: schema_version, snapshot_id, snapshot_hash, snapshot_issuer, risk_free_rate_observed_at, equity_risk_premium_observed_at, growth_rates_observed_at, source_references",
+          "sde_multiple": "SDE vereist geaccepteerde, bewijsgekoppelde eigenaarcompensatie; een omzetheuristiek wordt niet geprijsd.",
+          "arr_multiple": "ARR ontbreekt of is nul. Vul Annual Recurring Revenue, MRR, of een aandeel terugkerende omzet in om de ARR-multiple te activeren. Aanbevolen alternatief: ebitda_multiple.",
+          "adjusted_nav": "Balansgegevens vereist — totale activa ontbreken.",
+          "real_estate_yield": "Canonical property yield requires a signed, source-bound evidence contract.",
+          "fiscal_4x": "Fiscale referentie vereist boekhoudkundig eigen vermogen of een volledige balans.",
+          "startup_valuation": "Startup-waardering vereist kwalitatieve invoer (sliders, traction, cap-table) — niet beschikbaar voor klassieke KMO-flows.",
+          "liquidation_analysis": "Balansgegevens vereist — totale activa moeten positief zijn."
+        },
+        "resolved_weights": [
+          {
+            "method_key": "dcf",
+            "weight": "0",
+            "eligible": false,
+            "value_basis": "equity_value"
+          },
+          {
+            "method_key": "market_approach",
+            "weight": "1",
+            "eligible": true,
+            "value_basis": "equity_value"
+          }
+        ]
+      }
+    },
+    "projection_layers": {
+      "contemporaneous_observation": {
+        "low": "642060.00",
+        "mid": "821325.00",
+        "high": "1000590.00",
+        "currency": "EUR",
+        "value_basis": "equity_value",
+        "uncertainty_type": "valuation_range"
+      },
+      "current_lens_restatements": null,
+      "base_forecasts_and_scenarios": null
+    },
+    "qualifications": [
+      {
+        "field": "economic_context",
+        "issue": "economic_snapshot_missing_or_ungoverned",
+        "severity": "warning",
+        "value": {
+          "missing_or_ungoverned": [
+            "schema_version",
+            "snapshot_id",
+            "snapshot_hash",
+            "snapshot_issuer",
+            "risk_free_rate_observed_at",
+            "equity_risk_premium_observed_at",
+            "growth_rates_observed_at",
+            "source_references"
+          ]
+        },
+        "benchmark": null,
+        "deviation_percent": null
+      },
+      {
+        "field": "methodology_weights",
+        "issue": "adaptive_method_weights_resolved",
+        "severity": "info",
+        "value": {
+          "policy_version": "business_archetype_readiness_evidence.v1",
+          "business_archetype": "software",
+          "dcf_weight": "0",
+          "multiples_weight": "1",
+          "dcf_readiness": "excluded",
+          "benchmark_evidence_quality": "not_supplied",
+          "dcf_exclusion_reason": "DCF requires a sealed, source-dated economic_snapshot.v1; missing or ungoverned: schema_version, snapshot_id, snapshot_hash, snapshot_issuer, risk_free_rate_observed_at, equity_risk_premium_observed_at, growth_rates_observed_at, source_references"
+        },
+        "benchmark": null,
+        "deviation_percent": null
+      }
+    ],
+    "public_valuation_audit_snapshot": null,
+    "driver_ledger": {
+      "version": "value_driver_ledger.v1",
+      "layers": {
+        "operating_normalizations": {
+          "label": "Reported to normalized operating basis",
+          "earnings_basis": {
+            "version": "stateless_earnings_basis_v1",
+            "basis": "EBITDA",
+            "mode": "recency_weighted",
+            "reported_ebitda": "185000.0000000000000000000000",
+            "normalized_ebitda": "185000.0000000000000000000000",
+            "current_reported_ebitda": "200000",
+            "current_normalized_ebitda": "200000",
+            "total_adjustments": "0.0000000000000000000000",
+            "rows": [
+              {
+                "fiscal_year": 2023,
+                "reported_ebitda": "150000",
+                "normalized_ebitda": "150000",
+                "applied_adjustments": [],
+                "pending_adjustments": [],
+                "normalization_source": "reported_ebitda",
+                "reported_basis_missing_for_adjustments": false,
+                "weight": "0.1666666666666666666666666667",
+                "weighted_reported_ebitda": "25000.00000000000000000000000",
+                "weighted_normalized_ebitda": "25000.00000000000000000000000"
+              },
+              {
+                "fiscal_year": 2024,
+                "reported_ebitda": "180000",
+                "normalized_ebitda": "180000",
+                "applied_adjustments": [],
+                "pending_adjustments": [],
+                "normalization_source": "reported_ebitda",
+                "reported_basis_missing_for_adjustments": false,
+                "weight": "0.3333333333333333333333333333",
+                "weighted_reported_ebitda": "59999.99999999999999999999999",
+                "weighted_normalized_ebitda": "59999.99999999999999999999999"
+              },
+              {
+                "fiscal_year": 2025,
+                "reported_ebitda": "200000",
+                "normalized_ebitda": "200000",
+                "applied_adjustments": [],
+                "pending_adjustments": [],
+                "normalization_source": "reported_ebitda",
+                "reported_basis_missing_for_adjustments": false,
+                "weight": "0.5",
+                "weighted_reported_ebitda": "100000.0",
+                "weighted_normalized_ebitda": "100000.0"
+              }
+            ],
+            "weights_sum": "1.000000000000000000000000000",
+            "sde_basis": {
+              "version": "stateless_sde_annual_basis_v2",
+              "available": false,
+              "sde_base_ebitda": "185000.0000000000000000000000",
+              "actual_owner_compensation": "0.0000000000000000000000000000",
+              "replacement_owner_compensation": "0.0000000000000000000000000000",
+              "owner_compensation_addback": "0.0000000000000000000000000000",
+              "weighted_sde": "185000.0000000000000000000000",
+              "rows": [
+                {
+                  "fiscal_year": 2023,
+                  "weight": "0.1666666666666666666666666667",
+                  "normalized_ebitda": "150000",
+                  "owner_compensation_normalization": "0",
+                  "actual_owner_compensation": "0",
+                  "replacement_owner_compensation": "0",
+                  "owner_compensation_addback": "0",
+                  "sde_base_ebitda": "150000",
+                  "annual_sde": "150000",
+                  "weighted_annual_sde": "25000.00000000000000000000000",
+                  "evidence_ids": []
+                },
+                {
+                  "fiscal_year": 2024,
+                  "weight": "0.3333333333333333333333333333",
+                  "normalized_ebitda": "180000",
+                  "owner_compensation_normalization": "0",
+                  "actual_owner_compensation": "0",
+                  "replacement_owner_compensation": "0",
+                  "owner_compensation_addback": "0",
+                  "sde_base_ebitda": "180000",
+                  "annual_sde": "180000",
+                  "weighted_annual_sde": "59999.99999999999999999999999",
+                  "evidence_ids": []
+                },
+                {
+                  "fiscal_year": 2025,
+                  "weight": "0.5",
+                  "normalized_ebitda": "200000",
+                  "owner_compensation_normalization": "0",
+                  "actual_owner_compensation": "0",
+                  "replacement_owner_compensation": "0",
+                  "owner_compensation_addback": "0",
+                  "sde_base_ebitda": "200000",
+                  "annual_sde": "200000",
+                  "weighted_annual_sde": "100000.0",
+                  "evidence_ids": []
+                }
+              ],
+              "missing_compensation_years": [
+                2023,
+                2024,
+                2025
+              ],
+              "calculation_sequence": "annual normalized EBITDA + governed replacement compensation, equivalent to reported EBITDA + actual owner compensation, then historical weighting"
+            }
+          },
+          "holdings_consolidation": null
+        },
+        "method_calibration": {
+          "label": "Method-level market calibration before enterprise value",
+          "value_basis": "enterprise_value",
+          "market_discount_stack": {
+            "enabled": true,
+            "composition": "multiplicative",
+            "floor_factor": "0.45",
+            "pre_floor_factor": "0.80750",
+            "floor_applied": false,
+            "total_adjustment_factor": "0.80750",
+            "total_adjustment": "-0.19250",
+            "rows": [
+              {
+                "key": "size_discount",
+                "label": "Size discount",
+                "parameter": "-0.05",
+                "advisor_weight": "1",
+                "magnitude": "-0.05",
+                "euro_impact": null,
+                "factor_before": "1",
+                "factor_after": "0.95",
+                "rationale": null,
+                "source": null,
+                "multiple_discount_key": null,
+                "strength_factor_multiple_discount_keys": [],
+                "strength_factor_keys": [],
+                "strength_factor_mapped_inputs": [],
+                "strength_factor_valuation_effects": [],
+                "strength_factor_captured_input_ids": [],
+                "strength_factor_data_point_ids": [],
+                "strength_factor_evidence_count": 0,
+                "enabled": true
+              },
+              {
+                "key": "liquidity_discount",
+                "label": "Liquidity discount",
+                "parameter": "-0.15",
+                "advisor_weight": "1",
+                "magnitude": "-0.15",
+                "euro_impact": null,
+                "factor_before": "0.95",
+                "factor_after": "0.8075",
+                "rationale": null,
+                "source": null,
+                "multiple_discount_key": null,
+                "strength_factor_multiple_discount_keys": [],
+                "strength_factor_keys": [],
+                "strength_factor_mapped_inputs": [],
+                "strength_factor_valuation_effects": [],
+                "strength_factor_captured_input_ids": [],
+                "strength_factor_data_point_ids": [],
+                "strength_factor_evidence_count": 0,
+                "enabled": true
+              },
+              {
+                "key": "country_adjustment",
+                "label": "Country adjustment",
+                "parameter": "0",
+                "advisor_weight": "1",
+                "magnitude": "0",
+                "euro_impact": null,
+                "factor_before": "0.8075",
+                "factor_after": "0.80750",
+                "rationale": null,
+                "source": null,
+                "multiple_discount_key": null,
+                "strength_factor_multiple_discount_keys": [],
+                "strength_factor_keys": [],
+                "strength_factor_mapped_inputs": [],
+                "strength_factor_valuation_effects": [],
+                "strength_factor_captured_input_ids": [],
+                "strength_factor_data_point_ids": [],
+                "strength_factor_evidence_count": 0,
+                "enabled": true
+              }
+            ],
+            "owner_concentration_policy": "excluded_from_stateless_discount_stack",
+            "owner_concentration_policy_reason": "Owner concentration is handled by the owner-dependency pipeline; the stateless discount stack must not double-count it as liquidity/DLOM.",
+            "strength_factor_policy": null,
+            "strength_factor_evidence": []
+          },
+          "calculation_order": "reference_multiple_to_applied_multiple_to_enterprise_value"
+        },
+        "enterprise_to_equity": {
+          "label": "Enterprise value to total shareholder equity",
+          "bridge": {
+            "enterprise_value": "896325.0000000000000000000000",
+            "lines": [
+              {
+                "key": "total_debt",
+                "label": "Less: total debt",
+                "amount": "100000.0",
+                "operator": "-",
+                "kind": "debt",
+                "detail": null
+              },
+              {
+                "key": "cash",
+                "label": "Add: cash & equivalents",
+                "amount": "25000.0",
+                "operator": "+",
+                "kind": "cash",
+                "detail": null
+              }
+            ],
+            "equity_value": "821325.0000000000000000000000",
+            "net_debt": "75000.0",
+            "equity_status": null,
+            "unresolved_fields": [],
+            "nwc_status": "not_assessed",
+            "nwc_note": "Net working capital not assessed - no balance sheet.",
+            "is_phantom_suppressed": false,
+            "notes": []
+          },
+          "supporting_market_bridge": null,
+          "explicit_adjustments": {
+            "version": "stateless_equity_bridge_adjustments_v1",
+            "value_basis": "equity_value",
+            "currency_treatment": "request_currency",
+            "rows": [],
+            "tax_latency_net_impact": "0",
+            "balance_sheet_adjustment_net_impact": "0",
+            "total_net_impact": "0"
+          }
+        },
+        "shareholder_transaction": {
+          "label": "Structural, shareholder and transaction adjustments",
+          "ownership_percentage": "100",
+          "owner_dependency": null,
+          "owner_dependency_adjustment": "0",
+          "equity_before_owner_dependency": "821325.00",
+          "equity_after_owner_dependency": "821325.00"
+        }
+      }
+    },
+    "accounting_evidence_bundle_hash": null,
+    "country_pack_schema_version": "country_pack.v1",
+    "country_pack_version": "BE.2026.1",
+    "economic_snapshot": null,
+    "economic_snapshot_status": "not_supplied",
+    "company_snapshot": {
+      "snapshot_id": "company_beec5f01f850dd1a6f8735cc",
+      "snapshot_hash": "beec5f01f850dd1a6f8735ccaf8dc60290d10a8427c47dd0a7731457a453b7a2",
+      "source_kind": "derived_request_company_profile",
+      "revision_id": null,
+      "entity_id": null,
+      "company_registry_number": null,
+      "accountant_customer_id": null,
+      "trust_class": null,
+      "evidence_tier": null
+    },
+    "uploaded_data_snapshot": null,
+    "uploaded_data_snapshot_status": "not_supplied",
+    "classification_resolution": {
+      "requested_nace_code": null,
+      "canonical_nace_code": null,
+      "business_type_id": "software",
+      "business_type_label": "Software",
+      "resolution_level": "request_calibration",
+      "resolution_status": "manual_review_required",
+      "confidence": null,
+      "mapping_version": null,
+      "taxonomy_version": null,
+      "reviewer_state": null,
+      "mapping_hash": "4ac993937630f5b025c10c527c08d2c035a38c8893609585ab6fe4023fe95c41"
+    },
+    "benchmark_snapshot_references": [
+      {
+        "metric": "ev_ebitda",
+        "benchmark_id": "bench-software-be-2026q2",
+        "snapshot_hash": "3972df015b9eec1016881dfc7404a58534828d1bdc5ea7296419683045bc3c44",
+        "resolution_contract_id": "bench-software-be-2026q2",
+        "resolution_contract_hash": "3972df015b9eec1016881dfc7404a58534828d1bdc5ea7296419683045bc3c44",
+        "dataset_version_id": null,
+        "source_dataset_version_id": null,
+        "resolution_level": null,
+        "source_benchmark_id": "bench-software-be-2026q2",
+        "borrowed_from_country": null,
+        "borrowed_from_business_type": null,
+        "adjustments": [],
+        "evidence_window": null,
+        "confidence": "high",
+        "review_state": null,
+        "published_at": null
+      }
+    ],
+    "source_citations": [],
+    "normalization_adjustments": [],
+    "normalization_adjustments_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "report_review_decisions": [],
+    "content_provenance": {
+      "schema_version": "report_content_provenance.v1",
+      "narrative_origin": "deterministic_template",
+      "evidence_origin": "governed_structured",
+      "review_state": "not_required",
+      "model_id": null,
+      "reviewer_id": null,
+      "reviewed_at": null,
+      "source_hash": null
+    },
+    "assurance": {
+      "schema_version": "report_assurance.v1",
+      "evidence_maturity": {
+        "tier": "T3",
+        "rationale": "Grounded in a resolved Upswitch index benchmark contract.",
+        "legacy_data_tier": "defensible"
+      },
+      "evidence_confidence": {
+        "level": "HIGH",
+        "score": 80,
+        "model_version": "evidence_confidence.v1"
+      },
+      "calculation_certification": {
+        "status": "uncertified",
+        "certification_id": null,
+        "certifier_id": null,
+        "certified_at": null,
+        "qualifications": []
+      },
+      "legal_attestation": {
+        "status": "not_attested",
+        "attestation_id": null,
+        "signer_id": null,
+        "attested_at": null,
+        "eidas_tier": null,
+        "scope": "report_identity_and_signatures",
+        "calculation_certification_effect": "none"
+      },
+      "outcome_accuracy": {
+        "status": "not_observed",
+        "outcome_id": null,
+        "outcome_type": null,
+        "observed_at": null,
+        "absolute_percentage_error": null
+      },
+      "country_pack_certification_state": "draft",
+      "country_pack_certification_manifest_hash": null,
+      "country_pack_certification_reviewer_receipt_ids": [],
+      "method_certification_profile_version": "method_certification_profile.v1",
+      "priced_method_certification_profile_keys": [],
+      "method_certification_evaluations": [
+        {
+          "method_key": "market_approach",
+          "weight": "1",
+          "profile_version": null,
+          "country_code": "BE",
+          "eligible": false,
+          "evidence_checks": {},
+          "invariant_checks": {
+            "eligible_weights_sum_to_one": true
+          },
+          "review_checks": {
+            "profile_review_accepted": false
+          },
+          "failures": [
+            "profile_missing"
+          ]
+        }
+      ],
+      "method_country_certification_eligible": false
+    }
+  },
+  "equity_value_low": "642060.00",
+  "equity_value_mid": "821325.00",
+  "equity_value_high": "1000590.00",
+  "enterprise_value_low": "717060.00",
+  "enterprise_value_mid": "896325.00",
+  "enterprise_value_high": "1075590.00",
+  "recommended_asking_price": "821325.00",
+  "recommended_multiple": "4.8450",
+  "triage_flags": [
+    {
+      "field": "economic_context",
+      "issue": "economic_snapshot_missing_or_ungoverned",
+      "severity": "warning",
+      "value": {
+        "missing_or_ungoverned": [
+          "schema_version",
+          "snapshot_id",
+          "snapshot_hash",
+          "snapshot_issuer",
+          "risk_free_rate_observed_at",
+          "equity_risk_premium_observed_at",
+          "growth_rates_observed_at",
+          "source_references"
+        ]
+      },
+      "benchmark": null,
+      "deviation_percent": null
+    },
+    {
+      "field": "methodology_weights",
+      "issue": "adaptive_method_weights_resolved",
+      "severity": "info",
+      "value": {
+        "policy_version": "business_archetype_readiness_evidence.v1",
+        "business_archetype": "software",
+        "dcf_weight": "0",
+        "multiples_weight": "1",
+        "dcf_readiness": "excluded",
+        "benchmark_evidence_quality": "not_supplied",
+        "dcf_exclusion_reason": "DCF requires a sealed, source-dated economic_snapshot.v1; missing or ungoverned: schema_version, snapshot_id, snapshot_hash, snapshot_issuer, risk_free_rate_observed_at, equity_risk_premium_observed_at, growth_rates_observed_at, source_references"
+      },
+      "benchmark": null,
+      "deviation_percent": null
+    }
+  ],
+  "artifacts": null,
+  "methodology_used": "EBITDA_MULTIPLE",
+  "dcf_weight": "0",
+  "multiples_weight": "1",
+  "methodology_selection_reason": "Selected eligible ebitda_multiple method is the canonical headline.",
+  "dcf_exclusion_reason": "DCF requires a sealed, source-dated economic_snapshot.v1; missing or ungoverned: schema_version, snapshot_id, snapshot_hash, snapshot_issuer, risk_free_rate_observed_at, equity_risk_premium_observed_at, growth_rates_observed_at, source_references",
+  "confidence_level": "HIGH",
+  "confidence_score": 80,
+  "data_tier": "defensible",
+  "data_tier_rationale": "Grounded in a resolved Upswitch index benchmark contract.",
+  "publication_allowed": false,
+  "publication_blocked": true,
+  "report_readiness_state": "calculation_uncertified",
+  "defensibility_review_state": "approved",
+  "market_context": null,
+  "public_valuation_audit": null,
+  "public_method_resolution": null,
+  "negative_ebitda_resolution": null,
+  "public_negative_ebitda_recovery": null,
+  "valuation_method_label": "Earnings multiple on your connected financials",
+  "confidence_label": "Defensible estimate — grounded in your financials",
+  "present_point_estimate": true,
+  "valuation_disclaimer": "Grounded in your real financials; the range tightens as your data quality rises.",
+  "financial_metrics": {
+    "revenue": 1000000.0,
+    "revenue_source": null,
+    "ebitda": 185000.0,
+    "reported_ebitda": 200000.0,
+    "normalized_ebitda": 200000.0,
+    "valuation_basis_ebitda": 185000.0,
+    "valuation_basis_mode": "recency_weighted",
+    "ebitda_margin": 0.2,
+    "revenue_growth": "0.08108108108108108108108108108",
+    "shares_for_sale": 100.0,
+    "ownership_multiplier": 1.0,
+    "financial_health_score": 80,
+    "financial_health_description": "Financial health is high",
+    "revenue_growth_evidence": {
+      "rate": "0.08108108108108108108108108108",
+      "unit": "decimal_ratio",
+      "available": true,
+      "start_year": 2024,
+      "end_year": 2025,
+      "elapsed_years": 1,
+      "basis": "year_over_year",
+      "period_basis": "annual_fiscal_input_contract",
+      "unavailable_reason": null
+    },
+    "revenue_cagr_3y": null,
+    "revenue_cagr_3y_evidence": {
+      "rate": null,
+      "unit": "decimal_ratio",
+      "available": false,
+      "start_year": 2022,
+      "end_year": 2025,
+      "elapsed_years": 3,
+      "basis": "unavailable",
+      "period_basis": "annual_fiscal_input_contract",
+      "unavailable_reason": "three_year_endpoint_missing"
+    },
+    "cash": 25000.0,
+    "total_debt": 100000.0,
+    "reported_cash": "25000",
+    "restricted_cash": null,
+    "available_cash": null,
+    "financial_debt": "100000",
+    "lease_liabilities": null,
+    "debt_like_items": null,
+    "normalized_nwc_target": null,
+    "total_debt_like": null,
+    "completion_accounts_complete": false,
+    "completion_account_unresolved_fields": [
+      "restricted_cash",
+      "lease_liabilities",
+      "debt_like_items",
+      "normalized_nwc_target"
+    ],
+    "equity_bridge_is_illustrative": true
+  },
+  "dcf_results": null,
+  "multiples_results": {
+    "ev_ebitda_valuation": 1110000.0,
+    "ebitda_multiple": 6.0,
+    "valuation_range_basis": "empirical_benchmark_percentiles",
+    "p25_ebitda_multiple": 4.8,
+    "p75_ebitda_multiple": 7.2,
+    "range_low_multiple": 4.8,
+    "range_high_multiple": 7.2,
+    "range_statistical_coverage": null,
+    "benchmark_contract_resolved": true,
+    "size_discount": 0.05,
+    "liquidity_discount": 0.15,
+    "country_adjustment": 0.0,
+    "total_adjustment": 0.1925,
+    "discount_build_up": {
+      "enabled": true,
+      "floor_factor": "0.45",
+      "pre_floor_factor": "0.80750",
+      "floor_applied": false,
+      "total_adjustment_factor": "0.80750",
+      "total_adjustment": "-0.19250",
+      "rows": [
+        {
+          "key": "size_discount",
+          "label": "Size discount",
+          "model_adjustment": "-0.05",
+          "advisor_weight": "1",
+          "effective_adjustment": "-0.05",
+          "factor_before": "1",
+          "factor_after": "0.95",
+          "enabled": true
+        },
+        {
+          "key": "liquidity_discount",
+          "label": "Liquidity discount",
+          "model_adjustment": "-0.15",
+          "advisor_weight": "1",
+          "effective_adjustment": "-0.15",
+          "factor_before": "0.95",
+          "factor_after": "0.8075",
+          "enabled": true
+        },
+        {
+          "key": "country_adjustment",
+          "label": "Country adjustment",
+          "model_adjustment": "0.0",
+          "advisor_weight": "1",
+          "effective_adjustment": "0.0",
+          "factor_before": "0.8075",
+          "factor_after": "0.80750",
+          "enabled": true
+        }
+      ],
+      "composition": "multiplicative",
+      "basis": "pre-adjustment comparable multiple",
+      "owner_concentration_policy": "excluded_from_stateless_discount_stack",
+      "owner_concentration_policy_reason": "Owner concentration is handled by the owner-dependency pipeline; the stateless discount stack must not double-count it as liquidity/DLOM."
+    },
+    "base_value": 1110000.0,
+    "adjusted_equity_value": 821325.0,
+    "business_type_id": "software",
+    "primary_business_type_id": "software",
+    "business_type_mix": [
+      {
+        "business_type_id": "software",
+        "weight": 100
+      }
+    ],
+    "business_type_weights": {
+      "software": 100
+    },
+    "business_type_mix_policy": "single_business_type",
+    "benchmark_contract": {
+      "status": "resolved",
+      "source": "DELPHI_BENCHMARK_CONTRACT",
+      "primary_metric": "ev_ebitda",
+      "benchmark_id": "fictional-software-be",
+      "dataset_version_id": "fictional-tutorial-v1",
+      "country_code": "BE",
+      "region_key": "BE",
+      "tier": "native",
+      "walk_step": null,
+      "walk_proximity": 0,
+      "sample_size": 58,
+      "confidence_band": "high",
+      "confidence_score": 0.91,
+      "source_mix": {
+        "transaction": 40,
+        "listing_proxy": 14,
+        "public_market_proxy": 4
+      },
+      "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+      "published_at": "2026-05-01T00:00:00Z",
+      "methodology_version": "delphi-benchmark-v1",
+      "benchmark_scope": "country",
+      "benchmark_kind": "native",
+      "is_borrowed": false,
+      "scope_stage": "native_benelux",
+      "metrics": {
+        "ev_ebitda": {
+          "benchmark_id": "bench-software-be-2026q2",
+          "sample_size": 58,
+          "confidence_band": "high",
+          "business_type_id": "software",
+          "p25": "4.8",
+          "median": "6.0",
+          "p75": "7.2"
+        },
+        "ev_revenue": {
+          "benchmark_id": "bench-software-revenue-be-2026q2",
+          "sample_size": 41,
+          "confidence_band": "medium",
+          "business_type_id": "software",
+          "median": "1.5"
+        }
+      },
+      "business_type_id": "software"
+    },
+    "benchmark_provenance": {
+      "benchmark_id": "fictional-software-be",
+      "dataset_version_id": "fictional-tutorial-v1",
+      "country_code": "BE",
+      "region_key": "BE",
+      "tier": "native",
+      "walk_step": null,
+      "walk_proximity": 0,
+      "sample_size": 58,
+      "confidence_band": "high",
+      "confidence_score": 0.91,
+      "source_mix": {
+        "transaction": 40,
+        "listing_proxy": 14,
+        "public_market_proxy": 4
+      },
+      "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+      "published_at": "2026-05-01T00:00:00Z",
+      "methodology_version": "delphi-benchmark-v1",
+      "benchmark_scope": "country",
+      "benchmark_kind": "native",
+      "is_borrowed": false,
+      "scope_stage": "native_benelux",
+      "benchmark_scope_stage": "native_benelux"
+    },
+    "earnings_basis_ledger": {
+      "version": "stateless_earnings_basis_v1",
+      "basis": "EBITDA",
+      "mode": "recency_weighted",
+      "reported_ebitda": "185000.0000000000000000000000",
+      "normalized_ebitda": "185000.0000000000000000000000",
+      "current_reported_ebitda": "200000",
+      "current_normalized_ebitda": "200000",
+      "total_adjustments": "0.0000000000000000000000",
+      "rows": [
+        {
+          "fiscal_year": 2023,
+          "reported_ebitda": "150000",
+          "normalized_ebitda": "150000",
+          "applied_adjustments": [],
+          "pending_adjustments": [],
+          "normalization_source": "reported_ebitda",
+          "reported_basis_missing_for_adjustments": false,
+          "weight": "0.1666666666666666666666666667",
+          "weighted_reported_ebitda": "25000.00000000000000000000000",
+          "weighted_normalized_ebitda": "25000.00000000000000000000000"
+        },
+        {
+          "fiscal_year": 2024,
+          "reported_ebitda": "180000",
+          "normalized_ebitda": "180000",
+          "applied_adjustments": [],
+          "pending_adjustments": [],
+          "normalization_source": "reported_ebitda",
+          "reported_basis_missing_for_adjustments": false,
+          "weight": "0.3333333333333333333333333333",
+          "weighted_reported_ebitda": "59999.99999999999999999999999",
+          "weighted_normalized_ebitda": "59999.99999999999999999999999"
+        },
+        {
+          "fiscal_year": 2025,
+          "reported_ebitda": "200000",
+          "normalized_ebitda": "200000",
+          "applied_adjustments": [],
+          "pending_adjustments": [],
+          "normalization_source": "reported_ebitda",
+          "reported_basis_missing_for_adjustments": false,
+          "weight": "0.5",
+          "weighted_reported_ebitda": "100000.0",
+          "weighted_normalized_ebitda": "100000.0"
+        }
+      ],
+      "weights_sum": "1.000000000000000000000000000",
+      "sde_basis": {
+        "version": "stateless_sde_annual_basis_v2",
+        "available": false,
+        "sde_base_ebitda": "185000.0000000000000000000000",
+        "actual_owner_compensation": "0.0000000000000000000000000000",
+        "replacement_owner_compensation": "0.0000000000000000000000000000",
+        "owner_compensation_addback": "0.0000000000000000000000000000",
+        "weighted_sde": "185000.0000000000000000000000",
+        "rows": [
+          {
+            "fiscal_year": 2023,
+            "weight": "0.1666666666666666666666666667",
+            "normalized_ebitda": "150000",
+            "owner_compensation_normalization": "0",
+            "actual_owner_compensation": "0",
+            "replacement_owner_compensation": "0",
+            "owner_compensation_addback": "0",
+            "sde_base_ebitda": "150000",
+            "annual_sde": "150000",
+            "weighted_annual_sde": "25000.00000000000000000000000",
+            "evidence_ids": []
+          },
+          {
+            "fiscal_year": 2024,
+            "weight": "0.3333333333333333333333333333",
+            "normalized_ebitda": "180000",
+            "owner_compensation_normalization": "0",
+            "actual_owner_compensation": "0",
+            "replacement_owner_compensation": "0",
+            "owner_compensation_addback": "0",
+            "sde_base_ebitda": "180000",
+            "annual_sde": "180000",
+            "weighted_annual_sde": "59999.99999999999999999999999",
+            "evidence_ids": []
+          },
+          {
+            "fiscal_year": 2025,
+            "weight": "0.5",
+            "normalized_ebitda": "200000",
+            "owner_compensation_normalization": "0",
+            "actual_owner_compensation": "0",
+            "replacement_owner_compensation": "0",
+            "owner_compensation_addback": "0",
+            "sde_base_ebitda": "200000",
+            "annual_sde": "200000",
+            "weighted_annual_sde": "100000.0",
+            "evidence_ids": []
+          }
+        ],
+        "missing_compensation_years": [
+          2023,
+          2024,
+          2025
+        ],
+        "calculation_sequence": "annual normalized EBITDA + governed replacement compensation, equivalent to reported EBITDA + actual owner compensation, then historical weighting"
+      }
+    },
+    "multiples_source": "DELPHI_BENCHMARK_CONTRACT",
+    "is_delphi_benchmark_sourced": true,
+    "fallback_used": false,
+    "fallback_reason": null,
+    "multiple_type_blend": {
+      "source": "sector_aware_default",
+      "model_source": "sector_aware_default",
+      "weighted_enterprise_value": "1240000.000000000000000000000",
+      "weights": {
+        "ev_ebitda": "0.6666666666666666666666666667",
+        "ev_revenue": "0.3333333333333333333333333333"
+      },
+      "model_weights": {
+        "ev_ebitda": "0.6666666666666666666666666667",
+        "ev_revenue": "0.3333333333333333333333333333"
+      },
+      "rows": [
+        {
+          "key": "ev_ebitda",
+          "label": "EV/EBITDA",
+          "enterprise_value": "1110000.000000000000000000000",
+          "weight": "0.6666666666666666666666666667",
+          "model_weight": "0.6666666666666666666666666667",
+          "advisor_delta": "0.0000000000000000000000000000",
+          "contribution": "740000.0000000000000000000000",
+          "included": true
+        },
+        {
+          "key": "ev_revenue",
+          "label": "EV/Revenue",
+          "enterprise_value": "1500000.0",
+          "weight": "0.3333333333333333333333333333",
+          "model_weight": "0.3333333333333333333333333333",
+          "advisor_delta": "0.0000000000000000000000000000",
+          "contribution": "500000.0000000000000000000000",
+          "included": true
+        }
+      ]
+    },
+    "multiple_build_up": {
+      "version": "multiple_build_up_v2",
+      "tier": "firm",
+      "earnings_basis": {
+        "projection_version": "earnings_basis_build_up.v2",
+        "basis": "EBITDA",
+        "rationale": "Reported EBITDA basis: no normalization adjustments were applied. Year weights (2023: 16.66666666666666666666666667%, 2024: 33.33333333333333333333333333%, 2025: 50%).",
+        "reported_earnings": "185000.0000000000000000000000",
+        "adjusted_earnings": "185000.0000000000000000000000",
+        "total_adjustments": "0",
+        "add_backs": [],
+        "is_adjusted": false,
+        "applied_adjustment_count": 0,
+        "pending_adjustment_count": 0,
+        "source": "stateless_earnings_basis_v1"
+      },
+      "segments": [
+        {
+          "index": 0,
+          "business_type_id": "software",
+          "business_type_title": "technology",
+          "nace_code": null,
+          "basis": "EBITDA",
+          "earnings": null,
+          "multiple": "6.0",
+          "enterprise_value": "896325.0000000000000000000000",
+          "weight": "1",
+          "source_tier": "native",
+          "observation_count": 58,
+          "multiple_p25": "4.8",
+          "multiple_median": "6.0",
+          "multiple_p75": "7.2",
+          "as_of": "2026-05-01T00:00:00Z",
+          "confidence": null,
+          "is_advisor_override": false
+        }
+      ],
+      "is_multi_segment": false,
+      "segment_mode": "single_segment",
+      "multiple_type_blend": {
+        "source": "sector_aware_default",
+        "model_source": "sector_aware_default",
+        "weighted_enterprise_value": "1240000.000000000000000000000",
+        "rows": [
+          {
+            "key": "ev_ebitda",
+            "label": "EV/EBITDA",
+            "enterprise_value": "1110000.000000000000000000000",
+            "weight": "0.6666666666666666666666666667",
+            "model_weight": "0.6666666666666666666666666667",
+            "advisor_delta": "0",
+            "contribution": "740000.0000000000000000000000",
+            "included": true
+          },
+          {
+            "key": "ev_revenue",
+            "label": "EV/Revenue",
+            "enterprise_value": "1500000.0",
+            "weight": "0.3333333333333333333333333333",
+            "model_weight": "0.3333333333333333333333333333",
+            "advisor_delta": "0",
+            "contribution": "500000.0000000000000000000000",
+            "included": true
+          }
+        ]
+      },
+      "discounts": {
+        "enabled": true,
+        "composition": "multiplicative",
+        "floor_factor": "0.45",
+        "pre_floor_factor": "0.80750",
+        "floor_applied": false,
+        "total_adjustment_factor": "0.80750",
+        "total_adjustment": "-0.19250",
+        "rows": [
+          {
+            "key": "size_discount",
+            "label": "Size discount",
+            "parameter": "-0.05",
+            "advisor_weight": "1",
+            "magnitude": "-0.05",
+            "euro_impact": null,
+            "factor_before": "1",
+            "factor_after": "0.95",
+            "rationale": null,
+            "source": null,
+            "multiple_discount_key": null,
+            "strength_factor_multiple_discount_keys": [],
+            "strength_factor_keys": [],
+            "strength_factor_mapped_inputs": [],
+            "strength_factor_valuation_effects": [],
+            "strength_factor_captured_input_ids": [],
+            "strength_factor_data_point_ids": [],
+            "strength_factor_evidence_count": 0,
+            "enabled": true
+          },
+          {
+            "key": "liquidity_discount",
+            "label": "Liquidity discount",
+            "parameter": "-0.15",
+            "advisor_weight": "1",
+            "magnitude": "-0.15",
+            "euro_impact": null,
+            "factor_before": "0.95",
+            "factor_after": "0.8075",
+            "rationale": null,
+            "source": null,
+            "multiple_discount_key": null,
+            "strength_factor_multiple_discount_keys": [],
+            "strength_factor_keys": [],
+            "strength_factor_mapped_inputs": [],
+            "strength_factor_valuation_effects": [],
+            "strength_factor_captured_input_ids": [],
+            "strength_factor_data_point_ids": [],
+            "strength_factor_evidence_count": 0,
+            "enabled": true
+          },
+          {
+            "key": "country_adjustment",
+            "label": "Country adjustment",
+            "parameter": "0",
+            "advisor_weight": "1",
+            "magnitude": "0",
+            "euro_impact": null,
+            "factor_before": "0.8075",
+            "factor_after": "0.80750",
+            "rationale": null,
+            "source": null,
+            "multiple_discount_key": null,
+            "strength_factor_multiple_discount_keys": [],
+            "strength_factor_keys": [],
+            "strength_factor_mapped_inputs": [],
+            "strength_factor_valuation_effects": [],
+            "strength_factor_captured_input_ids": [],
+            "strength_factor_data_point_ids": [],
+            "strength_factor_evidence_count": 0,
+            "enabled": true
+          }
+        ],
+        "owner_concentration_policy": "excluded_from_stateless_discount_stack",
+        "owner_concentration_policy_reason": "Owner concentration is handled by the owner-dependency pipeline; the stateless discount stack must not double-count it as liquidity/DLOM.",
+        "strength_factor_policy": null,
+        "strength_factor_evidence": []
+      },
+      "advisor_override": null,
+      "risk_analysis_enabled": true,
+      "risk_analysis_reference_only": false,
+      "equity_bridge": {
+        "enterprise_value": "896325.0000000000000000000000",
+        "lines": [
+          {
+            "key": "total_debt",
+            "label": "Less: total debt",
+            "amount": "100000.0",
+            "operator": "-",
+            "kind": "debt",
+            "detail": null
+          },
+          {
+            "key": "cash",
+            "label": "Add: cash & equivalents",
+            "amount": "25000.0",
+            "operator": "+",
+            "kind": "cash",
+            "detail": null
+          }
+        ],
+        "equity_value": "821325.0000000000000000000000",
+        "net_debt": "75000.0",
+        "equity_status": null,
+        "unresolved_fields": [],
+        "nwc_status": "not_assessed",
+        "nwc_note": "Net working capital not assessed - no balance sheet.",
+        "is_phantom_suppressed": false,
+        "notes": []
+      },
+      "adjusted_earnings": "185000.0000000000000000000000",
+      "effective_multiple": "4.845000",
+      "enterprise_value": "896325.0000000000000000000000",
+      "equity_value": "821325.0000000000000000000000",
+      "band_low": "717060.0000000000000000000000",
+      "band_high": "1075590.000000000000000000000"
+    },
+    "enterprise_value": "896325.0000000000000000000000",
+    "enterprise_value_low": "717060.0000000000000000000000",
+    "enterprise_value_high": "1075590.000000000000000000000",
+    "equity_value": "821325.0000000000000000000000"
+  },
+  "earnings_basis": "EBITDA",
+  "earnings_basis_rationale": "selected_ebitda_multiple",
+  "multiple_build_up": {
+    "version": "multiple_build_up_v2",
+    "tier": "firm",
+    "earnings_basis": {
+      "projection_version": "earnings_basis_build_up.v2",
+      "basis": "EBITDA",
+      "rationale": "Reported EBITDA basis: no normalization adjustments were applied. Year weights (2023: 16.66666666666666666666666667%, 2024: 33.33333333333333333333333333%, 2025: 50%).",
+      "reported_earnings": "185000.0000000000000000000000",
+      "adjusted_earnings": "185000.0000000000000000000000",
+      "total_adjustments": "0",
+      "add_backs": [],
+      "is_adjusted": false,
+      "applied_adjustment_count": 0,
+      "pending_adjustment_count": 0,
+      "source": "stateless_earnings_basis_v1"
+    },
+    "segments": [
+      {
+        "index": 0,
+        "business_type_id": "software",
+        "business_type_title": "technology",
+        "nace_code": null,
+        "basis": "EBITDA",
+        "earnings": null,
+        "multiple": "6.0",
+        "enterprise_value": "896325.0000000000000000000000",
+        "weight": "1",
+        "source_tier": "native",
+        "observation_count": 58,
+        "multiple_p25": "4.8",
+        "multiple_median": "6.0",
+        "multiple_p75": "7.2",
+        "as_of": "2026-05-01T00:00:00Z",
+        "confidence": null,
+        "is_advisor_override": false
+      }
+    ],
+    "is_multi_segment": false,
+    "segment_mode": "single_segment",
+    "multiple_type_blend": {
+      "source": "sector_aware_default",
+      "model_source": "sector_aware_default",
+      "weighted_enterprise_value": "1240000.000000000000000000000",
+      "rows": [
+        {
+          "key": "ev_ebitda",
+          "label": "EV/EBITDA",
+          "enterprise_value": "1110000.000000000000000000000",
+          "weight": "0.6666666666666666666666666667",
+          "model_weight": "0.6666666666666666666666666667",
+          "advisor_delta": "0",
+          "contribution": "740000.0000000000000000000000",
+          "included": true
+        },
+        {
+          "key": "ev_revenue",
+          "label": "EV/Revenue",
+          "enterprise_value": "1500000.0",
+          "weight": "0.3333333333333333333333333333",
+          "model_weight": "0.3333333333333333333333333333",
+          "advisor_delta": "0",
+          "contribution": "500000.0000000000000000000000",
+          "included": true
+        }
+      ]
+    },
+    "discounts": {
+      "enabled": true,
+      "composition": "multiplicative",
+      "floor_factor": "0.45",
+      "pre_floor_factor": "0.80750",
+      "floor_applied": false,
+      "total_adjustment_factor": "0.80750",
+      "total_adjustment": "-0.19250",
+      "rows": [
+        {
+          "key": "size_discount",
+          "label": "Size discount",
+          "parameter": "-0.05",
+          "advisor_weight": "1",
+          "magnitude": "-0.05",
+          "euro_impact": null,
+          "factor_before": "1",
+          "factor_after": "0.95",
+          "rationale": null,
+          "source": null,
+          "multiple_discount_key": null,
+          "strength_factor_multiple_discount_keys": [],
+          "strength_factor_keys": [],
+          "strength_factor_mapped_inputs": [],
+          "strength_factor_valuation_effects": [],
+          "strength_factor_captured_input_ids": [],
+          "strength_factor_data_point_ids": [],
+          "strength_factor_evidence_count": 0,
+          "enabled": true
+        },
+        {
+          "key": "liquidity_discount",
+          "label": "Liquidity discount",
+          "parameter": "-0.15",
+          "advisor_weight": "1",
+          "magnitude": "-0.15",
+          "euro_impact": null,
+          "factor_before": "0.95",
+          "factor_after": "0.8075",
+          "rationale": null,
+          "source": null,
+          "multiple_discount_key": null,
+          "strength_factor_multiple_discount_keys": [],
+          "strength_factor_keys": [],
+          "strength_factor_mapped_inputs": [],
+          "strength_factor_valuation_effects": [],
+          "strength_factor_captured_input_ids": [],
+          "strength_factor_data_point_ids": [],
+          "strength_factor_evidence_count": 0,
+          "enabled": true
+        },
+        {
+          "key": "country_adjustment",
+          "label": "Country adjustment",
+          "parameter": "0",
+          "advisor_weight": "1",
+          "magnitude": "0",
+          "euro_impact": null,
+          "factor_before": "0.8075",
+          "factor_after": "0.80750",
+          "rationale": null,
+          "source": null,
+          "multiple_discount_key": null,
+          "strength_factor_multiple_discount_keys": [],
+          "strength_factor_keys": [],
+          "strength_factor_mapped_inputs": [],
+          "strength_factor_valuation_effects": [],
+          "strength_factor_captured_input_ids": [],
+          "strength_factor_data_point_ids": [],
+          "strength_factor_evidence_count": 0,
+          "enabled": true
+        }
+      ],
+      "owner_concentration_policy": "excluded_from_stateless_discount_stack",
+      "owner_concentration_policy_reason": "Owner concentration is handled by the owner-dependency pipeline; the stateless discount stack must not double-count it as liquidity/DLOM.",
+      "strength_factor_policy": null,
+      "strength_factor_evidence": []
+    },
+    "advisor_override": null,
+    "risk_analysis_enabled": true,
+    "risk_analysis_reference_only": false,
+    "equity_bridge": {
+      "enterprise_value": "896325.0000000000000000000000",
+      "lines": [
+        {
+          "key": "total_debt",
+          "label": "Less: total debt",
+          "amount": "100000.0",
+          "operator": "-",
+          "kind": "debt",
+          "detail": null
+        },
+        {
+          "key": "cash",
+          "label": "Add: cash & equivalents",
+          "amount": "25000.0",
+          "operator": "+",
+          "kind": "cash",
+          "detail": null
+        }
+      ],
+      "equity_value": "821325.0000000000000000000000",
+      "net_debt": "75000.0",
+      "equity_status": null,
+      "unresolved_fields": [],
+      "nwc_status": "not_assessed",
+      "nwc_note": "Net working capital not assessed - no balance sheet.",
+      "is_phantom_suppressed": false,
+      "notes": []
+    },
+    "adjusted_earnings": "185000.0000000000000000000000",
+    "effective_multiple": "4.845000",
+    "enterprise_value": "896325.0000000000000000000000",
+    "equity_value": "821325.0000000000000000000000",
+    "band_low": "717060.0000000000000000000000",
+    "band_high": "1075590.000000000000000000000"
+  },
+  "earnings_basis_ledger": {
+    "version": "stateless_earnings_basis_v1",
+    "basis": "EBITDA",
+    "mode": "recency_weighted",
+    "reported_ebitda": "185000.0000000000000000000000",
+    "normalized_ebitda": "185000.0000000000000000000000",
+    "current_reported_ebitda": "200000",
+    "current_normalized_ebitda": "200000",
+    "total_adjustments": "0.0000000000000000000000",
+    "rows": [
+      {
+        "fiscal_year": 2023,
+        "reported_ebitda": "150000",
+        "normalized_ebitda": "150000",
+        "applied_adjustments": [],
+        "pending_adjustments": [],
+        "normalization_source": "reported_ebitda",
+        "reported_basis_missing_for_adjustments": false,
+        "weight": "0.1666666666666666666666666667",
+        "weighted_reported_ebitda": "25000.00000000000000000000000",
+        "weighted_normalized_ebitda": "25000.00000000000000000000000"
+      },
+      {
+        "fiscal_year": 2024,
+        "reported_ebitda": "180000",
+        "normalized_ebitda": "180000",
+        "applied_adjustments": [],
+        "pending_adjustments": [],
+        "normalization_source": "reported_ebitda",
+        "reported_basis_missing_for_adjustments": false,
+        "weight": "0.3333333333333333333333333333",
+        "weighted_reported_ebitda": "59999.99999999999999999999999",
+        "weighted_normalized_ebitda": "59999.99999999999999999999999"
+      },
+      {
+        "fiscal_year": 2025,
+        "reported_ebitda": "200000",
+        "normalized_ebitda": "200000",
+        "applied_adjustments": [],
+        "pending_adjustments": [],
+        "normalization_source": "reported_ebitda",
+        "reported_basis_missing_for_adjustments": false,
+        "weight": "0.5",
+        "weighted_reported_ebitda": "100000.0",
+        "weighted_normalized_ebitda": "100000.0"
+      }
+    ],
+    "weights_sum": "1.000000000000000000000000000",
+    "sde_basis": {
+      "version": "stateless_sde_annual_basis_v2",
+      "available": false,
+      "sde_base_ebitda": "185000.0000000000000000000000",
+      "actual_owner_compensation": "0.0000000000000000000000000000",
+      "replacement_owner_compensation": "0.0000000000000000000000000000",
+      "owner_compensation_addback": "0.0000000000000000000000000000",
+      "weighted_sde": "185000.0000000000000000000000",
+      "rows": [
+        {
+          "fiscal_year": 2023,
+          "weight": "0.1666666666666666666666666667",
+          "normalized_ebitda": "150000",
+          "owner_compensation_normalization": "0",
+          "actual_owner_compensation": "0",
+          "replacement_owner_compensation": "0",
+          "owner_compensation_addback": "0",
+          "sde_base_ebitda": "150000",
+          "annual_sde": "150000",
+          "weighted_annual_sde": "25000.00000000000000000000000",
+          "evidence_ids": []
+        },
+        {
+          "fiscal_year": 2024,
+          "weight": "0.3333333333333333333333333333",
+          "normalized_ebitda": "180000",
+          "owner_compensation_normalization": "0",
+          "actual_owner_compensation": "0",
+          "replacement_owner_compensation": "0",
+          "owner_compensation_addback": "0",
+          "sde_base_ebitda": "180000",
+          "annual_sde": "180000",
+          "weighted_annual_sde": "59999.99999999999999999999999",
+          "evidence_ids": []
+        },
+        {
+          "fiscal_year": 2025,
+          "weight": "0.5",
+          "normalized_ebitda": "200000",
+          "owner_compensation_normalization": "0",
+          "actual_owner_compensation": "0",
+          "replacement_owner_compensation": "0",
+          "owner_compensation_addback": "0",
+          "sde_base_ebitda": "200000",
+          "annual_sde": "200000",
+          "weighted_annual_sde": "100000.0",
+          "evidence_ids": []
+        }
+      ],
+      "missing_compensation_years": [
+        2023,
+        2024,
+        2025
+      ],
+      "calculation_sequence": "annual normalized EBITDA + governed replacement compensation, equivalent to reported EBITDA + actual owner compensation, then historical weighting"
+    }
+  },
+  "equity_bridge_adjustments": {
+    "version": "stateless_equity_bridge_adjustments_v1",
+    "value_basis": "equity_value",
+    "currency_treatment": "request_currency",
+    "rows": [],
+    "tax_latency_net_impact": "0",
+    "balance_sheet_adjustment_net_impact": "0",
+    "total_net_impact": "0"
+  },
+  "holdings_consolidation": null,
+  "value_driver_ledger": {
+    "version": "value_driver_ledger.v1",
+    "layers": {
+      "operating_normalizations": {
+        "label": "Reported to normalized operating basis",
+        "earnings_basis": {
+          "version": "stateless_earnings_basis_v1",
+          "basis": "EBITDA",
+          "mode": "recency_weighted",
+          "reported_ebitda": "185000.0000000000000000000000",
+          "normalized_ebitda": "185000.0000000000000000000000",
+          "current_reported_ebitda": "200000",
+          "current_normalized_ebitda": "200000",
+          "total_adjustments": "0.0000000000000000000000",
+          "rows": [
+            {
+              "fiscal_year": 2023,
+              "reported_ebitda": "150000",
+              "normalized_ebitda": "150000",
+              "applied_adjustments": [],
+              "pending_adjustments": [],
+              "normalization_source": "reported_ebitda",
+              "reported_basis_missing_for_adjustments": false,
+              "weight": "0.1666666666666666666666666667",
+              "weighted_reported_ebitda": "25000.00000000000000000000000",
+              "weighted_normalized_ebitda": "25000.00000000000000000000000"
+            },
+            {
+              "fiscal_year": 2024,
+              "reported_ebitda": "180000",
+              "normalized_ebitda": "180000",
+              "applied_adjustments": [],
+              "pending_adjustments": [],
+              "normalization_source": "reported_ebitda",
+              "reported_basis_missing_for_adjustments": false,
+              "weight": "0.3333333333333333333333333333",
+              "weighted_reported_ebitda": "59999.99999999999999999999999",
+              "weighted_normalized_ebitda": "59999.99999999999999999999999"
+            },
+            {
+              "fiscal_year": 2025,
+              "reported_ebitda": "200000",
+              "normalized_ebitda": "200000",
+              "applied_adjustments": [],
+              "pending_adjustments": [],
+              "normalization_source": "reported_ebitda",
+              "reported_basis_missing_for_adjustments": false,
+              "weight": "0.5",
+              "weighted_reported_ebitda": "100000.0",
+              "weighted_normalized_ebitda": "100000.0"
+            }
+          ],
+          "weights_sum": "1.000000000000000000000000000",
+          "sde_basis": {
+            "version": "stateless_sde_annual_basis_v2",
+            "available": false,
+            "sde_base_ebitda": "185000.0000000000000000000000",
+            "actual_owner_compensation": "0.0000000000000000000000000000",
+            "replacement_owner_compensation": "0.0000000000000000000000000000",
+            "owner_compensation_addback": "0.0000000000000000000000000000",
+            "weighted_sde": "185000.0000000000000000000000",
+            "rows": [
+              {
+                "fiscal_year": 2023,
+                "weight": "0.1666666666666666666666666667",
+                "normalized_ebitda": "150000",
+                "owner_compensation_normalization": "0",
+                "actual_owner_compensation": "0",
+                "replacement_owner_compensation": "0",
+                "owner_compensation_addback": "0",
+                "sde_base_ebitda": "150000",
+                "annual_sde": "150000",
+                "weighted_annual_sde": "25000.00000000000000000000000",
+                "evidence_ids": []
+              },
+              {
+                "fiscal_year": 2024,
+                "weight": "0.3333333333333333333333333333",
+                "normalized_ebitda": "180000",
+                "owner_compensation_normalization": "0",
+                "actual_owner_compensation": "0",
+                "replacement_owner_compensation": "0",
+                "owner_compensation_addback": "0",
+                "sde_base_ebitda": "180000",
+                "annual_sde": "180000",
+                "weighted_annual_sde": "59999.99999999999999999999999",
+                "evidence_ids": []
+              },
+              {
+                "fiscal_year": 2025,
+                "weight": "0.5",
+                "normalized_ebitda": "200000",
+                "owner_compensation_normalization": "0",
+                "actual_owner_compensation": "0",
+                "replacement_owner_compensation": "0",
+                "owner_compensation_addback": "0",
+                "sde_base_ebitda": "200000",
+                "annual_sde": "200000",
+                "weighted_annual_sde": "100000.0",
+                "evidence_ids": []
+              }
+            ],
+            "missing_compensation_years": [
+              2023,
+              2024,
+              2025
+            ],
+            "calculation_sequence": "annual normalized EBITDA + governed replacement compensation, equivalent to reported EBITDA + actual owner compensation, then historical weighting"
+          }
+        },
+        "holdings_consolidation": null
+      },
+      "method_calibration": {
+        "label": "Method-level market calibration before enterprise value",
+        "value_basis": "enterprise_value",
+        "market_discount_stack": {
+          "enabled": true,
+          "composition": "multiplicative",
+          "floor_factor": "0.45",
+          "pre_floor_factor": "0.80750",
+          "floor_applied": false,
+          "total_adjustment_factor": "0.80750",
+          "total_adjustment": "-0.19250",
+          "rows": [
+            {
+              "key": "size_discount",
+              "label": "Size discount",
+              "parameter": "-0.05",
+              "advisor_weight": "1",
+              "magnitude": "-0.05",
+              "euro_impact": null,
+              "factor_before": "1",
+              "factor_after": "0.95",
+              "rationale": null,
+              "source": null,
+              "multiple_discount_key": null,
+              "strength_factor_multiple_discount_keys": [],
+              "strength_factor_keys": [],
+              "strength_factor_mapped_inputs": [],
+              "strength_factor_valuation_effects": [],
+              "strength_factor_captured_input_ids": [],
+              "strength_factor_data_point_ids": [],
+              "strength_factor_evidence_count": 0,
+              "enabled": true
+            },
+            {
+              "key": "liquidity_discount",
+              "label": "Liquidity discount",
+              "parameter": "-0.15",
+              "advisor_weight": "1",
+              "magnitude": "-0.15",
+              "euro_impact": null,
+              "factor_before": "0.95",
+              "factor_after": "0.8075",
+              "rationale": null,
+              "source": null,
+              "multiple_discount_key": null,
+              "strength_factor_multiple_discount_keys": [],
+              "strength_factor_keys": [],
+              "strength_factor_mapped_inputs": [],
+              "strength_factor_valuation_effects": [],
+              "strength_factor_captured_input_ids": [],
+              "strength_factor_data_point_ids": [],
+              "strength_factor_evidence_count": 0,
+              "enabled": true
+            },
+            {
+              "key": "country_adjustment",
+              "label": "Country adjustment",
+              "parameter": "0",
+              "advisor_weight": "1",
+              "magnitude": "0",
+              "euro_impact": null,
+              "factor_before": "0.8075",
+              "factor_after": "0.80750",
+              "rationale": null,
+              "source": null,
+              "multiple_discount_key": null,
+              "strength_factor_multiple_discount_keys": [],
+              "strength_factor_keys": [],
+              "strength_factor_mapped_inputs": [],
+              "strength_factor_valuation_effects": [],
+              "strength_factor_captured_input_ids": [],
+              "strength_factor_data_point_ids": [],
+              "strength_factor_evidence_count": 0,
+              "enabled": true
+            }
+          ],
+          "owner_concentration_policy": "excluded_from_stateless_discount_stack",
+          "owner_concentration_policy_reason": "Owner concentration is handled by the owner-dependency pipeline; the stateless discount stack must not double-count it as liquidity/DLOM.",
+          "strength_factor_policy": null,
+          "strength_factor_evidence": []
+        },
+        "calculation_order": "reference_multiple_to_applied_multiple_to_enterprise_value"
+      },
+      "enterprise_to_equity": {
+        "label": "Enterprise value to total shareholder equity",
+        "bridge": {
+          "enterprise_value": "896325.0000000000000000000000",
+          "lines": [
+            {
+              "key": "total_debt",
+              "label": "Less: total debt",
+              "amount": "100000.0",
+              "operator": "-",
+              "kind": "debt",
+              "detail": null
+            },
+            {
+              "key": "cash",
+              "label": "Add: cash & equivalents",
+              "amount": "25000.0",
+              "operator": "+",
+              "kind": "cash",
+              "detail": null
+            }
+          ],
+          "equity_value": "821325.0000000000000000000000",
+          "net_debt": "75000.0",
+          "equity_status": null,
+          "unresolved_fields": [],
+          "nwc_status": "not_assessed",
+          "nwc_note": "Net working capital not assessed - no balance sheet.",
+          "is_phantom_suppressed": false,
+          "notes": []
+        },
+        "supporting_market_bridge": null,
+        "explicit_adjustments": {
+          "version": "stateless_equity_bridge_adjustments_v1",
+          "value_basis": "equity_value",
+          "currency_treatment": "request_currency",
+          "rows": [],
+          "tax_latency_net_impact": "0",
+          "balance_sheet_adjustment_net_impact": "0",
+          "total_net_impact": "0"
+        }
+      },
+      "shareholder_transaction": {
+        "label": "Structural, shareholder and transaction adjustments",
+        "ownership_percentage": "100",
+        "owner_dependency": null,
+        "owner_dependency_adjustment": "0",
+        "equity_before_owner_dependency": "821325.00",
+        "equity_after_owner_dependency": "821325.00"
+      }
+    }
+  },
+  "size_discount": "0.05",
+  "liquidity_discount": "0.15",
+  "owner_dependency_adjustment": "0",
+  "owner_dependency_result": null,
+  "country_adjustment": "0.0",
+  "total_adjustment": "0.19250",
+  "nwc_normalization": null,
+  "trial_balance_anomalies": {
+    "has_anomalies": false,
+    "anomaly_count": 0,
+    "accounts_scanned": 3,
+    "years_scanned": 3,
+    "supported_accounts": [
+      "60",
+      "61",
+      "63"
+    ],
+    "unsupported_accounts": [],
+    "anomaly_flags": []
+  },
+  "valuation_summary": "Canal Works — fictional company is valued at €821,325 using the EBITDA_MULTIPLE methodology. This valuation has high confidence based on data quality and comparables.",
+  "key_value_drivers": [
+    "Stable business operations"
+  ],
+  "risk_factors": [
+    "No major risk factors identified"
+  ],
+  "monte_carlo_results": null,
+  "valuation_results": {
+    "upswitch_adaptive": {
+      "value": "821325.00",
+      "enterprise_value": null,
+      "enterprise_value_low": null,
+      "enterprise_value_high": null,
+      "equity_value": null,
+      "equity_value_low": null,
+      "equity_value_high": null,
+      "value_basis": "equity_value",
+      "label": "UpSwitch Adaptive",
+      "multiple_used": "6.0",
+      "wacc": null,
+      "available": true,
+      "unavailable_reason": null,
+      "details": {
+        "description": "Market approach with calibrated transaction multiples; DCF is not included as a weighted valuation leg for this profile.",
+        "primary_basis": "market",
+        "methodology_justification": "DCF is not included for this profile: DCF requires a sealed, source-dated economic_snapshot.v1; missing or ungoverned: schema_version, snapshot_id, snapshot_hash, snapshot_issuer, risk_free_rate_observed_at, equity_risk_premium_observed_at, growth_rates_observed_at, source_references",
+        "equity_range_low": 642060.0,
+        "equity_range_high": 1000590.0,
+        "saas_metrics": {},
+        "saas_adjustment_breakdown": [],
+        "multiples_source": "DELPHI_BENCHMARK_CONTRACT",
+        "is_delphi_benchmark_sourced": true,
+        "benchmark_contract": {
+          "status": "resolved",
+          "source": "DELPHI_BENCHMARK_CONTRACT",
+          "primary_metric": "ev_ebitda",
+          "benchmark_id": "fictional-software-be",
+          "dataset_version_id": "fictional-tutorial-v1",
+          "country_code": "BE",
+          "region_key": "BE",
+          "tier": "native",
+          "walk_step": null,
+          "walk_proximity": 0,
+          "sample_size": 58,
+          "confidence_band": "high",
+          "confidence_score": 0.91,
+          "source_mix": {
+            "transaction": 40,
+            "listing_proxy": 14,
+            "public_market_proxy": 4
+          },
+          "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+          "published_at": "2026-05-01T00:00:00Z",
+          "methodology_version": "delphi-benchmark-v1",
+          "benchmark_scope": "country",
+          "benchmark_kind": "native",
+          "is_borrowed": false,
+          "scope_stage": "native_benelux",
+          "metrics": {
+            "ev_ebitda": {
+              "benchmark_id": "bench-software-be-2026q2",
+              "sample_size": 58,
+              "confidence_band": "high",
+              "business_type_id": "software",
+              "p25": "4.8",
+              "median": "6.0",
+              "p75": "7.2"
+            },
+            "ev_revenue": {
+              "benchmark_id": "bench-software-revenue-be-2026q2",
+              "sample_size": 41,
+              "confidence_band": "medium",
+              "business_type_id": "software",
+              "median": "1.5"
+            }
+          },
+          "business_type_id": "software"
+        },
+        "benchmark_provenance": {
+          "benchmark_id": "fictional-software-be",
+          "dataset_version_id": "fictional-tutorial-v1",
+          "country_code": "BE",
+          "region_key": "BE",
+          "tier": "native",
+          "walk_step": null,
+          "walk_proximity": 0,
+          "sample_size": 58,
+          "confidence_band": "high",
+          "confidence_score": 0.91,
+          "source_mix": {
+            "transaction": 40,
+            "listing_proxy": 14,
+            "public_market_proxy": 4
+          },
+          "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+          "published_at": "2026-05-01T00:00:00Z",
+          "methodology_version": "delphi-benchmark-v1",
+          "benchmark_scope": "country",
+          "benchmark_kind": "native",
+          "is_borrowed": false,
+          "scope_stage": "native_benelux",
+          "benchmark_scope_stage": "native_benelux"
+        },
+        "fallback_used": false,
+        "fallback_reason": null
+      },
+      "method_key": "upswitch_adaptive",
+      "confidence": null,
+      "value_low": "642060.0",
+      "value_high": "1000590.0",
+      "engine_version": null
+    },
+    "ebitda_multiple": {
+      "value": "821325.00",
+      "enterprise_value": "896325.00",
+      "enterprise_value_low": "717060.00",
+      "enterprise_value_high": "1075590.00",
+      "equity_value": "821325.00",
+      "equity_value_low": "642060.00",
+      "equity_value_high": "1000590.00",
+      "value_basis": "equity_value",
+      "label": "EBITDA-multiple",
+      "multiple_used": "4.8450",
+      "wacc": null,
+      "available": true,
+      "unavailable_reason": null,
+      "details": {
+        "pricing_metric": "185000.0000000000000000000000",
+        "pricing_multiple": "4.845000",
+        "enterprise_value": "896325.00",
+        "enterprise_value_low": "717060.00",
+        "enterprise_value_high": "1075590.00",
+        "p25_multiple": "4.8",
+        "p75_multiple": "7.2",
+        "equity_range_low": "642060.00",
+        "equity_range_high": "1000590.00",
+        "reference_enterprise_value": "1110000.00",
+        "reference_multiple": "6.0",
+        "method_adjustment_factor": "0.80750",
+        "range_basis": {
+          "schema_version": "valuation_range_basis.v1",
+          "kind": "supplied_multiple_bounds",
+          "empirical_percentiles": false,
+          "lower_bound_supplied": true,
+          "upper_bound_supplied": true,
+          "assumed_spread": null,
+          "statistical_coverage": null
+        },
+        "saas_metrics": {},
+        "saas_adjustment_factor": "1",
+        "multiples_source": "DELPHI_BENCHMARK_CONTRACT",
+        "is_delphi_benchmark_sourced": true,
+        "benchmark_contract": {
+          "status": "resolved",
+          "source": "DELPHI_BENCHMARK_CONTRACT",
+          "primary_metric": "ev_ebitda",
+          "benchmark_id": "fictional-software-be",
+          "dataset_version_id": "fictional-tutorial-v1",
+          "country_code": "BE",
+          "region_key": "BE",
+          "tier": "native",
+          "walk_step": null,
+          "walk_proximity": 0,
+          "sample_size": 58,
+          "confidence_band": "high",
+          "confidence_score": 0.91,
+          "source_mix": {
+            "transaction": 40,
+            "listing_proxy": 14,
+            "public_market_proxy": 4
+          },
+          "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+          "published_at": "2026-05-01T00:00:00Z",
+          "methodology_version": "delphi-benchmark-v1",
+          "benchmark_scope": "country",
+          "benchmark_kind": "native",
+          "is_borrowed": false,
+          "scope_stage": "native_benelux",
+          "metrics": {
+            "ev_ebitda": {
+              "benchmark_id": "bench-software-be-2026q2",
+              "sample_size": 58,
+              "confidence_band": "high",
+              "business_type_id": "software",
+              "p25": "4.8",
+              "median": "6.0",
+              "p75": "7.2"
+            },
+            "ev_revenue": {
+              "benchmark_id": "bench-software-revenue-be-2026q2",
+              "sample_size": 41,
+              "confidence_band": "medium",
+              "business_type_id": "software",
+              "median": "1.5"
+            }
+          },
+          "business_type_id": "software"
+        },
+        "benchmark_provenance": {
+          "benchmark_id": "fictional-software-be",
+          "dataset_version_id": "fictional-tutorial-v1",
+          "country_code": "BE",
+          "region_key": "BE",
+          "tier": "native",
+          "walk_step": null,
+          "walk_proximity": 0,
+          "sample_size": 58,
+          "confidence_band": "high",
+          "confidence_score": 0.91,
+          "source_mix": {
+            "transaction": 40,
+            "listing_proxy": 14,
+            "public_market_proxy": 4
+          },
+          "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+          "published_at": "2026-05-01T00:00:00Z",
+          "methodology_version": "delphi-benchmark-v1",
+          "benchmark_scope": "country",
+          "benchmark_kind": "native",
+          "is_borrowed": false,
+          "scope_stage": "native_benelux",
+          "benchmark_scope_stage": "native_benelux"
+        },
+        "fallback_used": false,
+        "fallback_reason": null
+      },
+      "method_key": "ebitda_multiple",
+      "confidence": null,
+      "value_low": "642060.00",
+      "value_high": "1000590.00",
+      "engine_version": null
+    },
+    "dcf": {
+      "value": null,
+      "enterprise_value": null,
+      "enterprise_value_low": null,
+      "enterprise_value_high": null,
+      "equity_value": null,
+      "equity_value_low": null,
+      "equity_value_high": null,
+      "value_basis": "equity_value",
+      "label": "Discounted Cash Flow (DCF)",
+      "multiple_used": null,
+      "wacc": null,
+      "available": false,
+      "unavailable_reason": "DCF requires a sealed, source-dated economic_snapshot.v1; missing or ungoverned: schema_version, snapshot_id, snapshot_hash, snapshot_issuer, risk_free_rate_observed_at, equity_risk_premium_observed_at, growth_rates_observed_at, source_references",
+      "details": null,
+      "method_key": "dcf",
+      "confidence": null,
+      "value_low": null,
+      "value_high": null,
+      "engine_version": null
+    },
+    "sde_multiple": {
+      "value": null,
+      "enterprise_value": null,
+      "enterprise_value_low": null,
+      "enterprise_value_high": null,
+      "equity_value": null,
+      "equity_value_low": null,
+      "equity_value_high": null,
+      "value_basis": "equity_value",
+      "label": "SDE-multiple",
+      "multiple_used": null,
+      "wacc": null,
+      "available": false,
+      "unavailable_reason": "SDE vereist geaccepteerde, bewijsgekoppelde eigenaarcompensatie; een omzetheuristiek wordt niet geprijsd.",
+      "details": null,
+      "method_key": "sde_multiple",
+      "confidence": null,
+      "value_low": null,
+      "value_high": null,
+      "engine_version": null
+    },
+    "omzet_multiple": {
+      "value": "1136250.00",
+      "enterprise_value": "1211250.00",
+      "enterprise_value_low": "969000.00",
+      "enterprise_value_high": "1453500.00",
+      "equity_value": "1136250.00",
+      "equity_value_low": "894000.00",
+      "equity_value_high": "1378500.00",
+      "value_basis": "equity_value",
+      "label": "Omzetmultiple",
+      "multiple_used": "1.2112",
+      "wacc": null,
+      "available": true,
+      "unavailable_reason": null,
+      "details": {
+        "pricing_metric": "1000000",
+        "pricing_multiple": "1.211250",
+        "enterprise_value": "1211250.00",
+        "enterprise_value_low": "969000.00",
+        "enterprise_value_high": "1453500.00",
+        "revenue": "1000000.00",
+        "equity_range_low": "894000.00",
+        "equity_range_high": "1378500.00",
+        "reference_enterprise_value": "1500000.00",
+        "reference_multiple": "1.5",
+        "method_adjustment_factor": "0.80750",
+        "range_basis": {
+          "schema_version": "valuation_range_basis.v1",
+          "kind": "assumed_multiple_spread",
+          "empirical_percentiles": false,
+          "lower_bound_supplied": false,
+          "upper_bound_supplied": false,
+          "assumed_spread": "0.20",
+          "statistical_coverage": null
+        },
+        "multiples_source": "DELPHI_BENCHMARK_CONTRACT",
+        "is_delphi_benchmark_sourced": true,
+        "benchmark_contract": {
+          "status": "resolved",
+          "source": "DELPHI_BENCHMARK_CONTRACT",
+          "primary_metric": "ev_ebitda",
+          "benchmark_id": "fictional-software-be",
+          "dataset_version_id": "fictional-tutorial-v1",
+          "country_code": "BE",
+          "region_key": "BE",
+          "tier": "native",
+          "walk_step": null,
+          "walk_proximity": 0,
+          "sample_size": 58,
+          "confidence_band": "high",
+          "confidence_score": 0.91,
+          "source_mix": {
+            "transaction": 40,
+            "listing_proxy": 14,
+            "public_market_proxy": 4
+          },
+          "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+          "published_at": "2026-05-01T00:00:00Z",
+          "methodology_version": "delphi-benchmark-v1",
+          "benchmark_scope": "country",
+          "benchmark_kind": "native",
+          "is_borrowed": false,
+          "scope_stage": "native_benelux",
+          "metrics": {
+            "ev_ebitda": {
+              "benchmark_id": "bench-software-be-2026q2",
+              "sample_size": 58,
+              "confidence_band": "high",
+              "business_type_id": "software",
+              "p25": "4.8",
+              "median": "6.0",
+              "p75": "7.2"
+            },
+            "ev_revenue": {
+              "benchmark_id": "bench-software-revenue-be-2026q2",
+              "sample_size": 41,
+              "confidence_band": "medium",
+              "business_type_id": "software",
+              "median": "1.5"
+            }
+          },
+          "business_type_id": "software"
+        },
+        "benchmark_provenance": {
+          "benchmark_id": "fictional-software-be",
+          "dataset_version_id": "fictional-tutorial-v1",
+          "country_code": "BE",
+          "region_key": "BE",
+          "tier": "native",
+          "walk_step": null,
+          "walk_proximity": 0,
+          "sample_size": 58,
+          "confidence_band": "high",
+          "confidence_score": 0.91,
+          "source_mix": {
+            "transaction": 40,
+            "listing_proxy": 14,
+            "public_market_proxy": 4
+          },
+          "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+          "published_at": "2026-05-01T00:00:00Z",
+          "methodology_version": "delphi-benchmark-v1",
+          "benchmark_scope": "country",
+          "benchmark_kind": "native",
+          "is_borrowed": false,
+          "scope_stage": "native_benelux",
+          "benchmark_scope_stage": "native_benelux"
+        },
+        "fallback_used": false,
+        "fallback_reason": null
+      },
+      "method_key": "revenue_multiple",
+      "confidence": null,
+      "value_low": "894000.00",
+      "value_high": "1378500.00",
+      "engine_version": null
+    },
+    "arr_multiple": {
+      "value": null,
+      "enterprise_value": null,
+      "enterprise_value_low": null,
+      "enterprise_value_high": null,
+      "equity_value": null,
+      "equity_value_low": null,
+      "equity_value_high": null,
+      "value_basis": "equity_value",
+      "label": "ARR multiple",
+      "multiple_used": null,
+      "wacc": null,
+      "available": false,
+      "unavailable_reason": "ARR ontbreekt of is nul. Vul Annual Recurring Revenue, MRR, of een aandeel terugkerende omzet in om de ARR-multiple te activeren. Aanbevolen alternatief: ebitda_multiple.",
+      "details": {
+        "arr": 0.0,
+        "enterprise_value": 0.0,
+        "saas_metrics": {},
+        "saas_adjustment_breakdown": [],
+        "eligibility": {
+          "eligible": false,
+          "recurring_share": null,
+          "arr": null,
+          "blocking_reasons": [
+            "ARR ontbreekt of is nul. Vul Annual Recurring Revenue, MRR, of een aandeel terugkerende omzet in om de ARR-multiple te activeren."
+          ],
+          "warnings": [],
+          "signals": {
+            "arr_eur": null,
+            "recurring_share": null,
+            "min_recurring_share_threshold": 0.5,
+            "min_arr_eur_threshold": 100000.0,
+            "validation_error_count": 0,
+            "validation_warning_count": 0
+          },
+          "suggested_alternative_method": "ebitda_multiple"
+        }
+      },
+      "method_key": "arr_multiple",
+      "confidence": null,
+      "value_low": null,
+      "value_high": null,
+      "engine_version": null
+    },
+    "adjusted_nav": {
+      "value": null,
+      "enterprise_value": null,
+      "enterprise_value_low": null,
+      "enterprise_value_high": null,
+      "equity_value": null,
+      "equity_value_low": null,
+      "equity_value_high": null,
+      "value_basis": "equity_value",
+      "label": "Gecorrigeerde NAV (Intrinsieke Waarde)",
+      "multiple_used": null,
+      "wacc": null,
+      "available": false,
+      "unavailable_reason": "Balansgegevens vereist — totale activa ontbreken.",
+      "details": {
+        "modeled_asset_components": [],
+        "value_basis": "equity_value",
+        "ownership_multiplier": "1",
+        "range_basis": {
+          "schema_version": "valuation_range_basis.v1",
+          "kind": "assumed_nav_spread",
+          "assumed_spread": "0.10",
+          "empirical_percentiles": false,
+          "statistical_coverage": null
+        },
+        "additional_ev_to_equity_bridge_required": false
+      },
+      "method_key": "adjusted_nav",
+      "confidence": null,
+      "value_low": null,
+      "value_high": null,
+      "engine_version": null
+    },
+    "real_estate_yield": {
+      "value": null,
+      "enterprise_value": null,
+      "enterprise_value_low": null,
+      "enterprise_value_high": null,
+      "equity_value": null,
+      "equity_value_low": null,
+      "equity_value_high": null,
+      "value_basis": "equity_value",
+      "label": "Real-estate yield (income capitalisation)",
+      "multiple_used": null,
+      "wacc": null,
+      "available": false,
+      "unavailable_reason": "Canonical property yield requires a signed, source-bound evidence contract.",
+      "details": null,
+      "method_key": "real_estate_yield",
+      "confidence": null,
+      "value_low": null,
+      "value_high": null,
+      "engine_version": "real_estate_yield.v1"
+    },
+    "fiscal_4x": {
+      "value": null,
+      "enterprise_value": null,
+      "enterprise_value_low": null,
+      "enterprise_value_high": null,
+      "equity_value": null,
+      "equity_value_low": null,
+      "equity_value_high": null,
+      "value_basis": "equity_value",
+      "label": "Fiscale Referentiewaarde (4× EBITDA)",
+      "multiple_used": null,
+      "wacc": null,
+      "available": false,
+      "unavailable_reason": "Fiscale referentie vereist boekhoudkundig eigen vermogen of een volledige balans.",
+      "details": null,
+      "method_key": "fiscal_4x",
+      "confidence": null,
+      "value_low": null,
+      "value_high": null,
+      "engine_version": null
+    },
+    "startup_valuation": {
+      "value": null,
+      "enterprise_value": null,
+      "enterprise_value_low": null,
+      "enterprise_value_high": null,
+      "equity_value": null,
+      "equity_value_low": null,
+      "equity_value_high": null,
+      "value_basis": "equity_value",
+      "label": "Startup Valuation",
+      "multiple_used": null,
+      "wacc": null,
+      "available": false,
+      "unavailable_reason": "Startup-waardering vereist kwalitatieve invoer (sliders, traction, cap-table) — niet beschikbaar voor klassieke KMO-flows.",
+      "details": null,
+      "method_key": "startup_valuation",
+      "confidence": null,
+      "value_low": null,
+      "value_high": null,
+      "engine_version": null
+    },
+    "liquidation_analysis": {
+      "value": null,
+      "enterprise_value": null,
+      "enterprise_value_low": null,
+      "enterprise_value_high": null,
+      "equity_value": null,
+      "equity_value_low": null,
+      "equity_value_high": null,
+      "value_basis": "equity_value",
+      "label": "Liquidatiewaarde (Geordende & Gedwongen)",
+      "multiple_used": null,
+      "wacc": null,
+      "available": false,
+      "unavailable_reason": "Balansgegevens vereist — totale activa moeten positief zijn.",
+      "details": {
+        "unavailable_code": "LIQUIDATION_TOTAL_ASSETS_NON_POSITIVE",
+        "missing_fields": [
+          "current_year_data.total_assets"
+        ],
+        "remediation": "Corrigeer totale activa naar een positief bedrag uit de balans."
+      },
+      "method_key": "liquidation_analysis",
+      "confidence": null,
+      "value_low": null,
+      "value_high": null,
+      "engine_version": null
+    }
+  },
+  "weighted_valuation": null,
+  "fiscal_4x_anchor": "740000.0",
+  "data_quality": {
+    "multiples_source": "DELPHI_BENCHMARK_CONTRACT",
+    "is_delphi_benchmark_sourced": true,
+    "enrichment_complete": true,
+    "fallback_used": false,
+    "fallback_reason": null,
+    "business_type_id": "software",
+    "primary_business_type_id": "software",
+    "business_type_mix": [
+      {
+        "business_type_id": "software",
+        "weight": 100
+      }
+    ],
+    "business_type_weights": {
+      "software": 100
+    },
+    "business_type_mix_policy": "single_business_type",
+    "category_id": "technology",
+    "data_quality_score": null,
+    "benchmark_contract": {
+      "status": "resolved",
+      "source": "DELPHI_BENCHMARK_CONTRACT",
+      "primary_metric": "ev_ebitda",
+      "benchmark_id": "fictional-software-be",
+      "dataset_version_id": "fictional-tutorial-v1",
+      "country_code": "BE",
+      "region_key": "BE",
+      "tier": "native",
+      "walk_step": null,
+      "walk_proximity": 0,
+      "sample_size": 58,
+      "confidence_band": "high",
+      "confidence_score": 0.91,
+      "source_mix": {
+        "transaction": 40,
+        "listing_proxy": 14,
+        "public_market_proxy": 4
+      },
+      "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+      "published_at": "2026-05-01T00:00:00Z",
+      "methodology_version": "delphi-benchmark-v1",
+      "benchmark_scope": "country",
+      "benchmark_kind": "native",
+      "is_borrowed": false,
+      "scope_stage": "native_benelux",
+      "metrics": {
+        "ev_ebitda": {
+          "benchmark_id": "bench-software-be-2026q2",
+          "sample_size": 58,
+          "confidence_band": "high",
+          "business_type_id": "software",
+          "p25": "4.8",
+          "median": "6.0",
+          "p75": "7.2"
+        },
+        "ev_revenue": {
+          "benchmark_id": "bench-software-revenue-be-2026q2",
+          "sample_size": 41,
+          "confidence_band": "medium",
+          "business_type_id": "software",
+          "median": "1.5"
+        }
+      },
+      "business_type_id": "software"
+    },
+    "benchmark_provenance": {
+      "benchmark_id": "fictional-software-be",
+      "dataset_version_id": "fictional-tutorial-v1",
+      "country_code": "BE",
+      "region_key": "BE",
+      "tier": "native",
+      "walk_step": null,
+      "walk_proximity": 0,
+      "sample_size": 58,
+      "confidence_band": "high",
+      "confidence_score": 0.91,
+      "source_mix": {
+        "transaction": 40,
+        "listing_proxy": 14,
+        "public_market_proxy": 4
+      },
+      "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+      "published_at": "2026-05-01T00:00:00Z",
+      "methodology_version": "delphi-benchmark-v1",
+      "benchmark_scope": "country",
+      "benchmark_kind": "native",
+      "is_borrowed": false,
+      "scope_stage": "native_benelux",
+      "benchmark_scope_stage": "native_benelux"
+    }
+  },
+  "valuation_timeline": null,
+  "forward_value_cone": null
+}

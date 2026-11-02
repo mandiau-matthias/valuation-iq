@@ -1,0 +1,130 @@
+{# Risk Assessment Section - Phase 3 #}
+<div class="section-container bg-white rounded-lg shadow-sm p-6 mb-4 border border-gray-200" data-section="risk-assessment">
+  <div class="section-header mb-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900">Risk Assessment</h2>
+        <p class="text-sm text-gray-600">Valuation adjustments and risk factors</p>
+      </div>
+      <div class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm font-semibold">
+        Phase {{ phase | default(3) }}
+      </div>
+    </div>
+  </div>
+  
+  <div class="section-content space-y-4">
+    <!-- Risk Score -->
+    <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg p-4 border border-amber-200">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-semibold text-amber-900">Overall Risk Score</h3>
+        <span class="text-2xl font-bold text-amber-700">{{ risk_score | default(0) }}/100</span>
+      </div>
+      <div class="w-full bg-gray-200 rounded-full h-3">
+        <div class="bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 h-3 rounded-full" style="width: {{ risk_score | default(0) }}%"></div>
+      </div>
+      <div class="flex justify-between text-xs text-gray-600 mt-1">
+        <span>Low Risk</span>
+        <span>High Risk</span>
+      </div>
+    </div>
+
+    <!-- Risk Factors -->
+    {% if risk_factors %}
+    <div class="bg-white rounded-lg p-4 border border-gray-200">
+      <h3 class="text-sm font-semibold text-gray-700 mb-3">Identified Risk Factors</h3>
+      <div class="space-y-2">
+        {% for risk in risk_factors %}
+        <div class="flex items-start p-2 bg-gray-50 rounded">
+          <div class="flex-shrink-0 mr-2">
+            {% if risk.severity == 'high' %}
+            <span class="inline-block w-2 h-2 bg-red-500 rounded-full mt-1"></span>
+            {% elif risk.severity == 'medium' %}
+            <span class="inline-block w-2 h-2 bg-yellow-500 rounded-full mt-1"></span>
+            {% else %}
+            <span class="inline-block w-2 h-2 bg-green-500 rounded-full mt-1"></span>
+            {% endif %}
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-900">{{ risk.name }}</p>
+            <p class="text-xs text-gray-600">{{ risk.description }}</p>
+            <p class="text-xs text-amber-700 mt-1">Impact: {{ "{:+.1f}".format(risk.impact) }}%</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Valuation Adjustments -->
+    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+      <h3 class="text-sm font-semibold text-gray-700 mb-3">Valuation Adjustments</h3>
+      <div class="space-y-2">
+        {% if adjustments %}
+          {% for adjustment in adjustments %}
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600">{{ adjustment.name }}</span>
+            <span class="text-sm font-semibold {% if adjustment.value < 0 %}text-red-700{% else %}text-green-700{% endif %}">
+              {{ "{:+.1f}".format(adjustment.value) }}%
+            </span>
+          </div>
+          {% endfor %}
+        {% endif %}
+        <div class="border-t border-gray-300 pt-2 mt-2">
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-bold text-gray-900">Total Adjustment</span>
+            <span class="text-sm font-bold {% if total_adjustment < 0 %}text-red-700{% else %}text-green-700{% endif %}">
+              {{ "{:+.1f}".format(total_adjustment | default(0)) }}%
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Adjusted Valuation -->
+    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+      <h3 class="text-sm font-semibold text-blue-900 mb-3">Adjusted Valuation Range</h3>
+      <div class="grid grid-cols-3 gap-3">
+        <div class="text-center">
+          <p class="text-xs text-gray-600 mb-1">Low</p>
+          <p class="text-lg font-bold text-gray-900">€{{ "{:,.0f}".format(adjusted_value_low | default(0)) }}</p>
+        </div>
+        <div class="text-center bg-blue-100 rounded-lg py-2">
+          <p class="text-xs text-blue-700 mb-1 font-semibold">Mid</p>
+          <p class="text-2xl font-bold text-blue-700">€{{ "{:,.0f}".format(adjusted_value_mid | default(0)) }}</p>
+        </div>
+        <div class="text-center">
+          <p class="text-xs text-gray-600 mb-1">High</p>
+          <p class="text-lg font-bold text-gray-900">€{{ "{:,.0f}".format(adjusted_value_high | default(0)) }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mitigation Strategies -->
+    {% if mitigation_strategies %}
+    <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+      <h3 class="text-sm font-semibold text-green-900 mb-2">Risk Mitigation Strategies</h3>
+      <ul class="space-y-1">
+        {% for strategy in mitigation_strategies %}
+        <li class="flex items-start text-xs text-green-700">
+          <svg class="w-3 h-3 text-green-500 mt-0.5 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+          </svg>
+          {{ strategy }}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+  
+  <div class="section-footer mt-4 pt-4 border-t border-gray-200">
+    <div class="flex items-center justify-between">
+      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+        {{ confidence | default(85) }}% Confidence
+      </span>
+      <span class="text-xs text-gray-500">Risk-adjusted valuation</span>
+    </div>
+  </div>
+</div>
+
+

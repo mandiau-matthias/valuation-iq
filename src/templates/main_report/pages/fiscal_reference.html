@@ -1,0 +1,278 @@
+{#
+    FISCAL REFERENCE PAGE
+    Page 6 (conditional — only when show_fiscal_reference is true)
+
+    Belgian fiscal reference layer:
+    Forfaitaire Waarde = Eigen Vermogen + 4 × EBITDA
+    (Art. 102, § 4 WIB 92; voorwaarden via fiscaal adviseur bevestigen)
+
+    Contents:
+    - Scope disclaimer banner
+    - Peildatum strip
+    - Calculation breakdown table (with reported vs normalised gap)
+    - Side-by-side comparison (M&A vs Fiscal — only when complete)
+    - Internal-transfer / holding warnings (when flagged)
+    - Real-estate carve-out impact (when applied)
+    - Legal basis and statutory methods
+    - Professional disclaimer + book-equity notices
+
+    Screen version: uses CSS vars and flex/grid layouts (Clarity design).
+#}
+
+<div class="a4-page">
+    {% set _fiscal_ebitda_multiple = fiscal_ebitda_multiple|default(4, true) %}
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div class="section-header">
+        <span class="section-number">{{ fiscal_reference_section_number }}</span>
+        <div>
+            <h1 class="section-title">{{ t.fiscal_title }}</h1>
+            <p class="section-subtitle">{{ t.fiscal_subtitle }}</p>
+        </div>
+    </div>
+
+    <div style="background: hsl(35, 90%, 96%); border: 1pt solid hsl(35, 70%, 80%); border-radius: 6pt; padding: 10pt 14pt; margin-bottom: 12pt;">
+        <p style="font-size: 8pt; color: hsl(35, 50%, 30%); margin: 0; font-weight: 600;">
+            {{ t.fiscal_scope_disclaimer }}
+        </p>
+    </div>
+
+    {% if fiscal_reference_date %}
+    <div style="display: flex; gap: 12pt; margin-bottom: 18pt; font-size: 8pt;">
+        <div>
+            <span style="text-transform: uppercase; letter-spacing: 0.5pt; color: hsl(var(--report-slate-500)); font-size: 7pt;">{{ t.fiscal_peildatum_label }}</span>
+            <span style="font-weight: 600; color: hsl(var(--report-text)); margin-left: 6pt;">{{ fiscal_reference_date }}</span>
+        </div>
+        {% if fiscal_ebitda_source_label %}
+        <div>
+            <span style="text-transform: uppercase; letter-spacing: 0.5pt; color: hsl(var(--report-slate-500)); font-size: 7pt;">{{ t.fiscal_ebitda_source_label_caption }}</span>
+            <span style="font-weight: 600; color: hsl(var(--report-text)); margin-left: 6pt;">{{ fiscal_ebitda_source_label }}</span>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div style="background: hsl(var(--report-surface)); border-radius: 8pt; padding: 20pt; margin-bottom: 18pt;">
+        <h3 style="font-size: 10pt; font-weight: 700; color: hsl(var(--report-text)); margin-bottom: 14pt;">
+            {{ t.fiscal_calc_title }}
+        </h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 9pt;">
+            <tbody>
+                <tr style="border-bottom: 1pt solid hsl(var(--report-slate-200));">
+                    <td style="padding: 8pt 0; color: hsl(var(--report-text-muted));">
+                        {% if fiscal_uses_normalized_ebitda %}{{ t.fiscal_ebitda_used_label }}{% else %}{{ t.fiscal_reported_ebitda_label }}{% endif %}
+                    </td>
+                    <td style="padding: 8pt 0; text-align: right; font-weight: 600;">{{ fiscal_normalized_ebitda|format_currency }}</td>
+                </tr>
+                {% if fiscal_uses_normalized_ebitda and fiscal_reported_ebitda is not none %}
+                <tr style="border-bottom: 1pt solid hsl(var(--report-slate-200));">
+                    <td style="padding: 6pt 0 6pt 8pt; color: hsl(var(--report-slate-400)); font-size: 8pt;">↳ {{ t.fiscal_reported_ebitda_compare_label }}</td>
+                    <td style="padding: 6pt 0; text-align: right; color: hsl(var(--report-slate-500)); font-size: 8pt;">{{ fiscal_reported_ebitda|format_currency }}</td>
+                </tr>
+                {% endif %}
+                <tr style="border-bottom: 1pt solid hsl(var(--report-slate-200));">
+                    <td style="padding: 8pt 0; color: hsl(var(--report-text-muted));">{{ t.fiscal_forfaitaire_multiple_label }}</td>
+                    <td style="padding: 8pt 0; text-align: right; font-weight: 600;">{{ _fiscal_ebitda_multiple }}×</td>
+                </tr>
+                <tr style="border-bottom: 1pt solid hsl(var(--report-slate-200));">
+                    <td style="padding: 8pt 0; color: hsl(var(--report-text-muted));">{{ t.fiscal_ebitda_component_label|replace('{n}', _fiscal_ebitda_multiple|int|string) }}</td>
+                    <td style="padding: 8pt 0; text-align: right; font-weight: 600;">{{ fiscal_ebitda_component|format_currency }}</td>
+                </tr>
+                <tr style="border-bottom: 1pt solid hsl(var(--report-slate-200));">
+                    <td style="padding: 8pt 0; color: hsl(var(--report-text-muted));">{{ t.fiscal_book_equity_label }}</td>
+                    <td style="padding: 8pt 0; text-align: right; font-weight: 600;{% if fiscal_book_equity is none %} color: hsl(var(--report-slate-400));{% endif %}">
+                        {% if fiscal_book_equity is not none %}{{ fiscal_book_equity|format_currency }}{% else %}{{ t.fiscal_not_provided }}{% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12pt 0 8pt; font-weight: 700; font-size: 10pt; color: hsl(var(--report-text));">
+                        {% if fiscal_value_complete %}{{ t.fiscal_reference_value_label }}{% else %}{{ t.fiscal_reference_value_incomplete_label }}{% endif %}
+                    </td>
+                    <td style="padding: 12pt 0 8pt; text-align: right; font-weight: 700; font-size: 11pt; color: hsl(var(--report-primary));">
+                        {% if fiscal_value_complete %}{{ fiscal_reference_value|format_currency }}{% else %}<span style="color: hsl(var(--report-slate-500));">{{ t.fiscal_value_incomplete_token }}</span>{% endif %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    {% if fiscal_show_statutory_ebitda_caution|default(false) %}
+    <div style="background: hsl(35, 90%, 96%); border: 1pt solid hsl(35, 70%, 80%); border-radius: 6pt; padding: 10pt 14pt; margin-bottom: 14pt;">
+        <p style="font-size: 8pt; color: hsl(35, 50%, 30%); margin: 0 0 3pt 0; font-weight: 700;">
+            {{ t.fiscal_statutory_ebitda_caution_title }}
+        </p>
+        <p style="font-size: 8pt; color: hsl(35, 50%, 30%); margin: 0; line-height: 1.5;">
+            {{ t.fiscal_statutory_ebitda_caution_body }}
+        </p>
+    </div>
+    {% endif %}
+
+    {% if fiscal_value_complete %}
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12pt; margin-bottom: 18pt;">
+        <div style="background: hsl(var(--report-surface)); border-radius: 6pt; padding: 14pt; text-align: center;">
+            <p style="font-size: 7pt; text-transform: uppercase; letter-spacing: 0.5pt; color: hsl(var(--report-slate-500)); margin-bottom: 6pt;">{{ t.fiscal_ma_market_value }}</p>
+            <p style="font-size: 14pt; font-weight: 700; color: hsl(var(--report-teal)); margin: 0;">{{ equity_value|format_currency_compact }}</p>
+            <p style="font-size: 7pt; color: hsl(var(--report-slate-500)); margin-top: 4pt;">{{ t.fiscal_indicative_share_value }}</p>
+        </div>
+        <div style="background: hsl(var(--report-primary-light)); border-radius: 6pt; padding: 14pt; text-align: center; border: 1pt solid hsla(var(--report-primary), 0.25);">
+            <p style="font-size: 7pt; text-transform: uppercase; letter-spacing: 0.5pt; color: hsl(var(--report-primary-dark)); margin-bottom: 6pt;">{{ t.fiscal_reference_value_short }}</p>
+            <p style="font-size: 14pt; font-weight: 700; color: hsl(var(--report-primary)); margin: 0;">{{ fiscal_reference_value|format_currency_compact }}</p>
+            <p style="font-size: 7pt; color: hsl(var(--report-slate-500)); margin-top: 4pt;">{{ t.fiscal_equity_plus_multiple|replace('{n}', _fiscal_ebitda_multiple|int|string) }}</p>
+        </div>
+    </div>
+    {% else %}
+    <div style="background: hsl(var(--report-surface)); border: 1pt dashed hsl(var(--report-slate-300)); border-radius: 6pt; padding: 14pt; margin-bottom: 18pt; text-align: center;">
+        <p style="font-size: 7pt; text-transform: uppercase; letter-spacing: 0.5pt; color: hsl(var(--report-slate-500)); margin-bottom: 4pt;">{{ t.fiscal_value_incomplete_caption }}</p>
+        <p style="font-size: 11pt; font-weight: 700; color: hsl(var(--report-text)); margin: 0;">{{ t.fiscal_ebitda_component_only_label|replace('{amount}', fiscal_ebitda_component|format_currency_compact) }}</p>
+        <p style="font-size: 7pt; color: hsl(var(--report-slate-500)); margin-top: 4pt;">{{ t.fiscal_value_incomplete_help }}</p>
+    </div>
+    {% endif %}
+
+    {% if fiscal_internal_transfer %}
+    <div style="background: hsl(0, 80%, 97%); border: 1pt solid hsl(0, 60%, 80%); border-radius: 6pt; padding: 10pt 14pt; margin-bottom: 12pt;">
+        <p style="font-size: 8pt; color: hsl(0, 50%, 30%); margin: 0;">
+            <strong>{{ t.fiscal_internal_transfer_title }}</strong> {{ t.fiscal_internal_transfer_body }}
+        </p>
+    </div>
+    {% endif %}
+
+    {% if fiscal_company_role == 'holding' %}
+    <div style="background: hsl(35, 90%, 96%); border: 1pt solid hsl(35, 70%, 80%); border-radius: 6pt; padding: 10pt 14pt; margin-bottom: 12pt;">
+        <p style="font-size: 8pt; color: hsl(35, 50%, 30%); margin: 0;">
+            <strong>{{ t.fiscal_warning_prefix }}</strong> {{ t.fiscal_holding_role_warning }}
+        </p>
+    </div>
+    {% endif %}
+
+    {% if fiscal_real_estate_carve_out_applied %}
+    <div style="background: hsl(var(--report-surface)); border-left: 3pt solid hsl(var(--report-primary)); border-radius: 4pt; padding: 8pt 12pt; margin-bottom: 12pt;">
+        <p style="font-size: 8pt; color: hsl(var(--report-text-muted)); margin: 0;">
+            <strong style="color: hsl(var(--report-text));">{{ t.fiscal_carve_out_title }}</strong> {{ t.fiscal_carve_out_body }}
+        </p>
+    </div>
+    {% endif %}
+
+    <div style="margin-bottom: 12pt;">
+        <h3 style="font-size: 9pt; font-weight: 700; color: hsl(var(--report-text)); margin-bottom: 8pt;">{{ t.fiscal_legal_basis_title }}</h3>
+        <div style="font-size: 8pt; color: hsl(var(--report-text-muted)); line-height: 1.6;">
+            <p style="margin: 0 0 6pt 0;">{{ t.fiscal_legal_intro }}</p>
+            <ol style="margin: 0 0 6pt 0; padding-left: 14pt;">
+                <li>{{ t.fiscal_legal_item_1 }}</li>
+                <li>{{ t.fiscal_legal_item_2 }}</li>
+                <li>{{ t.fiscal_legal_item_3 }}</li>
+                <li>{{ t.fiscal_legal_item_4 }}</li>
+            </ol>
+            <p style="margin: 0 0 6pt 0; padding: 6pt 8pt; background: {% if fiscal_legal_anchors_acknowledged %}hsl(var(--report-surface)){% else %}hsl(35, 90%, 97%){% endif %}; border-radius: 4pt; font-weight: 600; color: {% if fiscal_legal_anchors_acknowledged %}hsl(var(--report-text)){% else %}hsl(35, 50%, 30%){% endif %};">
+                {% if fiscal_legal_anchors_acknowledged %}{{ t.fiscal_anchors_acknowledged_text }}{% else %}{{ t.fiscal_anchors_unacknowledged_text }}{% endif %}
+            </p>
+            <p style="margin: 0 0 6pt 0;">{{ t.fiscal_legal_paragraph }}</p>
+            <p style="margin: 0; font-size: 7pt; color: hsl(var(--report-slate-400)); font-style: italic;">{{ t.fiscal_legal_footer }}</p>
+        </div>
+    </div>
+
+    {# Statutory method worksheet. A professional report replaces the
+       formula in the supported-value selection. Other populated methods
+       remain comparable and the supported result is highlighted. #}
+    {% if fiscal_max_anchor_value is not none %}
+    <div style="background: hsl(var(--report-surface)); border-radius: 8pt; padding: 16pt 20pt; margin-bottom: 14pt;">
+        <h3 style="font-size: 10pt; font-weight: 700; color: hsl(var(--report-text)); margin: 0 0 4pt 0;">{{ t.fiscal_anchors_worksheet_title }}</h3>
+        <p style="font-size: 8pt; color: hsl(var(--report-text-muted)); margin: 0 0 10pt 0;">{{ t.fiscal_anchors_worksheet_intro }}</p>
+        <table style="width: 100%; border-collapse: collapse; font-size: 8.5pt;">
+            <thead>
+                <tr style="border-bottom: 1pt solid hsl(var(--report-slate-300));">
+                    <th style="padding: 6pt 0; text-align: left; font-weight: 600; color: hsl(var(--report-slate-500)); font-size: 7pt; text-transform: uppercase; letter-spacing: 0.5pt;">{{ t.fiscal_anchors_col_anchor }}</th>
+                    <th style="padding: 6pt 8pt; text-align: left; font-weight: 600; color: hsl(var(--report-slate-500)); font-size: 7pt; text-transform: uppercase; letter-spacing: 0.5pt;">{{ t.fiscal_anchors_col_basis }}</th>
+                    <th style="padding: 6pt 0; text-align: right; font-weight: 600; color: hsl(var(--report-slate-500)); font-size: 7pt; text-transform: uppercase; letter-spacing: 0.5pt;">{{ t.fiscal_anchors_col_value }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for anchor in [
+                    ('anchor_1', t.fiscal_anchor_1_name, t.fiscal_anchor_1_basis, fiscal_anchor_1_value),
+                    ('anchor_2', t.fiscal_anchor_2_name, t.fiscal_anchor_2_basis, fiscal_anchor_2_value),
+                    ('anchor_3', t.fiscal_anchor_3_name, t.fiscal_anchor_3_basis, fiscal_anchor_3_value),
+                    ('anchor_4', t.fiscal_anchor_4_name, t.fiscal_anchor_4_basis, fiscal_anchor_4_value)
+                ] %}
+                {% set is_winner = (fiscal_max_anchor_label == anchor[0]) %}
+                <tr style="border-bottom: 1pt solid hsl(var(--report-slate-200)); {% if is_winner %}background: hsla(var(--report-primary), 0.08);{% endif %}">
+                    <td style="padding: 8pt 0; font-weight: {% if is_winner %}700{% else %}500{% endif %}; color: hsl(var(--report-text));">
+                        {{ anchor[1] }}
+                        {% if is_winner %}<span style="display: inline-block; margin-left: 6pt; padding: 1pt 6pt; background: hsl(var(--report-primary)); color: white; border-radius: 8pt; font-size: 6.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3pt;">{{ t.fiscal_anchor_winner_chip }}</span>{% endif %}
+                    </td>
+                    <td style="padding: 8pt; color: hsl(var(--report-text-muted)); font-size: 7.5pt;">{{ anchor[2] }}</td>
+                    <td style="padding: 8pt 0; text-align: right; font-weight: {% if is_winner %}700{% else %}500{% endif %}; color: {% if anchor[3] is none %}hsl(var(--report-slate-400)){% else %}hsl(var(--report-text)){% endif %}; tabular-nums">
+                        {% if anchor[3] is not none %}{{ anchor[3]|format_currency }}{% else %}{{ t.fiscal_anchor_not_applicable }}{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if fiscal_max_anchor_value is not none %}
+                <tr>
+                    <td colspan="2" style="padding: 12pt 0 6pt; font-weight: 700; font-size: 9.5pt; color: hsl(var(--report-text));">
+                        {% if fiscal_acquisition_cost is not none and fiscal_acquisition_cost != fiscal_max_anchor_value %}{{ t.fiscal_acquisition_cost_label }}{% else %}{{ t.fiscal_max_anchor_label }}{% endif %}
+                        <p style="font-size: 7pt; font-weight: 400; color: hsl(var(--report-slate-500)); margin: 2pt 0 0 0;">
+                            {% if fiscal_acquisition_cost is not none and fiscal_acquisition_cost != fiscal_max_anchor_value %}{{ t.fiscal_acquisition_cost_caption }}{% else %}{{ t.fiscal_max_anchor_caption }}{% endif %}
+                        </p>
+                    </td>
+                    <td style="padding: 12pt 0 6pt; text-align: right; font-weight: 700; font-size: 12pt; color: hsl(var(--report-primary)); tabular-nums">
+                        {{ (fiscal_acquisition_cost if fiscal_acquisition_cost is not none else fiscal_max_anchor_value)|format_currency }}
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    {# Tax-impact panel — translates the aanschaffingswaarde into the
+       indicative belastingdruk an accountant explains to the client.
+       Shows both 10% (ordinary shares) and 33% (internal capital gain)
+       bands. Suppressed when the proposed value is unavailable. #}
+    {% if fiscal_max_anchor_value is not none or fiscal_acquisition_cost is not none %}
+    {% set acq = fiscal_acquisition_cost if fiscal_acquisition_cost is not none else fiscal_max_anchor_value %}
+    <div style="background: hsl(var(--report-primary-light)); border-left: 3pt solid hsl(var(--report-primary)); border-radius: 4pt; padding: 12pt 14pt; margin-bottom: 14pt;">
+        <h4 style="font-size: 9pt; font-weight: 700; color: hsl(var(--report-text)); margin: 0 0 4pt 0;">{{ t.fiscal_tax_impact_title }}</h4>
+        <p style="font-size: 8pt; color: hsl(var(--report-text-muted)); margin: 0 0 8pt 0;">
+            {{ t.fiscal_tax_impact_intro|replace('{acq}', acq|format_currency) }}
+        </p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10pt;">
+            <div style="background: hsl(var(--report-surface)); border-radius: 4pt; padding: 8pt 10pt;">
+                <span style="display: block; font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.5pt; color: hsl(var(--report-slate-500)); margin-bottom: 2pt;">{{ t.fiscal_tax_impact_rate_standard }}</span>
+                <span style="display: block; font-size: 11pt; font-weight: 700; color: hsl(var(--report-text)); tabular-nums">10%</span>
+            </div>
+            <div style="background: hsl(0, 80%, 97%); border: 1pt solid hsl(0, 60%, 85%); border-radius: 4pt; padding: 8pt 10pt;">
+                <span style="display: block; font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.5pt; color: hsl(0, 50%, 32%); margin-bottom: 2pt;">{{ t.fiscal_tax_impact_rate_internal }}</span>
+                <span style="display: block; font-size: 11pt; font-weight: 700; color: hsl(0, 60%, 32%); tabular-nums">33%</span>
+            </div>
+        </div>
+        <p style="font-size: 7pt; color: hsl(var(--report-slate-500)); margin: 8pt 0 0 0; font-style: italic;">{{ t.fiscal_tax_impact_disclaimer }}</p>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    {# Advisor-pinned EBITDA basis chip — surfaces the explicit choice
+       the advisor made (statutair vs genormaliseerd) so the reader sees
+       both that the gap was acknowledged and which side the report runs. #}
+    {% if fiscal_ebitda_basis %}
+    <div style="display: inline-block; padding: 4pt 10pt; border-radius: 12pt; background: hsl(var(--report-surface)); border: 1pt solid hsl(var(--report-slate-300)); margin-bottom: 12pt;">
+        <span style="font-size: 7pt; text-transform: uppercase; letter-spacing: 0.4pt; font-weight: 600; color: hsl(var(--report-text-muted));">
+            {% if fiscal_ebitda_basis == 'statutair' %}{{ t.fiscal_ebitda_basis_advisor_chip_statutair }}{% else %}{{ t.fiscal_ebitda_basis_advisor_chip_genormaliseerd }}{% endif %}
+        </span>
+    </div>
+    {% endif %}
+
+    {% if fiscal_book_equity is none %}
+    <div style="background: hsl(35, 90%, 96%); border: 1pt solid hsl(35, 70%, 80%); border-radius: 6pt; padding: 10pt 14pt; margin-bottom: 12pt;">
+        <p style="font-size: 8pt; color: hsl(35, 50%, 30%); margin: 0;">
+            <strong>{{ t.fiscal_warning_prefix }}</strong> {{ t.fiscal_warning_equity_missing }}
+        </p>
+    </div>
+    {% elif fiscal_book_equity_negative %}
+    <div style="background: hsl(35, 90%, 96%); border: 1pt solid hsl(35, 70%, 80%); border-radius: 6pt; padding: 10pt 14pt; margin-bottom: 12pt;">
+        <p style="font-size: 8pt; color: hsl(35, 50%, 30%); margin: 0;">
+            <strong>{{ t.fiscal_warning_prefix }}</strong> {{ t.fiscal_warning_equity_negative|replace('{amount}', fiscal_book_equity|format_currency) }}
+        </p>
+    </div>
+    {% endif %}
+
+    {% with page_number=fiscal_reference_page_number|default(7 if show_dcf_before_calibration else 6), total_pages=total_pages %}
+    {% include "main_report/partials/_footer.html" %}
+    {% endwith %}
+</div>

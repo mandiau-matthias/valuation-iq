@@ -1,0 +1,137 @@
+{#
+    OWNER RISK LEDGER — PDF mirror of main_report/components/_owner_risk_ledger.html.
+
+    Same data contract (`owner_risk_ledger` flat dict, dumped from the
+    typed Pydantic `OwnerRiskLedger`); PDF-tree colour tokens substituted
+    for the screen-tree HSL variables. Render contract is identical:
+    None → no-op; otherwise the M&A-grade reconciliation block.
+
+    Both trees consume the same dict-shape so the data contract stays a
+    single source of truth in
+    `apps/valuation-iq/src/domain/owner_risk_ledger.py`.
+#}
+
+{% set ledger = owner_risk_ledger %}
+{% if ledger %}
+{% set is_defensible = ledger.audit_quality == 'DEFENSIBLE' %}
+{% set chip_bg     = 'hsl(143, 40%, 94%)' if is_defensible else 'hsl(35, 70%, 94%)' %}
+{% set chip_border = 'hsl(143, 40%, 65%)' if is_defensible else 'hsl(35, 70%, 65%)' %}
+{% set chip_color  = 'hsl(143, 40%, 30%)' if is_defensible else 'hsl(35, 50%, 30%)' %}
+{% set chip_label  = t.owner_risk_ledger_audit_defensible if is_defensible else t.owner_risk_ledger_audit_heuristic %}
+
+<div style="margin-top: 14pt; padding: 12pt; background: hsl(40, 15%, 98%); border: 1px solid hsl(224, 10%, 88%); border-radius: 6pt; page-break-inside: avoid; break-inside: avoid;">
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12pt; flex-wrap: wrap; margin-bottom: 8pt;">
+        <div style="flex: 1 1 320pt; min-width: 0;">
+            <h3 style="margin: 0 0 2pt 0; font-size: 9.5pt; font-weight: 700; color: hsl(225, 18%, 12%);">
+                {{ t.owner_risk_ledger_title }}
+            </h3>
+            <p style="margin: 0; font-size: 7.5pt; color: hsl(224, 10%, 45%); line-height: 1.5;">
+                {{ t.owner_risk_ledger_subtitle }}
+            </p>
+        </div>
+        <div style="text-align: right;">
+            <span style="display: inline-block; padding: 3pt 8pt; border-radius: 999pt; background: {{ chip_bg }}; border: 1px solid {{ chip_border }}; color: {{ chip_color }}; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">
+                {{ t.owner_risk_ledger_audit_quality_label }}: {{ chip_label }}
+            </span>
+        </div>
+    </div>
+
+    <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt; color: hsl(225, 18%, 12%); margin-top: 6pt;">
+        <thead>
+            <tr style="border-bottom: 1px solid hsl(224, 10%, 88%);">
+                <th style="text-align: left;  padding: 4pt 4pt; font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(224, 10%, 45%); font-weight: 600;">{{ t.owner_risk_ledger_side_multiple if false else '' }}{# placeholder so emitter doesn't dedupe #}</th>
+                <th style="text-align: left;  padding: 4pt 4pt; font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(224, 10%, 45%); font-weight: 600;">{{ t.owner_risk_ledger_item_label }}</th>
+                <th style="text-align: right; padding: 4pt 4pt; font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(224, 10%, 45%); font-weight: 600;">%</th>
+                <th style="text-align: right; padding: 4pt 4pt; font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(224, 10%, 45%); font-weight: 600;">€</th>
+                <th style="text-align: left;  padding: 4pt 8pt; font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(224, 10%, 45%); font-weight: 600;">{{ t.owner_risk_ledger_methodology_title }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in ledger.entries %}
+            {% set side_label = t.owner_risk_ledger_side_multiple if entry.side == 'multiple' else t.owner_risk_ledger_side_equity %}
+            {% set heuristic_marker = '★' if entry.is_heuristic else '◆' %}
+            <tr style="border-bottom: 1px solid hsl(224, 10%, 94%);">
+                <td style="padding: 5pt 4pt; font-weight: 600; white-space: nowrap; color: hsl(224, 10%, 35%);">
+                    <span style="display: inline-block; padding: 1pt 5pt; border-radius: 3pt; background: hsl(40, 15%, 98%); border: 1px solid hsl(224, 10%, 88%); font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.04em;">
+                        {{ side_label }}
+                    </span>
+                </td>
+                <td style="padding: 5pt 4pt;">
+                    <div style="font-weight: 600; line-height: 1.35;">{{ entry.label }}</div>
+                    <div style="margin-top: 1pt; font-size: 6.5pt; color: hsl(224, 10%, 45%);">
+                        <span style="margin-right: 3pt;">{{ heuristic_marker }}</span>{{ entry.risk_level }}
+                        {% if entry.evidence_grade == 'UNCORROBORATED' %}
+                        <span style="display: inline-block; margin-left: 4pt; padding: 0 4pt; border-radius: 3pt; background: hsl(35, 90%, 94%); border: 1px solid hsl(35, 70%, 70%); color: hsl(35, 50%, 28%); font-size: 6pt; font-weight: 700; text-transform: uppercase;">{{ t.owner_risk_ledger_unverified_input }}</span>
+                        {% endif %}
+                    </div>
+                    {% if entry.input_basis %}
+                    <div style="margin-top: 1pt; font-size: 6.5pt; color: hsl(224, 10%, 45%);">
+                        {{ t.owner_risk_ledger_basis_label }}: {{ entry.input_basis }}
+                    </div>
+                    {% endif %}
+                </td>
+                <td style="padding: 5pt 4pt; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600;">
+                    {{ '%.1f'|format(entry.adjustment_pct|float) }}%
+                </td>
+                <td style="padding: 5pt 4pt; text-align: right; font-variant-numeric: tabular-nums; color: hsl(224, 10%, 35%);">
+                    {% set _monetary_impact = entry.monetary_impact|float if entry.monetary_impact is defined and entry.monetary_impact is not none else 0 %}
+                    {% if _monetary_impact != 0 %}
+                        {% if _monetary_impact < 0 %}−{% endif %}€{{ '{:,.0f}'.format(_monetary_impact|abs|float) }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td style="padding: 5pt 8pt; color: hsl(224, 10%, 45%); line-height: 1.45; font-size: 7pt;">
+                    {{ entry.methodology }}
+                    {% if entry.citation_keys %}
+                    <sup style="font-size: 6pt; color: hsl(173, 58%, 39%); font-weight: 700; margin-left: 2pt;">{{ entry.citation_keys|length }}</sup>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr style="border-top: 1.5px solid hsl(224, 10%, 75%);">
+                <td colspan="2" style="padding: 6pt 4pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; font-size: 7pt; color: hsl(225, 18%, 12%);">
+                    {{ t.owner_risk_ledger_total_label }}
+                </td>
+                <td colspan="2" style="padding: 6pt 4pt; text-align: right; font-variant-numeric: tabular-nums; font-weight: 800; font-size: 8.5pt; color: hsl(225, 18%, 12%);">
+                    {% set _total_monetary_impact = ledger.total_monetary_impact|float if ledger.total_monetary_impact is defined and ledger.total_monetary_impact is not none else 0 %}
+                    {% if _total_monetary_impact != 0 %}
+                        {% if _total_monetary_impact < 0 %}−{% endif %}€{{ '{:,.0f}'.format(_total_monetary_impact|abs|float) }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td style="padding: 6pt 8pt;"></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div style="margin-top: 10pt; padding: 8pt 10pt; background: hsl(40, 15%, 98%); border-left: 2pt solid hsl(173, 58%, 39%); border-radius: 0 4pt 4pt 0;">
+        <p style="margin: 0 0 3pt 0; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(173, 58%, 39%);">
+            {{ t.owner_risk_ledger_methodology_title }}
+        </p>
+        <p style="margin: 0; font-size: 7.5pt; line-height: 1.55; color: hsl(225, 18%, 12%);">
+            {{ ledger.methodology_summary }}
+        </p>
+    </div>
+
+    <div style="margin-top: 6pt; padding: 8pt 10pt; background: hsl(40, 15%, 98%); border: 1px dashed hsl(224, 10%, 88%); border-radius: 4pt;">
+        <p style="margin: 0 0 3pt 0; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(224, 10%, 35%);">
+            {{ t.owner_risk_ledger_no_double_count_title }}
+        </p>
+        <p style="margin: 0; font-size: 7pt; line-height: 1.55; color: hsl(224, 10%, 45%); font-style: italic;">
+            {{ ledger.cross_reference_note }}
+        </p>
+    </div>
+
+    {% if not is_defensible and ledger.next_action %}
+    <div style="margin-top: 6pt; padding: 8pt 10pt; background: hsl(35, 90%, 97%); border: 1px solid hsl(35, 70%, 80%); border-radius: 4pt;">
+        <p style="margin: 0; font-size: 7pt; line-height: 1.55; color: hsl(35, 50%, 25%); font-weight: 600;">
+            → {{ ledger.next_action }}
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endif %}

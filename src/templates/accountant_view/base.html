@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Upswitch Valuation Engine">
+    <meta name="keywords" content="business valuation, SME valuation, company valuation, financial analysis">
+    <meta name="subject" content="Business Valuation Report">
+    <meta name="created" content="{{ generation_timestamp | format_date if generation_timestamp else '' }}">
+    {% if report_classification %}
+    <meta name="report_classification" content="{{ report_classification }}">
+    {% endif %}
+    {% if report_limitations %}
+    <meta name="report_limitations" content="{{ report_limitations|join(', ') }}">
+    {% endif %}
+    <title>{% if report_classification and report_classification != 'Business Valuation Report' %}{{ report_classification }} - {% endif %}{{ company_name }}</title>
+    <style>
+        /* 
+           ============================================================================
+           SYNC WARNING: FRONTEND DEPENDENCY
+           ============================================================================
+           These styles are manually mirrored in the frontend application at:
+           apps/upswitch-valuation-tester/src/index.css
+           
+           If you modify the typography, colors, or layout classes below (especially 
+           .final-report styles), you MUST update the corresponding CSS in index.css 
+           to ensure the Progressive Report Preview matches the final PDF.
+           ============================================================================
+        */
+
+        /* ============================================================================
+           PROFESSIONAL TYPOGRAPHY
+           Based on established professional report standards
+           Compliance: Belgian IRE/IBR professional standards
+           ============================================================================ */
+        /* Font imports for PDF/A compliance */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        
+        /* PDF/A: Ensure font fallbacks */
+        body, .final-report {
+            font-family: 'Inter', 'Arial', 'Helvetica', sans-serif;
+            color: #334155; /* Professional body text color */
+        }
+        
+        /* Page setup - cover page has no headers/footers */
+        @page cover {
+            size: A4;
+            margin: 0; /* Full bleed for cover */
+            @top-center { content: none; }
+            @bottom-center { content: none; }
+            @bottom-left { content: none; }
+            @bottom-right { content: none; }
+        }
+        
+        /* Page setup - TOC page has no headers/footers */
+        @page toc {
+            size: A4;
+            margin: 0; /* Full bleed for TOC */
+            @top-center { content: none; }
+            @bottom-center { content: none; }
+            @bottom-left { content: none; }
+            @bottom-right { content: none; }
+        }
+
+        /* Standard Page Container - Dynamic for smart pagination */
+        .page {
+            width: 210mm;
+            min-height: 0; /* NO minimum - let content flow naturally */
+            height: auto; /* Content determines height */
+            padding: 2cm 1.5cm; /* Professional margins */
+            margin: 24px auto;
+            background: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            position: relative;
+            box-sizing: border-box; /* Ensure padding doesn't affect width */
+            overflow: visible; /* Critical for smart pagination */
+            /* WeasyPrint handles pagination automatically via CSS fragmentation */
+        }
+
+        /* Regular pages with headers and footers */
+        @page {
+            size: A4;
+            margin: 2cm 1.5cm 2cm 1.5cm; /* Adjusted for better fit */
+            @top-center {
+                content: "{{ company_name }} - Business Valuation Report";
+                font-family: 'Inter', 'Arial', sans-serif;
+                font-size: 8pt;
+                color: #4B5563; /* Slate-500 */
+                text-transform: none; /* Normal case */
+                letter-spacing: 0.5pt;
+                border-bottom: none;
+                margin-bottom: 0.5cm;
+            }
+            @bottom-left {
+                content: "Strictly Private & Confidential";
+                font-family: 'Inter', 'Arial', sans-serif;
+                font-size: 8pt;
+                color: #4B5563;
+            }
+            @bottom-right {
+                content: "Page " counter(page);
+                font-family: 'Inter', 'Arial', sans-serif;
+                font-size: 8pt;
+                color: #4B5563;
+            }
+        }
+        
+        /* Reset body to ensure no grey borders */
+        body {
+            margin: 0;
+            padding: 0;
+            /* Removed fixed white background to allow transparent stacking in preview */
+        }
+        
+        /* BANK-GRADE: Smooth scroll behavior for TOC navigation */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Fallback for browsers that don't support scroll-behavior */
+        @supports not (scroll-behavior: smooth) {
+            html {
+                scroll-behavior: auto;
+            }
+        }
+
+        /* Scope all styles to .final-report to prevent leaking to page UI */
+        .final-report {
+            font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; /* Modern Digital First */
+            font-size: 11pt; /* Slightly smaller for cleaner, sharper look */
+            line-height: 1.5;
+            color: #2b303a; /* Deep Navy for maximum contrast */
+            background: transparent; /* Transparent background to let pages float */
+            padding: 0;
+            margin: 0 auto;
+            counter-reset: page 1 table-counter;
+            position: relative; /* Ensure absolute positioning works relative to this */
+        }
+        
+        /* Browser Preview: Visual page indicators with flexible heights */
+        @media screen {
+            .page {
+                min-height: 297mm;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                margin: 24px auto;
+            }
+        }
+        
+        /* PDF Generation: Let WeasyPrint control pagination automatically */
+        @media print {
+            .final-report {
+                max-width: none;
+                width: 100%;
+                box-shadow: none;
+                margin: 0;
+                background: #FFFFFF;
+            }
+            
+            .page {
+                box-shadow: none;
+                margin: 0;
+                width: 100%;
+                padding: 0; /* Margins handled by @page in PDF */
+                min-height: 0; /* No height constraints - WeasyPrint decides */
+                max-height: none; /* Allow natural flow */
+                height: auto; /* Let content determine height */
+                page-break-after: auto; /* Let WeasyPrint's algorithm decide */
+                overflow: visible; /* Critical for proper fragmentation */
+            }
+        }
+        
+        .final-report * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        /* BANK-GRADE: Horizontal padding for all report sections (matches cover page) */
+        .final-report .report-section {
+            padding: 0;
+        }
+        
+        /* Modern Authority Color Palette - Epidemic Sound Inspired */
+        :root {
+            --upswitch-navy: #2b303a; /* Slate Ink - Primary Text */
+            --upswitch-blue: #4a5d4f; /* Sage Foundation - Primary Brand */
+            --text-dark: #2b303a;     /* Slate Ink */
+            --text-body: #4b5563;     /* Slate-600 */
+            --text-muted: #6b7280;    /* Slate-500 */
+            --bg-subtle: #f4f1ea;     /* Canvas */
+            --border-light: #e2e8f0;  /* Slate-200 */
+        }
+        
+        /* Scope styles to .final-report */
+        .final-report h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 42pt;
+            font-weight: 800; /* Extra Bold */
+            color: #2b303a;
+            margin-top: 48pt;
+            margin-bottom: 32pt;
+            padding: 0; /* Align with body text */
+            page-break-before: always; /* H1 always starts new page */
+            break-before: page; /* Modern browser support */
+            page-break-after: avoid;
+            border-bottom: none; /* Clean look, no borders */
+            letter-spacing: -1.5pt; /* Tight tracking for modern feel */
+            line-height: 1.05;
+        }
+        
+        /* Section header treatment - enhanced visual hierarchy */
+        .final-report h1[id^="section-"],
+        .final-report h1[id^="appendix-"] {
+            background: linear-gradient(to right, #f4f1ea 0%, rgba(244, 241, 234, 0) 100%);
+            padding: 16pt 0 16pt 20pt;
+            margin-left: -20pt;
+            margin-right: 0;
+            border-left: 4pt solid #2b303a;
+            border-bottom: 1pt solid #e2e8f0;
+            margin-bottom: 32pt;
+        }
+
+        .final-report .page > h1:first-child,
+        .final-report .report-section > h1:first-child {
+            margin-top: 0;
+        }
+        
+        /* Hero Header Utility Class */
+        .final-report .hero-header {
+            font-size: 64pt;
+            font-weight: 800;
+            line-height: 0.9;
+            letter-spacing: -2pt;
+            color: #2b303a;
+            margin-bottom: 24pt;
+        }
+        
+        .final-report h2 {
+            font-family: 'Inter', sans-serif;
+            font-size: 18pt;
+            font-weight: 700;
+            color: #2b303a; /* Slate-900 */
+            margin-top: 32pt;
+            margin-bottom: 16pt;
+            page-break-after: avoid;
+            text-transform: none;
+            letter-spacing: -0.5pt;
+            line-height: 1.3;
+            padding-bottom: 8pt;
+            border-bottom: 1pt solid #e2e8f0;
+        }
+
+        .final-report .page > h2:first-child,
+        .final-report .report-section > h2:first-child {
+            margin-top: 0;
+        }
+        
+        .final-report h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 13pt;
+            font-weight: 700;
+            color: #2b303a;
+            margin-top: 24pt;
+            margin-bottom: 12pt;
+            page-break-after: avoid;
+            line-height: 1.3;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        
+        .final-report h4 {
+            font-family: 'Inter', sans-serif;
+            font-size: 11pt;
+            font-weight: 700;
+            color: #2b303a;
+            margin-top: 16pt;
+            margin-bottom: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .final-report p {
+            margin-bottom: 12pt;
+            text-align: left; /* Left align for modern digital feel, rarely justify web-style */
+            color: #4b5563;
+        }
+        
+        .final-report .report-section {
+            margin-bottom: 48pt;
+        }
+        
+        /* ━━━ Enhanced Typography Scale - Professional Report Layout ━━━ */
+        .final-report .display-1 { 
+            font-size: 56pt; 
+            font-weight: 800; 
+            line-height: 1.0;
+            letter-spacing: -0.03em;
+        }
+        
+        .final-report .display-2 { 
+            font-size: 42pt; 
+            font-weight: 800; 
+            line-height: 1.05;
+            letter-spacing: -1.5pt;
+        }
+        
+        .final-report .display-3 { 
+            font-size: 28pt; 
+            font-weight: 700; 
+            line-height: 1.2;
+            letter-spacing: -0.75pt;
+        }
+        
+        .final-report .lead { 
+            font-size: 14pt; 
+            line-height: 1.6;
+            color: #334155;
+            font-weight: 400;
+        }
+        
+        .final-report .body { 
+            font-size: 11pt; 
+            line-height: 1.6;
+            color: #4b5563;
+        }
+        
+        .final-report .small { 
+            font-size: 9pt; 
+            line-height: 1.5;
+            color: #64748B;
+        }
+        
+        .final-report .tiny { 
+            font-size: 7pt; 
+            line-height: 1.4;
+            color: #94A3B8;
+        }
+        
+        /* ━━━ Professional Spacing System ━━━ */
+        .final-report .mb-xs { margin-bottom: 8pt; }
+        .final-report .mb-sm { margin-bottom: 16pt; }
+        .final-report .mb-md { margin-bottom: 24pt; }
+        .final-report .mb-lg { margin-bottom: 32pt; }
+        .final-report .mb-xl { margin-bottom: 48pt; }
+        
+        .final-report .mt-xs { margin-top: 8pt; }
+        .final-report .mt-sm { margin-top: 16pt; }
+        .final-report .mt-md { margin-top: 24pt; }
+        .final-report .mt-lg { margin-top: 32pt; }
+        .final-report .mt-xl { margin-top: 48pt; }
+
+        /* Cover Page Preview Style - FIXED A4 dimensions */
+        .cover-sheet {
+            width: 210mm;
+            height: 297mm; /* FIXED height for perfect A4 rendering */
+            margin: 24px auto;
+            background: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            position: relative;
+            page-break-after: always;
+            break-after: page;
+            page-break-inside: avoid; /* Prevent fragmentation */
+            break-inside: avoid;
+            box-sizing: border-box;
+            overflow: hidden; /* Contain content within fixed A4 */
+            /* No padding on container, to allow full bleed design */
+        }
+
+        @media print {
+            .cover-sheet {
+                box-shadow: none;
+                margin: 0;
+                width: 210mm;
+                height: 297mm; /* FIXED for PDF rendering */
+                page-break-after: always;
+                break-after: page;
+                page-break-inside: avoid;
+                break-inside: avoid;
+                overflow: hidden; /* Ensure content stays within A4 */
+            }
+        }
+        
+        /* TOC Container - Fixed A4 height for single-page layout */
+        .toc-container {
+            width: 210mm;
+            height: 297mm; /* FIXED height for perfect A4 rendering */
+            margin: 24px auto;
+            background: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            position: relative;
+            page-break-after: always;
+            break-after: page;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            box-sizing: border-box;
+            overflow: hidden;
+            padding: 1.5cm 1.5cm; /* Reduced top/bottom padding for more content space */
+        }
+        
+        @media print {
+            .toc-container {
+                box-shadow: none;
+                margin: 0;
+                width: 210mm;
+                height: 297mm; /* FIXED for PDF rendering */
+                page-break-after: always;
+                break-after: page;
+                page-break-inside: avoid;
+                break-inside: avoid;
+                overflow: hidden;
+                padding: 1.5cm 1.5cm !important; /* Reduced top/bottom padding for more content space */
+            }
+        }
+
+        
+        .final-report .stat-card {
+            background-color: #F8FAFC;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 20pt;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+            page-break-inside: avoid;
+            break-inside: avoid;
+            transition: all 0.2s ease;
+            height: 100%;
+            box-sizing: border-box;
+        }
+        
+        .final-report .stat-card .label {
+            font-size: 9pt;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #64748B;
+            font-weight: 700;
+            margin-bottom: 8pt;
+            display: block;
+        }
+        
+        .final-report .stat-card .value {
+            font-size: 28pt;
+            font-weight: 800;
+            color: #2b303a;
+            line-height: 1.0;
+            display: block;
+            margin-bottom: 8pt;
+        }
+        
+        .final-report .stat-card p {
+            margin: 0;
+            font-size: 9pt;
+            color: #64748B;
+            line-height: 1.4;
+        }
+
+        /* Utility Classes */
+        .final-report .font-bold {
+            font-weight: 700 !important;
+        }
+
+        /* Standardized report callouts */
+        .final-report .report-callout {
+            background-color: #f4f1ea;
+            border-left: 4pt solid #2b303a;
+            padding: 20pt;
+            margin: 24pt 0;
+            border-radius: 0 6pt 6pt 0;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .final-report .report-callout h4 {
+            margin-top: 0;
+            margin-bottom: 12pt;
+            font-size: 10pt;
+        }
+        
+        .final-report .report-callout.warning {
+            background-color: #fef3c7; /* More vibrant warning yellow */
+            border: 2pt solid #f59e0b;
+            border-left: 4pt solid #f59e0b; /* Thicker left accent (must come AFTER border shorthand) */
+            border-radius: 6pt;
+        }
+        
+        .final-report .report-callout.warning h4 {
+            color: #92400e; /* Dark orange text */
+        }
+        
+        .final-report .report-callout.danger {
+            background-color: #fee2e2; /* More vibrant danger red */
+            border: 2pt solid #dc2626;
+            border-left: 4pt solid #dc2626; /* Thicker left accent (must come AFTER border shorthand) */
+            border-radius: 6pt;
+        }
+        
+        .final-report .report-callout.danger h4 {
+            color: #991b1b; /* Dark red text */
+        }
+        
+        .final-report .report-callout p {
+            margin-bottom: 8pt;
+            color: #334155;
+            line-height: 1.6;
+        }
+        
+        .final-report .report-callout p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* The "Box" Container for Tables - Enhanced Professional Treatment */
+        .final-report .table-card {
+            background: #FFFFFF;
+            border: 1px solid #cbd5e1; /* Stronger border */
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06); /* More pronounced depth */
+            overflow: hidden; /* Keeps rounded corners clean */
+            margin-bottom: 32pt; /* More breathing room */
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        /* Remove default table margins if inside a card to fit perfectly */
+        .final-report .table-card .step-table,
+        .final-report .table-card table {
+            margin: 0;
+            border-top: none; /* The card has the border */
+            border-radius: 0;
+        }
+        
+        /* Header background within card */
+        .final-report .table-card .step-table th,
+        .final-report .table-card table th {
+            background-color: #f4f1ea; /* Canvas - matches info tab */
+            border-top: none;
+        }
+
+        /* Tables - Digital Authority & Academic Style */
+        .final-report table,
+        .final-report .step-table {
+            width: 100%;
+            margin-left: 0;
+            margin-right: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 24pt;
+            margin-bottom: 24pt;
+            font-family: 'Inter', sans-serif;
+            font-size: 10pt;
+            line-height: 1.6;
+            border: none;
+            border-top: 1pt solid #2b303a;
+        }
+        
+        /* Remove side margins when table is inside report-section (which already has padding) */
+        .final-report .report-section table,
+        .final-report .report-section .step-table {
+            width: 100%;
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        .final-report table caption {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 9pt;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 12pt 14pt;
+            margin-bottom: 0;
+            text-align: left;
+            color: #2b303a;
+            background-color: #f8fafc;
+            border-bottom: 2px solid #2b303a;
+            border-top: 2px solid #2b303a;
+        }
+        
+        .final-report th,
+        .final-report .step-table th,
+        .final-report .valuation-ledger th {
+            text-align: left;
+            font-size: 9pt; /* Matches info tab 0.75rem */
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6b7280; /* Matches info tab var(--text-muted) */
+            padding: 12pt 18pt; /* Matches info tab 1rem 1.5rem (at 12pt base) */
+            border-bottom: 2px solid #2b303a; /* Matches info tab var(--upswitch-navy) */
+            background-color: #f4f1ea; /* Matches info tab var(--bg-subtle) */
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Valuation Ledger - Matches info tab styling */
+        .final-report .valuation-ledger {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-family: 'Inter', sans-serif;
+            color: #4b5563;
+            margin-bottom: 24pt;
+            background-color: #FFFFFF;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        
+        .final-report .valuation-ledger td {
+            padding: 12pt 18pt;
+            vertical-align: top;
+            border-bottom: 1px solid #f4f1ea;
+        }
+        
+        .final-report .valuation-ledger .row-step td {
+            padding-bottom: 6pt;
+            border-bottom: none;
+        }
+        
+        .final-report .valuation-ledger .row-adjustment td {
+            padding-top: 0;
+            padding-bottom: 18pt;
+            font-size: 9pt;
+            color: #6b7280;
+        }
+        
+        .final-report .valuation-ledger .col-result {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+            color: #2b303a;
+        }
+        
+        .final-report .valuation-ledger .col-formula {
+            font-family: 'EB Garamond', 'Garamond', 'Georgia', serif;
+            font-size: 10pt;
+            color: #6b7280;
+            font-style: italic;
+            line-height: 1.4;
+        }
+        
+        .final-report .valuation-ledger .section-label {
+            font-size: 8pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #4a5d4f;
+            padding: 24pt 18pt 6pt;
+            background-color: #FFFFFF;
+        }
+        
+        .final-report .valuation-ledger .col-component { width: 35%; }
+        .final-report .valuation-ledger .col-value { 
+            width: 20%; 
+            text-align: right; 
+        }
+        .final-report .valuation-ledger .col-multiple { 
+            width: 15%; 
+            text-align: right; 
+        }
+        .final-report .valuation-ledger .col-ref { 
+            width: 5%; 
+            text-align: center; 
+        }
+        .final-report .valuation-ledger .col-methodology { width: 25%; }
+        
+        .final-report .valuation-ledger .col-multiple-cell {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+            color: #2b303a;
+        }
+        
+        .final-report .valuation-ledger td.col-ref {
+            text-align: center;
+            color: #6b7280;
+        }
+        
+        .final-report .valuation-ledger .row-final {
+            background-color: #2b303a;
+            color: #FFFFFF;
+        }
+        
+        .final-report .valuation-ledger .row-final td {
+            padding: 18pt;
+            border-bottom: none;
+            color: #FFFFFF;
+        }
+        
+        .final-report .valuation-ledger .row-final .col-result {
+            font-size: 15pt;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+        
+        .final-report .valuation-ledger .row-final .col-multiple-cell {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 13pt;
+            font-weight: 600;
+        }
+        
+        .final-report .valuation-ledger .row-final .col-formula {
+            color: rgba(255,255,255,0.7);
+        }
+        
+        /* Academic footnote styling - matches info tab */
+        .final-report .academic-footnote {
+            display: inline-block;
+            font-size: 7pt;
+            color: #4a5d4f; /* Matches info tab var(--upswitch-blue) */
+            vertical-align: super;
+            font-weight: 600;
+        }
+
+        .final-report td,
+        .final-report .step-table td {
+            padding: 10pt 10pt; /* Standardized Digital Authority padding */
+            color: #4b5563;
+            border-bottom: 1px solid #E2E8F0; /* Slate-200 */
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            vertical-align: top;
+        }
+
+        /* Primary column emphasis for step-table */
+        .final-report .step-table td:first-child {
+            font-weight: 500;
+            color: #2b303a;
+        }
+
+        .final-report tr:last-child td {
+            border-bottom: 1px solid #CBD5E1; /* Matches header for framing */
+        }
+        
+        /* Right-align numeric data in tables */
+        .final-report td.number,
+        .final-report td.currency,
+        .final-report td.percentage,
+        .final-report th.text-right,
+        .final-report td.text-right {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap; /* Prevent breaking numbers */
+        }
+        
+        .final-report tr:nth-child(even) {
+            background-color: #FFFFFF; /* No stripes, just clean lines */
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════════════
+         * PROFESSIONAL PAGE LAYOUT & PAGINATION CONTROLS
+         * Professional document standards
+         * ═══════════════════════════════════════════════════════════════════════
+         *
+         * These rules ensure professional page distribution that maintains
+         * credibility with accountants, banks, and professional stakeholders.
+         *
+         * Standards Reference:
+         * - AICPA Professional Standards (document layout)
+         * - Professional report formatting guidelines
+         * - SEC EDGAR Filing Requirements (professional presentation)
+         */
+        
+        /* ━━━ Critical Content Blocks - NEVER BREAK ━━━ */
+        .final-report .report-section,
+        .final-report .table-card,
+        .final-report .report-callout,
+        .final-report .stat-card,
+        .final-report .no-break,
+        .no-break {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+        }
+        
+        /* Financial cards and value displays - CRITICAL: Must stay intact */
+        .final-report [style*="background-color: #1E293B"],
+        .final-report [style*="background: #1e293b"],
+        .final-report [style*="background-color: #1e293b"],
+        .final-report .value-card,
+        .final-report .metric-card,
+        .final-report [style*="background-color: #e9f0eb"] {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+            break-after: auto;
+            page-break-after: auto;
+            max-height: 600pt; /* Ensure fits on single page */
+            margin-bottom: 24pt; /* Spacing buffer before potential page break */
+        }
+        
+        /* ━━━ Headers with content: never orphaned ━━━ */
+        .final-report h1,
+        .final-report h2,
+        .final-report h3,
+        .final-report h4 {
+            break-after: avoid !important;
+            page-break-after: avoid !important;
+            orphans: 3; /* Ensure minimum 3 lines follow header */
+            widows: 3;
+            line-height: 1.2; /* Professional header spacing */
+        }
+        
+        /* Extra protection for headers followed by important content */
+        .final-report h1 + p,
+        .final-report h1 + div,
+        .final-report h2 + p,
+        .final-report h2 + div,
+        .final-report h2 + table,
+        .final-report h3 + table {
+            break-before: avoid !important;
+            page-break-before: avoid !important;
+        }
+        
+        /* ━━━ Section Starts - Professional Page Boundaries ━━━ */
+        /* Major sections (H1) ALWAYS start on new pages */
+        .final-report h1[id^="section-"],
+        .final-report h1[id^="appendix-"] {
+            break-before: page !important;
+            page-break-before: always !important;
+            padding-top: 0 !important; /* Clean top of page */
+        }
+        
+        /* Subsections (H2) prefer new pages but can break if needed */
+        .final-report h2[id^="section-"] {
+            break-before: auto; /* WeasyPrint decides based on space */
+        }
+        
+        /* ━━━ Paragraph Quality - Professional Report Layout ━━━ */
+        .final-report p {
+            orphans: 3; /* Minimum 3 lines at bottom before break */
+            widows: 3;  /* Minimum 3 lines at top after break */
+            line-height: 1.6; /* Professional line spacing */
+        }
+        
+        /* Important paragraphs should never break */
+        .final-report p[style*="font-weight: 700"],
+        .final-report p[style*="font-weight: 600"],
+        .final-report p strong,
+        .final-report .lead-paragraph {
+            break-inside: avoid;
+            page-break-inside: avoid;
+            orphans: 2; /* At least 2 lines if must break */
+            widows: 2;
+        }
+        
+        /* ━━━ Tables - Professional Table Handling ━━━ */
+        /* Small tables (< 10 rows) never break */
+        .final-report table,
+        .final-report .step-table {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+        }
+        
+        /* Individual table rows never break mid-row */
+        .final-report tr {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+        }
+        
+        /* Table headers repeat on new pages (WeasyPrint feature) */
+        .final-report thead {
+            display: table-header-group;
+        }
+        
+        /* Large tables (> 10 rows) - allow controlled breaking */
+        .final-report table.allow-break {
+            break-inside: auto;
+        }
+        
+        /* Ensure table has minimum rows before/after break */
+        .final-report table tr:nth-child(-n+3) {
+            break-after: avoid;
+        }
+        
+        .final-report table tr:nth-last-child(-n+3) {
+            break-before: avoid;
+        }
+        
+        /* ━━━ Lists - Professional List Formatting ━━━ */
+        .final-report ul,
+        .final-report ol {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+        
+        .final-report li {
+            break-inside: avoid;
+            page-break-inside: avoid;
+            orphans: 2;
+            widows: 2;
+        }
+        
+        /* ━━━ Professional Spacing ━━━ */
+        .final-report .report-section {
+            margin-bottom: 32pt; /* Section spacing */
+        }
+        
+        /* Clean page transitions */
+        .final-report .page-break {
+            page-break-before: always;
+            break-before: page;
+        }
+        
+        /* ━━━ Financial Data - Critical Content Protection ━━━ */
+        .final-report [style*="font-size: 56pt"],
+        .final-report [style*="font-size: 48pt"],
+        .final-report [style*="font-size: 42pt"] {
+            break-after: avoid;
+            page-break-after: avoid;
+        }
+        
+        /* ━━━ Callout Boxes - Always Keep Together ━━━ */
+        .final-report .report-callout {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+            margin: 24pt 0;
+        }
+        
+        /* ━━━ Edge Cases - Specific Layout Scenarios ━━━ */
+        /* Prevent page breaks immediately after section headers */
+        .final-report h1 + *,
+        .final-report h2 + * {
+            break-before: avoid;
+            page-break-before: avoid;
+        }
+        
+        /* Keep related content together (e.g., label + value) */
+        .final-report .stat-pair,
+        .final-report .metric-pair {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+        
+        /* Section numbering */
+        .final-report .section-number {
+            font-weight: bold;
+            margin-right: 6pt;
+        }
+        
+        /* Valuation box - McKinsey Standard */
+        .final-report .valuation-box {
+            border: 1pt solid #e2e8f0;
+            padding: 24pt;
+            margin: 24pt 0;
+            text-align: center;
+            background-color: #f4f1ea;
+            border-radius: 4pt;
+        }
+        
+        .final-report .valuation-box .value {
+            font-size: 28pt;
+            font-weight: 800;
+            margin: 12pt 0 16pt 0;
+            color: #2b303a;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -1pt;
+        }
+        
+        .final-report .valuation-box .label {
+            font-size: 12pt;
+            margin-bottom: 12pt;
+            text-transform: uppercase;
+            letter-spacing: 1pt;
+            color: #6b7280;
+            font-weight: 600;
+        }
+        
+        /* Footer */
+        .final-report .footer {
+            margin-top: 32pt;
+            padding-top: 12pt;
+            border-top: 1pt solid #e2e8f0;
+            font-size: 9pt;
+            color: #6b7280;
+        }
+        
+        /* Text alignment */
+        .final-report .text-center {
+            text-align: center;
+        }
+        
+        .final-report .text-right {
+            text-align: right;
+        }
+        
+        /* Spacing */
+        .final-report .spacing-small {
+            margin-bottom: 6pt;
+        }
+        
+        .final-report .spacing-medium {
+            margin-bottom: 12pt;
+        }
+        
+        .final-report .spacing-large {
+            margin-bottom: 24pt;
+        }
+        
+        /* Classification banners */
+        .final-report .classification-banner {
+            background-color: #FFFFFF;
+            border: 1pt solid #2b303a;
+            padding: 12pt;
+            margin: 24pt 0;
+            text-align: center;
+            page-break-inside: avoid;
+        }
+
+        .final-report .classification-banner.preliminary {
+            background-color: #FEF2F2;
+            border: 1px solid #FECACA;
+            border-left: 4pt solid #b85c56;
+            border-radius: 6px;
+            padding: 18pt;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .final-report .classification-banner.limited {
+            background-color: #FFF7ED;
+            border: 1px solid #FED7AA;
+            border-left: 4pt solid #F97316;
+            border-radius: 6px;
+            padding: 18pt;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .final-report .classification-banner h3 {
+            margin: 0 0 6pt 0;
+            color: #2b303a;
+            font-size: 12pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5pt;
+            font-weight: 700;
+        }
+        
+        /* Table of Contents Styles */
+        .final-report ul.toc-list,
+        .final-report ul.toc-sublist {
+            list-style-type: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        
+        .final-report .toc-entry {
+            list-style-type: none !important;
+            margin-bottom: 8pt;
+            display: block !important;
+        }
+        
+        .final-report .toc-entry > a {
+            text-decoration: none;
+            color: #2b303a;
+            display: block;
+            font-weight: 700;
+        }
+        
+        .final-report .toc-entry > a::after {
+            content: leader('.') target-counter(attr(href), page);
+            color: #6b7280;
+            font-weight: normal;
+        }
+        
+        /* Sublist specific styles */
+        .final-report ul.toc-sublist {
+            padding-left: 24pt !important;
+            margin-top: 4pt !important;
+            margin-bottom: 8pt !important;
+        }
+        
+        .final-report ul.toc-sublist .toc-entry {
+            margin-bottom: 4pt;
+        }
+        
+        .final-report ul.toc-sublist .toc-entry > a {
+            font-weight: normal;
+            font-size: 10pt;
+        }
+        
+        /* PDF/A Color Management - Ensure exact color reproduction */
+        @media print {
+            .final-report {
+                font-size: 11pt;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            
+            /* Force exact colors for all elements */
+            .final-report * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            
+            .final-report .no-print {
+                display: none;
+            }
+        }
+        
+        /* Cover page specific - no page number */
+        .final-report .cover-page,
+        .final-report .cover-sheet {
+            page: cover;
+            counter-reset: page 1;
+        }
+        
+        /* TOC page specific - no page number */
+        .final-report .toc-container {
+            page: toc;
+        }
+        
+        /* Print/PDF: Cover page FIXED A4 dimensions */
+        @media print {
+            .final-report .cover-page,
+            .final-report .cover-sheet {
+                width: 210mm !important;
+                height: 297mm !important; /* FIXED A4 height */
+                margin: 0 !important;
+                overflow: hidden !important; /* Contain within A4 */
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            
+            .final-report .toc-container {
+                width: 210mm !important;
+                height: 297mm !important; /* FIXED A4 height */
+                margin: 0 !important;
+                overflow: hidden !important; /* Contain within A4 */
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                padding: 1.5cm 1.5cm !important; /* Reduced top/bottom padding for more content space */
+            }
+        }
+        
+        /* BANK-GRADE: Smooth scroll behavior for TOC navigation */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* BANK-GRADE: Scroll offset for anchor navigation (account for any fixed headers) */
+        .final-report [id] {
+            scroll-margin-top: 24pt; /* Offset to prevent content from being hidden under headers */
+        }
+
+        /* Status Badges - Refined for Digital Authority */
+        .final-report .status-badge {
+            display: inline-block;
+            padding: 2pt 6pt;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 7.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            white-space: nowrap;
+        }
+        
+        /* Priority badges */
+        .final-report .priority-badge-high {
+            display: inline-block;
+            background: #dc2626;
+            color: white;
+            padding: 4pt 10pt;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 9pt;
+            text-transform: uppercase;
+        }
+        
+        .final-report .priority-badge-medium {
+            display: inline-block;
+            background: #f59e0b;
+            color: white;
+            padding: 4pt 10pt;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 9pt;
+            text-transform: uppercase;
+        }
+        
+        .final-report .priority-badge-low {
+            display: inline-block;
+            background: #64748b;
+            color: white;
+            padding: 4pt 10pt;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 9pt;
+            text-transform: uppercase;
+        }
+
+        .final-report .status-badge.completed {
+            background-color: #e9f0eb; /* Moss Tint */
+            color: #6b8e72; /* Moss */
+            border: 0.5pt solid #d4e2db;
+        }
+
+        .final-report .status-badge.skipped {
+            background-color: #faf5eb; /* Harvest Tint */
+            color: #d9a558; /* Harvest */
+            border: 0.5pt solid #f3e6d5;
+        }
+
+        .final-report .status-badge.failed {
+            background-color: #f5ebea; /* Rust Tint */
+            color: #b85c56; /* Rust */
+            border: 0.5pt solid #ecdcdb;
+        }
+
+        .final-report .status-badge.pending,
+        .final-report .status-badge.not_executed {
+            background-color: #ebe7de; /* Stone 100 */
+            color: #85827a; /* Stone 500 */
+        }
+
+        /* Tooltip for Info Icon */
+        .info-icon-tooltip {
+            position: relative;
+        }
+
+        .info-icon-tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: #1E293B;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 100;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-size: 9pt;
+            font-weight: 400;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            pointer-events: none; /* Prevent tooltip from blocking interaction */
+        }
+
+        .info-icon-tooltip .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #1E293B transparent transparent transparent;
+        }
+
+        .info-icon-tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+    <script>
+        /**
+         * BANK-GRADE: Smooth scroll fallback for browsers without CSS scroll-behavior support
+         * Implements smooth scrolling for anchor links in the table of contents
+         * 
+         * Browser Support:
+         * - Modern browsers: Uses CSS scroll-behavior (no JS needed)
+         * - Older browsers: Falls back to this JavaScript implementation
+         */
+        (function() {
+            'use strict';
+            
+            // Check if browser supports CSS scroll-behavior
+            const supportsSmoothScroll = 'scrollBehavior' in document.documentElement.style;
+            
+            // Only add fallback if CSS scroll-behavior is not supported
+            if (!supportsSmoothScroll) {
+                // Handle anchor link clicks
+                document.addEventListener('click', function(e) {
+                    const anchor = e.target.closest('a[href^="#"]');
+                    if (!anchor) return;
+                    
+                    const href = anchor.getAttribute('href');
+                    if (!href || href === '#') return;
+                    
+                    const targetId = href.substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    
+                    if (targetElement) {
+                        e.preventDefault();
+                        
+                        // Calculate scroll position with offset
+                        const offset = 24; // 24pt offset (matches CSS scroll-margin-top)
+                        const elementPosition = targetElement.getBoundingClientRect().top;
+                        const offsetPosition = elementPosition + window.pageYOffset - offset;
+                        
+                        // Smooth scroll using requestAnimationFrame for better performance
+                        const startPosition = window.pageYOffset;
+                        const distance = offsetPosition - startPosition;
+                        const duration = 500; // 500ms scroll duration
+                        let start = null;
+                        
+                        function step(timestamp) {
+                            if (!start) start = timestamp;
+                            const progress = timestamp - start;
+                            const percentage = Math.min(progress / duration, 1);
+                            
+                            // Easing function (ease-in-out)
+                            const ease = percentage < 0.5
+                                ? 2 * percentage * percentage
+                                : 1 - Math.pow(-2 * percentage + 2, 2) / 2;
+                            
+                            window.scrollTo(0, startPosition + distance * ease);
+                            
+                            if (progress < duration) {
+                                window.requestAnimationFrame(step);
+                            } else {
+                                // Update URL hash without triggering scroll
+                                history.replaceState(null, null, href);
+                            }
+                        }
+                        
+                        window.requestAnimationFrame(step);
+                    }
+                });
+            }
+        })();
+    </script>
+</head>
+<body class="final-report">
+    {% block content %}{% endblock %}
+</body>
+</html>

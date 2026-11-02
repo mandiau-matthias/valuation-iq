@@ -1,0 +1,14 @@
+{# A cover note belongs with the report identity, never in the brand lock-up. #}
+{% if indicative_presentation|default(false) and report_certification_label %}
+<div class="report-indicative-disclosure" data-report-release-note="indicative"
+     style="margin-top:20pt; max-width:380pt; color:#E2E8EC; font-size:9pt; line-height:1.5;">
+    <span style="display:block; font-weight:600;">{{ report_certification_label }}</span>
+    {% if report_certification_detail %}<span style="display:block; margin-top:4pt; color:#AEB8BF; font-size:8.5pt;">{{ report_certification_detail }}</span>{% endif %}
+</div>
+{% elif report_presentation_surface|default('final_artifact') != 'advisor_workspace' and report_certification_label and report_certification_status|default('legacy_uncertified') in ['canonical_uncertified', 'legacy_uncertified'] %}
+<div class="report-assurance-banner"
+     style="margin-top:20pt; max-width:380pt; color:#E2E8EC; font-size:9pt; line-height:1.5;">
+    <span style="display:block; font-weight:600;">{{ report_certification_label }}</span>
+    {% if report_certification_detail %}<span style="display:block; margin-top:4pt; color:#AEB8BF; font-size:8.5pt;">{{ report_certification_detail }}</span>{% endif %}
+</div>
+{% endif %}

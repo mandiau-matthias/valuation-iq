@@ -1,0 +1,73 @@
+{#
+    Page Header Partial - TABLE-BASED FOR WEASYPRINT
+    Consistent header across all content pages (not cover)
+
+    Expected context:
+    - t: ReportTranslations object
+    - report_id: str
+    - valuation_date: str
+    - accountant_firm_name: str (optional)
+    - valuation_methodology_display / primary_method_label (optional, for the method chip)
+
+    Round-11 audit: deep TOC jumps left readers without a quick reminder of
+    which methodology drove the headline. The chip reuses the engine's already-
+    computed `valuation_methodology_display` (or `primary_method_label`) so
+    every page below the cover answers "what method are we reading right now?"
+    without scrolling back. Hidden when neither label is present.
+    Hardcoded HSL because WeasyPrint's CSS-var support is uneven across versions.
+#}
+{# Three Towers Capital regression — see screen twin for full rationale.
+   On Upswitch Adaptive workflows prefer the workflow label over the
+   downgraded engine surface so the running chip stays consistent with
+   the cover and body framing. ``primary_method_label`` (advisor
+   override) still wins when set.
+
+   VAL-2026-35A4 follow-up (2026-05-27): qualify the brand with the lens
+   on multiples-only Adaptive runs so the chip stops contradicting the
+   body of the report. #}
+{% set _is_adapt_mults_only = is_adaptive_multiples_only|default(false) %}
+{# Slice to first two chars so locale variants resolve correctly (en-US, nl-BE). #}
+{% set _is_en_chip = ((locale|default('nl'))|lower)[:2] == 'en' %}
+{% set _is_fr_chip = ((locale|default('nl'))|lower)[:2] == 'fr' %}
+{# Approach suffix must follow the headline methodology, not default to
+   "Market Approach". Asset-heavy (NAV) and real-estate-yield dossiers were
+   tagged is_adaptive_multiples_only, so the chip read "· Marktbenadering" on
+   every page while the body used an asset-approach heading. Branch
+   on the primary basis first. #}
+{% if is_yield_methodology|default(false) %}
+{% set _chip_label_adaptive = "Upswitch Adaptive · Approche par les revenus" if _is_fr_chip else ("Upswitch Adaptive · Income Approach" if _is_en_chip else "Upswitch Adaptive · Vastgoed yield") %}
+{% elif (adaptive_primary_basis|default("")) == "asset_based" %}
+{% set _chip_label_adaptive = "Upswitch Adaptive · Approche patrimoniale" if _is_fr_chip else ("Upswitch Adaptive · Asset Approach" if _is_en_chip else "Upswitch Adaptive · Substantiebenadering") %}
+{% elif _is_adapt_mults_only %}
+{% set _chip_label_adaptive = "Upswitch Adaptive · Approche de marché" if _is_fr_chip else ("Upswitch Adaptive · Market Approach" if _is_en_chip else "Upswitch Adaptive · Marktbenadering") %}
+{% else %}
+{% set _chip_label_adaptive = "Upswitch Adaptive" %}
+{% endif %}
+{% set _method_chip = primary_method_label
+    or (_chip_label_adaptive if has_upswitch_adaptive_page else valuation_methodology_display) %}
+{# Brand lead: accountant firm name when present (Enterprise / firm-branded
+   reports), otherwise the company being valued.  Mirrors the screen twin —
+   without this the unbranded PDF page header was just "Confidential". #}
+{% set _brand_lead = accountant_firm_name or company_name %}
+<div class="page-header">
+    <table>
+        <tr>
+            <td class="page-header-brand">
+                <span class="page-header-text">{% if _brand_lead %}{{ _brand_lead }} · {% endif %}{{ t.header_confidential }}</span>
+                <span class="page-header-powered">{{ t.header_powered_by }}</span>
+            </td>
+            <td class="page-header-meta">
+                {# VAL-2026-35A4 (2026-05-27): chip + ref share a line so the
+                   right column matches the left column's two-line height.
+                   Chip styling in base.html (.page-header-method). #}
+                <p class="page-header-ref page-header-meta-row">
+                    {% if _method_chip %}
+                    <span class="page-header-method">{{ _method_chip }}</span>
+                    {% endif %}
+                    {{ (report_id_display or report_id) | format_ref(valuation_date) }}
+                </p>
+                <p class="page-header-date">{{ valuation_date }}</p>
+            </td>
+        </tr>
+    </table>
+</div>

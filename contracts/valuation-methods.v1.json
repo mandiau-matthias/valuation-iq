@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "source": "UpswitchEU/valuation-iq/src/domain/method_keys.py",
+  "sourceSha256": "6e2222507ed97b5b62154983fb6e5fabfe2d614c4d4126f63ee937492c248f47",
+  "resultKeys": [
+    "dcf",
+    "ebitda_multiple",
+    "omzet_multiple",
+    "revenue_multiple",
+    "sde_multiple",
+    "adjusted_nav",
+    "holding_sotp",
+    "upswitch_adaptive",
+    "arr_multiple",
+    "real_estate_yield",
+    "fiscal_4x",
+    "liquidation_analysis",
+    "startup_valuation",
+    "pe_ratio",
+    "owner_adaptive",
+    "custom_weighted",
+    "upswitch_adaptive_multiples_only"
+  ],
+  "requestKeys": [
+    "upswitch_adaptive",
+    "ebitda_multiple",
+    "omzet_multiple",
+    "dcf",
+    "sde_multiple",
+    "arr_multiple",
+    "adjusted_nav",
+    "real_estate_yield",
+    "fiscal_4x",
+    "startup_valuation",
+    "liquidation_analysis"
+  ],
+  "runtimeKeys": [
+    "upswitch_adaptive",
+    "ebitda_multiple",
+    "omzet_multiple",
+    "dcf",
+    "sde_multiple",
+    "arr_multiple",
+    "adjusted_nav",
+    "real_estate_yield",
+    "fiscal_4x",
+    "startup_valuation",
+    "liquidation_analysis",
+    "holding_sotp"
+  ],
+  "aliases": {
+    "revenue_multiple": "omzet_multiple"
+  },
+  "userWeightKeys": [
+    "adjusted_nav",
+    "arr_multiple",
+    "dcf",
+    "ebitda_multiple",
+    "fiscal_4x",
+    "liquidation_analysis",
+    "omzet_multiple",
+    "real_estate_yield",
+    "revenue_multiple",
+    "sde_multiple",
+    "startup_valuation",
+    "upswitch_adaptive"
+  ],
+  "nonCombinableKeys": [
+    "liquidation_analysis",
+    "real_estate_yield",
+    "startup_valuation"
+  ],
+  "primaryOrder": [
+    "upswitch_adaptive",
+    "arr_multiple",
+    "ebitda_multiple",
+    "omzet_multiple",
+    "revenue_multiple",
+    "sde_multiple",
+    "dcf",
+    "adjusted_nav",
+    "real_estate_yield",
+    "fiscal_4x",
+    "liquidation_analysis"
+  ],
+  "patchableKeys": [
+    "upswitch_adaptive",
+    "ebitda_multiple",
+    "dcf",
+    "sde_multiple",
+    "arr_multiple",
+    "omzet_multiple",
+    "revenue_multiple",
+    "adjusted_nav",
+    "real_estate_yield",
+    "fiscal_4x",
+    "startup_valuation",
+    "liquidation_analysis"
+  ],
+  "distinctMethodCount": 11
+}

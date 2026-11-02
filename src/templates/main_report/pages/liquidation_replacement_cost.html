@@ -1,0 +1,86 @@
+{#
+    LIQUIDATION ANALYSIS — PAGE: REPLACEMENT COST (Section 00b)
+
+    M&A buyer ceiling per IVS 105 §60-90 + Pratt & Niculita Ch. 14.
+    The third premise of value (alongside LV floor + GC reference) —
+    the most a rational buyer should pay.
+
+    Renders only when ``replacement_cost`` is present.
+
+    PDF twin: main_report_pdf/pages/liquidation_replacement_cost.html
+#}
+{% set lr = liquidation_report %}
+{% if lr.replacement_cost %}
+{% set rc = lr.replacement_cost %}
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div class="section-header">
+        <span class="section-number">00b</span>
+        <h1 class="section-title" style="margin: 0; flex: 1;">{{ lr.t.rc_section_title }}</h1>
+        <div style="text-align: right;">
+            <span class="badge badge-primary" style="font-size: var(--font-size-xs);">
+                {{ lr.t.rc_section_subtitle }}
+            </span>
+        </div>
+    </div>
+
+    {# Per-class CRN + remaining-life build-up. #}
+    <table style="width: 100%; font-size: var(--font-size-xs); border-collapse: collapse; margin-bottom: var(--space-3);">
+        <thead>
+            <tr style="border-bottom: 1px solid hsl(var(--report-border));">
+                <th style="text-align: left; padding: var(--space-2) var(--space-1);">{{ lr.t.rc_col_class }}</th>
+                <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.rc_col_book }}</th>
+                <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.rc_col_crn_mult }}</th>
+                <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.rc_col_crn_value }}</th>
+                <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.rc_col_remaining_life }}</th>
+                <th style="text-align: right; padding: var(--space-2) var(--space-1);">{{ lr.t.rc_col_depreciated }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in rc.lines %}
+            <tr style="border-bottom: 1px solid hsl(var(--report-border-muted, var(--report-border)));">
+                <td style="padding: var(--space-1);">{{ line.class_label }}</td>
+                <td style="text-align: right;">€{{ line.book_value|format_eur_amount }}</td>
+                <td style="text-align: right;">{{ line.crn_multiplier|float|safe_round(2) }}×</td>
+                <td style="text-align: right;">€{{ line.crn_value|format_eur_amount }}</td>
+                <td style="text-align: right;">{{ line.remaining_life_factor|format_factor_pct(0) }}</td>
+                <td style="text-align: right;">€{{ line.depreciated_value|format_eur_amount }}</td>
+            </tr>
+            {% endfor %}
+            <tr style="font-weight: 600; border-top: 2px solid hsl(var(--report-border));">
+                <td style="padding: var(--space-2) var(--space-1);">{{ lr.t.rc_total_tangible }}</td>
+                <td colspan="4"></td>
+                <td style="text-align: right;">€{{ rc.tangible_replacement_value|format_eur_amount }}</td>
+            </tr>
+            <tr>
+                <td style="padding: var(--space-1);">
+                    {{ lr.t.rc_intangibles_uplift }}
+                    <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">
+                        {{ lr.t.rc_intangibles_uplift_caption.replace('{pct}', rc.identifiable_intangibles_uplift_pct|format_factor_pct(0)|replace('%','')|string) }}
+                    </div>
+                </td>
+                <td colspan="4"></td>
+                <td style="text-align: right;">€{{ rc.identifiable_intangibles_uplift|format_eur_amount }}</td>
+            </tr>
+            <tr style="font-weight: 700; border-top: 2px solid hsl(var(--report-border)); background: hsl(var(--report-surface-muted));">
+                <td style="padding: var(--space-2) var(--space-1);">{{ lr.t.rc_total_replacement }}</td>
+                <td colspan="4"></td>
+                <td style="text-align: right;">€{{ rc.total_replacement_cost|format_eur_amount }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="card" style="padding: var(--space-3); margin-bottom: var(--space-3); background: hsl(var(--report-surface-muted));">
+        <div style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted)); line-height: 1.5;">
+            {{ rc.rationale }}
+        </div>
+    </div>
+
+    {% if rc.sources %}
+    <div style="margin-top: var(--space-3); font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">
+        {{ lr.t.sources_label }}: {{ rc.sources|join(' · ') }}
+    </div>
+    {% endif %}
+</div>
+{% endif %}

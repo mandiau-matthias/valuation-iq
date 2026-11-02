@@ -1,0 +1,22 @@
+{# 
+    Page Footer Partial - FLEXBOX LAYOUT (Screen/Browser Version)
+    Consistent footer across all pages
+    
+    PDF version: main_report_pdf/partials/_footer.html (table-based for WeasyPrint)
+    
+    Expected context:
+    - t: ReportTranslations object
+    - company_name: str
+    - page_number: int
+    - total_pages: int
+#}
+<div class="page-footer">
+    <span>
+        {{ company_name }}
+        <span class="page-footer-divider">·</span>
+        <span class="page-footer-report">{{ report_certification_footer_label|default(t.footer_indicative_estimate) }}</span>
+        <span class="page-footer-divider">·</span>
+        <span class="page-footer-report">{{ t.footer_confidential }}</span>
+    </span>
+    <span class="page-footer-page">{{ t.footer_page }} {{ page_number }} {{ t.footer_of }} {{ total_pages }}</span>
+</div>

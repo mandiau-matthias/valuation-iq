@@ -1,0 +1,142 @@
+{#
+    DCF SENSITIVITY MATRIX COMPONENT — PDF version (WeasyPrint / Aurora Clarity)
+
+    Same logic as screen version; hardcoded HSL colors, page-break-inside: avoid.
+    One-decimal €M cells (matches main C's crosscheck-matrix convention).
+
+    Expected context: dcf_sensitivity_matrix_2d, dcf_sensitivity_wacc, dcf_sensitivity_growth,
+                      dcf_wacc, dcf_terminal_growth_rate, t, teal_hsl
+#}
+{% set _loc_mat_en = ((locale|default('nl'))|lower)[:2] == 'en' %}
+{% set matrix = dcf_sensitivity_matrix_2d %}
+{% set apv_matrix = matrix and matrix.value_basis|default('') == 'apv_enterprise_value' %}
+{% set apv_locale = (locale|default('nl'))[:2] %}
+{% set wacc_base = dcf_wacc|default(0.10)|float %}
+{% set growth_base = dcf_terminal_growth_rate|default(0.02)|float %}
+
+{% if matrix and matrix.matrix %}
+{% set secondary_key = matrix.secondary_axis_key|default('terminal_growth') %}
+{# Base case for COLUMN highlight depends on which axis the engine produced.
+   For Gordon growth, axis values are decimals (0.02 = 2%); tolerance ~0.003 (0.3 pp).
+   For exit multiple, axis values are bare multiples (e.g. 6.0); tolerance ~0.05× (5%). #}
+{% set _secondary_base = (dcf_terminal_exit_multiple|default(0)|float) if secondary_key == 'exit_multiple' else growth_base %}
+{% set _secondary_tol = 0.05 if secondary_key == 'exit_multiple' else 0.003 %}
+<div style="margin-top: 18pt; page-break-inside: avoid; break-inside: avoid;">
+    <h4 style="font-size: 9.5pt; margin: 0 0 6pt 0; color: hsl(225, 18%, 12%);">
+        {% include "shared/components/dcf_sensitivity_title.html" %}
+    </h4>
+    <p style="font-size: 7pt; color: hsl(224, 10%, 45%); margin: 0 0 8pt 0;">
+        {% if not apv_matrix %}{% if secondary_key == 'exit_multiple' %}{{ t.dcf_sensitivity_matrix_caption_exit_multiple }}{% else %}{{ t.dcf_sensitivity_matrix_caption_terminal }}{% endif %}{% endif %}
+    </p>
+
+    {% if matrix.value_basis|default('') == 'apv_enterprise_value' %}
+    <p style="font-size: 7pt; line-height: 1.4; color: #64748b; margin: 6pt 0;" data-apv-sensitivity="apv_tax_shield.v2">
+        {% set apv_locale = (locale|default('nl'))[:2] %}
+        {% if apv_locale == 'en' %}Each scenario includes the admitted financing tax shield once. The rate axis represents the unlevered base return.{% elif apv_locale == 'fr' %}Chaque scénario inclut une seule fois le bouclier fiscal admis. L’axe des taux représente le rendement de base sans dette.{% else %}Elk scenario bevat het toegelaten belastingschild eenmaal. De renteas toont het basisrendement zonder schuld.{% endif %}
+    </p>
+    {% endif %}
+
+    {% set primary_values = matrix.primary_axis_values|default([]) %}
+    {% set secondary_values = matrix.secondary_axis_values|default([]) %}
+    {% set grid = matrix.matrix|default({}) %}
+
+    <table style="width: 100%; font-size: 7pt; border-collapse: collapse;">
+        <thead>
+            <tr style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                <th style="text-align: left; padding: 4pt 5pt; background: hsl(224, 15%, 20%); color: white; font-size: 6.5pt; letter-spacing: 0.04em;">
+                    {% if apv_matrix %}{% if apv_locale == 'en' %}Base return{% elif apv_locale == 'fr' %}Rendement de base{% else %}Basisrendement{% endif %}{% else %}WACC{% endif %} ↓ / {% if secondary_key == 'exit_multiple' %}{{ t.calib_dcf_exit_multiple }}{% else %}{{ t.calib_dcf_terminal_growth }}{% endif %} →
+                </th>
+                {% for sv in secondary_values %}
+                <th style="text-align: center; padding: 4pt 5pt; background: hsl(224, 15%, 20%); color: white; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">
+                    {% if secondary_key == 'exit_multiple' %}{{ sv|float|safe_round(1) }}×{% else %}{{ (sv|float * 100)|safe_round(1) }}%{% endif %}
+                </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for pv in primary_values %}
+            {% set pv_str = pv|string %}
+            {% set is_base_row = (pv|float - wacc_base)|abs < 0.003 %}
+            <tr{% if is_base_row %} style="background: hsla({{ teal_hsl }}, 0.06); -webkit-print-color-adjust: exact; print-color-adjust: exact;"{% endif %}>
+                <td style="padding: 4pt 5pt; font-weight: 600; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl(224, 16%, 18%);">
+                    {{ (pv|float * 100)|safe_round(1) }}%
+                    {% if is_base_row %}<span style="color: hsl({{ teal_hsl }}); font-size: 5pt;">●</span>{% endif %}
+                </td>
+                {% for sv in secondary_values %}
+                {% set sv_str = sv|string %}
+                {% set is_base_col = (sv|float - _secondary_base)|abs < _secondary_tol %}
+                {% set is_center = is_base_row and is_base_col %}
+                {% set row_data = grid.get(pv_str, {}) if grid is mapping else {} %}
+                {% set cell_val = row_data.get(sv_str) if row_data is mapping else none %}
+                <td style="text-align: right; padding: 4pt 5pt; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;{% if is_center %} background: hsla({{ teal_hsl }}, 0.15); font-weight: 700; color: hsl({{ teal_hsl }}); -webkit-print-color-adjust: exact; print-color-adjust: exact;{% elif is_base_col or is_base_row %} font-weight: 500;{% endif %}">
+                    {% if cell_val is none %}—{% elif cell_val|float >= 1000000 %}{% set _mv = "%.1f"|format(cell_val|float / 1000000) %}€{{ _mv if _loc_mat_en else _mv|replace(".", ",") }}M{% else %}{{ cell_val|float|format_currency_compact }}{% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if matrix.has_unavailable_cells|default(false) %}
+    <p style="font-size: 7pt; line-height: 1.4; color: #64748b; margin: 6pt 0 0;">
+        {% set sensitivity_locale = (locale|default('nl'))[:2] %}
+        {% if sensitivity_locale == 'en' %}—: scenario unavailable under the stated assumptions.{% elif sensitivity_locale == 'fr' %}— : scénario non disponible avec les hypothèses indiquées.{% else %}—: scenario niet beschikbaar met de vermelde aannames.{% endif %}
+    </p>
+    {% endif %}
+</div>
+
+{% elif dcf_sensitivity_wacc and dcf_sensitivity_growth %}
+<div style="margin-top: 18pt; page-break-inside: avoid; break-inside: avoid;">
+    <h4 style="font-size: 9.5pt; margin: 0 0 8pt 0; color: hsl(225, 18%, 12%);">
+        {% include "shared/components/dcf_sensitivity_title.html" %}
+    </h4>
+    <table style="width: 100%; font-size: 7.5pt; border-collapse: collapse;">
+        <tr>
+            <td style="width: 50%; vertical-align: top; padding-right: 8pt;">
+                <p style="font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(224, 10%, 45%); margin: 0 0 4pt 0;">{{ t.calib_dcf_wacc_label }}</p>
+                <table style="width: 100%; font-size: 7.5pt; border-collapse: collapse; border: 1pt solid hsl(224, 10%, 91%);">
+                    {% for k, v in dcf_sensitivity_wacc.items() %}
+                    {% set is_base = (k|float - wacc_base)|abs < 0.003 %}
+                    <tr{% if is_base %} style="background: hsla({{ teal_hsl }}, 0.08); -webkit-print-color-adjust: exact; print-color-adjust: exact;"{% endif %}>
+                        <td style="padding: 2pt 5pt; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; border: none;">{{ (k|float * 100)|safe_round(1) }}%</td>
+                        <td style="text-align: right; padding: 2pt 5pt; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; border: none;{% if is_base %} font-weight: 700; color: hsl({{ teal_hsl }});{% endif %}">{% if v|float >= 1000000 %}{% set _mv = "%.1f"|format(v|float / 1000000) %}€{{ _mv if _loc_mat_en else _mv|replace(".", ",") }}M{% else %}{{ v|float|format_currency_compact }}{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </td>
+            <td style="width: 50%; vertical-align: top;">
+                <p style="font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(224, 10%, 45%); margin: 0 0 4pt 0;">{{ t.calib_dcf_terminal_growth }}</p>
+                <table style="width: 100%; font-size: 7.5pt; border-collapse: collapse; border: 1pt solid hsl(224, 10%, 91%);">
+                    {% for k, v in dcf_sensitivity_growth.items() %}
+                    {% set is_base = (k|float - growth_base)|abs < 0.003 %}
+                    <tr{% if is_base %} style="background: hsla({{ teal_hsl }}, 0.08); -webkit-print-color-adjust: exact; print-color-adjust: exact;"{% endif %}>
+                        <td style="padding: 2pt 5pt; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; border: none;">{{ (k|float * 100)|safe_round(1) }}%</td>
+                        <td style="text-align: right; padding: 2pt 5pt; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; border: none;{% if is_base %} font-weight: 700; color: hsl({{ teal_hsl }});{% endif %}">{% if v|float >= 1000000 %}{% set _mv = "%.1f"|format(v|float / 1000000) %}€{{ _mv if _loc_mat_en else _mv|replace(".", ",") }}M{% else %}{{ v|float|format_currency_compact }}{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>
+{% endif %}
+
+{% if dcf_ebitda_margin_sensitivity %}
+<div style="margin-top: 10pt; page-break-inside: avoid; break-inside: avoid;">
+    <h4 style="font-size: 9pt; margin: 0 0 5pt 0; color: hsl(225, 18%, 12%);">
+        {% if _loc_mat_en %}EBITDA-margin sensitivity{% else %}EBITDA-margesensitiviteit{% endif %}
+    </h4>
+    <table style="width: 100%; font-size: 7pt; border-collapse: collapse; border: 1pt solid hsl(224, 10%, 91%);">
+        {% for margin, value in dcf_ebitda_margin_sensitivity.items() %}
+        <tr{% if (margin|float - (dcf_sensitivity_range_policy.ebitda_margin_base|default(0)|float))|abs < 0.0005 %} style="background: hsla({{ teal_hsl }}, 0.08); -webkit-print-color-adjust: exact; print-color-adjust: exact;"{% endif %}>
+            <td style="padding: 3pt 5pt;">{{ (margin|float * 100)|safe_round(1) }}%</td>
+            <td style="padding: 3pt 5pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', monospace;">{{ value|float|format_currency_compact }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <p style="margin: 4pt 0 0 0; font-size: 6.5pt; color: hsl(224, 10%, 45%); line-height: 1.4;">
+        {# "Conclusieband" overstated what this is — these extremes are model
+           sensitivity, not a statistical conclusion range. #}
+        {% if _loc_mat_en %}Model sensitivity: the downside combines the low margin, high WACC and low terminal growth; the upside combines the high margin, low WACC and high terminal growth.{% else %}Modelgevoeligheid: de downside combineert de lage marge, hoge WACC en lage terminale groei; de upside combineert de hoge marge, lage WACC en hoge terminale groei.{% endif %}
+    </p>
+</div>
+{% endif %}

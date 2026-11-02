@@ -1,0 +1,136 @@
+{% if multiple_waterfall_steps|default([])|length > 0 %}
+{% set chart_width = multiple_chart_width|default(520) %}
+{% set chart_height = multiple_chart_height|default(146) %}
+{% set desired_bar_width = multiple_chart_bar_width|default(36) %}
+{% set padding_top = 28 %}
+{% set padding_bottom = 36 %}
+{% set padding_left = 42 %}
+{% set padding_right = 14 %}
+{% set chart_inner_width = chart_width - padding_left - padding_right %}
+{% set chart_inner_height = chart_height - padding_top - padding_bottom %}
+
+{% set plotted_values = [0] %}
+{% for step in multiple_waterfall_steps %}
+    {% set _ = plotted_values.append(step.start_value|default(0)|float) %}
+    {% set _ = plotted_values.append(step.end_value|default(0)|float) %}
+{% endfor %}
+{% set _raw_max = (plotted_values|max) %}
+{% set _raw_min = (plotted_values|min) %}
+{# Round-12 audit: snap the Y-axis to a "nice" grid so the four ticks
+   fall on round multiples (5.0×/5.5×/6.0× instead of 4.97×/5.43×/5.89×).
+   Step ladder matches the magnitude of multiples seen in the SME pipeline:
+   0.1× / 0.25× / 0.5× / 1.0× / 2.5× / 5.0× / 10.0×. The min is rounded
+   DOWN, the max is rounded UP, so the bars never clip. #}
+{% set _nice_step =
+       0.1 if _raw_max <= 1.5
+  else 0.25 if _raw_max <= 4
+  else 0.5 if _raw_max <= 8
+  else 1.0 if _raw_max <= 20
+  else 2.5 if _raw_max <= 50
+  else 5.0 %}
+{% set max_value = (((_raw_max / _nice_step)|round(0, 'ceil'))|int) * _nice_step %}
+{% set min_value = (((_raw_min / _nice_step)|round(0, 'floor'))|int) * _nice_step %}
+{% set value_range = (max_value - min_value) if (max_value - min_value) > 0 else 1 %}
+{% set total_bars = multiple_waterfall_steps|length %}
+{% set gap_divisor = total_bars - 1 if total_bars > 1 else 1 %}
+{% set min_gap = 4 %}
+{% set preferred_gap = 10 %}
+{% set bar_budget = (chart_inner_width - (gap_divisor * min_gap)) / total_bars if total_bars > 0 else desired_bar_width %}
+{% set computed_bar_width = desired_bar_width if desired_bar_width < bar_budget else bar_budget %}
+{% set bar_width = 12 if computed_bar_width < 12 else computed_bar_width %}
+{% set available_width = chart_inner_width - (total_bars * bar_width) %}
+{% set calculated_gap = available_width / gap_divisor %}
+{% set actual_gap = preferred_gap if calculated_gap > preferred_gap else (min_gap if calculated_gap < min_gap else calculated_gap) %}
+{% set zero_y = padding_top + ((max_value - 0) / value_range) * chart_inner_height %}
+{% set show_annotation = chart_width >= 460 %}
+
+<div style="margin-top: 8pt; padding: 9pt 10pt; background: hsl(var(--report-surface)); border: 1pt solid hsl(var(--report-slate-200)); border-radius: 6pt; overflow: hidden; page-break-inside: avoid; break-inside: avoid;">
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12pt; margin-bottom: 8pt;">
+        <div>
+            <h3 style="margin: 0 0 3pt 0; font-size: 8pt;">{% if is_disclosed_external_market_fallback|default(false) or is_governed_external_market_reference|default(false) %}Externe referentiemultiple{% else %}{{ t.calib_multiple_waterfall_title }}{% endif %}</h3>
+            <p style="margin: 0; font-size: 7pt; line-height: 1.45; color: hsl(var(--report-text-muted));">
+                {% if is_disclosed_external_market_fallback|default(false) or is_governed_external_market_reference|default(false) %}De gepubliceerde surveyreferentie wordt toegepast zonder pharmacy-specifieke closed-dealmediaan en zonder gekwantificeerde bedrijfsspecifieke multiple-aanpassing.{% else %}{{ t.calib_multiple_waterfall_intro }}{% endif %}
+            </p>
+        </div>
+        <div style="padding: 4pt 8pt; border-radius: 999px; background: hsl(var(--report-teal-light)); color: hsl(var(--report-teal-dark)); font-size: 7pt; font-weight: 700; font-family: 'JetBrains Mono', monospace; white-space: nowrap;">
+            {{ applied_multiple|safe_round(2) }}×
+        </div>
+    </div>
+
+    <svg width="{{ chart_width }}" height="{{ chart_height }}" viewBox="0 0 {{ chart_width }} {{ chart_height }}" style="display: block; margin: 0 auto; font-family: 'Inter', sans-serif;">
+        <rect x="{{ padding_left - 8 }}" y="{{ padding_top - 10 }}" width="{{ chart_inner_width + 16 }}" height="{{ chart_inner_height + 16 }}" rx="4" fill="hsl(var(--report-slate-50))" />
+
+        {% for i in range(4) %}
+            {% set ratio = i / 3 %}
+            {% set grid_value = min_value + (value_range * ratio) %}
+            {% set y_pos = padding_top + ((max_value - grid_value) / value_range) * chart_inner_height %}
+            <line x1="{{ padding_left - 4 }}" y1="{{ y_pos }}" x2="{{ padding_left + chart_inner_width }}" y2="{{ y_pos }}" stroke="hsl(var(--report-slate-200))" {% if i > 0 %}stroke-dasharray="3,2"{% endif %}/>
+            <text x="{{ padding_left - 8 }}" y="{{ y_pos + 3 }}" text-anchor="end" font-size="7" fill="hsl(var(--report-slate-500))">{{ grid_value|safe_round(1) }}×</text>
+        {% endfor %}
+
+        <line x1="{{ padding_left - 4 }}" y1="{{ zero_y }}" x2="{{ padding_left + chart_inner_width }}" y2="{{ zero_y }}" stroke="hsl(var(--report-slate-400))" stroke-width="1"/>
+
+        {% for step in multiple_waterfall_steps %}
+            {% set step_x = padding_left + (loop.index0 * (bar_width + actual_gap)) %}
+            {% set start_value = step.start_value|default(0)|float %}
+            {% set end_value = step.end_value|default(0)|float %}
+            {% set is_total = step.kind in ['base', 'subtotal', 'total'] %}
+            {% set connector_value = multiple_waterfall_steps[loop.index0 - 1].end_value|default(start_value)|float if loop.index0 > 0 else start_value %}
+
+            {% if is_total %}
+                {% set top_value = end_value if end_value > 0 else 0 %}
+                {% set bottom_value = 0 if end_value > 0 else end_value %}
+            {% else %}
+                {% set top_value = start_value if start_value > end_value else end_value %}
+                {% set bottom_value = end_value if start_value > end_value else start_value %}
+            {% endif %}
+
+            {% set bar_y = padding_top + ((max_value - top_value) / value_range) * chart_inner_height %}
+            {% set bar_bottom = padding_top + ((max_value - bottom_value) / value_range) * chart_inner_height %}
+            {% set bar_height = bar_bottom - bar_y %}
+            {% set connector_y = padding_top + ((max_value - connector_value) / value_range) * chart_inner_height %}
+
+            {% if loop.index0 > 0 %}
+                {% set prev_x = padding_left + ((loop.index0 - 1) * (bar_width + actual_gap)) + bar_width %}
+                <line x1="{{ prev_x }}" y1="{{ connector_y }}" x2="{{ step_x }}" y2="{{ connector_y }}" stroke="hsl(var(--report-slate-300))" stroke-width="1.2" stroke-dasharray="3,2"/>
+            {% endif %}
+
+            {% if step.tone == 'positive' %}
+                {% set fill_color = 'hsl(var(--report-success))' %}
+            {% elif step.tone == 'negative' %}
+                {% set fill_color = 'hsl(var(--report-danger))' %}
+            {% elif step.tone == 'brand' or step.tone == 'bridge' %}
+                {% set fill_color = 'hsl(var(--report-teal))' %}
+            {% else %}
+                {% set fill_color = 'hsl(var(--report-slate-700))' %}
+            {% endif %}
+
+            <rect x="{{ step_x + 1.5 }}" y="{{ bar_y + 1.5 }}" width="{{ bar_width }}" height="{{ bar_height }}" rx="3" fill="hsla(224, 12%, 22%, 0.08)"/>
+            <rect x="{{ step_x }}" y="{{ bar_y }}" width="{{ bar_width }}" height="{{ bar_height }}" rx="3" fill="{{ fill_color }}"/>
+
+            {% set label_y = (bar_y - 7) if end_value >= 0 else (bar_bottom + 11) %}
+            <text x="{{ step_x + (bar_width / 2) }}" y="{{ label_y }}" text-anchor="middle" font-size="7.5" font-weight="700" fill="hsl(var(--report-slate-900))">
+                {% if step.kind in ['increase', 'decrease'] %}
+                    {% set _delta_value = step.delta_value|default(0)|float %}
+                    {% if _delta_value > 0 %}+{% endif %}{{ _delta_value|safe_round(2) }}×
+                {% else %}
+                    {{ step.end_value|safe_round(2) }}×
+                {% endif %}
+            </text>
+
+            {# Round-4 fix: drop the truncated annotation row above the bar.
+               The bar's bottom short_label already names the step (e.g.
+               "Basismultiple", "Eig.-concentratie", "Omvangskorting",
+               "DLOM"); duplicating the long description above the bar
+               just renders as truncated noise ("Initiële EV/EBITD…",
+               "Correctie voor ei…") because the column width can't fit
+               the full string. Full descriptions still live in the
+               accompanying "Volledige Berekening" table below the chart. #}
+
+            <text x="{{ step_x + (bar_width / 2) }}" y="{{ padding_top + chart_inner_height + 14 }}" text-anchor="middle" font-size="6.5" fill="hsl(var(--report-slate-600))">
+                {{ step.short_label }}
+            </text>
+        {% endfor %}
+    </svg>
+</div>
+{% endif %}

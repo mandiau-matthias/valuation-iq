@@ -1,0 +1,102 @@
+[
+  {
+    "id": "agriculture",
+    "name": "Agriculture & Farming",
+    "description": "Farms, nurseries, agriculture"
+  },
+  {
+    "id": "arts-crafts",
+    "name": "Arts & Crafts",
+    "description": "Handmade goods, custom crafts"
+  },
+  {
+    "id": "automotive",
+    "name": "Automotive Services",
+    "description": "Repair, detailing, parts"
+  },
+  {
+    "id": "beauty-wellness",
+    "name": "Beauty & Wellness",
+    "description": "Salons, spas, beauty services"
+  },
+  {
+    "id": "creative-media",
+    "name": "Creative & Media",
+    "description": "Photography, design, marketing"
+  },
+  {
+    "id": "ecommerce-retail",
+    "name": "E-commerce & Retail",
+    "description": "Online stores, retail shops"
+  },
+  {
+    "id": "education-training",
+    "name": "Education & Training",
+    "description": "Schools, coaching, courses"
+  },
+  {
+    "id": "environmental",
+    "name": "Environmental Services",
+    "description": "Waste management, recycling"
+  },
+  {
+    "id": "events-entertainment",
+    "name": "Events & Entertainment",
+    "description": "Event planning, entertainment"
+  },
+  {
+    "id": "financial-services",
+    "name": "Financial Services",
+    "description": "Insurance, bookkeeping, financial planning"
+  },
+  {
+    "id": "fitness-health",
+    "name": "Fitness & Health",
+    "description": "Gyms, fitness, healthcare"
+  },
+  {
+    "id": "food-beverage",
+    "name": "Food & Beverage",
+    "description": "Restaurants, catering, food services"
+  },
+  {
+    "id": "home-property",
+    "name": "Home & Property",
+    "description": "Real estate, cleaning, construction"
+  },
+  {
+    "id": "hospitality-tourism",
+    "name": "Hospitality & Tourism",
+    "description": "Hotels, travel, tourism"
+  },
+  {
+    "id": "pet-services",
+    "name": "Pet Services",
+    "description": "Grooming, training, veterinary"
+  },
+  {
+    "id": "professional-services",
+    "name": "Professional Services",
+    "description": "Consulting, legal, accounting"
+  },
+  {
+    "id": "repair-maintenance",
+    "name": "Repair & Maintenance",
+    "description": "Appliance, electronics, furniture repair"
+  },
+  {
+    "id": "security-safety",
+    "name": "Security & Safety",
+    "description": "Security systems, safety services"
+  },
+  {
+    "id": "tech-digital",
+    "name": "Tech & Digital",
+    "description": "Software, web development, IT"
+  },
+  {
+    "id": "transportation-logistics",
+    "name": "Transportation & Logistics",
+    "description": "Delivery, moving, automotive"
+  }
+]

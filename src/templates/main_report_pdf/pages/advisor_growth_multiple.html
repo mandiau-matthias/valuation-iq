@@ -1,0 +1,42 @@
+{% set gm = advisor_growth_multiple or {} %}
+{% set loc = locale|default('nl') %}
+{% set _gm_is_en = loc == 'en' %}
+{% set _gm_is_fr = loc == 'fr' %}
+<div class="a4-page" style="break-before: page; page-break-before: always;">
+    {% include "main_report_pdf/partials/_page_header.html" %}
+    <div class="section-header">
+        <span class="section-number">{{ advisor_growth_multiple_section_number }}</span>
+        <h1 class="section-title">{% if _gm_is_fr %}Scénario de résultat × multiple{% elif _gm_is_en %}Earnings scenario × multiple{% else %}Resultaatscenario × multiple{% endif %}</h1>
+    </div>
+    <p style="font-size: 8pt; line-height: 1.55;">
+        {% if _gm_is_fr %}Scénario illustratif : résultat utilisé dans le calcul ±{{ gm.delta_pct }}, selon les multiples affichés dans les colonnes. Les autres hypothèses restent fixes. {% if gm.reconciles_to_headline %}La cellule centrale correspond à la valeur d’entreprise de l’approche par multiples.{% else %}La cellule centrale correspond à la composante par multiples, et non à la conclusion pondérée.{% endif %} Aucune prévision de chiffre d’affaires ni couverture statistique. Les valeurs sont arrondies pour l’affichage.
+        {% elif _gm_is_en %}Illustrative scenario: pricing earnings ±{{ gm.delta_pct }}, using the multiples shown in the columns. Other assumptions remain fixed. {% if gm.reconciles_to_headline %}The central cell corresponds to the market-multiple enterprise value.{% else %}The central cell corresponds to the market-multiple component, not the weighted conclusion.{% endif %} No revenue forecast or statistical coverage. Values are rounded for display.
+        {% else %}Illustratief scenario: prijsbepalend resultaat ±{{ gm.delta_pct }}, bij de multiples in de kolommen. Overige aannames blijven vast. {% if gm.reconciles_to_headline %}De centrale cel sluit aan op de ondernemingswaarde volgens de marktmultiple.{% else %}De centrale cel sluit aan op de marktmultiple-component, niet op de gewogen conclusie.{% endif %} Geen omzetprognose of statistische dekking. Waarden zijn afgerond voor weergave.{% endif %}
+    </p>
+    <table style="width: 100%; border-collapse: collapse; font-size: 7pt; table-layout: fixed;">
+        <colgroup><col style="width: 11%"><col style="width: 9%"><col style="width: 20%"><col style="width: 20%"><col style="width: 20%"><col style="width: 20%"></colgroup>
+        <thead><tr>
+            <th style="padding: 4pt 2pt; font-size: 7pt;">{% if _gm_is_fr %}Scénario{% elif _gm_is_en %}Scenario{% else %}Scenario{% endif %}</th>
+            <th style="padding: 4pt 2pt; font-size: 7pt;">{% if _gm_is_fr %}Variation{% elif _gm_is_en %}Change{% else %}Wijziging{% endif %}</th>
+            <th style="padding: 4pt 2pt; font-size: 7pt;">EBITDA / {{ gm.currency|default(currency|default("EUR"), true) }}</th>
+            {% for label in gm.band_labels %}<th style="padding: 4pt 2pt; font-size: 7pt;">{{ label }}</th>{% endfor %}
+        </tr></thead>
+        <tbody>
+            {% for row in gm.rows %}
+            <tr style="{% if row.is_basis %}background: hsla(172, 55%, 45%, 0.10);{% endif %}">
+                <td style="padding: 4pt 2pt; font-size: 7pt; white-space: nowrap;">{% if _gm_is_fr %}{% if row.label == 'Downside' %}Défavorable{% elif row.label == 'Upside' %}Favorable{% else %}Base{% endif %}{% elif _gm_is_en %}{{ "Base" if row.label == "Basis" else row.label }}{% else %}{% if row.label == 'Downside' %}Neerwaarts{% elif row.label == 'Upside' %}Opwaarts{% else %}Basis{% endif %}{% endif %}</td>
+                <td style="padding: 4pt 2pt; font-size: 7pt; white-space: nowrap;">{{ row.growth }}</td><td style="padding: 4pt 2pt; font-size: 7pt; white-space: nowrap;">{{ row.ebitda }}</td>
+                {% for cell in row.cells %}<td style="text-align: right; padding: 4pt 2pt; font-size: 7pt; white-space: nowrap;">{{ cell }}</td>{% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p style="font-size: 7pt; line-height: 1.5; margin-top: 12pt;">
+        {% if _gm_is_fr %}Cette sensibilité ne remplace pas la fourchette de valorisation sauvegardée.{% elif _gm_is_en %}This sensitivity does not replace the saved valuation range.{% else %}Deze gevoeligheid vervangt de opgeslagen waarderingsband niet.{% endif %}
+    </p>
+    {% if gm.calculation_id and gm.source_run_id and gm.source_run_hash %}
+    <p style="font-size: 6pt; overflow-wrap: anywhere;">{{ 'Scénario' if _gm_is_fr else 'Scenario' }}: {{ gm.calculation_id }}<br>{{ 'Bron' if not _gm_is_en and not _gm_is_fr else 'Source' }}: {{ gm.source_run_id }} / {{ gm.source_run_hash }}</p>
+    {% else %}
+    <p style="font-size: 6pt;">{% if _gm_is_fr %}Scénario dérivé des données du rapport ; référence de calcul scellée indisponible.{% elif _gm_is_en %}Scenario derived from report data; sealed calculation reference unavailable.{% else %}Scenario afgeleid van rapportgegevens; verzegelde rekenreferentie niet beschikbaar.{% endif %}</p>
+    {% endif %}
+</div>

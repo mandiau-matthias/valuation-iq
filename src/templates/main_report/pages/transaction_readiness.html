@@ -1,0 +1,243 @@
+{#
+    TRANSACTION READINESS MEMO — screen template.
+
+    First visible deal-room surface for the structured transaction context.
+    It is deliberately framed as readiness / evidence, not legal advice.
+#}
+
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+
+    {% set _is_en = locale|default('nl') == 'en' %}
+    {% set _is_fr = locale|default('nl') == 'fr' %}
+    {% set _tr = transaction_readiness or {} %}
+    {% set _status = _tr.report_handoff_status|default(_tr.buyer_release_status|default('lawyer_review_required')) %}
+    {% set _package_status = _tr.full_buyer_package_status|default(_tr.package_status|default('blocked')) %}
+    {% set _memo_score = _tr.memo_readiness_score|default(_tr.score|default(0)) %}
+    {% set _pack_score = _tr.buyer_package_readiness_score|default(_memo_score) %}
+    {% set _display_score = _tr.display_readiness_score|default(_memo_score) %}
+    {% set _integrity_issue_count = _tr.package_integrity_issue_count|default(0) %}
+    {% set _status_label = _tr.report_handoff_status_label|default(('Prêt' if _status == 'ready' else ('Contrôle requis' if _status == 'blocked' else 'Revue juridique requise')) if _is_fr else ('Ready' if _is_en and _status == 'ready' else ('Review required' if _is_en and _status == 'blocked' else ('Legal review required' if _is_en else ('Vrijgaveklaar' if _status == 'ready' else ('Controle vereist' if _status == 'blocked' else 'Juridische beoordeling vereist')))))) %}
+    {% set _package_status_label = _tr.full_buyer_package_status_label|default(_package_status|replace('_', ' ')|title) %}
+    {% set _effective_buyer_release_status_label = _tr.effective_buyer_release_status_label|default(_tr.effective_buyer_release_status|default('')|replace('_', ' ')|title) %}
+    {% set _status_color = 'hsl(143, 40%, 42%)' if _status == 'ready' else ('hsl(0, 65%, 50%)' if _status == 'blocked' else 'hsl(37, 65%, 45%)') %}
+    {% set _package_color = 'hsl(143, 40%, 42%)' if _package_status == 'ready' else ('hsl(0, 65%, 50%)' if _package_status == 'blocked' else 'hsl(37, 65%, 45%)') %}
+    {% set _score_color = _package_color if _tr.package_gate_active and _display_score < _memo_score else _status_color %}
+
+    <div class="section-header">
+        <span class="section-number">{{ transaction_readiness_section_number }}</span>
+        <h1 class="section-title" style="margin: 0; flex: 1;">
+            {% if _is_fr %}Mémo de préparation à la transaction{% elif _is_en %}Transaction Readiness Memo{% else %}Transactiegereedheidsmemo{% endif %}
+        </h1>
+    </div>
+
+    <p style="font-size: 10pt; line-height: 1.65; color: hsl(var(--report-slate-600)); margin: 0 0 var(--space-5) 0;">
+        {% if _is_fr %}
+        Cette page traduit la valorisation en première carte de diligence acheteur : mécanique de prix, lacunes probantes, questions acheteurs et implications SPA. Ce n’est pas un conseil juridique ou fiscal, mais une carte de transmission pour le conseiller, le conseil juridique et le vendeur.
+        {% elif _is_en %}
+        This page translates the valuation into a first buyer diligence map: price mechanics, evidence gaps, buyer questions and SPA implications. It is not legal or tax advice, but a handoff map for the advisor, legal counsel and seller.
+        {% else %}
+        Deze pagina vertaalt de waardering naar een eerste due-diligencekaart voor kopers: prijsmechaniek, bewijsstukken, kopersvragen en SPA-implicaties. Dit is geen juridisch of fiscaal advies, maar een overdrachtskaart voor adviseur, juridisch adviseur en verkoper.
+        {% endif %}
+    </p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12pt; margin-bottom: var(--space-5);">
+        <div style="background: hsl(var(--report-card)); border: 1px solid hsl(var(--report-border)); border-radius: 12px; padding: 14pt;">
+            <p style="font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-slate-500)); margin: 0 0 5pt 0;">
+                {% if _is_fr %}Score de préparation{% elif _is_en %}Readiness Score{% else %}Gereedheidsscore{% endif %}
+            </p>
+            <p style="font-size: 22pt; font-weight: 800; color: {{ _score_color }}; margin: 0;">
+                {{ _display_score }}<span style="font-size: 11pt; color: hsl(var(--report-slate-500));">/100</span>
+            </p>
+            {% if _tr.package_gate_active and _display_score < _memo_score %}
+            <p style="font-size: 7.5pt; line-height: 1.4; color: hsl(var(--report-slate-500)); margin: 4pt 0 0 0;">
+                {% if _is_fr %}Preuves du mémo {{ _memo_score }}/100{% elif _is_en %}Memo evidence {{ _memo_score }}/100{% else %}Memo-bewijs {{ _memo_score }}/100{% endif %}
+            </p>
+            {% endif %}
+        </div>
+        <div style="background: hsl(var(--report-card)); border: 1px solid hsl(var(--report-border)); border-radius: 12px; padding: 14pt;">
+            <p style="font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-slate-500)); margin: 0 0 5pt 0;">
+                {% if _is_fr %}Statut du rapport{% elif _is_en %}Report Status{% else %}Rapportstatus{% endif %}
+            </p>
+            <p style="font-size: 12pt; font-weight: 800; color: {{ _status_color }}; margin: 0;">{{ _status_label }}</p>
+            {% if _tr.effective_buyer_release_status and _tr.effective_buyer_release_status != _tr.buyer_release_status %}
+            <p style="font-size: 7.5pt; line-height: 1.4; color: hsl(var(--report-slate-500)); margin: 4pt 0 0 0;">
+                {% if _is_fr %}Statut du dossier acheteur après contrôle : {{ _effective_buyer_release_status_label }}{% elif _is_en %}Buyer package status after check: {{ _effective_buyer_release_status_label }}{% else %}Status koperspakket na controle: {{ _effective_buyer_release_status_label }}{% endif %}
+            </p>
+            {% endif %}
+        </div>
+        <div style="background: hsl(var(--report-card)); border: 1px solid hsl(var(--report-border)); border-radius: 12px; padding: 14pt;">
+            <p style="font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-slate-500)); margin: 0 0 5pt 0;">
+                {% if _is_fr %}Dossier acheteur{% elif _is_en %}Buyer Package{% else %}Koperspakket{% endif %}
+            </p>
+            <p style="font-size: 12pt; font-weight: 800; color: {{ _package_color }}; margin: 0;">
+                {{ _package_status_label }}
+            </p>
+        </div>
+    </div>
+
+    {% if _tr.missing_package_artifact_count|default(0) > 0 or _tr.blocked_package_artifact_count|default(0) > 0 or _tr.review_package_artifact_count|default(0) > 0 or _integrity_issue_count > 0 %}
+    <div style="background: hsl(37, 80%, 96%); border: 1px solid hsl(37, 55%, 78%); border-radius: 10px; padding: 10pt 12pt; margin: calc(var(--space-5) * -0.4) 0 var(--space-5) 0;">
+        <p style="font-size: 9pt; line-height: 1.5; color: hsl(37, 65%, 25%); margin: 0;">
+            {% if _is_fr %}
+            Le rapport de valorisation peut être revu comme mémo, mais le dossier acheteur nécessite encore un contrôle : {{ _tr.blocked_package_artifact_count|default(0) }} éléments critiques à revoir, {{ _tr.review_package_artifact_count|default(0) }} éléments à revoir, {{ _tr.missing_package_artifact_count|default(0) }} manquants ; points d’attention d’intégrité contractuelle : {{ _integrity_issue_count }}{% if not _tr.full_buyer_package_requested %}. Ce contrôle de dossier reste informatif tant qu’un dossier acheteur n’est pas demandé{% endif %}.
+            {% elif _is_en %}
+            The valuation report can be reviewed as a memo, but the buyer package still requires review: {{ _tr.blocked_package_artifact_count|default(0) }} critical review items, {{ _tr.review_package_artifact_count|default(0) }} review items, {{ _tr.missing_package_artifact_count|default(0) }} missing; contract-integrity attention points: {{ _integrity_issue_count }}{% if not _tr.full_buyer_package_requested %}. This package check is informational until a buyer package is requested{% endif %}.
+            {% else %}
+            Het waarderingsrapport kan als memo worden beoordeeld, maar het koperspakket vereist nog controle: {{ _tr.blocked_package_artifact_count|default(0) }} kritieke controlepunten, {{ _tr.review_package_artifact_count|default(0) }} reviewpunten, {{ _tr.missing_package_artifact_count|default(0) }} ontbrekend; aandachtspunten contractintegriteit: {{ _integrity_issue_count }}{% if not _tr.full_buyer_package_requested %}. Deze pakketcontrole is informatief zolang er geen koperspakket is aangevraagd{% endif %}.
+            {% endif %}
+        </p>
+        {% if _tr.missing_package_artifacts %}
+        <p style="font-size: 8pt; line-height: 1.45; color: hsl(37, 65%, 30%); margin: 5pt 0 0 0;">
+            {% if _is_fr %}Manquant :{% elif _is_en %}Missing:{% else %}Ontbreekt:{% endif %}
+            {{ _tr.missing_package_artifacts[:4]|join(', ') }}{% if _tr.missing_package_artifact_count > 4 %}, …{% endif %}
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% set _bridge = transaction_price_bridge or {} %}
+    <div style="background: hsl(var(--report-teal) / 0.06); border: 1px solid hsl(var(--report-teal) / 0.18); border-radius: 12px; padding: 14pt; margin-bottom: var(--space-5);">
+        <h2 style="font-size: 12pt; margin: 0 0 8pt 0; color: hsl(var(--report-text));">
+            {% if _is_fr %}Mécanique de prix{% elif _is_en %}Price Mechanics{% else %}Prijsmechaniek{% endif %}
+        </h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10pt;">
+            <div>
+                <p style="font-size: 8pt; color: hsl(var(--report-slate-500)); margin: 0 0 3pt 0;">EV</p>
+                <p style="font-size: 11pt; font-weight: 700; margin: 0;">{{ _bridge.enterprise_value_mid_eur|format_currency_compact }}</p>
+            </div>
+            <div>
+                <p style="font-size: 8pt; color: hsl(var(--report-slate-500)); margin: 0 0 3pt 0;">{% if _is_fr %}Capitaux propres{% else %}Equity{% endif %}</p>
+                <p style="font-size: 11pt; font-weight: 700; margin: 0;">{{ _bridge.equity_value_mid_eur|format_currency_compact }}</p>
+            </div>
+            <div>
+                <p style="font-size: 8pt; color: hsl(var(--report-slate-500)); margin: 0 0 3pt 0;">{% if _is_fr %}Mécanisme{% elif _is_en %}Mechanism{% else %}Mechaniek{% endif %}</p>
+                <p style="font-size: 10pt; font-weight: 700; margin: 0;">{{ _bridge.price_mechanism_label|default(_bridge.price_mechanism_default|replace('_', ' ')|title) }}</p>
+            </div>
+        </div>
+        {% if _bridge.equity_equals_ev_pending_balance or equity_value_assumed_equal_ev_due_to_missing_balance|default(false) %}
+        <p style="font-size: 8pt; line-height: 1.45; color: hsl(var(--report-slate-600)); margin: 8pt 0 0 0;">
+            {% if _is_fr %}Les capitaux propres sont affichés égaux à l’EV jusqu’à vérification de la dette nette, de la trésorerie et du fonds de roulement à partir d’un bilan.{% elif _is_en %}Equity is shown equal to EV until net debt, cash and working capital are verified from a balance sheet.{% else %}Equity is hier gelijk aan EV zolang nettoschuld, cash en werkkapitaal niet met een balans zijn bevestigd.{% endif %}
+        </p>
+        {% endif %}
+    </div>
+
+    {% set _rq = transaction_revenue_quality or {} %}
+    {% if _rq.rows %}
+    <div style="border: 1px solid hsl(var(--report-border)); border-radius: 12px; padding: 12pt 14pt; margin-bottom: var(--space-5);">
+        <h2 style="font-size: 12pt; margin: 0 0 8pt 0; color: hsl(var(--report-text));">
+            {% if _is_fr %}Entrées de qualité du chiffre d’affaires{% elif _is_en %}Revenue Quality Inputs{% else %}Omzetkwaliteitsinputs{% endif %}
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8pt;">
+            {% for row in _rq.rows[:3] %}
+            <div style="background: hsl(var(--report-muted)); border-radius: 8px; padding: 8pt;">
+                <p style="font-size: 7pt; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: hsl(var(--report-slate-500)); margin: 0 0 4pt 0;">{{ row.label }}</p>
+                <p style="font-size: 10pt; font-weight: 800; color: hsl(var(--report-text)); margin: 0;">
+                    {% if row.amount_eur is not none %}{{ row.amount_eur|format_currency_compact }}{% else %}—{% endif %}
+                </p>
+                <p style="font-size: 8pt; color: hsl(var(--report-slate-600)); margin: 3pt 0 0 0;">
+                    {% if row.ratio_pct is defined and row.ratio_pct is not none %}
+                        {{ row.ratio_pct|round(1) }}% {% if _is_fr %}du chiffre d’affaires{% elif _is_en %}of revenue{% else %}van omzet{% endif %}
+                    {% elif row.months is defined and row.months is not none %}
+                        {{ row.months|round(1) }} {% if _is_fr %}mois de chiffre d’affaires{% elif _is_en %}months of revenue{% else %}maanden omzet{% endif %}
+                    {% else %}
+                        {% if _is_fr %}Entrée capturée{% elif _is_en %}Input captured{% else %}Input vastgelegd{% endif %}
+                    {% endif %}
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% set _spa = transaction_spa_implications|default([]) %}
+    {% if _spa %}
+    <div style="border: 1px solid hsl(var(--report-border)); border-radius: 12px; padding: 12pt 14pt; margin-bottom: var(--space-5);">
+        <h2 style="font-size: 12pt; margin: 0 0 8pt 0; color: hsl(var(--report-text));">
+            {% if _is_fr %}Transmission SPA{% elif _is_en %}SPA Handoff{% else %}SPA-overdracht{% endif %}
+        </h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8pt;">
+            {% for item in _spa[:4] %}
+            <div style="background: hsl(var(--report-muted)); border-radius: 8px; padding: 8pt;">
+                <p style="font-size: 7pt; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: hsl(var(--report-slate-500)); margin: 0 0 3pt 0;">
+                    {{ item.area_label|default(item.area|replace('_', ' ')|title) }}
+                </p>
+                <p style="font-size: 8pt; font-weight: 700; color: hsl(var(--report-text)); margin: 0 0 3pt 0;">
+                    {{ item.instrument_label|default(item.instrument|replace('_', ' ')|title) }}
+                </p>
+                <p style="font-size: 8pt; line-height: 1.45; color: hsl(var(--report-slate-600)); margin: 0;">
+                    {{ item.note }}
+                </p>
+                {% if item.source %}
+                <p style="font-size: 7pt; line-height: 1.4; color: hsl(var(--report-slate-500)); margin: 4pt 0 0 0;">
+                    <strong>{% if _is_fr %}Preuve{% elif _is_en %}Evidence{% else %}Bewijs{% endif %}:</strong> {{ item.source }}
+                </p>
+                {% endif %}
+                {% if item.rebuttal_evidence_needed %}
+                <p style="font-size: 7pt; line-height: 1.4; color: hsl(var(--report-slate-500)); margin: 2pt 0 0 0;">
+                    <strong>{% if _is_fr %}Action{% elif _is_en %}Action{% else %}Actie{% endif %}:</strong> {{ item.rebuttal_evidence_needed }}
+                </p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 14pt;">
+        <div>
+            <h2 style="font-size: 12pt; margin: 0 0 8pt 0;">{% if _is_fr %}Checklist des preuves{% elif _is_en %}Evidence Checklist{% else %}Bewijschecklist{% endif %}</h2>
+            {% for row in transaction_evidence_checklist|default([]) %}
+            {% set _row_color = 'hsl(143, 40%, 42%)' if row.status == 'present' else ('hsl(0, 65%, 50%)' if row.status == 'missing' else 'hsl(37, 65%, 45%)') %}
+            <div style="border: 1px solid hsl(var(--report-border)); border-radius: 8px; padding: 8pt; margin-bottom: 6pt;">
+                <div style="display: flex; justify-content: space-between; gap: 8pt;">
+                    <strong style="font-size: 9pt;">{{ row.label }}</strong>
+                    <span style="font-size: 7pt; font-weight: 700; color: {{ _row_color }}; text-transform: uppercase;">{{ row.status_label|default(row.status) }}</span>
+                </div>
+                <p style="font-size: 8pt; line-height: 1.45; color: hsl(var(--report-slate-600)); margin: 3pt 0 0 0;">{{ row.transaction_consequence }}</p>
+                {% if row.source %}
+                <p style="font-size: 7pt; line-height: 1.4; color: hsl(var(--report-slate-500)); margin: 4pt 0 0 0;">
+                    <strong>{% if _is_fr %}Preuve{% elif _is_en %}Evidence{% else %}Bewijs{% endif %}:</strong> {{ row.source }}
+                </p>
+                {% endif %}
+                {% if row.rebuttal_evidence_needed %}
+                <p style="font-size: 7pt; line-height: 1.4; color: hsl(var(--report-slate-500)); margin: 2pt 0 0 0;">
+                    <strong>{% if _is_fr %}Action{% elif _is_en %}Action{% else %}Actie{% endif %}:</strong> {{ row.rebuttal_evidence_needed }}
+                </p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        <div>
+            <h2 style="font-size: 12pt; margin: 0 0 8pt 0;">{% if _is_fr %}Questions acheteurs{% elif _is_en %}Buyer Challenges{% else %}Kopersuitdagingen{% endif %}</h2>
+            {% if transaction_buyer_challenges %}
+                {% for challenge in transaction_buyer_challenges[:4] %}
+                <div style="background: hsl(37, 80%, 96%); border: 1px solid hsl(37, 55%, 78%); border-radius: 8px; padding: 9pt; margin-bottom: 7pt;">
+                    <p style="font-size: 8pt; font-weight: 800; color: hsl(37, 65%, 28%); margin: 0 0 4pt 0; text-transform: uppercase;">{{ challenge.severity_label|default(challenge.severity) }}</p>
+                    <p style="font-size: 9pt; line-height: 1.45; margin: 0;">{{ challenge.challenge }}</p>
+                    {% if challenge.source %}
+                    <p style="font-size: 7pt; line-height: 1.4; color: hsl(37, 45%, 30%); margin: 4pt 0 0 0;">
+                        <strong>{% if _is_fr %}Preuve{% elif _is_en %}Evidence{% else %}Bewijs{% endif %}:</strong> {{ challenge.source }}
+                    </p>
+                    {% endif %}
+                    {% if challenge.rebuttal_evidence_needed %}
+                    <p style="font-size: 7pt; line-height: 1.4; color: hsl(37, 45%, 30%); margin: 2pt 0 0 0;">
+                        <strong>{% if _is_fr %}Action{% elif _is_en %}Action{% else %}Actie{% endif %}:</strong> {{ challenge.rebuttal_evidence_needed }}
+                    </p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="background: hsl(143, 40%, 96%); border: 1px solid hsl(143, 35%, 78%); border-radius: 8px; padding: 10pt;">
+                    <p style="font-size: 9pt; line-height: 1.5; margin: 0; color: hsl(143, 45%, 25%);">
+                        {% if _is_fr %}Aucune question acheteur critique n’a été détectée à partir des preuves disponibles. Une revue juridique reste requise avant toute diffusion externe.{% elif _is_en %}No critical buyer challenge was detected from the available evidence. Legal review is still required before external distribution.{% else %}Geen kritieke kopersuitdaging gedetecteerd op basis van de beschikbare bewijsstukken. Juridische beoordeling blijft vereist vóór externe distributie.{% endif %}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% with page_number=transaction_readiness_page_number, total_pages=total_pages %}
+    {% include "main_report/partials/_footer.html" %}
+    {% endwith %}
+</div>

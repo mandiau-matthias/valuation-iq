@@ -1,0 +1,72 @@
+{#
+    SDE BRIDGE LADDER COMPONENT — PDF version (WeasyPrint / Aurora Clarity)
+    ========================================================================
+    Walk from Reported Net Income / Normalized EBITDA → Seller's Discretionary
+    Earnings, the canonical BizBuySell-style ladder for owner-operator
+    businesses. Two flavours come out of the engine:
+
+      Net-income decomposition path (full reconciliation):
+          Reported net income
+        + Interest expense
+        + Depreciation
+        + Amortisation
+        + Owner compensation (working = market replacement | passive = full)
+        + Owner benefits / perks
+        + Non-recurring expenses
+        − Non-operating income
+        = Seller's Discretionary Earnings (SDE)
+
+      Normalized-EBITDA path (when the engine starts from EBITDA):
+          Normalised EBITDA
+        + Owner compensation
+        = Seller's Discretionary Earnings (SDE)
+
+    Mirrors the visual rhythm of `_nav_bridge_table.html` and
+    `_equity_bridge_table.html`. Page-break-inside: avoid keeps the ladder
+    on one page.
+
+    Expected context — `sde_bridge` is a list of rows with shape:
+      [
+        {label, amount, running_total, kind: 'anchor'|'addback'|'subtract'|'total'},
+        ...
+      ]
+    populated by step_2_7_orchestrator._build_sde_bridge or by
+    sde_channel.build_sde_bridge. Each `label` already carries its
+    operator prefix ('+', '−'); we render it verbatim.
+
+    Self-gating: renders nothing when `sde_bridge` is missing, empty, or
+    the wrong shape.
+#}
+{% set _bridge_rows = sde_bridge if (sde_bridge and sde_bridge is iterable and sde_bridge is not mapping) else [] %}
+
+{% if _bridge_rows|length > 0 %}
+<div style="margin-top: 12pt; padding: 10pt; background: hsl(224, 15%, 97%); border-radius: 6pt; border: 0.5pt solid hsl(224, 15%, 88%); page-break-inside: avoid; break-inside: avoid;">
+    <p style="font-size: 7pt; margin: 0 0 6pt 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(224, 10%, 45%);">
+        {{ t.sde_bridge_title }}
+    </p>
+
+    {% for row in _bridge_rows %}
+        {% set _kind = row.kind|default('addback') %}
+        {% set _is_anchor = _kind == 'anchor' %}
+        {% set _is_total = _kind == 'total' %}
+        {% set _amount = row.amount|default(0)|float %}
+        {% set _is_subtract = _kind == 'subtract' or _amount < 0 %}
+        {% if _is_total %}
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 4pt 0 2pt 0; margin-top: 3pt; border-top: 0.5pt solid hsl(224, 15%, 82%); font-size: 8pt; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">
+            <span style="font-weight: 700; color: hsl({{ teal_hsl }});">{{ row.label }}</span>
+            <span style="font-weight: 700; color: hsl({{ teal_hsl }});">{{ _amount|format_currency }}</span>
+        </div>
+        {% else %}
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 2pt 0; font-size: 7.5pt; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">
+            <span style="color: hsl(224, 10%, {% if _is_anchor %}30%{% else %}45%{% endif %}); {% if _is_anchor %}font-weight: 600;{% endif %}">{{ row.label }}</span>
+            <span style="font-weight: 600; {% if _is_subtract %}color: hsl(6, 55%, 50%);{% endif %}">{{ _amount|abs|format_currency }}</span>
+        </div>
+        {% endif %}
+    {% endfor %}
+
+    {# Footnote: SDE definition, calls out single-owner assumption #}
+    <p style="margin: 6pt 0 0 0; font-size: 6.5pt; color: hsl(224, 10%, 55%); line-height: 1.4;">
+        {{ t.sde_bridge_footnote }}
+    </p>
+</div>
+{% endif %}

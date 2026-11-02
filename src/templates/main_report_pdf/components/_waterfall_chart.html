@@ -1,0 +1,229 @@
+{# 
+    EBITDA WATERFALL CHART COMPONENT
+    SVG-based visualization of normalization bridge
+    
+    Expected context variables:
+    - reported_ebitda: float
+    - latest_normalized_ebitda: float
+    - ebitda_adjustments: list of adjustment dicts with {label, value, type, category}
+    
+    Colors (from design system):
+    - Base: hsl(224 15% 25%) - Slate dark
+    - Add: hsl(172 55% 45%) - Teal primary
+    - Subtract: hsl(6 55% 55%) - Rust
+    - Result: hsl(172 55% 35%) - Teal dark
+#}
+
+{% set chart_width = 520 %}
+{% set chart_height = 160 %}
+{% set bar_width = 50 %}
+{% set padding_top = 24 %}
+{% set padding_bottom = 32 %}
+{% set padding_left = 50 %}
+{% set padding_right = 16 %}
+
+{% set chart_inner_width = chart_width - padding_left - padding_right %}
+{% set chart_inner_height = chart_height - padding_top - padding_bottom %}
+
+{# Ensure we have valid EBITDA values #}
+{% set _reported = reported_ebitda|default(0)|float %}
+{% set _normalized = latest_normalized_ebitda|default(0)|float %}
+
+{# Filter adjustments to get only add/subtract types (exclude base and result) #}
+{% set adjustment_items = [] %}
+{% for adj in ebitda_adjustments|default([]) %}
+    {% if adj.type in ['add', 'subtract'] and adj.value %}
+        {% set _ = adjustment_items.append(adj) %}
+    {% endif %}
+{% endfor %}
+
+{# Calculate bar count and spacing #}
+{% set total_bars = 2 + (adjustment_items|length) %}
+{# Fit guard: bar_width was hard-fixed at 50, so a fully itemised normalization
+   (≥7 add-backs ⇒ ≥9 bars) pushed the final bars past the 520 viewBox and
+   clipped at the chart's right edge. Shrink the bars to fit — never grow past
+   the 50 desired — so every bar plus a 6px minimum gap stays inside the inner
+   width. Mirrors the budget clamp used by _multiple_waterfall_chart.html. #}
+{% set _bar_fit = (chart_inner_width - (total_bars - 1) * 6) / total_bars %}
+{% set bar_width = [10, [bar_width, _bar_fit]|min]|max %}
+{% set available_width = chart_inner_width - (total_bars * bar_width) %}
+{% set gap_divisor = total_bars - 1 if total_bars > 1 else 1 %}
+{% set calculated_gap = available_width / gap_divisor %}
+{% set actual_gap = [2, [calculated_gap, 20]|min]|max %}
+
+{# Total adjustment for annotation #}
+{% set total_adjustment = _normalized - _reported %}
+{% set adjustment_percent = ((total_adjustment / _reported) * 100)|safe_round(1) if _reported > 0 else 0 %}
+
+{# Pre-calculate cumulative values for each bar to handle Jinja2 scoping #}
+{% set cumulative_values = [_reported] %}
+{% set running = namespace(total=_reported) %}
+{% for adj in adjustment_items %}
+    {% set adj_val = adj.value|abs|float %}
+    {% if adj.type == 'add' %}
+        {% set running.total = running.total + adj_val %}
+    {% else %}
+        {% set running.total = running.total - adj_val %}
+    {% endif %}
+    {% set _ = cumulative_values.append(running.total) %}
+{% endfor %}
+
+{# Calculate max value for scaling.
+   Include intermediate cumulative bridge values, not just reported and final
+   EBITDA, otherwise a large add-back followed by an offset can clip the middle
+   bar even when the endpoints are modest. #}
+{% set max_val = namespace(value=1) %}
+{% for candidate in cumulative_values + [_normalized] %}
+    {% set candidate_value = candidate|float %}
+    {% if candidate_value > max_val.value %}
+        {% set max_val.value = candidate_value %}
+    {% endif %}
+{% endfor %}
+{% set _raw_max = max_val.value * 1.15 %}
+{% set _nice_step =
+       1_000 if _raw_max <= 4_000
+  else 2_000 if _raw_max <= 8_000
+  else 5_000 if _raw_max <= 20_000
+  else 10_000 if _raw_max <= 40_000
+  else 25_000 if _raw_max <= 100_000
+  else 50_000 if _raw_max <= 200_000
+  else 100_000 if _raw_max <= 400_000
+  else 250_000 if _raw_max <= 1_000_000
+  else 500_000 if _raw_max <= 2_000_000
+  else 1_000_000 if _raw_max <= 4_000_000
+  else 2_500_000 if _raw_max <= 10_000_000
+  else 5_000_000 %}
+{% set max_value = (((_raw_max / _nice_step)|round(0, 'ceil'))|int) * _nice_step %}
+
+{# Scale factor for bar heights #}
+{% set scale = chart_inner_height / max_value if max_value > 0 else 1 %}
+
+{# Only render chart if we have valid data #}
+{% if _reported > 0 and _normalized > 0 %}
+<div class="waterfall-chart" style="margin-top: 12pt; margin-bottom: 12pt;">
+    <svg width="{{ chart_width }}" height="{{ chart_height }}" viewBox="0 0 {{ chart_width }} {{ chart_height }}" style="display: block; margin: 0 auto; font-family: 'Satoshi', 'Noto Sans', 'Noto Sans Symbols 2', sans-serif;">
+        {# Background #}
+        <rect x="{{ padding_left - 10 }}" y="{{ padding_top - 10 }}" width="{{ chart_inner_width + 20 }}" height="{{ chart_inner_height + 20 }}" fill="hsl(40 15% 98%)" rx="4"/>
+        
+        {# Y-axis grid lines.
+           Round the K-value to 1 decimal when max_value < €5K (low-EBITDA
+           SMEs were rendering all four ticks as "€0K" — defensibility bug).
+           Above €5K we keep round-to-integer-K for cleaner axes. #}
+        {% set _y_axis_dp = 1 if max_value < 5000 else 0 %}
+        {% for i in range(5) %}
+            {% set ratio = i / 4 %}
+            {% set y_pos = padding_top + chart_inner_height * (1 - ratio) %}
+            {% set grid_value = max_value * ratio %}
+            <line x1="{{ padding_left - 5 }}" y1="{{ y_pos }}" x2="{{ padding_left + chart_inner_width }}" y2="{{ y_pos }}" stroke="hsl(224 10% 90%)" {% if i > 0 %}stroke-dasharray="4,2"{% endif %}/>
+            <text x="{{ padding_left - 10 }}" y="{{ y_pos + 3 }}" text-anchor="end" font-size="8" fill="hsl(224 10% 45%)">
+                €{{ (grid_value / 1000)|safe_round(_y_axis_dp) }}K
+            </text>
+        {% endfor %}
+        
+        {# Chart title #}
+        <text x="{{ padding_left }}" y="12" font-size="10" font-weight="600" fill="hsl(224 15% 20%)">
+            {% if headline_ebitda_is_reported|default(false) %}Aansluiting gerapporteerde EBITDA{% else %}{{ t.waterfall_title }}{% endif %}
+        </text>
+        
+        {# Delta annotation #}
+        <text x="{{ chart_width - padding_right }}" y="12" text-anchor="end" font-size="9" fill="{% if total_adjustment >= 0 %}hsl({{ teal_hsl }}){% else %}hsl(6 55% 50%){% endif %}">
+            Δ {% if total_adjustment >= 0 %}+{% endif %}€{{ (total_adjustment / 1000)|safe_round(1) }}K ({{ adjustment_percent }}%)
+        </text>
+        
+        {# === Bar 1: Reported EBITDA (grounded) === #}
+        {% set bar1_height = _reported * scale %}
+        {% set bar1_y = padding_top + chart_inner_height - bar1_height %}
+        {% set bar1_x = padding_left %}
+        
+        {# Bar shadow #}
+        <rect x="{{ bar1_x + 2 }}" y="{{ bar1_y + 2 }}" width="{{ bar_width }}" height="{{ bar1_height }}" fill="hsla(224, 15%, 20%, 0.1)" rx="3"/>
+        {# Bar #}
+        <rect x="{{ bar1_x }}" y="{{ bar1_y }}" width="{{ bar_width }}" height="{{ bar1_height }}" fill="hsl(224 15% 25%)" rx="3"/>
+        {# Value label #}
+        <text x="{{ bar1_x + bar_width / 2 }}" y="{{ bar1_y - 8 }}" text-anchor="middle" font-size="9" font-weight="600" fill="hsl(224 15% 20%)">
+            €{{ (_reported / 1000)|safe_round(1) }}K
+        </text>
+        {# Label below #}
+        <text x="{{ bar1_x + bar_width / 2 }}" y="{{ padding_top + chart_inner_height + 16 }}" text-anchor="middle" font-size="8" fill="hsl(224 10% 45%)">
+            {{ t.waterfall_reported }}
+        </text>
+        
+        {# === Adjustment bars (floating) === #}
+        {% for adj in adjustment_items %}
+            {% set bar_idx = loop.index %}
+            {% set is_add = adj.type == 'add' %}
+            {% set adj_value = adj.value|abs|float %}
+            {% set adj_bar_height = adj_value * scale %}
+            
+            {# Get cumulative values from pre-calculated array #}
+            {% set prev_cumulative = cumulative_values[loop.index0] %}
+            {% set curr_cumulative = cumulative_values[loop.index] %}
+            
+            {# Calculate X position #}
+            {% set adj_x = padding_left + (bar_idx * (bar_width + actual_gap)) %}
+            
+            {# Calculate Y position based on type #}
+            {% if is_add %}
+                {% set adj_y = padding_top + chart_inner_height - (curr_cumulative * scale) %}
+            {% else %}
+                {% set adj_y = padding_top + chart_inner_height - (prev_cumulative * scale) %}
+            {% endif %}
+            
+            {# Connector line from previous bar #}
+            {% set prev_bar_x = padding_left + ((bar_idx - 1) * (bar_width + actual_gap)) + bar_width %}
+            {% set prev_y = padding_top + chart_inner_height - (prev_cumulative * scale) %}
+            <line x1="{{ prev_bar_x }}" y1="{{ prev_y }}" x2="{{ adj_x }}" y2="{{ prev_y }}" stroke="hsl(224 10% 75%)" stroke-width="1.5" stroke-dasharray="4,2"/>
+            
+            {# Bar shadow #}
+            <rect x="{{ adj_x + 2 }}" y="{{ adj_y + 2 }}" width="{{ bar_width }}" height="{{ adj_bar_height }}" fill="hsla(224, 15%, 20%, 0.1)" rx="3"/>
+            {# Bar #}
+            <rect x="{{ adj_x }}" y="{{ adj_y }}" width="{{ bar_width }}" height="{{ adj_bar_height }}" fill="{% if is_add %}hsl({{ teal_hsl }}){% else %}hsl(6 55% 55%){% endif %}" rx="3"/>
+            {# Value label #}
+            <text x="{{ adj_x + bar_width / 2 }}" y="{{ adj_y - 8 }}" text-anchor="middle" font-size="9" font-weight="600" fill="hsl(224 15% 20%)">
+                {% if is_add %}+{% else %}-{% endif %}€{{ (adj_value / 1000)|safe_round(1) }}K
+            </text>
+            {# Label below — truncated to fit the bar width.
+               Use Jinja's `truncate` filter with an explicit `…` so the
+               reader sees that the label was clipped, instead of the
+               previous silent character-slice that dropped words mid-phrase. #}
+            {% set label_text = adj.label|default(t.waterfall_adjustment) %}
+            <text x="{{ adj_x + bar_width / 2 }}" y="{{ padding_top + chart_inner_height + 16 }}" text-anchor="middle" font-size="8" fill="hsl(224 10% 45%)">
+                {{ label_text|truncate(11, True, '…') }}
+            </text>
+        {% endfor %}
+        
+        {# === Final connector line === #}
+        {% set last_bar_idx = adjustment_items|length %}
+        {% set final_bar_x = padding_left + ((last_bar_idx + 1) * (bar_width + actual_gap)) %}
+        {% set last_cumulative = cumulative_values[-1] if cumulative_values|length > 0 else _reported %}
+        {% set last_bar_end_x = padding_left + (last_bar_idx * (bar_width + actual_gap)) + bar_width %}
+        {% set last_y = padding_top + chart_inner_height - (last_cumulative * scale) %}
+        {% set final_y = padding_top + chart_inner_height - (_normalized * scale) %}
+        <line x1="{{ last_bar_end_x }}" y1="{{ last_y }}" x2="{{ final_bar_x }}" y2="{{ final_y }}" stroke="hsl(224 10% 75%)" stroke-width="1.5" stroke-dasharray="4,2"/>
+        
+        {# === Bar N: Normalized EBITDA (grounded) === #}
+        {% set bar_n_height = _normalized * scale %}
+        {% set bar_n_y = padding_top + chart_inner_height - bar_n_height %}
+        
+        {# Bar shadow #}
+        <rect x="{{ final_bar_x + 2 }}" y="{{ bar_n_y + 2 }}" width="{{ bar_width }}" height="{{ bar_n_height }}" fill="hsla(224, 15%, 20%, 0.1)" rx="3"/>
+        {# Bar #}
+        <rect x="{{ final_bar_x }}" y="{{ bar_n_y }}" width="{{ bar_width }}" height="{{ bar_n_height }}" fill="hsl({{ teal_dark_hsl }})" rx="3"/>
+        {# Value label #}
+        <text x="{{ final_bar_x + bar_width / 2 }}" y="{{ bar_n_y - 8 }}" text-anchor="middle" font-size="9" font-weight="600" fill="hsl(224 15% 20%)">
+            €{{ (_normalized / 1000)|safe_round(1) }}K
+        </text>
+        {# Label below #}
+        <text x="{{ final_bar_x + bar_width / 2 }}" y="{{ padding_top + chart_inner_height + 16 }}" text-anchor="middle" font-size="8" fill="hsl(224 10% 45%)">
+            {% if headline_ebitda_is_reported|default(false) %}In waardering (niet-genormaliseerd){% else %}{{ t.waterfall_normalized }}{% endif %}
+        </text>
+    </svg>
+</div>
+{% else %}
+{# Fallback if no EBITDA data #}
+<div class="callout callout-warning" style="margin: 24pt 0;">
+    <p style="font-size: 8pt; margin: 0;">
+        {{ t.waterfall_no_data }}
+    </p>
+</div>
+{% endif %}

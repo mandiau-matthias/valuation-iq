@@ -1,0 +1,4176 @@
+[
+  {
+    "id": "accounting",
+    "title": "Accounting & Finance",
+    "description": "Accounting firm, bookkeeping, tax services",
+    "short_description": "Accounting firm, bookkeeping, tax services",
+    "category_id": "professional-services",
+    "industryMapping": "Professional Services",
+    "keywords": [
+      "accounting",
+      "bookkeeping",
+      "cpa",
+      "tax"
+    ],
+    "popular": true,
+    "dcfPreference": "0.60",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "project_success_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "consulting",
+    "title": "Business Consulting",
+    "description": "Management consulting, strategy, business advisory",
+    "short_description": "Management consulting, strategy, business advisory",
+    "category_id": "professional-services",
+    "industryMapping": "Professional Services",
+    "keywords": [
+      "consulting",
+      "business consultant",
+      "management consulting"
+    ],
+    "popular": true,
+    "dcfPreference": "0.60",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "project_success_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "catering",
+    "title": "Catering",
+    "description": "Event catering, corporate meals, party services",
+    "short_description": "Event catering, corporate meals, party services",
+    "category_id": "food-beverage",
+    "industryMapping": "Food & Beverage",
+    "keywords": [
+      "events",
+      "corporate catering",
+      "party",
+      "wedding catering"
+    ],
+    "popular": true,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "foot_traffic",
+      "inventory_turnover"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "cleaning",
+    "title": "Cleaning Services",
+    "description": "House cleaning, office cleaning, specialized cleaning",
+    "short_description": "House cleaning, office cleaning, specialized cleaning",
+    "category_id": "home-property",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "cleaning",
+      "house cleaning",
+      "office cleaning",
+      "janitorial"
+    ],
+    "popular": true,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "coaching",
+    "title": "Coaching",
+    "description": "Life coaching, business coaching, career coaching",
+    "short_description": "Life coaching, business coaching, career coaching",
+    "category_id": "education-training",
+    "industryMapping": "Education",
+    "keywords": [
+      "coaching",
+      "life coach",
+      "business coach",
+      "career coach"
+    ],
+    "popular": true,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "student_count",
+      "retention_rate",
+      "hourly_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "coffee-shop",
+    "title": "Coffee Shop",
+    "description": "Cafe, coffee house, espresso bar",
+    "short_description": "Cafe, coffee house, espresso bar",
+    "category_id": "food-beverage",
+    "industryMapping": "Food & Beverage",
+    "keywords": [
+      "cafe",
+      "coffee",
+      "espresso",
+      "tea house"
+    ],
+    "popular": true,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "foot_traffic",
+      "inventory_turnover"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "construction",
+    "title": "Construction",
+    "description": "General contractor, construction company, building",
+    "short_description": "General contractor, construction company, building",
+    "category_id": "home-property",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "construction",
+      "contractor",
+      "building",
+      "renovation"
+    ],
+    "popular": true,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "design",
+    "title": "Design Services",
+    "description": "Graphic design, web design, branding, creative services",
+    "short_description": "Graphic design, web design, branding, creative services",
+    "category_id": "creative-media",
+    "industryMapping": "Creative & Media",
+    "keywords": [
+      "graphic design",
+      "design",
+      "branding",
+      "creative"
+    ],
+    "popular": true,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "project_capacity",
+      "client_retention",
+      "hourly_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "ecommerce",
+    "title": "E-commerce Store",
+    "description": "Online stores, digital retail, online shop",
+    "short_description": "Online stores, digital retail, online shop",
+    "category_id": "ecommerce-retail",
+    "industryMapping": "E-commerce",
+    "keywords": [
+      "ecommerce",
+      "online store",
+      "online shop",
+      "digital retail"
+    ],
+    "popular": true,
+    "dcfPreference": "0.70",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "inventory_turnover",
+      "customer_lifetime_value",
+      "conversion_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "education",
+    "title": "Education & Training",
+    "description": "Schools, training centers, educational services",
+    "short_description": "Schools, training centers, educational services",
+    "category_id": "education-training",
+    "industryMapping": "Education",
+    "keywords": [
+      "education",
+      "school",
+      "training",
+      "learning"
+    ],
+    "popular": true,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "student_count",
+      "retention_rate",
+      "hourly_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "events",
+    "title": "Event Planning",
+    "description": "Event planning, wedding planning, corporate events",
+    "short_description": "Event planning, wedding planning, corporate events",
+    "category_id": "events-entertainment",
+    "industryMapping": "Creative & Media",
+    "keywords": [
+      "event planning",
+      "event coordinator",
+      "wedding planner"
+    ],
+    "popular": true,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "event_volume",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "gym",
+    "title": "Gym & Fitness Center",
+    "description": "Fitness centers, gyms, workout facilities",
+    "short_description": "Fitness centers, gyms, workout facilities",
+    "category_id": "fitness-health",
+    "industryMapping": "Healthcare",
+    "keywords": [
+      "gym",
+      "fitness",
+      "workout",
+      "health club"
+    ],
+    "popular": true,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "membership_count",
+      "retention_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "hairstyling",
+    "title": "Hair Salon",
+    "description": "Hair salons, barbershops, hairstyling",
+    "short_description": "Hair salons, barbershops, hairstyling",
+    "category_id": "beauty-wellness",
+    "industryMapping": "Beauty & Wellness",
+    "keywords": [
+      "hair salon",
+      "barbershop",
+      "hairstylist",
+      "hair cutting"
+    ],
+    "popular": true,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "healthcare",
+    "title": "Healthcare Services",
+    "description": "Medical practices, clinics, therapy services",
+    "short_description": "Medical practices, clinics, therapy services",
+    "category_id": "fitness-health",
+    "industryMapping": "Healthcare",
+    "keywords": [
+      "medical",
+      "clinic",
+      "healthcare",
+      "therapy"
+    ],
+    "popular": true,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "membership_count",
+      "retention_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "itsupport",
+    "title": "IT Support",
+    "description": "Managed IT services, tech support, infrastructure",
+    "short_description": "Managed IT services, tech support, infrastructure",
+    "category_id": "tech-digital",
+    "industryMapping": "Technology",
+    "keywords": [
+      "it support",
+      "managed it",
+      "tech support",
+      "it services"
+    ],
+    "popular": true,
+    "dcfPreference": "0.80",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.30",
+    "keyMetrics": [
+      "revenue",
+      "recurring_revenue",
+      "customer_acquisition_cost",
+      "churn_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "landscaping",
+    "title": "Landscaping",
+    "description": "Lawn care, landscape design, outdoor maintenance",
+    "short_description": "Lawn care, landscape design, outdoor maintenance",
+    "category_id": "home-property",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "landscaping",
+      "lawn care",
+      "gardening",
+      "outdoor"
+    ],
+    "popular": true,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "legal",
+    "title": "Legal Services",
+    "description": "Law firm, attorney, legal consulting",
+    "short_description": "Law firm, attorney, legal consulting",
+    "category_id": "professional-services",
+    "industryMapping": "Professional Services",
+    "keywords": [
+      "legal",
+      "law firm",
+      "attorney",
+      "lawyer"
+    ],
+    "popular": true,
+    "dcfPreference": "0.60",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "project_success_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "logistics",
+    "title": "Logistics & Delivery",
+    "description": "Delivery services, freight, courier services",
+    "short_description": "Delivery services, freight, courier services",
+    "category_id": "transportation-logistics",
+    "industryMapping": "Transportation",
+    "keywords": [
+      "logistics",
+      "delivery",
+      "freight",
+      "courier"
+    ],
+    "popular": true,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "fleet_size",
+      "utilization_rate",
+      "fuel_efficiency"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "marketing",
+    "title": "Marketing Agency",
+    "description": "Digital marketing, SEO, social media, advertising",
+    "short_description": "Digital marketing, SEO, social media, advertising",
+    "category_id": "creative-media",
+    "industryMapping": "Creative & Media",
+    "keywords": [
+      "marketing",
+      "digital marketing",
+      "seo",
+      "advertising"
+    ],
+    "popular": true,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "project_capacity",
+      "client_retention",
+      "hourly_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "massage",
+    "title": "Massage Therapy",
+    "description": "Therapeutic massage, spa services, wellness treatments",
+    "short_description": "Therapeutic massage, spa services, wellness treatments",
+    "category_id": "beauty-wellness",
+    "industryMapping": "Beauty & Wellness",
+    "keywords": [
+      "massage",
+      "massage therapy",
+      "therapeutic massage"
+    ],
+    "popular": true,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "nail-salon",
+    "title": "Nail Salon",
+    "description": "Manicures, pedicures, nail art",
+    "short_description": "Manicures, pedicures, nail art",
+    "category_id": "beauty-wellness",
+    "industryMapping": "Beauty & Wellness",
+    "keywords": [
+      "nails",
+      "manicure",
+      "pedicure",
+      "nail art"
+    ],
+    "popular": true,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "personaltraining",
+    "title": "Personal Training",
+    "description": "Fitness coaching, personal trainers, workout programs",
+    "short_description": "Fitness coaching, personal trainers, workout programs",
+    "category_id": "fitness-health",
+    "industryMapping": "Healthcare",
+    "keywords": [
+      "personal trainer",
+      "fitness coach",
+      "training"
+    ],
+    "popular": true,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "membership_count",
+      "retention_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "photography",
+    "title": "Photography",
+    "description": "Wedding, portrait, event, commercial photography",
+    "short_description": "Wedding, portrait, event, commercial photography",
+    "category_id": "creative-media",
+    "industryMapping": "Creative & Media",
+    "keywords": [
+      "photographer",
+      "photography",
+      "wedding photography",
+      "portrait"
+    ],
+    "popular": true,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "project_capacity",
+      "client_retention",
+      "hourly_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "realestate",
+    "title": "Real Estate",
+    "description": "Real estate agency, property management, realtor",
+    "short_description": "Real estate agency, property management, realtor",
+    "category_id": "home-property",
+    "industryMapping": "Real Estate",
+    "keywords": [
+      "real estate",
+      "property",
+      "realtor",
+      "property management"
+    ],
+    "popular": true,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "restaurant",
+    "title": "Restaurant",
+    "description": "Dining establishments, cafes, bistros",
+    "short_description": "Dining establishments, cafes, bistros",
+    "category_id": "food-beverage",
+    "industryMapping": "Food & Beverage",
+    "keywords": [
+      "dining",
+      "cafe",
+      "bistro",
+      "eatery",
+      "food service"
+    ],
+    "popular": true,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "foot_traffic",
+      "inventory_turnover"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "retail",
+    "title": "Retail Store",
+    "description": "Physical retail, boutiques, specialty shops",
+    "short_description": "Physical retail, boutiques, specialty shops",
+    "category_id": "ecommerce-retail",
+    "industryMapping": "E-commerce",
+    "keywords": [
+      "retail",
+      "store",
+      "boutique",
+      "shop"
+    ],
+    "popular": true,
+    "dcfPreference": "0.70",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "inventory_turnover",
+      "customer_lifetime_value",
+      "conversion_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "saas",
+    "title": "SaaS",
+    "description": "Software as a Service, cloud platforms, B2B tech",
+    "short_description": "Software as a Service, cloud platforms, B2B tech",
+    "category_id": "tech-digital",
+    "industryMapping": "Technology",
+    "keywords": [
+      "saas",
+      "software",
+      "cloud",
+      "b2b software"
+    ],
+    "popular": true,
+    "dcfPreference": "0.80",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.30",
+    "keyMetrics": [
+      "revenue",
+      "recurring_revenue",
+      "customer_acquisition_cost",
+      "churn_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "software",
+    "title": "Software Development",
+    "description": "Custom software, app development, tech solutions",
+    "short_description": "Custom software, app development, tech solutions",
+    "category_id": "tech-digital",
+    "industryMapping": "Technology",
+    "keywords": [
+      "software development",
+      "custom software",
+      "programming"
+    ],
+    "popular": true,
+    "dcfPreference": "0.80",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.30",
+    "keyMetrics": [
+      "revenue",
+      "recurring_revenue",
+      "customer_acquisition_cost",
+      "churn_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "videography",
+    "title": "Videography",
+    "description": "Video production, editing, content creation",
+    "short_description": "Video production, editing, content creation",
+    "category_id": "creative-media",
+    "industryMapping": "Creative & Media",
+    "keywords": [
+      "videography",
+      "video production",
+      "film",
+      "video editing"
+    ],
+    "popular": true,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "project_capacity",
+      "client_retention",
+      "hourly_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "webdev",
+    "title": "Web Development",
+    "description": "Website development, e-commerce builds, web apps",
+    "short_description": "Website development, e-commerce builds, web apps",
+    "category_id": "tech-digital",
+    "industryMapping": "Technology",
+    "keywords": [
+      "web development",
+      "website",
+      "web design",
+      "web app"
+    ],
+    "popular": true,
+    "dcfPreference": "0.80",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.30",
+    "keyMetrics": [
+      "revenue",
+      "recurring_revenue",
+      "customer_acquisition_cost",
+      "churn_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "advertising-agency",
+    "title": "Advertising Agency",
+    "description": "Ad campaigns, media buying, creative advertising",
+    "short_description": "Ad campaigns, media buying, creative advertising",
+    "category_id": "creative-media",
+    "industryMapping": "Creative & Media",
+    "keywords": [
+      "advertising",
+      "ad agency",
+      "media buying",
+      "campaigns"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "project_capacity",
+      "client_retention",
+      "hourly_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "affiliate-marketing",
+    "title": "Affiliate Marketing",
+    "description": "Affiliate sites, content monetization, referral income",
+    "short_description": "Affiliate sites, content monetization, referral income",
+    "category_id": "ecommerce-retail",
+    "industryMapping": "E-commerce",
+    "keywords": [
+      "affiliate",
+      "affiliate marketing",
+      "referral"
+    ],
+    "popular": false,
+    "dcfPreference": "0.70",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "inventory_turnover",
+      "customer_lifetime_value",
+      "conversion_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "ai-ml",
+    "title": "AI / Machine Learning",
+    "description": "Artificial intelligence, ML models, AI solutions",
+    "short_description": "Artificial intelligence, ML models, AI solutions",
+    "category_id": "tech-digital",
+    "industryMapping": "Technology",
+    "keywords": [
+      "ai",
+      "machine learning",
+      "artificial intelligence",
+      "ml"
+    ],
+    "popular": false,
+    "dcfPreference": "0.80",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.30",
+    "keyMetrics": [
+      "revenue",
+      "recurring_revenue",
+      "customer_acquisition_cost",
+      "churn_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "amusement",
+    "title": "Amusement Services",
+    "description": "Bounce houses, arcade, entertainment venue",
+    "short_description": "Bounce houses, arcade, entertainment venue",
+    "category_id": "events-entertainment",
+    "industryMapping": "Creative & Media",
+    "keywords": [
+      "amusement",
+      "bounce house",
+      "arcade",
+      "entertainment"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "event_volume",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "animation",
+    "title": "Animation Services",
+    "description": "2D/3D animation, motion graphics, animated videos",
+    "short_description": "2D/3D animation, motion graphics, animated videos",
+    "category_id": "creative-media",
+    "industryMapping": "Creative & Media",
+    "keywords": [
+      "animation",
+      "motion graphics",
+      "3d animation"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "project_capacity",
+      "client_retention",
+      "hourly_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "appliance-repair",
+    "title": "Appliance Repair",
+    "description": "Appliance service, refrigerator repair, washer/dryer",
+    "short_description": "Appliance service, refrigerator repair, washer/dryer",
+    "category_id": "repair-maintenance",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "appliance repair",
+      "appliance service",
+      "refrigerator repair"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "service_calls",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "aquaculture",
+    "title": "Aquaculture / Fish Farm",
+    "description": "Fish farming, aquaculture, seafood production",
+    "short_description": "Fish farming, aquaculture, seafood production",
+    "category_id": "agriculture",
+    "industryMapping": "Manufacturing",
+    "keywords": [
+      "aquaculture",
+      "fish farm",
+      "seafood",
+      "fish farming"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "production_capacity",
+      "yield_per_acre",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "art-classes",
+    "title": "Art Classes",
+    "description": "Art instruction, painting classes, art studio",
+    "short_description": "Art instruction, painting classes, art studio",
+    "category_id": "education-training",
+    "industryMapping": "Education",
+    "keywords": [
+      "art classes",
+      "art instruction",
+      "painting classes"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "student_count",
+      "retention_rate",
+      "hourly_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "art-gallery",
+    "title": "Art Gallery",
+    "description": "Gallery, fine art, art sales",
+    "short_description": "Gallery, fine art, art sales",
+    "category_id": "arts-crafts",
+    "industryMapping": "E-commerce",
+    "keywords": [
+      "art gallery",
+      "gallery",
+      "fine art",
+      "art sales"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.90",
+    "keyMetrics": [
+      "revenue",
+      "inventory_turnover",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "body-shop",
+    "title": "Auto Body Shop",
+    "description": "Collision repair, auto body, paint shop",
+    "short_description": "Collision repair, auto body, paint shop",
+    "category_id": "automotive",
+    "industryMapping": "Transportation",
+    "keywords": [
+      "body shop",
+      "collision repair",
+      "auto body",
+      "paint"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "fleet_size",
+      "utilization_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "auto-parts",
+    "title": "Auto Parts",
+    "description": "Auto parts store, aftermarket parts, accessories",
+    "short_description": "Auto parts store, aftermarket parts, accessories",
+    "category_id": "automotive",
+    "industryMapping": "Transportation",
+    "keywords": [
+      "auto parts",
+      "car parts",
+      "auto accessories"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "fleet_size",
+      "utilization_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "automotive",
+    "title": "Auto Repair",
+    "description": "Auto mechanic, car repair, vehicle service",
+    "short_description": "Auto mechanic, car repair, vehicle service",
+    "category_id": "automotive",
+    "industryMapping": "Transportation",
+    "keywords": [
+      "auto repair",
+      "mechanic",
+      "car repair",
+      "automotive"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "fleet_size",
+      "utilization_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "bakery",
+    "title": "Bakery",
+    "description": "Bread, pastries, cakes, baked goods",
+    "short_description": "Bread, pastries, cakes, baked goods",
+    "category_id": "food-beverage",
+    "industryMapping": "Food & Beverage",
+    "keywords": [
+      "bread",
+      "pastries",
+      "cakes",
+      "baked goods",
+      "patisserie"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "foot_traffic",
+      "inventory_turnover"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "barber-shop",
+    "title": "Barbershop",
+    "description": "Men\\",
+    "short_description": "Men\\",
+    "category_id": "beauty-wellness",
+    "industryMapping": "Beauty & Wellness",
+    "keywords": [
+      "barbershop",
+      "barber",
+      "men\\s grooming",
+      "shave"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "bar-pub",
+    "title": "Bar / Pub",
+    "description": "Bar, pub, tavern, nightclub",
+    "short_description": "Bar, pub, tavern, nightclub",
+    "category_id": "food-beverage",
+    "industryMapping": "Food & Beverage",
+    "keywords": [
+      "bar",
+      "pub",
+      "tavern",
+      "nightclub",
+      "cocktail bar"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "foot_traffic",
+      "inventory_turnover"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "beauty-supply",
+    "title": "Beauty Supply Store",
+    "description": "Beauty products, cosmetics, hair products",
+    "short_description": "Beauty products, cosmetics, hair products",
+    "category_id": "beauty-wellness",
+    "industryMapping": "Beauty & Wellness",
+    "keywords": [
+      "beauty supply",
+      "cosmetics",
+      "beauty products"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "bed-breakfast",
+    "title": "Bed & Breakfast",
+    "description": "B&B, inn, guest house, boutique lodging",
+    "short_description": "B&B, inn, guest house, boutique lodging",
+    "category_id": "hospitality-tourism",
+    "industryMapping": "Real Estate",
+    "keywords": [
+      "bed and breakfast",
+      "b&b",
+      "inn",
+      "guest house"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "occupancy_rate",
+      "average_daily_rate",
+      "location_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "blockchain",
+    "title": "Blockchain Services",
+    "description": "Crypto, Web3, blockchain development",
+    "short_description": "Crypto, Web3, blockchain development",
+    "category_id": "tech-digital",
+    "industryMapping": "Technology",
+    "keywords": [
+      "blockchain",
+      "crypto",
+      "web3",
+      "cryptocurrency"
+    ],
+    "popular": false,
+    "dcfPreference": "0.80",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.30",
+    "keyMetrics": [
+      "revenue",
+      "recurring_revenue",
+      "customer_acquisition_cost",
+      "churn_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "bookkeeping",
+    "title": "Bookkeeping Services",
+    "description": "Small business bookkeeping, financial records",
+    "short_description": "Small business bookkeeping, financial records",
+    "category_id": "professional-services",
+    "industryMapping": "Professional Services",
+    "keywords": [
+      "bookkeeping",
+      "bookkeeper",
+      "financial records"
+    ],
+    "popular": false,
+    "dcfPreference": "0.60",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "project_success_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "bookstore",
+    "title": "Bookstore",
+    "description": "Books, used books, specialty bookstore",
+    "short_description": "Books, used books, specialty bookstore",
+    "category_id": "ecommerce-retail",
+    "industryMapping": "E-commerce",
+    "keywords": [
+      "bookstore",
+      "books",
+      "used books"
+    ],
+    "popular": false,
+    "dcfPreference": "0.70",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "inventory_turnover",
+      "customer_lifetime_value",
+      "conversion_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "brewery",
+    "title": "Brewery",
+    "description": "Craft beer, microbrewery, brewpub",
+    "short_description": "Craft beer, microbrewery, brewpub",
+    "category_id": "food-beverage",
+    "industryMapping": "Food & Beverage",
+    "keywords": [
+      "beer",
+      "craft brewery",
+      "microbrewery",
+      "brewpub"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "foot_traffic",
+      "inventory_turnover"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "business-brokerage",
+    "title": "Business Brokerage",
+    "description": "Business broker, M&A advisory, business sales",
+    "short_description": "Business broker, M&A advisory, business sales",
+    "category_id": "professional-services",
+    "industryMapping": "Professional Services",
+    "keywords": [
+      "business broker",
+      "brokerage",
+      "mergers acquisitions"
+    ],
+    "popular": false,
+    "dcfPreference": "0.60",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "project_success_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "butcher",
+    "title": "Butcher / Meat Shop",
+    "description": "Meat cutting, butchery, specialty meats",
+    "short_description": "Meat cutting, butchery, specialty meats",
+    "category_id": "food-beverage",
+    "industryMapping": "Food & Beverage",
+    "keywords": [
+      "butcher",
+      "meat shop",
+      "butchery",
+      "meat cutting"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "foot_traffic",
+      "inventory_turnover"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "campground",
+    "title": "Campground / RV Park",
+    "description": "Camping, RV park, outdoor recreation",
+    "short_description": "Camping, RV park, outdoor recreation",
+    "category_id": "hospitality-tourism",
+    "industryMapping": "Real Estate",
+    "keywords": [
+      "campground",
+      "rv park",
+      "camping",
+      "outdoor"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "occupancy_rate",
+      "average_daily_rate",
+      "location_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "car-detailing",
+    "title": "Car Detailing",
+    "description": "Auto detailing, car wash, vehicle cleaning",
+    "short_description": "Auto detailing, car wash, vehicle cleaning",
+    "category_id": "automotive",
+    "industryMapping": "Transportation",
+    "keywords": [
+      "car detailing",
+      "auto detailing",
+      "car wash"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "fleet_size",
+      "utilization_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "car-rental",
+    "title": "Car Rental",
+    "description": "Vehicle rental, car hire, rental agency",
+    "short_description": "Vehicle rental, car hire, rental agency",
+    "category_id": "automotive",
+    "industryMapping": "Transportation",
+    "keywords": [
+      "car rental",
+      "vehicle rental",
+      "car hire"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "fleet_size",
+      "utilization_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "chef",
+    "title": "Chef Services",
+    "description": "Private chef, cooking classes, meal preparation",
+    "short_description": "Private chef, cooking classes, meal preparation",
+    "category_id": "food-beverage",
+    "industryMapping": "Food & Beverage",
+    "keywords": [
+      "private chef",
+      "cooking classes",
+      "personal chef"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "foot_traffic",
+      "inventory_turnover"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "childcare",
+    "title": "Childcare / Daycare",
+    "description": "Daycare center, preschool, child care services",
+    "short_description": "Daycare center, preschool, child care services",
+    "category_id": "education-training",
+    "industryMapping": "Education",
+    "keywords": [
+      "childcare",
+      "daycare",
+      "preschool",
+      "child care"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "student_count",
+      "retention_rate",
+      "hourly_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "chiropractic",
+    "title": "Chiropractic",
+    "description": "Chiropractic care, spinal adjustment, wellness",
+    "short_description": "Chiropractic care, spinal adjustment, wellness",
+    "category_id": "fitness-health",
+    "industryMapping": "Healthcare",
+    "keywords": [
+      "chiropractic",
+      "chiropractor",
+      "spinal adjustment"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "membership_count",
+      "retention_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "clothing-store",
+    "title": "Clothing Store",
+    "description": "Fashion boutique, apparel shop, clothing retail",
+    "short_description": "Fashion boutique, apparel shop, clothing retail",
+    "category_id": "ecommerce-retail",
+    "industryMapping": "E-commerce",
+    "keywords": [
+      "clothing",
+      "fashion",
+      "apparel",
+      "boutique"
+    ],
+    "popular": false,
+    "dcfPreference": "0.70",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "inventory_turnover",
+      "customer_lifetime_value",
+      "conversion_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "cloud-services",
+    "title": "Cloud Services",
+    "description": "Cloud infrastructure, DevOps, hosting",
+    "short_description": "Cloud infrastructure, DevOps, hosting",
+    "category_id": "tech-digital",
+    "industryMapping": "Technology",
+    "keywords": [
+      "cloud",
+      "devops",
+      "hosting",
+      "infrastructure"
+    ],
+    "popular": false,
+    "dcfPreference": "0.80",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.30",
+    "keyMetrics": [
+      "revenue",
+      "recurring_revenue",
+      "customer_acquisition_cost",
+      "churn_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "computer-repair",
+    "title": "Computer Repair",
+    "description": "PC repair, Mac repair, computer services",
+    "short_description": "PC repair, Mac repair, computer services",
+    "category_id": "tech-digital",
+    "industryMapping": "Technology",
+    "keywords": [
+      "computer repair",
+      "pc repair",
+      "mac repair",
+      "tech repair"
+    ],
+    "popular": false,
+    "dcfPreference": "0.80",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.30",
+    "keyMetrics": [
+      "revenue",
+      "recurring_revenue",
+      "customer_acquisition_cost",
+      "churn_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "content-creation",
+    "title": "Content Creation",
+    "description": "Copywriting, blogging, content marketing",
+    "short_description": "Copywriting, blogging, content marketing",
+    "category_id": "creative-media",
+    "industryMapping": "Creative & Media",
+    "keywords": [
+      "content",
+      "copywriting",
+      "blogging",
+      "writing"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "project_capacity",
+      "client_retention",
+      "hourly_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "credit-repair",
+    "title": "Credit Repair",
+    "description": "Credit counseling, credit repair services",
+    "short_description": "Credit counseling, credit repair services",
+    "category_id": "financial-services",
+    "industryMapping": "Financial Services",
+    "keywords": [
+      "credit repair",
+      "credit counseling",
+      "credit services"
+    ],
+    "popular": false,
+    "dcfPreference": "0.60",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "assets_under_management",
+      "compliance_score"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "crafts",
+    "title": "Custom Crafts",
+    "description": "Handmade goods, artisan products, crafts",
+    "short_description": "Handmade goods, artisan products, crafts",
+    "category_id": "arts-crafts",
+    "industryMapping": "E-commerce",
+    "keywords": [
+      "crafts",
+      "handmade",
+      "artisan",
+      "handmade goods"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.90",
+    "keyMetrics": [
+      "revenue",
+      "inventory_turnover",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "cybersecurity",
+    "title": "Cybersecurity",
+    "description": "Security consulting, penetration testing, cyber defense",
+    "short_description": "Security consulting, penetration testing, cyber defense",
+    "category_id": "tech-digital",
+    "industryMapping": "Technology",
+    "keywords": [
+      "cybersecurity",
+      "security",
+      "penetration testing",
+      "cyber"
+    ],
+    "popular": false,
+    "dcfPreference": "0.80",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.30",
+    "keyMetrics": [
+      "revenue",
+      "recurring_revenue",
+      "customer_acquisition_cost",
+      "churn_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "dance-studio",
+    "title": "Dance Studio",
+    "description": "Dance classes, dance instruction, dance school",
+    "short_description": "Dance classes, dance instruction, dance school",
+    "category_id": "education-training",
+    "industryMapping": "Education",
+    "keywords": [
+      "dance",
+      "dance studio",
+      "dance classes",
+      "dance school"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "student_count",
+      "retention_rate",
+      "hourly_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "data-analytics",
+    "title": "Data Analytics",
+    "description": "Business intelligence, data analysis, reporting",
+    "short_description": "Business intelligence, data analysis, reporting",
+    "category_id": "tech-digital",
+    "industryMapping": "Technology",
+    "keywords": [
+      "data analytics",
+      "business intelligence",
+      "data science"
+    ],
+    "popular": false,
+    "dcfPreference": "0.80",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.30",
+    "keyMetrics": [
+      "revenue",
+      "recurring_revenue",
+      "customer_acquisition_cost",
+      "churn_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "digital-products",
+    "title": "Digital Products",
+    "description": "E-books, courses, digital downloads",
+    "short_description": "E-books, courses, digital downloads",
+    "category_id": "ecommerce-retail",
+    "industryMapping": "E-commerce",
+    "keywords": [
+      "digital products",
+      "ebook",
+      "digital downloads"
+    ],
+    "popular": false,
+    "dcfPreference": "0.70",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "inventory_turnover",
+      "customer_lifetime_value",
+      "conversion_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "dog-walking",
+    "title": "Dog Walking",
+    "description": "Dog walker, pet care, daily walks",
+    "short_description": "Dog walker, pet care, daily walks",
+    "category_id": "pet-services",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "dog walking",
+      "dog walker",
+      "pet care"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "dropshipping",
+    "title": "Dropshipping Business",
+    "description": "Online retail without inventory, dropship model",
+    "short_description": "Online retail without inventory, dropship model",
+    "category_id": "ecommerce-retail",
+    "industryMapping": "E-commerce",
+    "keywords": [
+      "dropshipping",
+      "dropship",
+      "online retail"
+    ],
+    "popular": false,
+    "dcfPreference": "0.70",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "inventory_turnover",
+      "customer_lifetime_value",
+      "conversion_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "electrical",
+    "title": "Electrical Services",
+    "description": "Electrician, electrical repair, installation",
+    "short_description": "Electrician, electrical repair, installation",
+    "category_id": "home-property",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "electrical",
+      "electrician",
+      "electrical repair"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "electronics-repair",
+    "title": "Electronics Repair",
+    "description": "Phone repair, tablet repair, electronics service",
+    "short_description": "Phone repair, tablet repair, electronics service",
+    "category_id": "repair-maintenance",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "electronics repair",
+      "phone repair",
+      "tablet repair"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "service_calls",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "entertainment",
+    "title": "Entertainment",
+    "description": "DJ services, performers, entertainment booking",
+    "short_description": "DJ services, performers, entertainment booking",
+    "category_id": "events-entertainment",
+    "industryMapping": "Creative & Media",
+    "keywords": [
+      "entertainment",
+      "dj",
+      "performer",
+      "entertainment booking"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "event_volume",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "environmental-consulting",
+    "title": "Environmental Consulting",
+    "description": "Environmental assessment, sustainability consulting",
+    "short_description": "Environmental assessment, sustainability consulting",
+    "category_id": "environmental",
+    "industryMapping": "Professional Services",
+    "keywords": [
+      "environmental",
+      "sustainability",
+      "environmental consulting"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "project_capacity",
+      "client_retention",
+      "compliance_score"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "venue",
+    "title": "Event Venue",
+    "description": "Wedding venue, event space, banquet hall",
+    "short_description": "Wedding venue, event space, banquet hall",
+    "category_id": "events-entertainment",
+    "industryMapping": "Creative & Media",
+    "keywords": [
+      "venue",
+      "event space",
+      "wedding venue",
+      "banquet hall"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "event_volume",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "farm",
+    "title": "Farm / Agricultural",
+    "description": "Farming operation, crop production, agriculture",
+    "short_description": "Farming operation, crop production, agriculture",
+    "category_id": "agriculture",
+    "industryMapping": "Manufacturing",
+    "keywords": [
+      "farm",
+      "agriculture",
+      "farming",
+      "crop production"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "production_capacity",
+      "yield_per_acre",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "financial-planning",
+    "title": "Financial Planning",
+    "description": "Financial advisor, wealth management, planning",
+    "short_description": "Financial advisor, wealth management, planning",
+    "category_id": "financial-services",
+    "industryMapping": "Financial Services",
+    "keywords": [
+      "financial planning",
+      "financial advisor",
+      "wealth management"
+    ],
+    "popular": false,
+    "dcfPreference": "0.60",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "assets_under_management",
+      "compliance_score"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "fire-protection",
+    "title": "Fire Protection",
+    "description": "Fire extinguishers, fire safety, fire suppression",
+    "short_description": "Fire extinguishers, fire safety, fire suppression",
+    "category_id": "security-safety",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "fire protection",
+      "fire safety",
+      "fire extinguisher"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "response_time",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "florist",
+    "title": "Florist",
+    "description": "Flower shop, wedding flowers, event florals",
+    "short_description": "Flower shop, wedding flowers, event florals",
+    "category_id": "events-entertainment",
+    "industryMapping": "Creative & Media",
+    "keywords": [
+      "florist",
+      "flowers",
+      "wedding flowers",
+      "floral design"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "event_volume",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "food-distribution",
+    "title": "Food Distribution",
+    "description": "Wholesale food, food supply, distribution",
+    "short_description": "Wholesale food, food supply, distribution",
+    "category_id": "food-beverage",
+    "industryMapping": "Food & Beverage",
+    "keywords": [
+      "wholesale",
+      "food supply",
+      "distribution",
+      "food service distributor"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "foot_traffic",
+      "inventory_turnover"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "food-truck",
+    "title": "Food Truck",
+    "description": "Mobile food service, street food",
+    "short_description": "Mobile food service, street food",
+    "category_id": "food-beverage",
+    "industryMapping": "Food & Beverage",
+    "keywords": [
+      "mobile food",
+      "street food",
+      "food cart"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "foot_traffic",
+      "inventory_turnover"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "freight-broker",
+    "title": "Freight Brokerage",
+    "description": "Freight broker, shipping logistics, transportation broker",
+    "short_description": "Freight broker, shipping logistics, transportation broker",
+    "category_id": "transportation-logistics",
+    "industryMapping": "Transportation",
+    "keywords": [
+      "freight broker",
+      "shipping",
+      "logistics broker"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "fleet_size",
+      "utilization_rate",
+      "fuel_efficiency"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "furniture-repair",
+    "title": "Furniture Repair",
+    "description": "Furniture restoration, upholstery, refinishing",
+    "short_description": "Furniture restoration, upholstery, refinishing",
+    "category_id": "repair-maintenance",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "furniture repair",
+      "upholstery",
+      "furniture restoration"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "service_calls",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "game-development",
+    "title": "Game Development",
+    "description": "Video games, mobile games, game studio",
+    "short_description": "Video games, mobile games, game studio",
+    "category_id": "tech-digital",
+    "industryMapping": "Technology",
+    "keywords": [
+      "game development",
+      "video games",
+      "game studio"
+    ],
+    "popular": false,
+    "dcfPreference": "0.80",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.30",
+    "keyMetrics": [
+      "revenue",
+      "recurring_revenue",
+      "customer_acquisition_cost",
+      "churn_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "handyman",
+    "title": "Handyman Services",
+    "description": "General repairs, home maintenance, handyman",
+    "short_description": "General repairs, home maintenance, handyman",
+    "category_id": "repair-maintenance",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "handyman",
+      "home repair",
+      "maintenance",
+      "general repairs"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "service_calls",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "hotel",
+    "title": "Hotel / Lodging",
+    "description": "Hotel, motel, accommodation services",
+    "short_description": "Hotel, motel, accommodation services",
+    "category_id": "hospitality-tourism",
+    "industryMapping": "Real Estate",
+    "keywords": [
+      "hotel",
+      "motel",
+      "lodging",
+      "accommodation"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "occupancy_rate",
+      "average_daily_rate",
+      "location_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "hr",
+    "title": "HR & Recruitment",
+    "description": "Human resources, recruiting, staffing agency",
+    "short_description": "Human resources, recruiting, staffing agency",
+    "category_id": "professional-services",
+    "industryMapping": "Professional Services",
+    "keywords": [
+      "hr",
+      "human resources",
+      "recruitment",
+      "staffing"
+    ],
+    "popular": false,
+    "dcfPreference": "0.60",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "project_success_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "hvac",
+    "title": "HVAC Services",
+    "description": "Heating, cooling, air conditioning, HVAC repair",
+    "short_description": "Heating, cooling, air conditioning, HVAC repair",
+    "category_id": "home-property",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "hvac",
+      "heating",
+      "cooling",
+      "air conditioning"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "ice-cream",
+    "title": "Ice Cream Shop",
+    "description": "Ice cream, gelato, frozen desserts",
+    "short_description": "Ice cream, gelato, frozen desserts",
+    "category_id": "food-beverage",
+    "industryMapping": "Food & Beverage",
+    "keywords": [
+      "ice cream",
+      "gelato",
+      "frozen yogurt",
+      "desserts"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "foot_traffic",
+      "inventory_turnover"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "insurance-broker",
+    "title": "Insurance Brokerage",
+    "description": "Insurance agent, insurance broker, policies",
+    "short_description": "Insurance agent, insurance broker, policies",
+    "category_id": "financial-services",
+    "industryMapping": "Financial Services",
+    "keywords": [
+      "insurance",
+      "insurance broker",
+      "insurance agent"
+    ],
+    "popular": false,
+    "dcfPreference": "0.60",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "assets_under_management",
+      "compliance_score"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "interior-design",
+    "title": "Interior Design",
+    "description": "Home staging, interior decorating, design consulting",
+    "short_description": "Home staging, interior decorating, design consulting",
+    "category_id": "home-property",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "interior design",
+      "home staging",
+      "decorating"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "investment-advisory",
+    "title": "Investment Advisory",
+    "description": "Investment advisor, portfolio management",
+    "short_description": "Investment advisor, portfolio management",
+    "category_id": "financial-services",
+    "industryMapping": "Financial Services",
+    "keywords": [
+      "investment",
+      "investment advisor",
+      "portfolio management"
+    ],
+    "popular": false,
+    "dcfPreference": "0.60",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "assets_under_management",
+      "compliance_score"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "jewelry-making",
+    "title": "Jewelry Making",
+    "description": "Custom jewelry, handmade jewelry, jewelry design",
+    "short_description": "Custom jewelry, handmade jewelry, jewelry design",
+    "category_id": "arts-crafts",
+    "industryMapping": "E-commerce",
+    "keywords": [
+      "jewelry",
+      "handmade jewelry",
+      "custom jewelry",
+      "jewelry design"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.90",
+    "keyMetrics": [
+      "revenue",
+      "inventory_turnover",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "jewelry-store",
+    "title": "Jewelry Store",
+    "description": "Fine jewelry, custom jewelry, jewelry retail",
+    "short_description": "Fine jewelry, custom jewelry, jewelry retail",
+    "category_id": "ecommerce-retail",
+    "industryMapping": "E-commerce",
+    "keywords": [
+      "jewelry",
+      "fine jewelry",
+      "custom jewelry"
+    ],
+    "popular": false,
+    "dcfPreference": "0.70",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "inventory_turnover",
+      "customer_lifetime_value",
+      "conversion_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "juice-bar",
+    "title": "Juice Bar",
+    "description": "Fresh juice, smoothies, health drinks",
+    "short_description": "Fresh juice, smoothies, health drinks",
+    "category_id": "food-beverage",
+    "industryMapping": "Food & Beverage",
+    "keywords": [
+      "juice",
+      "smoothies",
+      "healthy drinks",
+      "acai bowl"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "foot_traffic",
+      "inventory_turnover"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "language-school",
+    "title": "Language School",
+    "description": "Language learning, ESL, foreign language instruction",
+    "short_description": "Language learning, ESL, foreign language instruction",
+    "category_id": "education-training",
+    "industryMapping": "Education",
+    "keywords": [
+      "language",
+      "language school",
+      "esl",
+      "foreign language"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "student_count",
+      "retention_rate",
+      "hourly_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "limo-service",
+    "title": "Limousine Service",
+    "description": "Luxury transportation, limo rental, chauffeur",
+    "short_description": "Luxury transportation, limo rental, chauffeur",
+    "category_id": "transportation-logistics",
+    "industryMapping": "Transportation",
+    "keywords": [
+      "limousine",
+      "limo",
+      "luxury transportation",
+      "chauffeur"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "fleet_size",
+      "utilization_rate",
+      "fuel_efficiency"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "livestock",
+    "title": "Livestock / Ranch",
+    "description": "Cattle, livestock, ranching operation",
+    "short_description": "Cattle, livestock, ranching operation",
+    "category_id": "agriculture",
+    "industryMapping": "Manufacturing",
+    "keywords": [
+      "livestock",
+      "cattle",
+      "ranch",
+      "ranching"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "production_capacity",
+      "yield_per_acre",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "locksmith",
+    "title": "Locksmith",
+    "description": "Lock service, key cutting, security locks",
+    "short_description": "Lock service, key cutting, security locks",
+    "category_id": "repair-maintenance",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "locksmith",
+      "lock service",
+      "key cutting",
+      "locks"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "service_calls",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "magician",
+    "title": "Magician / Entertainer",
+    "description": "Magic shows, children\\",
+    "short_description": "Magic shows, children\\",
+    "category_id": "events-entertainment",
+    "industryMapping": "Creative & Media",
+    "keywords": [
+      "magician",
+      "magic",
+      "entertainer",
+      "performer"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "event_volume",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "makeup",
+    "title": "Makeup Services",
+    "description": "Bridal makeup, special events, beauty services",
+    "short_description": "Bridal makeup, special events, beauty services",
+    "category_id": "beauty-wellness",
+    "industryMapping": "Beauty & Wellness",
+    "keywords": [
+      "makeup",
+      "bridal makeup",
+      "makeup artist",
+      "beauty"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "market-research",
+    "title": "Market Research",
+    "description": "Research services, market analysis, surveys",
+    "short_description": "Research services, market analysis, surveys",
+    "category_id": "professional-services",
+    "industryMapping": "Professional Services",
+    "keywords": [
+      "market research",
+      "research",
+      "market analysis"
+    ],
+    "popular": false,
+    "dcfPreference": "0.60",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "project_success_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "martial-arts",
+    "title": "Martial Arts School",
+    "description": "Karate, jiu-jitsu, boxing, MMA",
+    "short_description": "Karate, jiu-jitsu, boxing, MMA",
+    "category_id": "fitness-health",
+    "industryMapping": "Healthcare",
+    "keywords": [
+      "martial arts",
+      "karate",
+      "boxing",
+      "jiu-jitsu",
+      "mma"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "membership_count",
+      "retention_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "meals",
+    "title": "Meal Services",
+    "description": "Meal delivery, meal prep, food subscription boxes",
+    "short_description": "Meal delivery, meal prep, food subscription boxes",
+    "category_id": "food-beverage",
+    "industryMapping": "Food & Beverage",
+    "keywords": [
+      "meal delivery",
+      "meal prep",
+      "food subscription",
+      "meal kit"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "foot_traffic",
+      "inventory_turnover"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "mental-health",
+    "title": "Mental Health Services",
+    "description": "Therapy, counseling, psychology practice",
+    "short_description": "Therapy, counseling, psychology practice",
+    "category_id": "fitness-health",
+    "industryMapping": "Healthcare",
+    "keywords": [
+      "therapy",
+      "counseling",
+      "psychologist",
+      "mental health"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "membership_count",
+      "retention_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "mobile-app",
+    "title": "Mobile App Development",
+    "description": "iOS, Android, mobile applications",
+    "short_description": "iOS, Android, mobile applications",
+    "category_id": "tech-digital",
+    "industryMapping": "Technology",
+    "keywords": [
+      "mobile app",
+      "ios",
+      "android",
+      "app development"
+    ],
+    "popular": false,
+    "dcfPreference": "0.80",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.30",
+    "keyMetrics": [
+      "revenue",
+      "recurring_revenue",
+      "customer_acquisition_cost",
+      "churn_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "mortgage-broker",
+    "title": "Mortgage Brokerage",
+    "description": "Mortgage broker, home loans, lending",
+    "short_description": "Mortgage broker, home loans, lending",
+    "category_id": "financial-services",
+    "industryMapping": "Financial Services",
+    "keywords": [
+      "mortgage",
+      "mortgage broker",
+      "home loans",
+      "lending"
+    ],
+    "popular": false,
+    "dcfPreference": "0.60",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "assets_under_management",
+      "compliance_score"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "moving-company",
+    "title": "Moving Company",
+    "description": "Moving services, relocation, storage",
+    "short_description": "Moving services, relocation, storage",
+    "category_id": "transportation-logistics",
+    "industryMapping": "Transportation",
+    "keywords": [
+      "moving",
+      "movers",
+      "relocation",
+      "moving company"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "fleet_size",
+      "utilization_rate",
+      "fuel_efficiency"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "music-production",
+    "title": "Music Production",
+    "description": "Recording studio, music production, audio engineering",
+    "short_description": "Recording studio, music production, audio engineering",
+    "category_id": "creative-media",
+    "industryMapping": "Creative & Media",
+    "keywords": [
+      "music",
+      "recording studio",
+      "audio",
+      "music production"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "project_capacity",
+      "client_retention",
+      "hourly_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "music-school",
+    "title": "Music School",
+    "description": "Music lessons, instrument instruction, music academy",
+    "short_description": "Music lessons, instrument instruction, music academy",
+    "category_id": "education-training",
+    "industryMapping": "Education",
+    "keywords": [
+      "music school",
+      "music lessons",
+      "instrument lessons"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "student_count",
+      "retention_rate",
+      "hourly_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "notary",
+    "title": "Notary Services",
+    "description": "Notary public, document notarization",
+    "short_description": "Notary public, document notarization",
+    "category_id": "professional-services",
+    "industryMapping": "Professional Services",
+    "keywords": [
+      "notary",
+      "notary public",
+      "notarization"
+    ],
+    "popular": false,
+    "dcfPreference": "0.60",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "project_success_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "nutrition-counseling",
+    "title": "Nutrition Counseling",
+    "description": "Dietitian, nutritionist, meal planning",
+    "short_description": "Dietitian, nutritionist, meal planning",
+    "category_id": "fitness-health",
+    "industryMapping": "Healthcare",
+    "keywords": [
+      "nutrition",
+      "dietitian",
+      "nutritionist",
+      "diet"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "membership_count",
+      "retention_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "oil-change",
+    "title": "Oil Change Service",
+    "description": "Quick lube, oil change, vehicle maintenance",
+    "short_description": "Quick lube, oil change, vehicle maintenance",
+    "category_id": "automotive",
+    "industryMapping": "Transportation",
+    "keywords": [
+      "oil change",
+      "quick lube",
+      "vehicle maintenance"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "fleet_size",
+      "utilization_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "marketplace",
+    "title": "Online Marketplace",
+    "description": "Multi-vendor platform, marketplace business",
+    "short_description": "Multi-vendor platform, marketplace business",
+    "category_id": "ecommerce-retail",
+    "industryMapping": "E-commerce",
+    "keywords": [
+      "marketplace",
+      "multi-vendor",
+      "platform"
+    ],
+    "popular": false,
+    "dcfPreference": "0.70",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "inventory_turnover",
+      "customer_lifetime_value",
+      "conversion_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "organic-farm",
+    "title": "Organic Farm",
+    "description": "Organic farming, sustainable agriculture",
+    "short_description": "Organic farming, sustainable agriculture",
+    "category_id": "agriculture",
+    "industryMapping": "Manufacturing",
+    "keywords": [
+      "organic",
+      "organic farm",
+      "sustainable",
+      "organic farming"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "production_capacity",
+      "yield_per_acre",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "painting",
+    "title": "Painting Services",
+    "description": "Interior/exterior painting, commercial painting",
+    "short_description": "Interior/exterior painting, commercial painting",
+    "category_id": "home-property",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "painting",
+      "painter",
+      "interior painting",
+      "exterior painting"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "parking-services",
+    "title": "Parking Services",
+    "description": "Parking lots, valet service, parking management",
+    "short_description": "Parking lots, valet service, parking management",
+    "category_id": "transportation-logistics",
+    "industryMapping": "Transportation",
+    "keywords": [
+      "parking",
+      "valet",
+      "parking management"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "fleet_size",
+      "utilization_rate",
+      "fuel_efficiency"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "party-rental",
+    "title": "Party Rental",
+    "description": "Event rentals, party supplies, equipment rental",
+    "short_description": "Event rentals, party supplies, equipment rental",
+    "category_id": "events-entertainment",
+    "industryMapping": "Creative & Media",
+    "keywords": [
+      "party rental",
+      "event rentals",
+      "party supplies"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "event_volume",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "payroll",
+    "title": "Payroll Services",
+    "description": "Payroll processing, payroll management",
+    "short_description": "Payroll processing, payroll management",
+    "category_id": "professional-services",
+    "industryMapping": "Professional Services",
+    "keywords": [
+      "payroll",
+      "payroll processing",
+      "payroll services"
+    ],
+    "popular": false,
+    "dcfPreference": "0.60",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "project_success_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "pest-control",
+    "title": "Pest Control",
+    "description": "Exterminator, pest management, termite control",
+    "short_description": "Exterminator, pest management, termite control",
+    "category_id": "environmental",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "pest control",
+      "exterminator",
+      "pest management",
+      "termite"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "project_capacity",
+      "client_retention",
+      "compliance_score"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "pet-grooming",
+    "title": "Pet Grooming",
+    "description": "Dog grooming, cat grooming, pet salon",
+    "short_description": "Dog grooming, cat grooming, pet salon",
+    "category_id": "pet-services",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "pet grooming",
+      "dog grooming",
+      "pet salon"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "pet-sitting",
+    "title": "Pet Sitting / Boarding",
+    "description": "Pet care, dog sitting, pet boarding, kennel",
+    "short_description": "Pet care, dog sitting, pet boarding, kennel",
+    "category_id": "pet-services",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "pet sitting",
+      "dog sitting",
+      "pet boarding",
+      "kennel"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "pet-store",
+    "title": "Pet Store",
+    "description": "Pet supplies, pet products, pet shop",
+    "short_description": "Pet supplies, pet products, pet shop",
+    "category_id": "pet-services",
+    "industryMapping": "E-commerce",
+    "keywords": [
+      "pet store",
+      "pet supplies",
+      "pet shop",
+      "pet products"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "pet-training",
+    "title": "Pet Training",
+    "description": "Dog training, obedience training, behavior",
+    "short_description": "Dog training, obedience training, behavior",
+    "category_id": "pet-services",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "pet training",
+      "dog training",
+      "obedience",
+      "dog trainer"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "physical-therapy",
+    "title": "Physical Therapy",
+    "description": "Rehabilitation, sports therapy, physical rehab",
+    "short_description": "Rehabilitation, sports therapy, physical rehab",
+    "category_id": "fitness-health",
+    "industryMapping": "Healthcare",
+    "keywords": [
+      "physical therapy",
+      "rehab",
+      "physiotherapy",
+      "sports therapy"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "membership_count",
+      "retention_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "piercing-studio",
+    "title": "Piercing Studio",
+    "description": "Body piercing, ear piercing, jewelry",
+    "short_description": "Body piercing, ear piercing, jewelry",
+    "category_id": "beauty-wellness",
+    "industryMapping": "Beauty & Wellness",
+    "keywords": [
+      "piercing",
+      "body piercing",
+      "ear piercing"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "pilates-studio",
+    "title": "Pilates Studio",
+    "description": "Pilates classes, reformer, mat pilates",
+    "short_description": "Pilates classes, reformer, mat pilates",
+    "category_id": "fitness-health",
+    "industryMapping": "Healthcare",
+    "keywords": [
+      "pilates",
+      "reformer",
+      "mat pilates",
+      "fitness"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "membership_count",
+      "retention_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "nursery",
+    "title": "Plant Nursery",
+    "description": "Garden center, plant nursery, greenhouse",
+    "short_description": "Garden center, plant nursery, greenhouse",
+    "category_id": "agriculture",
+    "industryMapping": "E-commerce",
+    "keywords": [
+      "nursery",
+      "garden center",
+      "plants",
+      "greenhouse"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "production_capacity",
+      "yield_per_acre",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "plumbing",
+    "title": "Plumbing Services",
+    "description": "Plumber, plumbing repair, installation",
+    "short_description": "Plumber, plumbing repair, installation",
+    "category_id": "home-property",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "plumbing",
+      "plumber",
+      "plumbing repair"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "pottery",
+    "title": "Pottery / Ceramics",
+    "description": "Pottery studio, ceramics, handmade pottery",
+    "short_description": "Pottery studio, ceramics, handmade pottery",
+    "category_id": "arts-crafts",
+    "industryMapping": "E-commerce",
+    "keywords": [
+      "pottery",
+      "ceramics",
+      "handmade",
+      "pottery studio"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.90",
+    "keyMetrics": [
+      "revenue",
+      "inventory_turnover",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "printing",
+    "title": "Printing Services",
+    "description": "Print shop, custom printing, commercial printing",
+    "short_description": "Print shop, custom printing, commercial printing",
+    "category_id": "creative-media",
+    "industryMapping": "Creative & Media",
+    "keywords": [
+      "printing",
+      "print shop",
+      "commercial printing"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "project_capacity",
+      "client_retention",
+      "hourly_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "print-on-demand",
+    "title": "Print on Demand",
+    "description": "Custom products, POD business, merchandise",
+    "short_description": "Custom products, POD business, merchandise",
+    "category_id": "ecommerce-retail",
+    "industryMapping": "E-commerce",
+    "keywords": [
+      "print on demand",
+      "pod",
+      "custom products",
+      "merchandise"
+    ],
+    "popular": false,
+    "dcfPreference": "0.70",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "inventory_turnover",
+      "customer_lifetime_value",
+      "conversion_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "private-security",
+    "title": "Private Security",
+    "description": "Security guard, protective services, security agency",
+    "short_description": "Security guard, protective services, security agency",
+    "category_id": "security-safety",
+    "industryMapping": "Professional Services",
+    "keywords": [
+      "security",
+      "security guard",
+      "private security",
+      "protective services"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "response_time",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "public-relations",
+    "title": "Public Relations",
+    "description": "PR agency, media relations, communications",
+    "short_description": "PR agency, media relations, communications",
+    "category_id": "professional-services",
+    "industryMapping": "Professional Services",
+    "keywords": [
+      "public relations",
+      "pr",
+      "media relations"
+    ],
+    "popular": false,
+    "dcfPreference": "0.60",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "project_success_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "recycling",
+    "title": "Recycling Services",
+    "description": "Recycling center, scrap metal, waste recycling",
+    "short_description": "Recycling center, scrap metal, waste recycling",
+    "category_id": "environmental",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "recycling",
+      "recycling center",
+      "scrap",
+      "waste recycling"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "project_capacity",
+      "client_retention",
+      "compliance_score"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "roofing",
+    "title": "Roofing Services",
+    "description": "Roof repair, roof installation, roofing contractor",
+    "short_description": "Roof repair, roof installation, roofing contractor",
+    "category_id": "home-property",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "roofing",
+      "roof repair",
+      "roofer"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "safety-training",
+    "title": "Safety Training",
+    "description": "Workplace safety, first aid, safety consulting",
+    "short_description": "Workplace safety, first aid, safety consulting",
+    "category_id": "security-safety",
+    "industryMapping": "Professional Services",
+    "keywords": [
+      "safety training",
+      "workplace safety",
+      "first aid",
+      "safety"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "response_time",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "security-systems",
+    "title": "Security Systems",
+    "description": "Alarm systems, surveillance, security installation",
+    "short_description": "Alarm systems, surveillance, security installation",
+    "category_id": "security-safety",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "security",
+      "alarm",
+      "surveillance",
+      "security systems"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "response_time",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "seo-services",
+    "title": "SEO Services",
+    "description": "Search engine optimization, SEO consulting",
+    "short_description": "Search engine optimization, SEO consulting",
+    "category_id": "tech-digital",
+    "industryMapping": "Technology",
+    "keywords": [
+      "seo",
+      "search engine optimization",
+      "sem"
+    ],
+    "popular": false,
+    "dcfPreference": "0.80",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.30",
+    "keyMetrics": [
+      "revenue",
+      "recurring_revenue",
+      "customer_acquisition_cost",
+      "churn_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "skincare-clinic",
+    "title": "Skincare Clinic",
+    "description": "Facials, skincare treatments, esthetics",
+    "short_description": "Facials, skincare treatments, esthetics",
+    "category_id": "beauty-wellness",
+    "industryMapping": "Beauty & Wellness",
+    "keywords": [
+      "skincare",
+      "facial",
+      "esthetics",
+      "skin treatment"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "social-media",
+    "title": "Social Media Management",
+    "description": "Social media strategy, community management",
+    "short_description": "Social media strategy, community management",
+    "category_id": "creative-media",
+    "industryMapping": "Creative & Media",
+    "keywords": [
+      "social media",
+      "community management",
+      "influencer"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "project_capacity",
+      "client_retention",
+      "hourly_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "spa",
+    "title": "Spa",
+    "description": "Day spa, wellness spa, spa treatments",
+    "short_description": "Day spa, wellness spa, spa treatments",
+    "category_id": "beauty-wellness",
+    "industryMapping": "Beauty & Wellness",
+    "keywords": [
+      "spa",
+      "wellness",
+      "spa treatments",
+      "day spa"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "grocery-specialty",
+    "title": "Specialty Grocery",
+    "description": "Gourmet foods, specialty items, ethnic grocery",
+    "short_description": "Gourmet foods, specialty items, ethnic grocery",
+    "category_id": "food-beverage",
+    "industryMapping": "Food & Beverage",
+    "keywords": [
+      "gourmet",
+      "specialty foods",
+      "ethnic grocery",
+      "delicatessen"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "foot_traffic",
+      "inventory_turnover"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "subscription",
+    "title": "Subscription Box",
+    "description": "Subscription service, monthly boxes, curated products",
+    "short_description": "Subscription service, monthly boxes, curated products",
+    "category_id": "ecommerce-retail",
+    "industryMapping": "E-commerce",
+    "keywords": [
+      "subscription box",
+      "subscription service",
+      "monthly box"
+    ],
+    "popular": false,
+    "dcfPreference": "0.70",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "inventory_turnover",
+      "customer_lifetime_value",
+      "conversion_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "tanning-salon",
+    "title": "Tanning Salon",
+    "description": "Spray tanning, tanning beds, sunless tanning",
+    "short_description": "Spray tanning, tanning beds, sunless tanning",
+    "category_id": "beauty-wellness",
+    "industryMapping": "Beauty & Wellness",
+    "keywords": [
+      "tanning",
+      "spray tan",
+      "tanning salon",
+      "sunless"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "tattoo-parlor",
+    "title": "Tattoo Parlor",
+    "description": "Tattoo artist, body art, custom tattoos",
+    "short_description": "Tattoo artist, body art, custom tattoos",
+    "category_id": "beauty-wellness",
+    "industryMapping": "Beauty & Wellness",
+    "keywords": [
+      "tattoo",
+      "body art",
+      "tattoo artist",
+      "ink"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "taxi-rideshare",
+    "title": "Taxi / Rideshare",
+    "description": "Taxi service, car service, transportation",
+    "short_description": "Taxi service, car service, transportation",
+    "category_id": "transportation-logistics",
+    "industryMapping": "Transportation",
+    "keywords": [
+      "taxi",
+      "rideshare",
+      "car service",
+      "transportation"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "fleet_size",
+      "utilization_rate",
+      "fuel_efficiency"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "tax-preparation",
+    "title": "Tax Preparation",
+    "description": "Tax services, tax filing, tax consulting",
+    "short_description": "Tax services, tax filing, tax consulting",
+    "category_id": "financial-services",
+    "industryMapping": "Financial Services",
+    "keywords": [
+      "tax",
+      "tax preparation",
+      "tax services",
+      "tax filing"
+    ],
+    "popular": false,
+    "dcfPreference": "0.60",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "assets_under_management",
+      "compliance_score"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "tech-training",
+    "title": "Tech Training",
+    "description": "Coding bootcamp, tech education, IT training",
+    "short_description": "Coding bootcamp, tech education, IT training",
+    "category_id": "tech-digital",
+    "industryMapping": "Technology",
+    "keywords": [
+      "coding bootcamp",
+      "tech training",
+      "programming courses"
+    ],
+    "popular": false,
+    "dcfPreference": "0.80",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.30",
+    "keyMetrics": [
+      "revenue",
+      "recurring_revenue",
+      "customer_acquisition_cost",
+      "churn_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "theater",
+    "title": "Theater / Performance",
+    "description": "Theater company, performance venue, live shows",
+    "short_description": "Theater company, performance venue, live shows",
+    "category_id": "events-entertainment",
+    "industryMapping": "Creative & Media",
+    "keywords": [
+      "theater",
+      "performance",
+      "live shows",
+      "performing arts"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "event_volume",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "tire-shop",
+    "title": "Tire Shop",
+    "description": "Tire sales, tire service, tire installation",
+    "short_description": "Tire sales, tire service, tire installation",
+    "category_id": "automotive",
+    "industryMapping": "Transportation",
+    "keywords": [
+      "tires",
+      "tire shop",
+      "tire service"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "fleet_size",
+      "utilization_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "tour-operator",
+    "title": "Tour Operator",
+    "description": "Tours, sightseeing, guided experiences",
+    "short_description": "Tours, sightseeing, guided experiences",
+    "category_id": "hospitality-tourism",
+    "industryMapping": "Professional Services",
+    "keywords": [
+      "tour operator",
+      "tours",
+      "sightseeing",
+      "guided tours"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "occupancy_rate",
+      "average_daily_rate",
+      "location_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "toy-store",
+    "title": "Toy Store",
+    "description": "Toys, games, children\\",
+    "short_description": "Toys, games, children\\",
+    "category_id": "ecommerce-retail",
+    "industryMapping": "E-commerce",
+    "keywords": [
+      "toys",
+      "toy store",
+      "games",
+      "children"
+    ],
+    "popular": false,
+    "dcfPreference": "0.70",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "inventory_turnover",
+      "customer_lifetime_value",
+      "conversion_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "translation",
+    "title": "Translation Services",
+    "description": "Document translation, interpretation, localization",
+    "short_description": "Document translation, interpretation, localization",
+    "category_id": "professional-services",
+    "industryMapping": "Professional Services",
+    "keywords": [
+      "translation",
+      "interpretation",
+      "localization"
+    ],
+    "popular": false,
+    "dcfPreference": "0.60",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "project_success_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "travel-agency",
+    "title": "Travel Agency",
+    "description": "Travel planning, tour operator, travel services",
+    "short_description": "Travel planning, tour operator, travel services",
+    "category_id": "hospitality-tourism",
+    "industryMapping": "Professional Services",
+    "keywords": [
+      "travel agency",
+      "travel agent",
+      "tour operator"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "occupancy_rate",
+      "average_daily_rate",
+      "location_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "truck-rental",
+    "title": "Truck Rental",
+    "description": "Commercial truck rental, vehicle rental",
+    "short_description": "Commercial truck rental, vehicle rental",
+    "category_id": "transportation-logistics",
+    "industryMapping": "Transportation",
+    "keywords": [
+      "truck rental",
+      "vehicle rental",
+      "commercial trucks"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "fleet_size",
+      "utilization_rate",
+      "fuel_efficiency"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "tutoring",
+    "title": "Tutoring Services",
+    "description": "Academic tutoring, test prep, private lessons",
+    "short_description": "Academic tutoring, test prep, private lessons",
+    "category_id": "education-training",
+    "industryMapping": "Education",
+    "keywords": [
+      "tutoring",
+      "tutor",
+      "test prep",
+      "lessons"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "student_count",
+      "retention_rate",
+      "hourly_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "ui-ux-design",
+    "title": "UI/UX Design",
+    "description": "User interface, user experience, product design",
+    "short_description": "User interface, user experience, product design",
+    "category_id": "tech-digital",
+    "industryMapping": "Technology",
+    "keywords": [
+      "ui",
+      "ux",
+      "user experience",
+      "product design"
+    ],
+    "popular": false,
+    "dcfPreference": "0.80",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.30",
+    "keyMetrics": [
+      "revenue",
+      "recurring_revenue",
+      "customer_acquisition_cost",
+      "churn_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "vacation-rental",
+    "title": "Vacation Rental",
+    "description": "Short-term rental, vacation property, Airbnb business",
+    "short_description": "Short-term rental, vacation property, Airbnb business",
+    "category_id": "hospitality-tourism",
+    "industryMapping": "Real Estate",
+    "keywords": [
+      "vacation rental",
+      "short-term rental",
+      "airbnb",
+      "vrbo"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "occupancy_rate",
+      "average_daily_rate",
+      "location_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "veterinary",
+    "title": "Veterinary Services",
+    "description": "Vet clinic, animal hospital, veterinarian",
+    "short_description": "Vet clinic, animal hospital, veterinarian",
+    "category_id": "pet-services",
+    "industryMapping": "Healthcare",
+    "keywords": [
+      "veterinary",
+      "vet",
+      "animal hospital",
+      "veterinarian"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "virtual-assistant",
+    "title": "Virtual Assistant",
+    "description": "Administrative support, virtual office services",
+    "short_description": "Administrative support, virtual office services",
+    "category_id": "professional-services",
+    "industryMapping": "Professional Services",
+    "keywords": [
+      "virtual assistant",
+      "va",
+      "administrative support"
+    ],
+    "popular": false,
+    "dcfPreference": "0.60",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "project_success_rate"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "warehousing",
+    "title": "Warehousing & Storage",
+    "description": "Warehouse services, storage facilities, fulfillment",
+    "short_description": "Warehouse services, storage facilities, fulfillment",
+    "category_id": "transportation-logistics",
+    "industryMapping": "Transportation",
+    "keywords": [
+      "warehouse",
+      "storage",
+      "fulfillment",
+      "distribution"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.40",
+    "keyMetrics": [
+      "revenue",
+      "fleet_size",
+      "utilization_rate",
+      "fuel_efficiency"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "waste-management",
+    "title": "Waste Management",
+    "description": "Trash collection, waste disposal, sanitation",
+    "short_description": "Trash collection, waste disposal, sanitation",
+    "category_id": "environmental",
+    "industryMapping": "Home Services",
+    "keywords": [
+      "waste management",
+      "trash",
+      "garbage",
+      "waste disposal"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "project_capacity",
+      "client_retention",
+      "compliance_score"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "wellness",
+    "title": "Wellness Center",
+    "description": "Holistic therapies, wellness retreats, alternative medicine",
+    "short_description": "Holistic therapies, wellness retreats, alternative medicine",
+    "category_id": "beauty-wellness",
+    "industryMapping": "Beauty & Wellness",
+    "keywords": [
+      "wellness",
+      "holistic",
+      "alternative medicine",
+      "wellness retreat"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.80",
+    "keyMetrics": [
+      "revenue",
+      "client_retention",
+      "hourly_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "winery",
+    "title": "Winery",
+    "description": "Wine production, tasting room, vineyard",
+    "short_description": "Wine production, tasting room, vineyard",
+    "category_id": "food-beverage",
+    "industryMapping": "Food & Beverage",
+    "keywords": [
+      "wine",
+      "vineyard",
+      "winemaking",
+      "tasting room"
+    ],
+    "popular": false,
+    "dcfPreference": "0.30",
+    "multiplesPreference": "0.80",
+    "ownerDependencyImpact": "0.70",
+    "keyMetrics": [
+      "revenue",
+      "location_value",
+      "foot_traffic",
+      "inventory_turnover"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "woodworking",
+    "title": "Woodworking",
+    "description": "Custom furniture, woodcraft, carpentry",
+    "short_description": "Custom furniture, woodcraft, carpentry",
+    "category_id": "arts-crafts",
+    "industryMapping": "Manufacturing",
+    "keywords": [
+      "woodworking",
+      "furniture",
+      "carpentry",
+      "woodcraft"
+    ],
+    "popular": false,
+    "dcfPreference": "0.40",
+    "multiplesPreference": "0.70",
+    "ownerDependencyImpact": "0.90",
+    "keyMetrics": [
+      "revenue",
+      "inventory_turnover",
+      "client_retention",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "yoga-studio",
+    "title": "Yoga Studio",
+    "description": "Yoga classes, meditation, mindfulness",
+    "short_description": "Yoga classes, meditation, mindfulness",
+    "category_id": "fitness-health",
+    "industryMapping": "Healthcare",
+    "keywords": [
+      "yoga",
+      "meditation",
+      "mindfulness",
+      "yoga studio"
+    ],
+    "popular": false,
+    "dcfPreference": "0.50",
+    "multiplesPreference": "0.60",
+    "ownerDependencyImpact": "0.60",
+    "keyMetrics": [
+      "revenue",
+      "membership_count",
+      "retention_rate",
+      "equipment_value"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "fintech-lending",
+    "title": "Fintech — Lending & Credit",
+    "description": "Lending, credit, BNPL, factoring, and SME finance platforms",
+    "short_description": "Lending, credit, BNPL, factoring, SME finance",
+    "category_id": "financial-services",
+    "industryMapping": "Financial Services",
+    "industry": "lending",
+    "keywords": [
+      "fintech",
+      "lending",
+      "credit",
+      "bnpl",
+      "factoring",
+      "64.92",
+      "kredietverlening"
+    ],
+    "popular": true,
+    "dcfPreference": "0.25",
+    "multiplesPreference": "0.75",
+    "ownerDependencyImpact": "0.50",
+    "keyMetrics": [
+      "revenue",
+      "loan_book",
+      "default_rate",
+      "net_interest_margin"
+    ],
+    "status": "active"
+  }
+]

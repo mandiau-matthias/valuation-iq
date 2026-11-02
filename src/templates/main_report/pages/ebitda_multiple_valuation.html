@@ -1,0 +1,173 @@
+{#
+    EBITDA MULTIPLE VALUATION — screen version (Aurora design tokens)
+    =================================================================
+    Screen twin of `main_report_pdf/pages/ebitda_multiple_valuation.html`.
+
+    Same gating contract: rendered only when the aggregator sets
+    `has_ebitda_multiple_page` (hybrid / EBITDA-as-primary cases that
+    deserve their own narrative beyond the consolidated calibration
+    ledger). Pure DCF / SDE / NAV cases skip this page entirely.
+
+    Migrated 2026-05-15 to use the shared `method_section` macro so
+    the wrapper (page header, section title, citations rail, footer)
+    is defined once across all method pages × both trees. Only the
+    method-specific body (methodology callout, waterfall, EV summary,
+    cross-checks, sensitivity, assumptions) lives here.
+
+    Context variables consumed (mirror of PDF twin):
+      ebitda_multiple_section_number (str|None)
+      ebitda_multiple_page_number (int|None)
+      ebitda_method (MethodResult — hoisted from engine in aggregator)
+      base_multiple, applied_multiple, multiple_low, multiple_high (floats)
+      benchmark_multiple_label, benchmark_multiple_mid (peer-set anchor)
+      ev_ebitda_enterprise_value, ebitda_normalized (engine outputs)
+      ebitda_sensitivity_matrix_2d (multiple × EBITDA grid; falls back to 1-D)
+      revenue, net_income, equity_value (for implied cross-checks)
+      benchmark_sample_size, benchmark_window_months, benchmark_refresh_date (provenance)
+#}
+
+{% from "shared/macros/method_section.html" import method_section with context %}
+
+{% call method_section(
+    method_key='ebitda_multiple',
+    section_number=ebitda_multiple_section_number|default('M'),
+    title=t.calib_title ~ ' — EV/EBITDA',
+    subtitle=t.calib_multiples_intro,
+    badge_label=benchmark_multiple_label,
+    tree_root='main_report',
+    page_number=ebitda_multiple_page_number|default(total_pages - 3),
+    total_pages=total_pages,
+    method=ebitda_method
+) %}
+
+    {# Methodology intro: peer-anchor narrative. #}
+    <div style="margin-top: var(--space-2); margin-bottom: var(--space-4); padding: var(--space-3); border-radius: 6pt; border: 1pt solid hsl(var(--report-slate-200)); background: hsl(var(--report-cream)); page-break-inside: avoid; break-inside: avoid;">
+        <p style="margin: 0; font-size: var(--font-size-sm); color: hsl(var(--report-slate-700)); line-height: 1.55;">
+            {{ t.ebitda_multiple_methodology_intro }}
+        </p>
+    </div>
+
+    {# Multiple buildup waterfall — authoritative location is HERE on the
+       dedicated EBITDA-Multiple page; calibration page suppresses its copy
+       when has_ebitda_multiple_page is true (dedupe-2026-05-03). #}
+    {% include "main_report/components/_multiple_waterfall_chart.html" ignore missing %}
+
+    {# Cross-reference to the consolidated calibration ledger on the next
+       page. The waterfall above shows the *path*; the ledger shows the
+       *audit trail* with academic footnotes — readers who want either
+       the per-step rationale or the citation should know where to find
+       it without scanning the full report. #}
+    {% if t.ebitda_multiple_calibration_xref %}
+    <p style="margin: var(--space-2) 0 0 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); font-style: italic; line-height: 1.5;">
+        {{ t.ebitda_multiple_calibration_xref }}
+    </p>
+    {% endif %}
+
+    {# EV summary card — mirrors the DCF EV card visual rhythm. #}
+    {% if ev_ebitda_enterprise_value and ev_ebitda_enterprise_value|float > 0 %}
+    <div style="margin-top: var(--space-4); padding: var(--space-3); border: 1pt solid hsl(var(--report-slate-200)); border-left: 3pt solid hsl({{ teal_hsl }}); border-radius: 6pt; page-break-inside: avoid; break-inside: avoid;">
+        <h4 style="font-size: 9.5pt; margin: 0 0 var(--space-2) 0; color: hsl(var(--report-slate-900));">{{ t.dcf_ev_summary_header }}</h4>
+
+        <table style="width: 100%; font-size: var(--font-size-sm); border-collapse: collapse;">
+            <tr style="border-bottom: 1pt solid hsl(var(--report-slate-100));">
+                <td style="padding: 3pt 0; color: hsl(var(--report-text-muted)); border: none;">{{ t.dcf_row_ebitda }}</td>
+                <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: hsl(var(--report-slate-900)); border: none;">{{ ebitda_normalized|default(0)|format_currency }}</td>
+            </tr>
+            <tr style="border-bottom: 1pt solid hsl(var(--report-slate-100));">
+                <td style="padding: 3pt 0; color: hsl(var(--report-text-muted)); border: none;">× {{ t.calib_multiple_applied }}</td>
+                <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: hsl(var(--report-slate-900)); border: none;">{{ applied_multiple|default(0)|safe_round(2) }}×</td>
+            </tr>
+            <tr>
+                <td style="padding: var(--space-1) 0; font-weight: 700; font-size: 9pt; color: hsl({{ teal_hsl }}); border: none;">= {{ t.dcf_enterprise_value_label }}</td>
+                <td style="padding: var(--space-1) 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 9pt; color: hsl({{ teal_hsl }}); border: none;">{{ ev_ebitda_enterprise_value|format_currency }}</td>
+            </tr>
+        </table>
+
+        {% if multiple_low and multiple_high %}
+        <p style="margin: var(--space-2) 0 0 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">
+            {{ t.calib_multiple_range }}: <strong style="color: hsl(var(--report-slate-900));">{{ multiple_low|safe_round(2) }}× — {{ multiple_high|safe_round(2) }}×</strong>
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {# Comparable-deals table — the peer-set anchor in evidence form.
+       Renders silently when the model doesn't surface a comparables list.
+       See the component docstring for why this is M&A-baseline. #}
+    {% include "main_report/components/_comparables_table.html" ignore missing %}
+
+    {# Driver-impact tornado — ranks model adjustments by €-impact so the
+       reader sees which discount/premium dominates the headline. Hidden
+       silently when fewer than 2 non-trivial drivers are present. #}
+    {% include "main_report/components/_driver_tornado.html" ignore missing %}
+
+    {# Implied cross-checks — places the EV/EBITDA headline in absolute terms.
+       M&A reviewers always triangulate against EV/Sales and an after-tax P/E
+       so the multiple "feels right" before signing off. Renders only when we
+       have the inputs to compute each cross-check; falls through silently. #}
+    {% if ev_ebitda_enterprise_value and ev_ebitda_enterprise_value|float > 0 and ((revenue is defined and revenue and revenue|float > 0) or (net_income is defined and net_income and net_income|float > 0) or (equity_value is defined and equity_value and equity_value|float > 0)) %}
+    <div style="margin-top: var(--space-3); padding: var(--space-3); border: 1pt solid hsl(var(--report-slate-200)); border-radius: 6pt; background: hsl(var(--report-cream)); page-break-inside: avoid; break-inside: avoid;">
+        <h4 style="font-size: 9pt; margin: 0 0 var(--space-1) 0; color: hsl(var(--report-slate-900));">{{ t.ebitda_multiple_cross_check_title }}</h4>
+        <p style="margin: 0 0 var(--space-2) 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.45;">
+            {{ t.ebitda_multiple_cross_check_intro }}
+        </p>
+        <table style="width: 100%; font-size: var(--font-size-sm); border-collapse: collapse;">
+            {% if revenue is defined and revenue and revenue|float > 0 %}
+            <tr style="border-bottom: 1pt solid hsl(var(--report-slate-100));">
+                <td style="padding: 3pt 0; color: hsl(var(--report-text-muted)); border: none;">{{ t.ebitda_multiple_implied_ev_sales_label }}</td>
+                <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: hsl(var(--report-slate-900)); border: none;">
+                    {{ (ev_ebitda_enterprise_value|float / revenue|float)|safe_round(2) }}×
+                </td>
+            </tr>
+            {% endif %}
+            {% if net_income is defined and net_income and net_income|float > 0 and equity_value is defined and equity_value and equity_value|float > 0 %}
+            <tr>
+                <td style="padding: 3pt 0; color: hsl(var(--report-text-muted)); border: none;">{{ t.ebitda_multiple_implied_pe_label }}</td>
+                <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: hsl(var(--report-slate-900)); border: none;">
+                    {{ (equity_value|float / net_income|float)|safe_round(2) }}×
+                </td>
+            </tr>
+            {% endif %}
+        </table>
+    </div>
+    {% endif %}
+
+    {# Control-basis / marketability disclosure (M&A defensibility). #}
+    <div style="margin-top: var(--space-3); padding: var(--space-3); border-radius: 6pt; border: 1pt solid hsl(37, 65%, 80%); background: hsl(37, 70%, 97%); page-break-inside: avoid; break-inside: avoid;">
+        <p style="margin: 0 0 3pt 0; font-size: var(--font-size-sm); font-weight: 700; color: hsl(35, 55%, 28%);">
+            {{ t.ebitda_multiple_dloc_dlom_title }}
+        </p>
+        <p style="margin: 0; font-size: var(--font-size-xs); color: hsl(35, 25%, 28%); line-height: 1.5;">
+            {{ t.ebitda_multiple_dloc_dlom_body }}
+        </p>
+    </div>
+
+    {# EBITDA × multiple sensitivity matrix (component falls through when no data). #}
+    {% with multiple_sensitivity_matrix_2d=ebitda_sensitivity_matrix_2d,
+            multiple_sensitivity_metric=ebitda_sensitivity_metric,
+            multiple_sensitivity_multiple=ebitda_sensitivity_multiple,
+            metric_base=ebitda_normalized,
+            multiple_base=applied_multiple,
+            metric_label=t.dcf_row_ebitda,
+            multiple_axis_label='EV/EBITDA' %}
+    {% include "main_report/components/_multiple_sensitivity_matrix.html" ignore missing %}
+    {% endwith %}
+
+    {# Methodology assumptions / sources footnote, with peer-set provenance. #}
+    <div style="margin-top: var(--space-4); padding: var(--space-3); border-radius: 6pt; border: 1pt solid hsl(var(--report-slate-200)); background: hsl(var(--report-cream)); page-break-inside: avoid; break-inside: avoid;">
+        <p style="margin: 0 0 var(--space-1) 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.5;">
+            {{ t.ebitda_multiple_assumptions_note }}
+        </p>
+        {% if benchmark_sample_size or benchmark_window_months or benchmark_refresh_date %}
+        <p style="margin: var(--space-1) 0 0 0; font-size: var(--font-size-xxs); color: hsl(var(--report-slate-500)); line-height: 1.45;">
+            <strong style="text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-slate-700));">{{ t.ebitda_multiple_provenance_label }}:</strong>
+            {% set _provenance_parts = [] %}
+            {% if benchmark_sample_size %}{% set _ = _provenance_parts.append(t.ebitda_multiple_provenance_n.replace('{count}', benchmark_sample_size|string)) %}{% endif %}
+            {% if benchmark_window_months %}{% set _ = _provenance_parts.append(t.ebitda_multiple_provenance_window.replace('{months}', benchmark_window_months|string)) %}{% endif %}
+            {% if benchmark_refresh_date %}{% set _ = _provenance_parts.append(t.ebitda_multiple_provenance_refresh.replace('{date}', benchmark_refresh_date|string)) %}{% endif %}
+            {{ _provenance_parts|join(' · ') }}
+        </p>
+        {% endif %}
+    </div>
+
+{% endcall %}

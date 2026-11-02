@@ -1,0 +1,22 @@
+{% from "shared/macros/method_section.html" import method_section with context %}
+{% set _lang = (locale|default('nl')|lower)[:2] %}
+{% set _titles = {
+  'en': ['Holding Company Sum of the Parts', 'Entity values, ownership and eliminations'],
+  'nl': ['Holdingvennootschap Sum of the Parts', 'Entiteitswaarden, eigendom en eliminaties'],
+  'fr': ['Somme des parties de la holding', 'Valeurs par entité, participations et éliminations']
+} %}
+{% set _title = _titles.get(_lang, _titles['en']) %}
+{% call method_section(
+  method_key='holding_sotp',
+  section_number=holding_sotp_section_number|default('SOTP'),
+  title=_title[0],
+  subtitle=_title[1],
+  tree_root='main_report',
+  page_number=holding_sotp_page_number,
+  total_pages=total_pages,
+  method=None,
+  show_citations=False,
+  show_flow_footer=False
+) %}
+  {% include "shared/components/_holding_sotp_body.html" %}
+{% endcall %}

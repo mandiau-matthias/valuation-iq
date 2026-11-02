@@ -1,0 +1,48 @@
+{#
+    Working-capital peg — PDF twin.
+    BET-241 / F1 scaffold; math in F5 (BET-245).
+#}
+
+<section class="brp-wc-peg brp-pdf" data-section="wc_peg"
+         data-confidence="{{ package.wc_peg.confidence }}"
+         style="page-break-inside: avoid;">
+    <h2>Working-capital peg</h2>
+
+    <div class="brp-wc-target">
+        <span class="brp-wc-label">Target</span>
+        <strong class="brp-wc-value">€{{ '{:,.0f}'.format(package.wc_peg.target_eur) }}</strong>
+        <span class="brp-wc-band">
+            (band: €{{ '{:,.0f}'.format(package.wc_peg.band_low_eur) }} – €{{ '{:,.0f}'.format(package.wc_peg.band_high_eur) }})
+        </span>
+    </div>
+
+    {% if package.wc_peg.advisor_override_value is not none %}
+        <div class="brp-wc-override">
+            <span>Advisor override: €{{ '{:,.0f}'.format(package.wc_peg.advisor_override_value) }}</span>
+            <span class="brp-wc-override-reason">{{ package.wc_peg.advisor_override_reason }}</span>
+        </div>
+    {% endif %}
+
+    <p class="brp-wc-narrative">{{ package.wc_peg.one_liner }}</p>
+
+    {% if package.wc_peg.monthly_series %}
+        <div class="brp-wc-seasonality">
+            <h3>Monthly seasonality</h3>
+            <table class="brp-wc-table">
+                <thead><tr><th>Month</th><th>NWC</th></tr></thead>
+                <tbody>
+                    {% for point in package.wc_peg.monthly_series %}
+                        <tr>
+                            <td>{{ point.month }}</td>
+                            <td>€{{ '{:,.0f}'.format(point.nwc_eur) }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    <p class="brp-wc-method">
+        Method: {{ package.wc_peg.derived_from | replace('_', ' ') }}.
+    </p>
+</section>

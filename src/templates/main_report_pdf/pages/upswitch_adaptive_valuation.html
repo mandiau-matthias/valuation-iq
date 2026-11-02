@@ -1,0 +1,405 @@
+{#
+    UPSWITCH ADAPTIVE — PDF page (M&A advisor to client)
+
+    Plain-language hybrid headline explanation, composition or NAV anchor,
+    equity band, methodology foundations (`_method_citations.html`), brief file note.
+
+    Rendered when `has_upswitch_adaptive_page` is True.
+
+    Migrated 2026-05-15 to share the `method_section` macro with the
+    screen twin.  Only the print-stable body (subtitle, composition
+    card, band card, assumptions) lives here.  The hardcoded-hex
+    subtitle contains rich-text `<em>` markup so it is rendered inside
+    the body slot rather than via the macro's `subtitle=` parameter.
+    The assumptions footnote was reordered to render BEFORE the macro's
+    citations rail (was AFTER pre-migration) so this page now matches
+    the other method pages' rhythm.
+
+    Context variables consumed:
+      has_upswitch_adaptive_page (bool)
+      upswitch_adaptive_section_number (str|None)
+      upswitch_adaptive_page_number (int|None)
+      upswitch_adaptive_value (Decimal|None)
+      upswitch_adaptive_method (MethodResult — hoisted from engine in aggregator)
+      adaptive_primary_basis (str: hybrid | asset_based)
+      adaptive_dcf_weight, adaptive_multiples_weight, adaptive_multiple_used
+      equity_value_low / mid / high, adaptive_methodology_justification
+      teal_hsl, t (translations), locale
+#}
+
+{% from "shared/macros/method_section.html" import method_section with context %}
+
+{% set _is_en = (locale|default('nl'))|lower == 'en' %}
+{% set _is_fr = (locale|default('nl'))|lower == 'fr' %}
+
+{# Multiples-only vs hybrid framing — see screen twin; uses gate flag. #}
+{% set _is_multiples_only = is_adaptive_multiples_only|default(false) %}
+
+{# Panel MAJOR (D1/D2): the methodology-foundations block must cite the ACTUAL
+   method. D1 (asset_based) and D2 (yield) were rendering the hybrid/multiples
+   literature (Koller weighted-EBITDA, Damodaran multiples) under a "Gewogen
+   hybride methodologie" subtitle on NAV/income pages. Route to the NAV / income-
+   capitalisation citation profiles instead; multiples/hybrid cases keep
+   'upswitch_adaptive'. #}
+{# Carry the multiples-only distinction via method_key (which propagates reliably
+   into the {% with %}-scoped _method_citations include — unlike the ambient
+   is_adaptive_multiples_only flag, which a macro-wrapped include does not see).
+   The dedicated 'upswitch_adaptive_multiples_only' registry entry renders the
+   correct "Marktbenadering met multiples — DCF uitgesloten" subtitle instead of
+   the hybrid default. #}
+{% set _adaptive_method_key = (
+    'real_estate_yield' if is_yield_methodology|default(false)
+    else 'adjusted_nav' if (adaptive_primary_basis|default('')) == 'asset_based'
+    else 'upswitch_adaptive_multiples_only' if _is_multiples_only
+    else 'upswitch_adaptive'
+) %}
+
+{% call method_section(
+    method_key=_adaptive_method_key,
+    section_number=upswitch_adaptive_section_number|default('A'),
+    title=(
+        client_presentation_method_label
+        if client_presentation_method_label|default(false) else
+        (
+            ("Upswitch Adaptive — property valuation for M&A") if is_yield_methodology|default(false)
+            else ("Upswitch Adaptive — asset-based valuation for M&A") if (adaptive_primary_basis|default('')) == 'asset_based'
+            else ("Upswitch Adaptive — market approach for M&A") if _is_multiples_only
+            else ("Upswitch Adaptive — hybrid valuation for M&A")
+        )
+        if _is_en else
+        (
+            ("Upswitch Adaptive — valorisation immobilière pour M&A") if is_yield_methodology|default(false)
+            else ("Upswitch Adaptive — valorisation patrimoniale pour M&A") if (adaptive_primary_basis|default('')) == 'asset_based'
+            else ("Upswitch Adaptive — approche de marché pour M&A") if _is_multiples_only
+            else ("Upswitch Adaptive — valorisation hybride pour M&A")
+        )
+        if _is_fr else
+        (
+            ("Upswitch Adaptive — vastgoedwaardering voor M&A") if is_yield_methodology|default(false)
+            else ("Upswitch Adaptive — substantiewaardering voor M&A") if (adaptive_primary_basis|default('')) == 'asset_based'
+            else ("Upswitch Adaptive — marktbenadering voor M&A") if _is_multiples_only
+            else ("Upswitch Adaptive — hybride waardering voor M&A")
+        )
+    ),
+    tree_root='main_report_pdf',
+    page_number=upswitch_adaptive_page_number|default(4),
+    method=upswitch_adaptive_method,
+    show_citations=(not is_disclosed_external_market_fallback|default(false) and not suppress_engine_product_name|default(false)),
+    show_flow_footer=not is_disclosed_external_market_fallback|default(false)
+) %}
+
+    {# Subtitle rendered inline in the body slot (not via the macro's
+       `subtitle=` parameter) because it contains rich-text `<em>` markup
+       and would otherwise be HTML-escaped by the macro. #}
+    <p style="margin-bottom: 10pt; font-size: 8pt; color: hsl(224, 10%, 45%);">
+        {# Asset/yield dossiers must not inherit the "works fully with market
+           multiples" intro — that contradicts the NAV/yield headline. Branch
+           on the primary basis first (inline, locale-aware, so no new
+           translation keys are needed). #}
+        {% if canonical_fallback_disclosure|default(false) %}{{ canonical_fallback_disclosure }}{% elif is_disclosed_external_market_fallback|default(false) %}
+            {{ accountant_firm_name|default('Upswitch', true) }} gebruikt voor dit dossier uitsluitend de uitdrukkelijk aanvaarde externe marktreferentie van {{ fallback_applied_multiple|safe_round(2) }}× gerapporteerde EBITDA. Dit is geen {{ fallback_market_key }} Index-benchmark, geen vergelijkbare-transactiemultiple en geen empirische marktsteekproef.
+        {% elif suppress_engine_product_name|default(false) %}
+            {% if _is_fr %}Cette synthèse combine le DCF et l’approche de marché selon les pondérations scellées du dossier. Cette page montre comment chaque méthode contribue à la valeur d’entreprise indicative.{% elif _is_en %}This synthesis combines DCF and the market approach using the dossier’s sealed weights. This page shows how each method contributes to indicative enterprise value.{% else %}Deze waarderingssynthese combineert DCF en de marktbenadering volgens de verzegelde dossiergewichten. Deze pagina toont hoe beide methoden bijdragen aan de indicatieve ondernemingswaarde.{% endif %}
+        {% elif is_yield_methodology|default(false) %}
+            {% if _is_fr %}Upswitch Adaptive est conscient de la méthodologie : pour les sociétés immobilières, la valeur principale s’ancre sur le loyer net divisé par un rendement de marché (cap-rate), avec la valeur nette d’actif ajustée (NAV) comme plancher. Cette page montre <em>comment</em> cette valeur est construite.{% elif _is_en %}Upswitch Adaptive is methodology-aware: for property-holding companies the headline anchors on net rent divided by a market yield (cap-rate), with adjusted net asset value (NAV) as the floor. This page shows <em>how</em> that value is built up.{% else %}Upswitch Adaptive is methodologie-bewust: voor vastgoedvennootschappen verankert de hoofdwaardering op de netto huuropbrengst gedeeld door een marktconforme yield (cap-rate), met de gecorrigeerde intrinsieke waarde (NAV) als bodem. Op deze pagina ziet u <em>hoe</em> die waarde is opgebouwd.{% endif %}
+        {% elif (adaptive_primary_basis|default('')) == 'asset_based' %}
+            {% if _is_fr %}Upswitch Adaptive est conscient de la méthodologie : ce profil à forte intensité d’actifs s’ancre sur la valeur nette d’actif ajustée (NAV) du bilan plutôt que sur les bénéfices ou les multiples de flux de trésorerie. Les multiples et le DCF sont présentés uniquement comme contrôles croisés. Cette page montre <em>comment</em> cette valeur est construite.{% elif _is_en %}Upswitch Adaptive is methodology-aware: this asset-heavy profile is anchored on the adjusted net asset value (NAV) of the balance sheet rather than on earnings or cash-flow multiples. Multiples and DCF are reported only as cross-checks. This page shows <em>how</em> that value is built up.{% else %}Upswitch Adaptive is methodologie-bewust: dit activumzware profiel wordt verankerd op de gecorrigeerde intrinsieke waarde (NAV) van de balans in plaats van op winst- of cashflowmultiples. Multiples en DCF worden uitsluitend als kruisverificatie gerapporteerd. Op deze pagina ziet u <em>hoe</em> die waarde is opgebouwd.{% endif %}
+        {% elif is_seller_report|default(false) %}
+            {% if _is_multiples_only %}
+            {{ t.adaptive_intro_multiples_only_seller|safe }}
+            {% else %}
+            {{ t.adaptive_intro_hybrid_seller|safe }}
+            {% endif %}
+        {% elif _is_multiples_only %}
+            {{ t.adaptive_intro_multiples_only_advisor|safe }}
+        {% else %}
+            {{ t.adaptive_intro_hybrid_advisor|safe }}
+        {% endif %}
+    </p>
+
+    {# ── 1. Composition — single sentence + integer-renormalised weights.
+       See the screen twin (`main_report/pages/upswitch_adaptive_valuation.html`)
+       for the full rationale. PDF must stay byte-equivalent on numbers. ── #}
+
+    {% if sealed_display is defined %}
+        {% set _w_mults_pct = sealed_display.weights.market_pct %}
+        {% set _w_dcf_pct = sealed_display.weights.dcf_pct %}
+    {% else %}
+        {% set _w_mults_raw = (adaptive_presentation_multiples_weight|float) if (adaptive_presentation_multiples_weight is defined and adaptive_presentation_multiples_weight is not none) else 0 %}
+        {% set _w_dcf_raw = (adaptive_presentation_dcf_weight|float) if (adaptive_presentation_dcf_weight is defined and adaptive_presentation_dcf_weight is not none) else 0 %}
+        {% set _w_total_raw = _w_mults_raw + _w_dcf_raw %}
+        {% if _w_total_raw > 0 %}
+        {% set _w_mults_pct = ((_w_mults_raw / _w_total_raw * 100)|safe_round(0))|int %}
+        {% set _w_dcf_pct = 100 - _w_mults_pct %}
+        {% else %}
+        {% set _w_mults_pct = none %}
+        {% set _w_dcf_pct = none %}
+        {% endif %}
+    {% endif %}
+
+    {% set _multiple_short =
+       ('EV/EBITDA' if multiple_metric_type == 'EBITDA'
+        else ('EV/Revenue' if multiple_metric_type == 'REVENUE'
+        else ('EV/ARR' if multiple_metric_type == 'ARR' else ''))) %}
+
+    <div style="margin-top: 6pt; margin-bottom: 8pt; padding: 8pt 12pt; border: 1pt solid hsl(224, 10%, 91%); border-left: 3pt solid hsl({{ teal_hsl }}); border-radius: 6pt; page-break-inside: avoid; break-inside: avoid;">
+        <h4 style="font-size: 9.5pt; margin: 0 0 8pt 0; color: hsl(225, 18%, 12%);">
+            {% if _is_fr %}Composition pour {{ company_name }}{% elif _is_en %}Composition for {{ company_name }}{% else %}Samenstelling voor {{ company_name }}{% endif %}
+        </h4>
+
+        {% if is_yield_methodology %}
+            {# Real-estate (vastgoed) entity: the headline is income-capitalisation
+               (rent ÷ cap-rate), NOT operating multiples. Render the yield basis
+               and SKIP the multiples-lens table below so the page never shows a
+               contradictory "100% multiples / 0,00×" for a property company. #}
+            <p style="margin: 0 0 6pt 0; font-size: 8pt; color: hsl(224, 12%, 30%); line-height: 1.55;">
+                {% if _is_fr %}
+                <strong>Base principale : rendement immobilier (loyer ÷ cap-rate).</strong> Il s’agit d’une société immobilière ; la valeur principale correspond au loyer net durable capitalisé à un cap-rate de marché, avec la NAV comptable comme plancher. Les multiples opérationnels et le DCF ne sont pas le moteur principal ici. Voir la page <em>Rendement immobilier</em> pour le détail.
+                {% elif _is_en %}
+                <strong>Primary basis: Real-estate yield (rent ÷ cap-rate).</strong> This is a property entity, so the headline is the sustainable net rent capitalised at a market cap-rate, with the book NAV as a downside floor. Operating multiples and DCF are not the primary driver here. See the <em>Real-estate yield</em> page for detail.
+                {% else %}
+                <strong>Primaire basis: Vastgoed yield (huur ÷ cap-rate).</strong> Dit is een vastgoedvennootschap; de hoofdwaardering is de duurzame nettohuur gekapitaliseerd tegen een marktconforme cap-rate, met de boekwaarde-NAV als vloer. Operationele multiples en DCF zijn hier niet de primaire waardedriver. Zie de <em>Vastgoed yield</em>-pagina voor het detail.
+                {% endif %}
+            </p>
+        {% elif adaptive_primary_basis == 'asset_based' %}
+            <p style="margin: 0 0 6pt 0; font-size: 8pt; color: hsl(224, 12%, 30%); line-height: 1.55;">
+                {% if _is_fr %}
+                <strong>Base principale : NAV ajustée.</strong> Ce profil d’entreprise est à forte intensité d’actifs ; la valeur principale s’ancre sur le bilan plutôt que sur les bénéfices ou les flux de trésorerie. Les multiples et le DCF sont présentés comme contrôles croisés. Voir la page <em>NAV ajustée</em> pour le détail du pont d’actifs.
+                {% elif _is_en %}
+                <strong>Primary basis: Adjusted NAV.</strong> This business profile is asset-heavy, so the headline anchors on the balance sheet rather than on earnings or cash flow. Multiples and DCF are reported as cross-checks. See the <em>Adjusted NAV</em> page for the asset-bridge detail.
+                {% else %}
+                <strong>Primaire basis: Aangepaste NAV.</strong> Dit bedrijfsprofiel is activumzwaar; de hoofdwaardering verankert op de balans en niet op winst of cashflow. Multiples en DCF worden als kruisverificaties gerapporteerd. Zie de <em>Aangepaste NAV</em>-pagina voor het balansdetail.
+                {% endif %}
+            </p>
+        {% else %}
+            <p style="margin: 0 0 8pt 0; font-size: 8pt; color: hsl(224, 12%, 30%); line-height: 1.55;">
+                {% if _w_mults_pct is not none and _w_dcf_pct is not none and _w_dcf_pct > 0 %}
+                    {% if _is_fr %}
+                    <strong>Base principale : hybride.</strong> {{ _w_mults_pct }} % multiples
+                    {% if _multiple_short %}({{ _multiple_short }}){% endif %} +
+                    {{ _w_dcf_pct }} % DCF{% if not suppress_engine_product_name|default(false) %} — choisi par Upswitch Adaptive pour ce profil{% endif %}.
+                    {% elif _is_en %}
+                    <strong>Primary basis: Hybrid.</strong> {{ _w_mults_pct }}% multiples
+                    {% if _multiple_short %}({{ _multiple_short }}){% endif %} +
+                    {{ _w_dcf_pct }}% DCF{% if not suppress_engine_product_name|default(false) %} — chosen by Upswitch Adaptive for this profile{% endif %}.
+                    {% else %}
+                    <strong>Primaire basis: Hybride.</strong> {{ _w_mults_pct }}% multiples
+                    {% if _multiple_short %}({{ _multiple_short }}){% endif %} +
+                    {{ _w_dcf_pct }}% DCF{% if not suppress_engine_product_name|default(false) %} — door Upswitch Adaptive gekozen voor dit profiel{% endif %}.
+                    {% endif %}
+                {% else %}
+                    {% if _is_multiples_only %}
+                    {% if canonical_fallback_disclosure|default(false) %}{{ canonical_fallback_disclosure }}{% elif is_disclosed_external_market_fallback|default(false) %}<strong>Primaire basis: externe marktreferentie.</strong> De hoofdwaardering gebruikt {{ fallback_applied_multiple|safe_round(2) }}× gerapporteerde EBITDA zonder empirische benchmark, transactietoeschrijving of bedrijfsspecifieke aanpassing; DCF draagt 0% bij.
+                    {% elif _is_fr %}<strong>Base principale : approche de marché.</strong> La valeur principale est entièrement portée par des multiples calibrés ; une vue DCF n’est pas justifiée pour ce profil.
+                    {% elif _is_en %}<strong>Primary basis: Market approach.</strong> The headline is driven entirely by calibrated multiples; a DCF view is not warranted for this profile.
+                    {% else %}<strong>Primaire basis: Marktbenadering.</strong> De hoofdwaardering wordt volledig bepaald door gekalibreerde multiples; DCF is voor dit profiel niet opgenomen.
+                    {% endif %}
+                    {% else %}
+                    {% if _is_fr %}<strong>Base principale : pilotée par les multiples.</strong> L’approche de marché porte la valeur principale ; le DCF est présenté comme contrôle croisé.
+                    {% elif _is_en %}<strong>Primary basis: Multiples-led.</strong> The market approach drives the headline; DCF is reported as a cross-check.
+                    {% else %}<strong>Primaire basis: Multiples-gestuurd.</strong> De marktbenadering bepaalt het hoofdcijfer; DCF wordt als kruisverificatie gerapporteerd.
+                    {% endif %}
+                    {% endif %}
+                {% endif %}
+            </p>
+
+            <table style="width: 100%; font-size: 8pt; border-collapse: collapse;">
+                {% if _w_mults_pct is not none %}
+                <tr style="border-bottom: 1pt solid hsl(224, 12%, 96%);">
+                    <td style="padding: 3pt 0; color: hsl(224, 10%, 45%); border: none;">
+                        {% if _is_fr %}Angle multiples{% elif _is_en %}Multiples lens{% else %}Multiples-lens{% endif %}{% if _multiple_short %} <span style="color: hsl(224, 10%, 55%);">· {{ _multiple_short }}</span>{% endif %}
+                    </td>
+                    <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">
+                        {{ _w_mults_pct }}%
+                    </td>
+                </tr>
+                {% endif %}
+                {% if _w_dcf_pct is not none and _w_dcf_pct > 0 %}
+                <tr style="border-bottom: 1pt solid hsl(224, 12%, 96%);">
+                    <td style="padding: 3pt 0; color: hsl(224, 10%, 45%); border: none;">
+                        {% if _is_fr %}Angle DCF{% elif _is_en %}DCF lens{% else %}DCF-lens{% endif %}
+                        {% if dcf_wacc %}<span style="color: hsl(224, 10%, 55%);">· {{ t.cover_wacc_label }} {{ dcf_wacc|format_percentage }}</span>{% endif %}
+                    </td>
+                    <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">
+                        {{ _w_dcf_pct }}%
+                    </td>
+                </tr>
+                {% endif %}
+                {% if adaptive_multiple_used is defined and adaptive_multiple_used is not none %}
+                <tr>
+                    <td style="padding: 5pt 0; font-weight: 700; font-size: 8.5pt; color: hsl({{ teal_hsl }}); border: none;">
+                        {% if _is_fr %}Multiple appliqué{% elif _is_en %}Applied multiple{% else %}Toegepaste multiple{% endif %}{% if _multiple_short %} <span style="font-weight: 500; opacity: 0.85;">({{ _multiple_short }})</span>{% endif %}
+                    </td>
+                    <td style="padding: 5pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 700; font-size: 8.5pt; color: hsl({{ teal_hsl }}); border: none;">
+                        {{ adaptive_multiple_used|safe_round(2) }}×
+                    </td>
+                </tr>
+                {% endif %}
+            </table>
+
+            {% if _w_dcf_pct is not none and _w_dcf_pct > 0 and (dcf_wacc or dcf_projection_years or dcf_terminal_value_methodology) %}
+            <p style="margin: 8pt 0 0 0; padding: 5pt 7pt; background: hsla({{ teal_hsl }}, 0.04); border-radius: 4pt; font-size: 7pt; color: hsl(224, 12%, 38%); line-height: 1.5;">
+                {% if _is_fr %}<strong>Jambe DCF :</strong>{% elif _is_en %}<strong>DCF leg:</strong>{% else %}<strong>DCF-leg:</strong>{% endif %}
+                {% if dcf_projection_years %}{{ dcf_projection_years }}{% if _is_fr %} ans de prévision{% elif _is_en %}-year forecast{% else %}-jaar prognose{% endif %}{% endif %}
+                {% if dcf_wacc %}{% if dcf_projection_years %} · {% endif %}{{ t.cover_wacc_label }} {{ dcf_wacc|format_percentage }}{% endif %}
+                {% if dcf_terminal_value_methodology == 'exit_multiple' and dcf_terminal_exit_multiple %}
+                    · {% if _is_fr %}multiple de sortie{% elif _is_en %}exit multiple{% else %}exit-multiple{% endif %} {{ dcf_terminal_exit_multiple|safe_round(1) }}×
+                {% elif dcf_terminal_growth_rate %}
+                    · {% if _is_fr %}croissance terminale{% elif _is_en %}terminal growth{% else %}terminale groei{% endif %} {{ dcf_terminal_growth_rate|format_percentage }}
+                {% endif %}
+                {% if dcf_mid_year_discounting %} · {% if _is_fr %}actualisation mi-année{% elif _is_en %}mid-year discounting{% else %}mid-year discontering{% endif %}{% endif %}
+                {% if dcf_has_apv_tax_shield|default(false) and dcf_apv_tax_shield_value %}
+                    · {% if _is_fr %}bouclier fiscal APV{% elif _is_en %}APV tax shield{% else %}APV-belastingschild{% endif %} {{ dcf_apv_tax_shield_value|format_currency }}
+                {% endif %}
+            </p>
+            {% endif %}
+
+            {% if benchmark_sample_size and _w_mults_pct is not none and _w_mults_pct > 0 %}
+            <p style="margin: 4pt 0 0 0; font-size: 7pt; color: hsl(224, 10%, 50%); line-height: 1.5;">
+                {% if _is_fr %}<strong>Jambe multiples :</strong>{% elif _is_en %}<strong>Multiples leg:</strong>{% else %}<strong>Multiples-leg:</strong>{% endif %}
+                {{ benchmark_sample_size }} {% if benchmark_sample_size == 1 %}{{ t.exec_transactions_singular }}{% else %}{{ t.exec_transactions }}{% endif %}{% if benchmark_multiple_mid %}, {% if benchmark_sample_size == 1 %}{{ t.exec_single_reference|lower }}{% else %}{{ t.exec_median_multiple|lower }}{% endif %} {{ benchmark_multiple_mid|safe_round(1) }}×{% endif %}
+                {% if benchmark_sample_size < 3 %}<span style="color: hsl(0, 55%, 45%); font-style: italic;"> · {{ t.exec_insufficient_data_warning }}</span>
+                {% elif benchmark_sample_size < 10 %}<span style="color: hsl(35, 70%, 40%); font-style: italic;"> · {{ t.exec_limited_data }}</span>
+                {% endif %}
+            </p>
+            {% endif %}
+        {% endif %}
+
+        {% if adaptive_methodology_justification %}
+        <p style="margin: 10pt 0 0 0; padding-top: 6pt; border-top: 1pt solid hsl(224, 12%, 96%); font-size: 8pt; color: hsl(224, 12%, 35%); line-height: 1.55;">
+            {% if _is_fr %}<strong>Choix méthodologique.</strong>{% elif _is_en %}<strong>Method selection.</strong>{% else %}<strong>Methodologische keuze.</strong>{% endif %}
+            {{ adaptive_methodology_justification }}
+        </p>
+        {% endif %}
+    </div>
+
+    {# ── 2. Value band card — title locale-aware to actual basis;
+       collapses gracefully when low === mid === high. See screen twin
+       for the full rationale. ──────────────────────────────────── #}
+    {# EV-mid slot must read ``valuation`` (the formula-derived EV-mid the
+       cover headline displays), NOT ``upswitch_adaptive_value`` (the
+       Adaptive engine's blended output). Mirrors screen twin. #}
+    {% set _equity_primary = (enterprise_value_applicability|default('applicable')) == 'not_applicable' or (show_ev_equity_bridge|default(false) and headline_value_basis|default('equity_value') != 'enterprise_value') %}
+    {% set _band_low = equity_value_low if (_equity_primary and equity_value_low is defined) else valuation_low %}
+    {% set _band_mid = equity_value if (_equity_primary and equity_value is defined and equity_value is not none) else (valuation if valuation is defined and valuation is not none else upswitch_adaptive_value) %}
+    {% set _band_high = equity_value_high if (_equity_primary and equity_value_high is defined) else valuation_high %}
+    {# ── Band monotonicity pin (mirrors screen twin + pin_band_monotone)
+       Three different context keys (valuation_low / upswitch_adaptive_value
+       / valuation_high) can come from sub-computations with their own
+       anchors and can put the midpoint outside the displayed band. Squeeze
+       the bounds to surround
+       the authoritative mid. ──────────────────────────────────────────── #}
+    {% if _band_mid is not none and _band_mid is number and _band_mid > 0 %}
+        {% if _band_low is not none and _band_low is number and _band_low > 0 and _band_low > _band_mid %}
+            {% set _band_low = _band_mid %}
+        {% endif %}
+        {% if _band_high is not none and _band_high is number and _band_high > 0 and _band_high < _band_mid %}
+            {% set _band_high = _band_mid %}
+        {% endif %}
+    {% endif %}
+    {% set _is_equity_band = _equity_primary and equity_value is defined and equity_value is not none %}
+    {# The band has a meaningful spread only when ``low < high`` AND the
+       aggregator's ``*_band_is_meaningful`` flag is True (a thin spread can render as identical compact
+       strings, so we suppress the range view and show the headline only). #}
+    {% set _band_meaningful_flag = equity_value_band_is_meaningful if _is_equity_band else valuation_band_is_meaningful %}
+    {% set _band_has_spread = (_band_low is defined and _band_low is not none and _band_high is defined and _band_high is not none and _band_low < _band_high and _band_meaningful_flag|default(true)) %}
+
+    {% if _band_mid is not none %}
+    <div style="margin-top: 8pt; padding: 8pt 12pt; border: 1pt solid hsl(224, 10%, 91%); border-radius: 6pt; background: white; page-break-inside: avoid; break-inside: avoid;">
+        <h4 style="font-size: 9.5pt; margin: 0 0 4pt 0; color: hsl(225, 18%, 12%);">
+            {% if _is_equity_band %}
+                {% if _is_fr %}Fourchette de valeur des capitaux propres{% elif _is_en %}Equity value band{% else %}Equity-waardeband{% endif %}
+            {% else %}
+                {% if _is_fr %}Fourchette de valeur d’entreprise{% elif _is_en %}Enterprise value band{% else %}Enterprise-waardeband{% endif %}
+            {% endif %}
+        </h4>
+        <p style="margin: 0 0 8pt 0; font-size: 7pt; color: hsl(224, 12%, 38%); line-height: 1.45;">
+            {% if _is_equity_band %}
+                {% if minority_interest_pending %}{% if _is_fr %}Capitaux propres pondérés moteur (incl. potentiel DCF), consolidés à 100 % et avant déduction des minoritaires — voir la couverture pour l’ancrage de marché conservateur.{% elif _is_en %}Engine-weighted equity (incl. DCF upside), 100% consolidated and before minority deduction — see the cover for the conservative market anchor.{% else %}Engine-gewogen eigen vermogen (incl. DCF-opwaarts), 100% geconsolideerd en vóór minderheidsaftrek — zie de cover voor het conservatieve marktanker.{% endif %}{% elif _is_fr %}Ce que le vendeur reçoit indicativement après compensation de la position de dette/trésorerie nette (et, le cas échéant, de l'impôt différé).{% elif _is_en %}What the seller indicatively receives after netting the net debt/cash position (and deferred tax where applicable).{% else %}Wat de verkoper indicatief ontvangt na verrekening van de netto schuld-/kaspositie (en, waar van toepassing, latente belasting).{% endif %}
+            {% else %}
+                {% if _is_fr %}Valeur d’entreprise principale avant le pont vers les capitaux propres.{% elif _is_en %}Headline enterprise value before the bridge to equity.{% else %}Hoofdwaardering enterprise value vóór de brug naar equity.{% endif %}
+            {% endif %}
+        </p>
+
+        <table style="width: 100%; font-size: 8pt; border-collapse: collapse;">
+            {% if _band_has_spread %}
+            <tr style="border-bottom: 1pt solid hsl(224, 12%, 96%);">
+                <td style="padding: 3pt 0; color: hsl(224, 10%, 45%); border: none; width: 30%;">
+                    {% if _is_fr %}Estimation basse{% elif _is_en %}Low estimate{% else %}Lage schatting{% endif %}
+                </td>
+                <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 500; color: hsl(224, 14%, 25%); border: none;">
+                    {{ _band_low|format_currency }}
+                </td>
+            </tr>
+            {% endif %}
+            <tr{% if _band_has_spread %} style="border-bottom: 2pt solid hsl({{ teal_hsl }});"{% endif %}>
+                <td style="padding: 6pt 0; font-weight: 700; font-size: 9pt; color: hsl({{ teal_hsl }}); border: none;">
+                    {% if _band_has_spread %}
+                        {% if _is_fr %}Estimation centrale{% elif _is_en %}Central estimate{% else %}Centrale schatting{% endif %}
+                    {% else %}
+                        {% if _is_fr %}Valeur principale{% elif _is_en %}Headline value{% else %}Hoofdwaardering{% endif %}
+                    {% endif %}
+                </td>
+                <td style="padding: 6pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 700; font-size: 11pt; color: hsl({{ teal_hsl }}); border: none;">
+                    {{ _band_mid|format_currency }}
+                </td>
+            </tr>
+            {% if _band_has_spread %}
+            <tr>
+                <td style="padding: 3pt 0; color: hsl(224, 10%, 45%); border: none;">
+                    {% if _is_fr %}Estimation haute{% elif _is_en %}High estimate{% else %}Hoge schatting{% endif %}
+                </td>
+                <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 500; color: hsl(224, 14%, 25%); border: none;">
+                    {{ _band_high|format_currency }}
+                </td>
+            </tr>
+            {% endif %}
+        </table>
+
+        {% if _band_has_spread %}
+        <p style="margin: 8pt 0 0 0; font-size: 7pt; color: hsl(224, 10%, 50%); line-height: 1.45;">
+            {% if _is_fr %}
+            Les lignes basse et haute résument la sensibilité et la dispersion méthodologique ; la fourchette est affichée de manière transparente à côté de la valeur principale.
+            {% elif _is_en %}
+            The low and high rows summarise sensitivity and methodological spread; the band is shown transparently alongside the headline figure.
+            {% else %}
+            De lage en hoge rij vatten sensitiviteit en methodespreiding samen; de bandbreedte staat transparant naast het hoofdcijfer.
+            {% endif %}
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {# ── Assumptions footnote ──────────────────────────────────────────
+       Moved BEFORE the macro's citations rail during the 2026-05-15
+       migration (was rendered AFTER citations pre-migration) so the
+       page now matches the other method pages' rhythm: body →
+       assumptions → citations → footer. #}
+    <div style="margin-top: 8pt; padding: 6pt 10pt; border-radius: 6pt; border: 1pt solid hsl(224, 10%, 91%); background: hsl(40, 15%, 98%); page-break-inside: avoid; break-inside: avoid;">
+        <p style="margin: 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.5;">
+            {# Asset/yield dossiers get a basis-appropriate footnote instead of
+               the "works fully with market multiples" note (which contradicts
+               the NAV/yield headline). Inline + locale-aware, no new keys. #}
+            {% if is_governed_external_market_reference|default(false) %}
+                <strong>Vastgelegde dossiersynthese.</strong> De 60%/40%-weging wordt niet automatisch aangepast. Zonder attestatie van de adviseursprognose en verificatie van de vastgoedperimeter blijft vrijgave geblokkeerd.
+            {% elif canonical_fallback_disclosure|default(false) %}{{ canonical_fallback_disclosure }}{% elif is_disclosed_external_market_fallback|default(false) %}
+                <strong>Voor uw cliëntendossier.</strong> {{ fallback_reasonableness_note or 'De generieke band van 80%–120% toont uitsluitend onzekerheid en vormt geen empirische percentielverdeling of bewijs van een gerealiseerde transactieprijs.' }}
+            {% elif is_yield_methodology|default(false) %}
+                {% if _is_fr %}<strong>Pour le dossier client.</strong> La valeur principale s’ancre sur le rendement locatif net du bien (loyer ÷ cap-rate) avec la NAV ajustée comme plancher ; les multiples et le DCF sont uniquement des contrôles croisés directionnels sur ce profil d’actifs.{% elif _is_en %}<strong>For your client file.</strong> The headline anchors on the property's net rental yield (rent ÷ cap-rate) with adjusted NAV as the floor; multiples and DCF are directional cross-checks only on this asset profile.{% else %}<strong>Voor uw cliëntendossier.</strong> De hoofdwaardering verankert op de netto huur­opbrengst (huur ÷ cap-rate) met de gecorrigeerde NAV als bodem; multiples en DCF zijn op dit vastgoedprofiel uitsluitend richtinggevende kruiscontroles.{% endif %}
+            {% elif (adaptive_primary_basis|default('')) == 'asset_based' %}
+                {% if _is_fr %}<strong>Pour le dossier client.</strong> Ce profil à forte intensité d’actifs est valorisé sur la valeur nette d’actif ajustée (NAV) du bilan ; les multiples de bénéfices/flux de trésorerie et le DCF sont présentés uniquement comme contrôles croisés, pas comme valeur principale.{% elif _is_en %}<strong>For your client file.</strong> This asset-heavy profile is valued on the adjusted net asset value (NAV) of the balance sheet; earnings/cash-flow multiples and DCF are reported as cross-checks only, not as the headline.{% else %}<strong>Voor uw cliëntendossier.</strong> Dit activumzware profiel wordt gewaardeerd op de gecorrigeerde intrinsieke waarde (NAV) van de balans; winst-/cashflowmultiples en DCF dienen uitsluitend als kruiscontrole, niet als hoofdcijfer.{% endif %}
+            {% elif is_seller_report|default(false) %}
+                {% if _is_multiples_only %}
+                {{ t.adaptive_footnote_multiples_only_seller|safe }}
+                {% else %}
+                {{ t.adaptive_footnote_hybrid_seller|safe }}
+                {% endif %}
+            {% elif _is_multiples_only %}
+                {{ t.adaptive_footnote_multiples_only_advisor|safe }}
+            {% else %}
+                {{ t.adaptive_footnote_hybrid_advisor|safe }}
+            {% endif %}
+        </p>
+    </div>
+
+{% endcall %}

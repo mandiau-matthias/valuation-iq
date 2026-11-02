@@ -1,0 +1,45 @@
+{# Read the sealed market leg, never rebuild it from annual cards or legacy default discounts. #}
+{% set _lang = (locale|default('en')|lower)[:2] %}
+{% set _build = valuation_run.multiples_results.multiple_build_up|default({}) %}
+{% set _earnings = _build.earnings_basis|default({}) %}
+{% set _discounts = _build.discounts|default({}) %}
+{% set _bridge = _build.equity_bridge|default({}) %}
+<div class="saved-pricing-schedule" style="font-size: 8pt; line-height: 1.5; color: #333;">
+<p>{{ canonical_fallback_disclosure }}</p>
+<table style="width: 100%; border-collapse: collapse; margin: 10pt 0;">
+<tr><th style="text-align: left;">{% if _lang == 'fr' %}Base de résultat valorisée{% elif _lang == 'nl' %}Geprijsde resultaatsbasis{% else %}Pricing earnings basis{% endif %} ({{ _earnings.basis|default('—') }})</th><td style="text-align: right;" data-pricing-value="earnings">{{ _earnings.adjusted_earnings|format_currency if _earnings.adjusted_earnings is defined and _earnings.adjusted_earnings is not none else '—' }}</td></tr>
+<tr><th style="text-align: left;">{% if _lang == 'fr' %}Multiple effectif{% elif _lang == 'nl' %}Effectieve multiple{% else %}Effective multiple{% endif %}</th><td style="text-align: right;" data-pricing-value="multiple">{{ _build.effective_multiple|safe_round(6) if _build.effective_multiple is defined and _build.effective_multiple is not none else '—' }}×</td></tr>
+<tr><th style="text-align: left;">{% if _lang == 'fr' %}Valeur d’entreprise — méthode de marché{% elif _lang == 'nl' %}Ondernemingswaarde — marktmethode{% else %}Enterprise value — market method{% endif %}</th><td style="text-align: right;" data-pricing-value="enterprise">{{ _build.enterprise_value|format_currency if _build.enterprise_value is defined and _build.enterprise_value is not none else '—' }}</td></tr>
+</table>
+<p>{{ _earnings.rationale|default('') }}</p>
+{% if _saved_pricing_detail|default('bridge') == 'reference' %}
+<h3>{% if _lang == 'fr' %}Références déclarées{% elif _lang == 'nl' %}Vermelde referenties{% else %}Disclosed references{% endif %}</h3>
+<table style="width: 100%; border-collapse: collapse;">
+{% for _segment in _build.segments|default([]) %}
+<tr><td>{{ _segment.business_type_title|default(_segment.business_type_id) }} · {{ _segment.basis|default('—') }}</td><td style="text-align: right;">{{ _segment.multiple|safe_round(4) if _segment.multiple is not none else '—' }}×</td></tr>
+{% endfor %}
+</table>
+<p>{{ fallback_reference_title|default('—', true) }}{% if fallback_reference_summary %} — {{ fallback_reference_summary }}{% endif %}</p>
+{% if fallback_reference_range_low is not none and fallback_reference_range_high is not none %}
+<p>{% if _lang == 'fr' %}Fourchette de référence déclarée{% elif _lang == 'nl' %}Vermeld referentiebereik{% else %}Disclosed reference range{% endif %}: {{ fallback_reference_range_low }}× — {{ fallback_reference_range_high }}×</p>
+{% endif %}
+{% else %}
+<h3>{% if _lang == 'fr' %}Ajustements enregistrés{% elif _lang == 'nl' %}Opgeslagen aanpassingen{% else %}Saved adjustments{% endif %}</h3>
+<table style="width: 100%; border-collapse: collapse;">
+<thead><tr><th style="text-align: left;">{% if _lang == 'fr' %}Ajustement{% elif _lang == 'nl' %}Aanpassing{% else %}Adjustment{% endif %}</th><th>{% if _lang == 'fr' %}Paramètre (fraction){% elif _lang == 'nl' %}Parameter (fractie){% else %}Parameter (fraction){% endif %}</th><th>{% if _lang == 'fr' %}Facteur cumulé{% elif _lang == 'nl' %}Cumulatieve factor{% else %}Cumulative factor{% endif %}</th></tr></thead>
+<tbody>{% for _row in _discounts.rows|default([]) %}
+<tr><td>{{ _row.label|default(_row.key) }}</td><td style="text-align: right;">{{ _row.parameter if _row.parameter is not none else '—' }}</td><td style="text-align: right;">{{ _row.factor_after if _row.factor_after is not none else '—' }}</td></tr>
+{% endfor %}</tbody>
+</table>
+<p>{% if _lang == 'fr' %}Composition{% elif _lang == 'nl' %}Samenstelling{% else %}Composition{% endif %}: {{ _discounts.composition|default('—') }}. {% if _lang == 'fr' %}Facteur final{% elif _lang == 'nl' %}Eindfactor{% else %}Final factor{% endif %}: {{ _discounts.total_adjustment_factor|default('—') }}.</p>
+{% if _saved_pricing_detail|default('bridge') == 'bridge' %}
+<h3>{% if _lang == 'fr' %}Pont enregistré — méthode de marché{% elif _lang == 'nl' %}Opgeslagen brug — marktmethode{% else %}Saved bridge — market method{% endif %}</h3>
+<table style="width: 100%; border-collapse: collapse;">
+<tr><td>{{ t.cover_ev_label }}</td><td style="text-align: right;">{{ _bridge.enterprise_value|format_currency if _bridge.enterprise_value is defined and _bridge.enterprise_value is not none else '—' }}</td></tr>
+{% for _line in _bridge.lines|default([]) %}<tr><td>{{ _line.label }}</td><td style="text-align: right;">{{ _line.operator|default('') }} {{ _line.amount|format_currency }}</td></tr>{% endfor %}
+<tr><th style="text-align: left;">{{ t.cover_equity_label }}</th><td style="text-align: right;">{{ _bridge.equity_value|format_currency if _bridge.equity_value is defined and _bridge.equity_value is not none else '—' }}</td></tr>
+</table>
+<p>{{ _bridge.nwc_note|default('') }}</p>
+{% endif %}
+{% endif %}
+</div>

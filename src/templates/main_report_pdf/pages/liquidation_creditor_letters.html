@@ -1,0 +1,38 @@
+{#
+    LIQUIDATION ANALYSIS — PAGE: CREDITOR LETTERS (PDF version)
+    PDF twin of main_report/pages/liquidation_creditor_letters.html.
+    Phase 5 §11 — auto-drafted §XX.39 WER / Art. 38 Fw letters.
+#}
+{% set lr = liquidation_report %}
+{% if lr.creditor_letters_orderly %}
+{% set pack = lr.creditor_letters_orderly %}
+<section class="pdf-page liquidation-page">
+    <header class="pdf-section-header">
+        <span class="pdf-section-number">11</span>
+        <h1 class="pdf-section-title">{{ lr.t.creditor_letters_section_title }}</h1>
+        <span class="pdf-badge">{{ lr.t.creditor_letters_section_subtitle }}</span>
+    </header>
+
+    <div class="pdf-card pdf-card-muted">
+        <div class="pdf-card-eyebrow">{{ lr.t.creditor_letters_cover_label }}</div>
+        <div class="pdf-prose">{{ pack.cover_note }}</div>
+    </div>
+
+    {% for letter in pack.letters %}
+    <div class="pdf-card {% if letter.urgency == 'urgent' %}pdf-card-success{% elif letter.urgency == 'hardship' %}pdf-card-warning{% else %}pdf-card-primary{% endif %}">
+        <div class="pdf-card-eyebrow">{{ lr.t.creditor_letters_subject }}: {{ letter.subject_line }}</div>
+        <div class="pdf-prose-small"><strong>{{ letter.urgency_label }}</strong> · {{ lr.t.creditor_letters_expected_dividend }}: €{{ letter.expected_dividend_amount|format_eur_amount }} ({{ letter.expected_dividend_pct|format_factor_pct(1) }})</div>
+        <div class="pdf-prose">
+            <p>{{ letter.salutation_placeholder }}</p>
+            {% for para in letter.body_paragraphs %}<p>{{ para }}</p>{% endfor %}
+            <p style="white-space: pre-line;">{{ letter.closing }}</p>
+            <p><em>{{ letter.signatory_placeholder }}</em></p>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if pack.sources %}
+    <div class="pdf-sources">{{ lr.t.sources_label }}: {{ pack.sources|join(' · ') }}</div>
+    {% endif %}
+</section>
+{% endif %}

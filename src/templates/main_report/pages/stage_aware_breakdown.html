@@ -1,0 +1,163 @@
+{#
+    TRANSPARENT CALCULATION BREAKDOWN (Screen + PDF) — BET-463.
+
+    Conditional page — only when show_stage_aware_breakdown_section is true,
+    which is driven by the presence of the `stage_aware_breakdown` payload Titan
+    attaches to valuation_data before /render. Absent payload → section is a
+    byte-identical no-op (legacy reports unchanged).
+
+    Honest-rendering invariants (the context already enforces these; the
+    template must not re-introduce a point where one is forbidden):
+      • display == 'band_only'        → render ONLY the range low – high.
+                                         stage_aware_breakdown.headline.point is
+                                         null and must NOT be printed.
+      • display == 'point_and_band'   → render the point AND the band.
+      • A method with value/contribution == null renders an em-dash
+        (format_eur_or_dash).
+      • reconciles_to_headline gates the reconciliation claim — when false a
+        neutral "indicative blend" note is shown instead. Never fabricated.
+
+    Sits AFTER the valuation/weighted synthesis section (it explains how that
+    headline was derived) and BEFORE owner profiling.
+
+    Context: t (ReportTranslations), stage_aware_breakdown: {
+      stage, stage_is_known, tier, tier_is_known, tier_label, display,
+      headline: {point, low, high}, methods[], selection_rationale,
+      benchmark_provenance_ids[], caveats[], reconciles_to_headline,
+      reconciliation_delta, plus localised chrome (section_title, …).
+    }
+#}
+
+{% set sab = stage_aware_breakdown %}
+
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div style="max-width: 760px; margin: 0 auto;">
+        {# ── Header ── #}
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+            <span style="background: hsl(var(--primary)); color: white; font-size: 11px; font-weight: 700; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                ∑
+            </span>
+            <div>
+                <h2 style="font-size: 18px; font-weight: 700; color: hsl(var(--foreground)); margin: 0;">
+                    {{ sab.section_title }}
+                </h2>
+                <p style="font-size: 13px; color: hsl(var(--muted-foreground)); margin: 4px 0 0 0;">
+                    {{ sab.section_subtitle }}
+                </p>
+            </div>
+        </div>
+
+        {# ── Stage / tier + headline (band-only vs point+band) ── #}
+        <div style="background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 12px; padding: 24px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+                {% if sab.stage %}
+                <span style="background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em;">
+                    {{ sab.stage_label }}: {{ sab.stage }}
+                </span>
+                {% endif %}
+                {% if sab.tier_label or sab.tier %}
+                <span style="background: hsl(var(--primary) / 0.1); color: hsl(var(--primary)); font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em;">
+                    {{ sab.tier_label_heading }}: {{ sab.tier_label or sab.tier }}
+                </span>
+                {% endif %}
+            </div>
+
+            {% if sab.display == 'point_and_band' and sab.headline.point is not none %}
+            {# ── Point + band ── #}
+            <p style="font-size: 26px; font-weight: 700; color: hsl(var(--foreground)); margin: 0; font-family: 'JetBrains Mono', monospace;">
+                € {{ sab.headline.point | format_eur_amount }}
+            </p>
+            <p style="font-size: 13px; color: hsl(var(--muted-foreground)); margin: 6px 0 0 0;">
+                € {{ sab.headline.low | format_eur_amount }} – € {{ sab.headline.high | format_eur_amount }}
+            </p>
+            {% else %}
+            {# ── Band only (indicative / public): NO point estimate ── #}
+            <p style="font-size: 22px; font-weight: 700; color: hsl(var(--foreground)); margin: 0; font-family: 'JetBrains Mono', monospace;">
+                € {{ sab.headline.low | format_eur_amount }} – € {{ sab.headline.high | format_eur_amount }}
+            </p>
+            {% endif %}
+        </div>
+
+        {# ── Methods table (label, weight %, contribution €) — payload order ── #}
+        {% if sab.methods %}
+        <div style="margin-bottom: 20px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <thead>
+                    <tr style="border-bottom: 2px solid hsl(var(--border));">
+                        <th style="text-align: left; padding: 8px 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--muted-foreground));">
+                            {{ sab.methods_heading }}
+                        </th>
+                        <th style="text-align: right; padding: 8px 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--muted-foreground));">
+                            {{ sab.weight_heading }}
+                        </th>
+                        <th style="text-align: right; padding: 8px 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--muted-foreground));">
+                            {{ sab.contribution_heading }}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in sab.methods %}
+                    <tr style="border-bottom: 1px solid hsl(var(--border));">
+                        <td style="text-align: left; padding: 8px 6px; color: hsl(var(--foreground)); font-weight: 600;">
+                            {{ m.label }}
+                        </td>
+                        <td style="text-align: right; padding: 8px 6px; color: hsl(var(--muted-foreground)); font-family: 'JetBrains Mono', monospace;">
+                            {% if m.weight is not none %}{{ m.weight | format_factor_pct(0) }}{% else %}—{% endif %}
+                        </td>
+                        <td style="text-align: right; padding: 8px 6px; color: hsl(var(--foreground)); font-family: 'JetBrains Mono', monospace;">
+                            {% if m.contribution is not none %}€ {{ m.contribution | format_eur_or_dash }}{% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {# ── Reconciliation note — only claim re-derivation when true ── #}
+            <p style="font-size: 11px; line-height: 1.5; color: hsl(var(--muted-foreground)); margin: 10px 0 0 0;">
+                {% if sab.reconciles_to_headline %}
+                    {{ sab.reconciles_note }}
+                {% else %}
+                    {{ sab.indicative_blend_note }}
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+
+        {# ── Selection rationale ── #}
+        {% if sab.selection_rationale %}
+        <div style="margin-bottom: 20px;">
+            <p style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--muted-foreground)); margin: 0 0 6px 0;">
+                {{ sab.rationale_label }}
+            </p>
+            <p style="font-size: 13px; line-height: 1.6; color: hsl(var(--foreground)); margin: 0;">
+                {{ sab.selection_rationale }}
+            </p>
+        </div>
+        {% endif %}
+
+        {# ── Caveats — the honest stage disclaimer (caveats[0]) + the rest ── #}
+        {% if sab.caveats %}
+        <div style="background: hsl(var(--muted)); border: 1px solid hsl(var(--border)); border-radius: 12px; padding: 16px 20px; margin-bottom: 16px;">
+            <p style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--muted-foreground)); margin: 0 0 8px 0;">
+                {{ sab.caveats_label }}
+            </p>
+            <ul style="margin: 0; padding-left: 18px;">
+                {% for c in sab.caveats %}
+                <li style="font-size: 12px; line-height: 1.6; color: hsl(var(--foreground)); margin: 0 0 4px 0;">
+                    {{ c }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {# ── Benchmark provenance / audit line ── #}
+        {% if sab.benchmark_provenance_ids %}
+        <p style="font-size: 11px; line-height: 1.5; color: hsl(var(--muted-foreground)); margin: 0;">
+            {{ sab.provenance_label }}: {{ sab.benchmark_provenance_ids | join(', ') }}
+        </p>
+        {% endif %}
+    </div>
+</div>

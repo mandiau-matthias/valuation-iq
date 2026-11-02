@@ -1,0 +1,119 @@
+{#
+    REVENUE MULTIPLE VALUATION — screen version (Aurora design tokens)
+    ====================================================================
+    Screen twin of `main_report_pdf/pages/revenue_multiple_valuation.html`.
+
+    Same gating contract: rendered only when `has_revenue_multiple_page`
+    is True.  Aurora tokens (`var(--space-*)`, `var(--report-*)`)
+    replace the PDF's hardcoded HSL.  Mirrors the rhythm of the
+    existing screen twin `ebitda_multiple_valuation.html` so the SME
+    track shows EV/Sales / EV-EBITDA / SDE / DCF / NAV as five
+    consistent dossiers.
+
+    Migrated 2026-05-15 to use the shared `method_section` macro so
+    the wrapper (page header, section title, citations rail, footer)
+    is defined once across all method pages × both trees.  The
+    pre-migration screen template silently omitted the page footer
+    (the macro now adds it automatically — small bug fix bundled with
+    the migration).
+
+    Context variables consumed (mirror of PDF twin):
+      has_revenue_multiple_page (bool)
+      revenue_multiple_section_number (str|None)
+      revenue_multiple_page_number (int|None)
+      revenue_method (MethodResult — hoisted from engine in aggregator)
+      operating_revenue (float — preferred over `revenue` for
+                                  cover-anchored consistency)
+      revenue (float — fallback)
+      revenue_multiple_applied (float)
+      revenue_multiple_low, revenue_multiple_high (band)
+      ev_revenue_enterprise_value (engine output)
+      revenue_growth_3y_cagr (decimal ratio — exact three-year horizon)
+      revenue_sensitivity_matrix_2d / revenue_sensitivity_metric / revenue_sensitivity_multiple
+#}
+
+{% from "shared/macros/method_section.html" import method_section with context %}
+
+{% call method_section(
+    method_key='revenue_multiple',
+    section_number=revenue_multiple_section_number|default('R'),
+    title=t.calib_title ~ ' — EV/Sales',
+    subtitle=t.calib_multiples_intro,
+    badge_label='EV/Sales',
+    tree_root='main_report',
+    page_number=revenue_multiple_page_number,
+    total_pages=total_pages,
+    method=revenue_method
+) %}
+
+
+
+    {# EBITDA's shared waterfall is not an EV/Sales calibration schedule.
+       The saved revenue method and its own EV band are disclosed below. #}
+
+    {# NOTE: _calibration_ledger.html intentionally NOT included here.
+       Consolidated multi-method ledger is owned by the calibration
+       page (renders directly after this dossier). Dedupe-2026-05-03. #}
+
+    {# Sales × multiple summary card.  Prefers operating_revenue when
+       present so this page agrees with the cover Omzet stat. #}
+    {% set _top_line = revenue_valuation_basis|default(operating_revenue|default(revenue)) %}
+    {% if _top_line and _top_line|float > 0 %}
+    <div style="margin-top: var(--space-4); padding: var(--space-3); border: 1pt solid hsl(var(--report-slate-200)); border-left: 3pt solid hsl({{ teal_hsl }}); border-radius: 6pt; page-break-inside: avoid; break-inside: avoid;">
+        <h4 style="font-size: 9.5pt; margin: 0 0 var(--space-2) 0; color: hsl(var(--report-slate-900));">{{ t.revenue_multiple_summary_title }}</h4>
+
+        <table style="width: 100%; font-size: var(--font-size-sm); border-collapse: collapse;">
+            <tr style="border-bottom: 1pt solid hsl(var(--report-slate-100));">
+                <td style="padding: 3pt 0; color: hsl(var(--report-text-muted)); border: none;">
+                    {% if operating_revenue %}{{ t.revenue_multiple_operating_revenue_label }}{% else %}{{ t.revenue_multiple_revenue_label }}{% endif %}
+                </td>
+                <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: hsl(var(--report-slate-900)); border: none;">{{ _top_line|format_currency }}</td>
+            </tr>
+            <tr style="border-bottom: 1pt solid hsl(var(--report-slate-100));">
+                <td style="padding: 3pt 0; color: hsl(var(--report-text-muted)); border: none;">× {{ t.revenue_multiple_multiple_label }}</td>
+                <td style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: hsl(var(--report-slate-900)); border: none;">≈{{ revenue_multiple_applied|safe_round(4) }}×</td>
+            </tr>
+            {% if ev_revenue_enterprise_value is defined and ev_revenue_enterprise_value is not none %}
+            <tr>
+                <td style="padding: var(--space-1) 0; font-weight: 700; font-size: 9pt; color: hsl({{ teal_hsl }}); border: none;">= {{ t.dcf_enterprise_value_label }}</td>
+                <td style="padding: var(--space-1) 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 9pt; color: hsl({{ teal_hsl }}); border: none;">{{ ev_revenue_enterprise_value|format_currency }}</td>
+            </tr>
+            {% endif %}
+        </table>
+
+        {% if revenue_multiple_low is defined and revenue_multiple_high is defined and revenue_multiple_low is not none and revenue_multiple_high is not none %}
+        <p style="margin: var(--space-2) 0 0 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">
+            {{ t.revenue_multiple_range_label }}: <strong style="color: hsl(var(--report-slate-900));">{{ revenue_multiple_low|safe_round(2) }}× — {{ revenue_multiple_high|safe_round(2) }}×</strong>
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {# Sales × multiple sensitivity matrix — screen partial may not
+       exist yet (PDF-only at audit time); `ignore missing` lets it
+       skip gracefully until a screen twin is added. #}
+    {% with multiple_sensitivity_matrix_2d=revenue_sensitivity_matrix_2d,
+            multiple_sensitivity_metric=revenue_sensitivity_metric,
+            multiple_sensitivity_multiple=revenue_sensitivity_multiple,
+            metric_base=_top_line,
+            multiple_base=revenue_multiple_applied,
+            metric_label=t.revenue_multiple_metric_label,
+            multiple_axis_label=t.revenue_multiple_axis_label %}
+    {% include "main_report/components/_multiple_sensitivity_matrix.html" ignore missing %}
+    {% endwith %}
+
+    {# Observed three-year CAGR is a descriptive metric, not a PEG valuation rule. #}
+    {% if revenue_growth_3y_cagr is defined and revenue_growth_3y_cagr is not none %}
+    <p style="margin-top: 12pt; font-size: 8pt; line-height: 1.5;">
+        {{ t.revenue_multiple_growth_cagr_label }}: <strong>{{ (revenue_growth_3y_cagr|float * 100)|safe_round(1) }}%</strong>
+    </p>
+    {% endif %}
+
+    {# Assumptions / sources footnote. #}
+    <div style="margin-top: var(--space-4); padding: var(--space-3); border-radius: 6pt; border: 1pt solid hsl(var(--report-slate-200)); background: hsl(var(--report-cream)); page-break-inside: avoid; break-inside: avoid;">
+        <p style="margin: 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.5;">
+            {{ t.revenue_multiple_assumptions_note }}
+        </p>
+    </div>
+
+{% endcall %}

@@ -1,0 +1,49 @@
+{#
+    LIQUIDATION ANALYSIS — PAGE: STRATEGIC BUYER SCENARIOS (PDF version)
+    PDF twin of main_report/pages/liquidation_buyer_scenarios.html.
+    Phase 5 §00c — McKinsey Ch. 18 + Damodaran Ch. 24 buyer profiles.
+#}
+{% set lr = liquidation_report %}
+{% if lr.strategic_buyer_scenarios and lr.strategic_buyer_scenarios.assessment_status == "basis_reconciled_and_supported" %}
+{% set bs = lr.strategic_buyer_scenarios %}
+<section class="pdf-page liquidation-page">
+    <header class="pdf-section-header">
+        <span class="pdf-section-number">00c</span>
+        <h1 class="pdf-section-title">{{ lr.t.buyer_scenarios_section_title }}</h1>
+        <span class="pdf-badge">{{ lr.t.buyer_scenarios_section_subtitle }}</span>
+    </header>
+
+    <div class="pdf-grid pdf-grid-3">
+        {% for s in bs.scenarios %}
+        <div class="pdf-card {% if s.profile == 'strategic' %}pdf-card-success{% elif s.profile == 'financial' %}pdf-card-warning{% else %}pdf-card-primary{% endif %}">
+            <div class="pdf-card-eyebrow">{{ s.label }}</div>
+            <table class="pdf-table pdf-table-compact">
+                <tbody>
+                    <tr><td>{{ lr.t.buyer_scenarios_floor }}</td><td class="pdf-num">€{{ s.bid_floor|format_eur_amount }}</td></tr>
+                    <tr class="pdf-row-headline"><td>{{ lr.t.buyer_scenarios_anchor }}</td><td class="pdf-num">€{{ s.bid_anchor|format_eur_amount }}</td></tr>
+                    <tr><td>{{ lr.t.buyer_scenarios_ceiling }}</td><td class="pdf-num">€{{ s.bid_ceiling|format_eur_amount }}</td></tr>
+                </tbody>
+            </table>
+            <div class="pdf-prose-small">
+                {{ s.floor_multiplier_of_lv|float|safe_round(2) }}–{{ s.ceiling_multiplier_of_lv|float|safe_round(2) }}× {{ lr.t.buyer_scenarios_lv_multiplier }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% for s in bs.scenarios %}
+    <div class="pdf-card pdf-card-muted">
+        <div class="pdf-card-eyebrow">{{ s.label }}</div>
+        <div class="pdf-prose">{{ s.rationale }}</div>
+    </div>
+    {% endfor %}
+
+    <div class="pdf-card pdf-card-primary">
+        <div class="pdf-prose">{{ bs.rationale }}</div>
+    </div>
+
+    {% if bs.sources %}
+    <div class="pdf-sources">{{ lr.t.sources_label }}: {{ bs.sources|join(' · ') }}</div>
+    {% endif %}
+</section>
+{% endif %}

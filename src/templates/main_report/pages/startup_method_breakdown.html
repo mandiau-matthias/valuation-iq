@@ -1,0 +1,444 @@
+{#
+    STARTUP VALUATION — METHOD BREAKDOWN (Screen/Browser version)
+
+    Three-method audit trail (Berkus / Scorecard / VC backsolve).
+    PDF twin: main_report_pdf/pages/startup_method_breakdown.html
+
+    Localised via ``startup_report.t.*`` — see
+    ``services/reports/startup_report_context.py`` for the translation
+    table.  Values that interpolate (section titles, captions) use
+    ``str.replace`` rather than ``|format`` so a stray ``{`` in user
+    content can't blow up rendering.
+#}
+{% set br = startup_report.berkus %}
+{% set sc = startup_report.scorecard %}
+{% set vc = startup_report.vc %}
+{% set sf = startup_report.saas_forward %}
+
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div class="section-header">
+        {# B11 — section badge bound to context. #}
+        <span class="section-number">{{ startup_method_breakdown_section_number|default('03') }}</span>
+        <h1 class="section-title" style="margin: 0;">{{ startup_report.t.method_breakdown_title }}</h1>
+    </div>
+
+    {# Berkus #}
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-3) 0 var(--space-2);">
+        {{ startup_report.t.berkus_section_title_template.replace('{value}', br.pre_money|format_eur_amount) }}
+    </h2>
+    <p style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted)); margin-bottom: var(--space-2);">
+        {{ startup_report.t.berkus_section_caption.replace('{max}', br.max_per_milestone|format_eur_amount) }}
+    </p>
+    <table class="data-table" style="width: 100%; font-size: var(--font-size-sm); margin-bottom: var(--space-4);">
+        <thead>
+            <tr>
+                <th style="text-align: left;">{{ startup_report.t.berkus_col_milestone }}</th>
+                <th style="text-align: right;">{{ startup_report.t.berkus_col_score }}</th>
+                <th style="text-align: right;">{{ startup_report.t.berkus_col_contribution }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in br.contributions %}
+            <tr>
+                <td>{{ c.label }}</td>
+                {# B6 — mini progress bar so an investor scanning the
+                   five rows can spot the puller at a glance.  The
+                   numeric "75 / 100" stays for precision; the bar
+                   sits above it for quick scan.  Width is the score
+                   percentage; colour follows the same primary tint as
+                   the rest of the brand stack so the bar reads as
+                   "filled portion of the milestone" rather than a
+                   competing chart element. #}
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace; min-width: 110pt;">
+                    <div style="display: inline-flex; flex-direction: column; align-items: flex-end; gap: 2pt;">
+                        <div style="width: 80pt; height: 5pt; background: hsl(var(--report-slate-200)); border-radius: 3pt; overflow: hidden;">
+                            <div style="width: {{ c.score_pct|default(0)|float|round(0)|int }}%; height: 100%; background: hsl(var(--report-primary)); border-radius: 3pt;"></div>
+                        </div>
+                        <span>{{ c.score_pct }}/100</span>
+                    </div>
+                </td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ c.value|format_currency }}</td>
+            </tr>
+            {% if c.evidence %}
+            <tr>
+                <td colspan="3" style="padding: 0 0 6pt 0;">
+                    <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.5; padding: 4pt 8pt; border-left: 2pt solid hsl(var(--report-primary)); background: rgba(244, 99, 35, 0.04);">
+                        <span style="font-weight: 600; color: hsl(var(--report-text));">{{ startup_report.t.founder_evidence_label }}:</span>
+                        <em>{{ c.evidence }}</em>
+                    </div>
+                </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {# Scorecard #}
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-3) 0 var(--space-2);">
+        {{ startup_report.t.scorecard_section_title_template.replace('{value}', sc.pre_money|format_eur_amount) }}
+    </h2>
+    <p style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted)); margin-bottom: var(--space-2);">
+        {{ startup_report.t.scorecard_section_caption.replace('{avg}', sc.average_pre_money|format_eur_amount).replace('{mult}', sc.blended_multiplier|safe_round(2)|string) }}
+    </p>
+    <table class="data-table" style="width: 100%; font-size: var(--font-size-sm); margin-bottom: var(--space-4);">
+        <thead>
+            <tr>
+                <th style="text-align: left;">{{ startup_report.t.scorecard_col_factor }}</th>
+                <th style="text-align: right;">{{ startup_report.t.scorecard_col_weight }}</th>
+                <th style="text-align: right;">{{ startup_report.t.scorecard_col_score }}</th>
+                <th style="text-align: right;">{{ startup_report.t.scorecard_col_multiplier }}</th>
+                <th style="text-align: right;">{{ startup_report.t.scorecard_col_weighted }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in sc.factors %}
+            <tr>
+                <td>{{ f.label }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ (f.weight * 100)|safe_round(0) }}%</td>
+                {# B6 — mini progress bar mirroring the Berkus column.
+                   Width = score percentage, primary brand colour. #}
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace; min-width: 110pt;">
+                    <div style="display: inline-flex; flex-direction: column; align-items: flex-end; gap: 2pt;">
+                        <div style="width: 80pt; height: 5pt; background: hsl(var(--report-slate-200)); border-radius: 3pt; overflow: hidden;">
+                            <div style="width: {{ f.score_pct|default(0)|float|round(0)|int }}%; height: 100%; background: hsl(var(--report-primary)); border-radius: 3pt;"></div>
+                        </div>
+                        <span>{{ f.score_pct }}/100</span>
+                    </div>
+                </td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ f.multiplier|safe_round(2) }}×</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ f.weighted_multiplier|safe_round(3) }}</td>
+            </tr>
+            {% if f.evidence %}
+            <tr>
+                <td colspan="5" style="padding: 0 0 6pt 0;">
+                    <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.5; padding: 4pt 8pt; border-left: 2pt solid hsl(var(--report-primary)); background: rgba(244, 99, 35, 0.04);">
+                        <span style="font-weight: 600; color: hsl(var(--report-text));">{{ startup_report.t.founder_evidence_label }}:</span>
+                        <em>{{ f.evidence }}</em>
+                    </div>
+                </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {# SaaS Forward Multiple #}
+    {% if sf and sf.available %}
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-3) 0 var(--space-2);">
+        {{ startup_report.t.saas_forward_section_title_template.replace('{value}', sf.pre_money|format_eur_amount) }}
+    </h2>
+    <p style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted)); margin-bottom: var(--space-2);">
+        {{ startup_report.t.saas_forward_section_caption }}
+    </p>
+    <table class="data-table" style="width: 100%; font-size: var(--font-size-sm); margin-bottom: var(--space-4);">
+        <tbody>
+            <tr>
+                <td>{{ startup_report.t.saas_label_current_arr }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ sf.current_arr|format_currency }}</td>
+            </tr>
+            <tr>
+                <td>{{ startup_report.t.saas_label_forward_arr }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ sf.forward_arr|format_currency }}</td>
+            </tr>
+            <tr>
+                <td>{{ startup_report.t.saas_label_mom_growth_used }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ sf.forward_mom_growth_pct|safe_round(1) }}%</td>
+            </tr>
+            <tr>
+                <td>{{ startup_report.t.saas_label_base_multiple }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ sf.base_multiple|safe_round(2) }}×</td>
+            </tr>
+            <tr>
+                <td>{{ startup_report.t.saas_label_risk_discount }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ ((1 - sf.risk_discount) * 100)|safe_round(0) }}%</td>
+            </tr>
+            {% if sf.churn_drag and sf.churn_drag > 0 %}
+            <tr>
+                <td>{{ startup_report.t.saas_label_churn_drag }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">-{{ (sf.churn_drag * 100)|safe_round(0) }}%</td>
+            </tr>
+            {% endif %}
+            <tr style="font-weight: 600;">
+                <td>{{ startup_report.t.saas_label_applied_multiple }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ sf.applied_multiple|safe_round(2) }}×</td>
+            </tr>
+        </tbody>
+    </table>
+    {% endif %}
+
+    {# VC Method #}
+    {% if vc.pre_money and vc.pre_money > 0 %}
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-3) 0 var(--space-2);">
+        {{ startup_report.t.vc_section_title_template.replace('{value}', vc.pre_money|format_eur_amount) }}
+    </h2>
+
+    {# Formula walkthrough — line-by-line EV/Revenue math with the
+       founder's actual inputs substituted in.  Lives in the report
+       (not the input panel) so the reader who isn't keeping the data
+       collection page open can audit the chain in one glance.  Audit
+       issue B1 — moved here from the panel where it didn't belong. #}
+    {% if vc.year5_revenue and vc.exit_revenue_multiple and vc.target_roi_x %}
+    <div class="card" style="padding: var(--space-3) var(--space-4); margin-bottom: var(--space-3); background: rgba(244, 99, 35, 0.04); border-left: 3pt solid hsl(var(--report-primary));">
+        <div style="font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-primary)); margin-bottom: var(--space-2);">
+            {{ startup_report.t.vc_formula_walkthrough_title }}
+        </div>
+        <table style="width: 100%; max-width: 32rem; font-size: var(--font-size-sm);">
+            <tbody>
+                <tr>
+                    <td style="padding: 2pt 0; color: hsl(var(--report-text-muted));">{{ startup_report.t.vc_formula_row_y5 }}</td>
+                    <td style="padding: 2pt 0; text-align: right; font-family: 'JetBrains Mono', monospace;">{{ vc.year5_revenue|format_currency }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 2pt 0; color: hsl(var(--report-text-muted));">{{ startup_report.t.vc_formula_row_multiply }}</td>
+                    <td style="padding: 2pt 0; text-align: right; font-family: 'JetBrains Mono', monospace;">× {{ vc.exit_revenue_multiple|safe_round_or_dash(1) }}×</td>
+                </tr>
+                <tr style="border-top: 1pt solid hsl(var(--report-border)); font-weight: 600;">
+                    <td style="padding: 4pt 0;">{{ startup_report.t.vc_formula_row_exit_value }}</td>
+                    <td style="padding: 4pt 0; text-align: right; font-family: 'JetBrains Mono', monospace;">{{ vc.terminal_value|format_currency }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 2pt 0; color: hsl(var(--report-text-muted));">{{ startup_report.t.vc_formula_row_divide_roi }}</td>
+                    <td style="padding: 2pt 0; text-align: right; font-family: 'JetBrains Mono', monospace;">÷ {{ vc.target_roi_x|safe_round_or_dash(0) }}×</td>
+                </tr>
+                <tr style="border-top: 1.5pt solid hsl(var(--report-primary)); font-weight: 700; color: hsl(var(--report-primary));">
+                    <td style="padding: 5pt 0;">{{ startup_report.t.vc_formula_row_pre_money }}</td>
+                    <td style="padding: 5pt 0; text-align: right; font-family: 'JetBrains Mono', monospace; font-size: var(--font-size-md);">{{ vc.pre_money|format_currency }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <p style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); margin-top: var(--space-2); line-height: 1.5; max-width: 48rem;">
+            {{ startup_report.t.vc_formula_walkthrough_caption }}
+        </p>
+    </div>
+    {% endif %}
+
+    <table class="data-table" style="width: 100%; font-size: var(--font-size-sm);">
+        <tbody>
+            <tr>
+                <td>{{ startup_report.t.vc_label_y5_revenue_projection }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ vc.year5_revenue|format_currency }}{% if not vc.used_year5_projection %} <span style="display: inline-block; margin-left: 6pt; padding: 1pt 6pt; background: hsl(38 95% 92%); color: hsl(38 100% 28%); border-radius: 999px; font-size: var(--font-size-xs); font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; font-family: inherit;">{{ startup_report.t.vc_extrapolated_callout_label }}</span>{% endif %}</td>
+            </tr>
+            {# Promoted disclaimer — fires when the founder didn't enter
+               Y5 directly. Tinted callout (vs the previous muted grey
+               suffix) so an investor can't read past it. Audit issue D7. #}
+            {% if not vc.used_year5_projection %}
+            <tr>
+                <td colspan="2" style="padding: 4pt 8pt; border-left: 2pt solid hsl(38 95% 50%); background: hsl(45 95% 96%); font-size: var(--font-size-xs); line-height: 1.5; color: hsl(var(--report-text));">
+                    {{ startup_report.t.vc_extrapolated_callout_body }}
+                </td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td>{{ startup_report.t.vc_label_exit_multiple }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ vc.exit_revenue_multiple|safe_round_or_dash(1) }}×</td>
+            </tr>
+            {# B3 — Inline source citation. The multiple is the most-leveraged
+               input on the EV/Revenue calc; M&A readers expect to see the
+               peer median + range right next to it (not 200 rows below in
+               the comps table). #}
+            {% set vms = startup_report.vc_multiple_source %}
+            <tr>
+                <td colspan="2" style="padding: 4pt 8pt; border-left: 2pt solid hsl(var(--report-primary)); background: rgba(244, 99, 35, 0.04); font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.5;">
+                    {% if vms %}
+                        {% set _vms_caption = startup_report.t.vc_multiple_source_caption %}
+                        {{ _vms_caption.replace('{source}', vms.source).replace('{sector}', vms.sector_label).replace('{p25}', vms.p25|safe_round(1)|string).replace('{p75}', vms.p75|safe_round(1)|string) }}
+                    {% else %}
+                        {{ startup_report.t.vc_multiple_source_caption_unsourced }}
+                    {% endif %}
+                </td>
+            </tr>
+            {# Founder-supplied exit-multiple rationale — surfaces only
+               when the founder typed one in the wizard.  Rendered as an
+               italic quote-styled row immediately below the multiple
+               and its peer-source citation, so the auditor reads
+               "multiple → peer source → why this number" in one pass. #}
+            {% if startup_report.exit_multiple_rationale %}
+            <tr>
+                <td colspan="2" style="padding: 4pt 8pt; border-left: 2pt solid hsl(var(--report-primary)); background: rgba(244, 99, 35, 0.04); font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.5;">
+                    <span style="font-weight: 600; color: hsl(var(--report-text));">{{ startup_report.t.exit_multiple_rationale_label }}:</span>
+                    <em>{{ startup_report.exit_multiple_rationale }}</em>
+                </td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td>{{ startup_report.t.vc_label_terminal_value }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ vc.terminal_value|format_currency }}</td>
+            </tr>
+            <tr>
+                <td>{{ startup_report.t.vc_label_roi_expectation }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ vc.target_roi_x|safe_round_or_dash(0) }}×</td>
+            </tr>
+            <tr>
+                <td>{{ startup_report.t.vc_label_post_money_today }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ vc.post_money|format_currency }}</td>
+            </tr>
+            <tr>
+                <td>{{ startup_report.t.vc_label_expected_dilution_to_exit }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ vc.dilution_pct|safe_round_or_dash(0) }}%</td>
+            </tr>
+        </tbody>
+    </table>
+    {% endif %}
+
+    {# -----------------------------------------------------------------
+       B3 — Pre-money triangulation range, framed as P10/P50/P90.
+       The numbers are the canonical low/mid/high already used elsewhere
+       in the report; we re-label for M&A readers fluent in percentile
+       framing. The caption explicitly notes this is an empirical
+       leg-blend range, NOT a Monte-Carlo distribution, so we don't
+       oversell precision we don't have.
+       ----------------------------------------------------------------- #}
+    {% set dist = startup_report.pre_money_distribution %}
+    {% if dist and dist.p50 and dist.p50 > 0 %}
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-4) 0 var(--space-2);">
+        {{ startup_report.t.pre_money_distribution_title }}
+    </h2>
+    <p style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted)); margin-bottom: var(--space-2); max-width: 56rem;">
+        {{ startup_report.t.pre_money_distribution_caption }}
+    </p>
+    <table class="data-table" style="width: 100%; max-width: 44rem; font-size: var(--font-size-sm); margin-bottom: var(--space-4);">
+        <tbody>
+            <tr>
+                <td>{{ startup_report.t.pre_money_distribution_p10 }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ dist.p10|format_currency }}</td>
+            </tr>
+            <tr style="background: rgba(244, 99, 35, 0.04); font-weight: 600;">
+                <td>{{ startup_report.t.pre_money_distribution_p50 }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ dist.p50|format_currency }}</td>
+            </tr>
+            <tr>
+                <td>{{ startup_report.t.pre_money_distribution_p90 }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ dist.p90|format_currency }}</td>
+            </tr>
+            {% if dist.spread_ratio %}
+            <tr>
+                <td style="color: hsl(var(--report-text-muted));">{{ startup_report.t.pre_money_distribution_spread_label }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-text-muted));">{{ dist.spread_ratio|safe_round(2) }}×</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {# -----------------------------------------------------------------
+       Sensitivity analysis — the institutional "what if Y5 / exit
+       multiple is off by ±20%?" lens.  Renders only when the engine
+       emitted a ``vc_sensitivity`` block (all inputs present).
+       ----------------------------------------------------------------- #}
+    {% set sens = startup_report.vc_sensitivity %}
+    {% if sens %}
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-4) 0 var(--space-2);">
+        {{ startup_report.t.sensitivity_section_title }}
+    </h2>
+    <p style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted)); margin-bottom: var(--space-2); max-width: 52rem;">
+        {{ startup_report.t.sensitivity_section_caption }}
+    </p>
+    <table class="data-table" style="width: 100%; max-width: 44rem; font-size: var(--font-size-sm); margin-bottom: var(--space-2);">
+        <thead>
+            <tr>
+                <th style="text-align: left;">&nbsp;</th>
+                <th style="text-align: right;">{{ startup_report.t.sensitivity_col_y5_low }}</th>
+                <th style="text-align: right;">{{ startup_report.t.sensitivity_col_y5_mid }}</th>
+                <th style="text-align: right;">{{ startup_report.t.sensitivity_col_y5_high }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row_label, row in [
+                (startup_report.t.sensitivity_row_mult_low, sens.grid[0]),
+                (startup_report.t.sensitivity_row_mult_mid, sens.grid[1]),
+                (startup_report.t.sensitivity_row_mult_high, sens.grid[2])
+            ] %}
+            <tr {% if loop.index == 2 %}style="background: rgba(244, 99, 35, 0.04); font-weight: 600;"{% endif %}>
+                <td>{{ row_label }}</td>
+                {% for cell in row %}
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ cell|format_currency }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); margin-bottom: var(--space-4); max-width: 52rem;">
+        {{ startup_report.t.sensitivity_legend }}
+    </p>
+    {% endif %}
+
+    {# -----------------------------------------------------------------
+       Sector comparables — peer EV/EBITDA + EV/Revenue + EBITDA-margin
+       table sourced from Athena (Damodaran corpus + public deals).
+       This is the M&A/VC defensibility hallmark: every input the
+       founder assumed is grounded against published peer multiples.
+       Renders only when Athena returned ≥1 comparable.
+       ----------------------------------------------------------------- #}
+    {% set comps = startup_report.sector_comparables %}
+    {% if comps and comps|length > 0 %}
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-4) 0 var(--space-2);">
+        {{ startup_report.t.comps_section_title }}
+    </h2>
+    <p style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted)); margin-bottom: var(--space-2); max-width: 56rem;">
+        {% set _comps_caption = startup_report.t.comps_section_caption %}
+        {{ _comps_caption.replace('{n}', comps|length|string).replace('{sector}', startup_report.sector|replace('_', ' ')) }}
+    </p>
+    {# Sector comparables table — split EV multiples into P25 / Median /
+       P75 columns instead of packing them into a single slash-delimited
+       cell.  Mirrors the column convention M&A reviewers expect (audit
+       issue #20) and keeps numbers visually aligned with the
+       sensitivity-grid table above (which also uses 3-column low/mid/
+       high). #}
+    <table class="data-table" style="width: 100%; font-size: var(--font-size-sm); margin-bottom: var(--space-2);">
+        <thead>
+            <tr>
+                <th rowspan="2" style="text-align: left; vertical-align: bottom;">{{ startup_report.t.comps_col_business_type }}</th>
+                <th colspan="3" style="text-align: center; border-bottom: 1pt solid hsl(var(--report-border));">{{ startup_report.t.comps_col_ev_ebitda }}</th>
+                <th colspan="3" style="text-align: center; border-bottom: 1pt solid hsl(var(--report-border));">{{ startup_report.t.comps_col_ev_revenue }}</th>
+                <th rowspan="2" style="text-align: right; vertical-align: bottom;">{{ startup_report.t.comps_col_ebitda_margin }}</th>
+                <th rowspan="2" style="text-align: left; vertical-align: bottom;">{{ startup_report.t.comps_col_source }}</th>
+            </tr>
+            <tr>
+                <th style="text-align: right; font-weight: 500; color: hsl(var(--report-text-muted)); font-size: var(--font-size-xs);">{{ startup_report.t.comps_col_p25 }}</th>
+                <th style="text-align: right; font-weight: 600; font-size: var(--font-size-xs);">{{ startup_report.t.comps_col_median }}</th>
+                <th style="text-align: right; font-weight: 500; color: hsl(var(--report-text-muted)); font-size: var(--font-size-xs);">{{ startup_report.t.comps_col_p75 }}</th>
+                <th style="text-align: right; font-weight: 500; color: hsl(var(--report-text-muted)); font-size: var(--font-size-xs);">{{ startup_report.t.comps_col_p25 }}</th>
+                <th style="text-align: right; font-weight: 600; font-size: var(--font-size-xs);">{{ startup_report.t.comps_col_median }}</th>
+                <th style="text-align: right; font-weight: 500; color: hsl(var(--report-text-muted)); font-size: var(--font-size-xs);">{{ startup_report.t.comps_col_p75 }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in comps %}
+            {# Spread checks — em-dash p25/p75 cells when there's no
+               real spread (single Damodaran cell vs distinct percentile
+               bracket).  Without this, identical p25/median/p75 cells
+               looked like a populated range and read as "we surveyed
+               many comps" when in fact only the median was sourced.
+               Audit issue D5. #}
+            {% set ebitda_has_spread = c.ev_ebitda_p25 and c.ev_ebitda_p75 and c.ev_ebitda_p25 != c.ev_ebitda_median and c.ev_ebitda_p75 != c.ev_ebitda_median %}
+            {% set revenue_has_spread = c.ev_revenue_p25 and c.ev_revenue_p75 and c.ev_revenue_p25 != c.ev_revenue_median and c.ev_revenue_p75 != c.ev_revenue_median %}
+            <tr>
+                <td>{{ c.title }}</td>
+                {# EV / EBITDA — three cells.  The median cell is
+                   visually heavier so the eye lands on the canonical
+                   figure first.  P25/P75 collapse to em-dash when no
+                   real spread exists. #}
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-text-muted));">{% if ebitda_has_spread %}{{ c.ev_ebitda_p25|safe_round(1) }}×{% else %}—{% endif %}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600;">{% if c.ev_ebitda_median %}{{ c.ev_ebitda_median|safe_round(1) }}×{% else %}—{% endif %}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-text-muted));">{% if ebitda_has_spread %}{{ c.ev_ebitda_p75|safe_round(1) }}×{% else %}—{% endif %}</td>
+                {# EV / Revenue — same shape. #}
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-text-muted));">{% if revenue_has_spread %}{{ c.ev_revenue_p25|safe_round(1) }}×{% else %}—{% endif %}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600;">{% if c.ev_revenue_median %}{{ c.ev_revenue_median|safe_round(1) }}×{% else %}—{% endif %}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-text-muted));">{% if revenue_has_spread %}{{ c.ev_revenue_p75|safe_round(1) }}×{% else %}—{% endif %}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">
+                    {% if c.typical_ebitda_margin_median %}{{ (c.typical_ebitda_margin_median * 100)|safe_round(0) }}%{% else %}—{% endif %}
+                </td>
+                <td style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">{{ c.multiples_source or '—' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); margin-bottom: var(--space-4); max-width: 52rem;">
+        {{ startup_report.t.comps_band_legend }}
+    </p>
+    {% endif %}
+
+    {% include "main_report/partials/_footer.html" ignore missing %}
+</div>

@@ -1,0 +1,109 @@
+{#
+  Canonical priced-evidence and adjustment projection.
+
+  Rendering invariant: this template may format and label precomputed fields,
+  but it must not add, subtract, multiply or divide monetary values.  The
+  projection service is the sole producer of signed amounts and percentages.
+#}
+{% set _cea_locale = (locale|default('nl'))|lower %}
+{% set _cea_register = priced_evidence_register|default({}) %}
+{% set _cea_projection = actionable_adjustment_projection|default({}) %}
+{% set _cea_lines = actionable_adjustment_lines|default([]) %}
+{% set _cea_show_register = canonical_projection_show_register|default(true) %}
+{% set _cea_show_adjustments = canonical_projection_show_adjustments|default(true) %}
+{% macro _cea_missing_code(field) -%}
+{%- if field == 'source_or_benchmark_id' -%}source-id
+{%- elif field == 'hash_or_locator' -%}hash/locator
+{%- elif field == 'observed_at' -%}observed-at
+{%- elif field == 'published_at' -%}published-at
+{%- elif field == 'snapshot_id' -%}snapshot-id
+{%- elif field == 'freshness_status' -%}freshness
+{%- elif field == 'review_status' -%}review
+{%- elif field == 'evidence_reference_ids' -%}evidence-ids
+{%- elif field == 'evidence_status' -%}evidence-status
+{%- elif field == 'evidence_date' -%}evidence-date
+{%- elif field == 'signed_impact' -%}signed-impact
+{%- else -%}{{ field|replace('_', '-') }}
+{%- endif -%}
+{%- endmacro %}
+
+<p style="margin: 0 0 9pt 0; font-size: 7.5pt; line-height: 1.45; color: hsl(var(--report-text-muted));">
+  {% if _cea_locale == 'fr' %}Ce registre est une projection en lecture seule du run scellé. Les montants et pourcentages sont rendus tels quels; ce modèle ne recalcule aucune valeur.{% elif _cea_locale == 'en' %}This register is a read-only projection of the sealed run. Amounts and percentages are rendered as supplied; this template recalculates no value.{% else %}Dit register is een alleen-lezenprojectie van de verzegelde run. Bedragen en percentages worden ongewijzigd weergegeven; dit sjabloon herberekent geen waarde.{% endif %}
+</p>
+
+<div style="margin-bottom: 9pt; padding: 6pt 8pt; border: 1px solid hsl(var(--report-border)); border-radius: 5pt; font-size: 6.3pt; line-height: 1.45; color: hsl(var(--report-text-muted));">
+  <div style="display: grid; grid-template-columns: 23% 77%; gap: 2pt 5pt;">
+    <strong>{% if _cea_locale == 'fr' %}Run{% elif _cea_locale == 'en' %}Run{% else %}Run{% endif %}</strong>
+    <span style="overflow-wrap: anywhere; font-family: 'JetBrains Mono', monospace;">{{ _cea_register.valuation_run_id|default('-') }}</span>
+    <strong>{% if _cea_locale == 'fr' %}Hachage du run{% elif _cea_locale == 'en' %}Run hash{% else %}Run-hash{% endif %}</strong>
+    <span style="overflow-wrap: anywhere; font-family: 'JetBrains Mono', monospace;">{{ _cea_register.valuation_run_hash|default('-') }}</span>
+    <strong>{% if _cea_locale == 'fr' %}Hachage du registre{% elif _cea_locale == 'en' %}Register hash{% else %}Register-hash{% endif %}</strong>
+    <span style="overflow-wrap: anywhere; font-family: 'JetBrains Mono', monospace;">{{ _cea_register.register_hash|default('-') }}</span>
+    <strong>{% if _cea_locale == 'fr' %}Hachage des ajustements{% elif _cea_locale == 'en' %}Adjustment hash{% else %}Aanpassingshash{% endif %}</strong>
+    <span style="overflow-wrap: anywhere; font-family: 'JetBrains Mono', monospace;">{{ _cea_projection.projection_hash|default('-') }}</span>
+  </div>
+</div>
+
+{% if _cea_show_register %}
+<h3 style="margin: 7pt 0 4pt 0; font-size: 8.5pt;">
+  {% if _cea_locale == 'fr' %}Registre des preuves intégrées au prix{% elif _cea_locale == 'en' %}Priced evidence register{% else %}Register van geprijsd bewijs{% endif %}
+</h3>
+{% if _cea_register.entries|default([]) %}
+<table data-canonical-projection="priced-evidence" style="width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 5.9pt; margin-bottom: 8pt;">
+  <thead>
+    <tr style="border-bottom: 1.5px solid hsl(var(--report-border)); color: hsl(var(--report-text-muted));">
+      <th style="width: 18%; text-align: left; padding: 3pt;">{% if _cea_locale == 'fr' %}Méthode / usage{% elif _cea_locale == 'en' %}Method / use{% else %}Methode / gebruik{% endif %}</th>
+      <th style="width: 27%; text-align: left; padding: 3pt;">{% if _cea_locale == 'fr' %}Source / instantané{% elif _cea_locale == 'en' %}Source / snapshot{% else %}Bron / snapshot{% endif %}</th>
+      <th style="width: 20%; text-align: left; padding: 3pt;">{% if _cea_locale == 'fr' %}Dates{% elif _cea_locale == 'en' %}Dates{% else %}Datums{% endif %}</th>
+      <th style="width: 16%; text-align: left; padding: 3pt;">{% if _cea_locale == 'fr' %}Échantillon{% elif _cea_locale == 'en' %}Sample{% else %}Steekproef{% endif %}</th>
+      <th style="width: 19%; text-align: left; padding: 3pt;">{% if _cea_locale == 'fr' %}Fraîcheur / revue{% elif _cea_locale == 'en' %}Freshness / review{% else %}Versheid / review{% endif %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for entry in _cea_register.entries %}
+    <tr style="border-bottom: 1px solid hsl(var(--report-border)); vertical-align: top;">
+      <td style="padding: 3pt; overflow-wrap: anywhere;"><strong>{{ entry.method_key|replace('_', ' ') }}</strong><br>{{ entry.use|replace('_', ' ') }}</td>
+      <td style="padding: 3pt; overflow-wrap: anywhere;">{{ entry.provider or entry.source_label or entry.source_kind }}<br>{{ entry.source_id or entry.benchmark_id or '-' }}{% if entry.snapshot_id %}<br>{{ entry.snapshot_id }}{% endif %}</td>
+      <td style="padding: 3pt; overflow-wrap: anywhere;">{% if _cea_locale == 'fr' %}observé{% elif _cea_locale == 'en' %}observed{% else %}waargenomen{% endif %}: {{ entry.observed_at or '-' }}<br>{% if _cea_locale == 'fr' %}publié{% elif _cea_locale == 'en' %}published{% else %}gepubliceerd{% endif %}: {{ entry.published_at or '-' }}</td>
+      <td style="padding: 3pt;">{% if entry.sample_size_disclosure == 'reported' %}n={{ entry.sample_size }}{% elif entry.sample_size_disclosure == 'not_applicable' %}N/A{% else %}{% if _cea_locale == 'fr' %}non communiqué{% elif _cea_locale == 'en' %}not disclosed{% else %}niet vermeld{% endif %}{% endif %}</td>
+      <td style="padding: 3pt; overflow-wrap: anywhere;">{{ entry.freshness_status|replace('_', ' ') }}<br>{{ entry.review_status|replace('_', ' ') }}{% if entry.missing_committed_fields %}<br><strong>{% if _cea_locale == 'fr' %}Absents{% elif _cea_locale == 'en' %}Missing{% else %}Ontbreekt{% endif %}:</strong> {% for field in entry.missing_committed_fields %}{{ _cea_missing_code(field) }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p style="font-size: 7pt; color: hsl(var(--report-text-muted));">{% if _cea_locale == 'fr' %}Aucune entrée de preuve tarifée n'est disponible dans ce run.{% elif _cea_locale == 'en' %}No priced-evidence entry is available in this run.{% else %}Deze run bevat geen geprijsde bewijsvermelding.{% endif %}</p>
+{% endif %}
+{% endif %}
+
+{% if _cea_show_adjustments %}
+<h3 style="margin: 7pt 0 4pt 0; font-size: 8.5pt;">
+  {% if _cea_locale == 'fr' %}Lignes d'ajustement actionnables{% elif _cea_locale == 'en' %}Actionable adjustment lines{% else %}Actiegerichte aanpassingslijnen{% endif %}
+</h3>
+{% if _cea_lines %}
+<table data-canonical-projection="actionable-adjustments" style="width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 5.8pt;">
+  <thead>
+    <tr style="border-bottom: 1.5px solid hsl(var(--report-border)); color: hsl(var(--report-text-muted));">
+      <th style="width: 20%; text-align: left; padding: 3pt;">{% if _cea_locale == 'fr' %}Catégorie{% elif _cea_locale == 'en' %}Category{% else %}Categorie{% endif %}</th>
+      <th style="width: 27%; text-align: left; padding: 3pt;">{% if _cea_locale == 'fr' %}Ligne{% elif _cea_locale == 'en' %}Line{% else %}Lijn{% endif %}</th>
+      <th style="width: 15%; text-align: right; padding: 3pt;">{% if _cea_locale == 'fr' %}Impact scellé{% elif _cea_locale == 'en' %}Sealed impact{% else %}Verzegelde impact{% endif %}</th>
+      <th style="width: 16%; text-align: left; padding: 3pt;">{% if _cea_locale == 'fr' %}État{% elif _cea_locale == 'en' %}State{% else %}Status{% endif %}</th>
+      <th style="width: 22%; text-align: left; padding: 3pt;">{% if _cea_locale == 'fr' %}Preuve / action{% elif _cea_locale == 'en' %}Evidence / action{% else %}Bewijs / actie{% endif %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for line in _cea_lines %}
+    <tr style="border-bottom: 1px solid hsl(var(--report-border)); vertical-align: top;">
+      <td style="padding: 3pt; overflow-wrap: break-word;">{% if line.category == 'operating_normalization' %}{% if _cea_locale == 'fr' %}Normalisation opérationnelle{% elif _cea_locale == 'en' %}Operating normalization{% else %}Operationele normalisatie{% endif %}{% elif line.category == 'enterprise_to_equity' %}{% if _cea_locale == 'fr' %}VE vers capitaux propres{% elif _cea_locale == 'en' %}EV to equity{% else %}EV naar eigen vermogen{% endif %}{% else %}{% if _cea_locale == 'fr' %}Structurel / actionnaire / transaction{% elif _cea_locale == 'en' %}Structural / shareholder / transaction{% else %}Structureel / aandeelhouder / transactie{% endif %}{% endif %}<br><span style="color: hsl(var(--report-text-muted));">{{ line.amount_basis|replace('_', ' ') }}</span></td>
+      <td style="padding: 3pt; overflow-wrap: anywhere;"><strong>{{ line.label }}</strong>{% if line.fiscal_year %}<br>FY {{ line.fiscal_year }}{% endif %}{% if line.recoverability != 'not_assessed' %}<br>{{ line.recoverability }}{% endif %}</td>
+      <td style="padding: 3pt; text-align: right; font-family: 'JetBrains Mono', monospace;">{% if line.signed_amount is not none %}{{ line.currency or '' }} {{ line.signed_amount }}{% elif line.signed_percentage_points is not none %}{{ line.signed_percentage_points }}%{% else %}-{% endif %}</td>
+      <td style="padding: 3pt; overflow-wrap: break-word;">{{ line.priced_state|replace('_', ' ') }}<br>{{ line.status|replace('_', ' ') }}</td>
+      <td style="padding: 3pt; overflow-wrap: anywhere;">{% if line.evidence_reference_ids %}{{ line.evidence_reference_ids|join(', ') }}{% else %}-{% endif %}<br>{{ line.evidence_status|replace('_', ' ') }}{% if line.evidence_date %} | {{ line.evidence_date }}{% endif %}{% if line.missing_committed_fields %}<br><strong>{% if _cea_locale == 'fr' %}Absents{% elif _cea_locale == 'en' %}Missing{% else %}Ontbreekt{% endif %}:</strong> {% for field in line.missing_committed_fields %}{{ _cea_missing_code(field) }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}{% if line.action %}<br><strong>{% if _cea_locale == 'fr' %}Action{% elif _cea_locale == 'en' %}Action{% else %}Actie{% endif %}:</strong> {{ line.action }}{% endif %}{% if line.proof_required %}<br><strong>{% if _cea_locale == 'fr' %}Preuve requise{% elif _cea_locale == 'en' %}Proof required{% else %}Bewijs vereist{% endif %}:</strong> {{ line.proof_required }}{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p style="font-size: 7pt; color: hsl(var(--report-text-muted));">{% if _cea_locale == 'fr' %}Aucune ligne d'ajustement n'est présente dans le grand livre scellé.{% elif _cea_locale == 'en' %}No adjustment line is present in the sealed driver ledger.{% else %}Het verzegelde driver-ledger bevat geen aanpassingslijn.{% endif %}</p>
+{% endif %}
+{% endif %}

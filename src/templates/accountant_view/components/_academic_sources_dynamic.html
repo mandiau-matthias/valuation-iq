@@ -1,0 +1,50 @@
+{# 
+WORLD-CLASS: Dynamic Academic Sources Component
+
+Displays academic sources dynamically from calculation metadata.
+Replaces hardcoded sources with actual sources used in calculations.
+
+Usage:
+    {% include "accountant_view/components/_academic_sources_dynamic.html" with academic_sources=step.academic_sources %}
+
+Author: Upswitch CTO Team
+Date: December 2, 2025
+Status: Production Ready - Academic/Professional Style
+#}
+
+{% if academic_sources and academic_sources | length > 0 %}
+<div style="background-color: #FFFFFF; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18pt; margin-bottom: 12pt; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+    <p style="font-family: 'Inter', sans-serif; font-size: 10pt; font-weight: 600; color: #2b303a; text-transform: uppercase; margin-bottom: 8pt;">Academic Sources</p>
+    <table style="width: 100%; border-collapse: collapse; margin: 0; border: none; border-top: none;">
+        {% for source in academic_sources %}
+        <tr>
+            <td style="padding: 0; border: none; padding-bottom: 8pt; vertical-align: top;">
+                <div style="font-family: 'Inter', sans-serif; font-size: 10pt; color: #4b5563;">
+                    <p style="font-weight: 600; color: #2b303a; margin-bottom: 2pt;">
+                        {{ source.author }} ({{ source.year }})
+                    </p>
+                    <p style="color: #4b5563; font-style: italic; margin-bottom: 2pt;">
+                        {{ source.title }}
+                    </p>
+                    {% if source.publisher %}
+                    <p style="color: #6b7280; font-size: 9pt; margin-bottom: 2pt;">
+                        {{ source.publisher }}
+                    </p>
+                    {% endif %}
+                    {% if source.pages %}
+                    <p style="color: #6b7280; font-size: 9pt; margin: 0;">
+                        {{ source.pages }}
+                    </p>
+                    {% endif %}
+                    {% if source.relevance %}
+                    <p style="color: #6b7280; font-size: 9pt; margin: 2pt 0 0 0; font-style: italic;">
+                        Relevance: {{ source.relevance }}
+                    </p>
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endif %}

@@ -1,0 +1,18 @@
+{% if show_seller_advisor_cta|default(false) and is_seller_report|default(false) and seller_advisor_cta_url %}
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+    <div class="section-header">
+        <span class="section-number">{{ seller_advisor_cta_section_number|default('A') }}</span>
+        <h1 class="section-title" style="margin: 0;">{{ t.seller_advisor_cta_title }}</h1>
+    </div>
+    <div class="card" style="padding: var(--space-5); border: 1pt solid hsl(var(--report-primary)); background: rgba(244, 99, 35, 0.04);">
+        <p style="font-size: var(--font-size-md); line-height: 1.55; margin: 0 0 var(--space-4); max-width: 56rem;">
+            {{ t.seller_advisor_cta_lead }}
+        </p>
+        <a href="{{ seller_advisor_cta_url }}" style="display: inline-block; background: hsl(var(--report-primary)); color: white; padding: 12pt 20pt; border-radius: 6pt; font-weight: 600; text-decoration: none; font-size: var(--font-size-md);">
+            {{ t.seller_advisor_cta_button }}
+        </a>
+    </div>
+    {% include "main_report/partials/_footer.html" ignore missing %}
+</div>
+{% endif %}

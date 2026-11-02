@@ -1,0 +1,2231 @@
+<!DOCTYPE html>
+<html lang="{{ locale|default('nl') }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ company_name|default('—', true) }} - {{ sealed_memorandum.labels.memorandum if is_sealed_advisor_memorandum|default(false) else t.cover_estimate_label }} | {{ accountant_firm_name|default('Upswitch', true) }}</title>
+    <style>
+        /* Font Loading — deterministic bundled faces (Satoshi / JetBrains Mono /
+           Noto Sans / Noto Emoji) injected from src/assets/fonts via file:// URLs.
+           No local()/CDN so the embedded faces are identical on every host and
+           render path (kills the Verdana + Apple-Color-Emoji leakage). Built by
+           src/services/infrastructure/pdf/font_css.py. */
+        {{ pdf_font_face_css }}
+
+        /* ============================================================================
+           UPSWITCH VALUATION REPORT - HYBRID AURORA DESIGN SYSTEM
+           ============================================================================
+           Professional valuation report layout | A4 Print-Ready
+           
+           Color Palette (hardcoded for WeasyPrint compatibility):
+           - Deep Slate #121519 (hsl 225,18%,8%)   - Canvas/Cover
+           - Aurora Teal #2ba899 (hsl 172,55%,45%)  - Primary/Authority  
+           - Burnt Clay  #c87f63 (hsl 17,50%,59%)   - Accent
+           ============================================================================ */
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           PAGE SETUP - A4 PROFESSIONAL MARGINS
+           WeasyPrint: Balanced margins to prevent overflow. Avoid excessive left.
+           ═══════════════════════════════════════════════════════════════════════════ */
+        @page {
+            size: A4;
+            margin: 20mm 25mm 25mm 25mm;
+            background: #ffffff;
+            @bottom-left {
+                content: "{% if accountant_firm_name and (accountant_firm_name|lower|trim != 'upswitch') %}{{ accountant_firm_name|css_string }} × Upswitch · {% endif %}{{ company_name|default('—', true)|css_string }} · {{ report_certification_footer_label|default(t.footer_indicative_estimate)|css_string }} · {{ t.footer_confidential|css_string }}";
+                font-family: 'Satoshi', 'Noto Sans', 'Noto Sans Symbols 2', sans-serif;
+                font-size: 7.5pt;
+                font-weight: 500;
+                color: hsl(224, 10%, 55%);
+                border-top: 0.5pt solid hsl(224, 10%, 91%);
+                padding-top: 6pt;
+                vertical-align: top;
+            }
+            @bottom-right {
+                content: "{{ t.footer_page }} " counter(page) " {{ t.footer_of }} " counter(pages);
+                font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;
+                font-size: 7.5pt;
+                font-weight: 500;
+                color: hsl(224, 8%, 70%);
+                border-top: 0.5pt solid hsl(224, 10%, 91%);
+                padding-top: 6pt;
+                vertical-align: top;
+            }
+        }
+
+        @page :first {
+            margin: 0;
+            background: #121519;
+            @bottom-left {
+                content: none;
+            }
+            @bottom-right {
+                content: none;
+            }
+        }
+
+        @page cover {
+            margin: 0;
+            background: #121519;
+            @bottom-left {
+                content: none;
+            }
+            @bottom-right {
+                content: none;
+            }
+        }
+
+        /* Exact financial amounts must not split digits across lines. */
+        .valuation-report .tax-latencies th,
+        .valuation-report .multi-year-earnings th {
+            padding-left: 4pt;
+            padding-right: 4pt;
+            font-size: 6.5pt;
+            letter-spacing: .06em;
+            overflow-wrap: normal;
+            word-break: normal;
+        }
+        .valuation-report .tax-latencies td,
+        .valuation-report .multi-year-earnings td {
+            padding-left: 4pt;
+            padding-right: 4pt;
+            overflow-wrap: normal;
+            word-break: normal;
+        }
+        .valuation-report .tax-latencies td.tabular,
+        .valuation-report .multi-year-earnings th:nth-child(4),
+        .valuation-report .multi-year-earnings td.text-right {
+            white-space: nowrap;
+        }
+        .valuation-report .multi-year-earnings td.tabular span {
+            white-space: normal;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           BASE RESET
+           ═══════════════════════════════════════════════════════════════════════════ */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           BASE TYPOGRAPHY - SATOSHI + JETBRAINS MONO
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report {
+            --pdf-teal: 172, 55%, 45%;
+            --pdf-teal-light: 172, 45%, 92%;
+            --pdf-teal-dark: 172, 60%, 32%;
+            --pdf-teal-40: 172, 55%, 40%;
+            --pdf-teal-50: 172, 55%, 50%;
+            --pdf-primary: var(--pdf-teal);
+            --pdf-primary-light: var(--pdf-teal-light);
+            --pdf-primary-dark: var(--pdf-teal-dark);
+            font-family: 'Satoshi', 'Noto Sans', 'Noto Sans Symbols 2', sans-serif;
+            font-size: 10.5pt;
+            line-height: 1.6;
+            color: hsl(225, 18%, 12%);
+            background: #ffffff;
+            /* Satoshi's "ft" ligature has no ToUnicode mapping in the embedded
+               subset: it printed a visible gap ("geeft  de") and copied out of
+               the PDF as "gee". Dutch hits this constantly (geeft, blijft,
+               heeft), so ligatures are off report-wide. Cosmetic loss, and it
+               makes the delivered document text-selectable and searchable. */
+            font-variant-ligatures: none;
+            font-feature-settings: "liga" 0, "clig" 0, "dlig" 0;
+        }
+
+        {% if primary_color_hsl %}
+        .valuation-report {
+            --pdf-teal: {{ primary_color_hsl }};
+            --pdf-teal-light: {{ primary_color_hsl_light }};
+            --pdf-teal-dark: {{ primary_color_hsl_dark }};
+            --pdf-teal-40: {{ primary_color_hsl_dark }};
+            --pdf-teal-50: {{ primary_color_hsl }};
+        }
+        {% endif %}
+
+        .valuation-report * {
+            box-sizing: border-box;
+        }
+
+        /* ─── Overflow safety net ───────────────────────────────────────────────
+           Defensive wrap for dynamic content: long company/firm names, long
+           Dutch asset labels (e.g. "BRUTO SUBSTANTIEWAARDE (GECORRIGEERDE
+           ACTIVA)"), academic citations, DOIs/URLs, content hashes, and the
+           weighted-synthesis formula. WeasyPrint has no horizontal scroll, so
+           without this an unbreakable token rides past the ~453pt A4 content
+           box and clips off the page edge. `break-word` only breaks when a
+           token cannot otherwise fit, so ordinary prose and space-separated
+           figures are unaffected; `white-space: nowrap` figure cells
+           (cover / value-bridge / stat values, width-managed by the
+           --long/--very-long/--extra-long font-step-down classes) still win and
+           never break mid-number. */
+        .valuation-report p,
+        .valuation-report li,
+        .valuation-report dd,
+        .valuation-report dt,
+        .valuation-report h1,
+        .valuation-report h2,
+        .valuation-report h3,
+        .valuation-report h4,
+        .valuation-report td,
+        .valuation-report th,
+        .valuation-report .section-title,
+        .valuation-report blockquote {
+            overflow-wrap: break-word;
+        }
+
+        .valuation-report .keep-together {
+            page-break-inside: avoid;
+        }
+
+        /* Display Typography */
+        .valuation-report .display-hero {
+            font-size: 56pt;
+            font-weight: 800;
+            line-height: 0.95;
+            letter-spacing: 0;
+            color: hsl(224, 17%, 12%);
+        }
+
+        .valuation-report .display-1 {
+            font-size: 42pt;
+            font-weight: 800;
+            line-height: 1.0;
+            letter-spacing: 0;
+        }
+
+        .valuation-report .display-2 {
+            font-size: 28pt;
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: 0;
+        }
+
+        .valuation-report .display-3 {
+            font-size: 18pt;
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: 0;
+        }
+
+        /* Headings */
+        .valuation-report h1 {
+            font-size: 24pt;
+            font-weight: 800;
+            color: hsl(224, 17%, 12%);
+            letter-spacing: 0;
+            margin: 0 0 24pt 0;
+            page-break-after: avoid;
+        }
+
+        .valuation-report h2 {
+            font-size: 16pt;
+            font-weight: 700;
+            color: hsl(224, 17%, 12%);
+            letter-spacing: 0;
+            margin: 32pt 0 16pt 0;
+            padding-bottom: 8pt;
+            border-bottom: 1pt solid hsl(224, 10%, 91%);
+            page-break-after: avoid;
+        }
+
+        .valuation-report h3 {
+            font-size: 11pt;
+            font-weight: 700;
+            color: hsl(224, 14%, 28%);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin: 24pt 0 12pt 0;
+            page-break-after: avoid;
+        }
+
+        .valuation-report h4 {
+            font-size: 10pt;
+            font-weight: 600;
+            color: hsl(224, 12%, 42%);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 14pt 0 6pt 0;
+        }
+
+        /* Body Text */
+        .valuation-report p {
+            margin: 0 0 12pt 0;
+            color: hsl(224, 10%, 45%);
+        }
+
+        .valuation-report .lead {
+            font-size: 12pt;
+            line-height: 1.7;
+            color: hsl(224, 12%, 42%);
+        }
+
+        /* Monospace for Financial Data */
+        .valuation-report .mono,
+        .valuation-report .tabular {
+            font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           A4 PAGE CONTAINER
+           @page margins handle all insets — no additional padding here.
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report .a4-page {
+            width: 100%;
+            min-height: 0;
+            padding: 0;
+            margin: 0;
+            background: #ffffff;
+            position: relative;
+            page-break-after: always;
+            box-sizing: border-box;
+        }
+
+        .valuation-report .method-section--upswitch_adaptive .page-header,
+        .valuation-report .method-section--upswitch_adaptive_multiples_only .page-header {
+            margin-bottom: 8pt;
+            padding-bottom: 8pt;
+        }
+
+        /* Compact method chrome keeps supporting references on their method page.
+           Preserve type sizes and all disclosures; only vertical spacing changes. */
+        .valuation-report .method-section--upswitch_adaptive .section-header,
+        .valuation-report .method-section--upswitch_adaptive_multiples_only .section-header {
+            margin-bottom: 8pt;
+            padding-bottom: 8pt;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           COVER PAGE - ABSOLUTE POSITIONING FOR WEASYPRINT COMPATIBILITY
+           ═══════════════════════════════════════════════════════════════════════════ */
+        /* Cover: full-bleed A4, dark background. Three zones (top, hero, bottom) are
+           positioned in separate regions. Rendered word geometry checks collisions.
+           Do NOT convert to Flexbox/Grid: WeasyPrint has partial Flexbox support with
+           known bugs (absolute inside flex fails; page breaks in flex items overflow).
+           Absolute + position:relative fixed container is the recommended PDF pattern. */
+        .valuation-report .cover-page {
+            width: 210mm;
+            height: 297mm;
+            min-height: 297mm;
+            max-height: 297mm;
+            padding: 0;
+            margin: 0;
+            background: #121519 !important;
+            position: relative;
+            overflow: hidden;
+            page-break-after: always;
+            page-break-inside: avoid;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        @media print {
+            .valuation-report .cover-page {
+                margin: 0;
+                width: 210mm;
+                height: 297mm;
+                min-height: 297mm;
+                background: #121519 !important;
+                page-break-after: always;
+                page-break-inside: avoid;
+                overflow: hidden;
+            }
+        }
+
+        /* Defensibility scope banner — disclaimers section only (same HTML as ``build_defensibility_banner``). */
+        .valuation-report .upswitch-defensibility-banner {
+            display: block;
+            margin: 0 0 14pt 0;
+            padding: 10pt 14pt;
+            background: hsl(35, 90%, 96%);
+            border: 1pt solid hsl(35, 70%, 70%);
+            border-left: 4pt solid hsl(35, 80%, 50%);
+            border-radius: 4pt;
+            font-family: 'Satoshi', 'Noto Sans', 'Noto Sans Symbols 2', sans-serif;
+            page-break-inside: avoid;
+        }
+        .valuation-report .upswitch-defensibility-banner .ud-title {
+            display: block;
+            font-size: 9.5pt;
+            font-weight: 700;
+            color: hsl(35, 50%, 25%);
+            text-transform: uppercase;
+            letter-spacing: 0.5pt;
+            margin-bottom: 4pt;
+        }
+        .valuation-report .upswitch-defensibility-banner .ud-body {
+            display: block;
+            font-size: 8.5pt;
+            color: hsl(35, 50%, 30%);
+            line-height: 1.5;
+        }
+
+        /* Background Industry Icon - Faded watermark */
+        .valuation-report .cover-bg-icon {
+            position: absolute;
+            top: 50%;
+            right: 40pt;
+            width: 280pt;
+            height: 280pt;
+            opacity: 0.035;
+            z-index: 0;
+        }
+
+        .valuation-report .cover-bg-icon svg {
+            width: 100%;
+            height: 100%;
+            color: hsl(40, 15%, 90%);
+        }
+
+        .valuation-report .cover-bg-emoji {
+            font-size: 260pt;
+            line-height: 1;
+            text-align: center;
+            width: 100%;
+            height: 100%;
+            filter: grayscale(50%);
+        }
+
+        /* ─── Top Bar: Logo + Accountant Co-branding ────────────────────────────── */
+        .valuation-report .cover-top-bar {
+            position: absolute;
+            /* Reserve the cover's top edge for the compact, mandatory
+               diagnostic-release marker when one is present. */
+            top: 30pt;
+            left: 0;
+            right: 0;
+            padding: 34pt 40pt;
+            z-index: 10;
+        }
+
+        .valuation-report .cover-top-bar table {
+            width: 100%;
+            border-collapse: collapse;
+            border: none;
+            margin: 0;
+        }
+
+        .valuation-report .cover-top-bar table td {
+            border: none;
+            padding: 0;
+            vertical-align: middle;
+            background: transparent;
+        }
+
+        .valuation-report .cover-branding {
+            white-space: nowrap;
+        }
+
+        .valuation-report .cover-logo {
+            height: 28pt;
+            width: auto;
+            opacity: 0.95;
+            vertical-align: middle;
+        }
+
+        .valuation-report .cover-brand-divider {
+            font-size: 14pt;
+            font-weight: 300;
+            color: hsl(224, 10%, 55%);
+            padding: 0 8pt;
+            vertical-align: middle;
+        }
+
+        .valuation-report .cover-accountant-logo {
+            /* Both brands use the same cap height. Width remains intrinsic so
+               neither wordmark is stretched or visually subordinated. */
+            max-height: 28pt;
+            height: 28pt;
+            width: auto;
+            max-width: 130pt;
+            object-fit: contain;
+            opacity: 1;
+            vertical-align: middle;
+        }
+
+        .valuation-report .cover-accountant-name {
+            font-size: 12pt;
+            font-weight: 600;
+            color: hsl(40, 12%, 80%);
+            letter-spacing: 0.02em;
+            vertical-align: middle;
+        }
+
+        .valuation-report .cover-ref {
+            text-align: right;
+        }
+
+        .valuation-report .cover-ref-id {
+            font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;
+            font-size: 9pt;
+            font-weight: 500;
+            color: hsl(224, 10%, 55%);
+            letter-spacing: 0.06em;
+        }
+
+        /* ─── Hero Area ─────────────────────────────────────────────────────────── */
+        .valuation-report .cover-hero-wrapper {
+            position: absolute;
+            top: 160pt;
+            bottom: 160pt;
+            left: 0;
+            right: 0;
+            display: block;
+            width: 100%;
+            z-index: 1;
+        }
+        /* Slim cover: when bottom bar is hidden, hero extends to bottom for better centering */
+        .valuation-report .cover-page--slim .cover-hero-wrapper {
+            bottom: 0;
+        }
+
+        .valuation-report .cover-hero-area {
+            display: block;
+            padding: 8pt 40pt 0 40pt;
+        }
+
+        .valuation-report .cover-company {
+            margin-bottom: 32pt;
+        }
+
+        .valuation-report .cover-label {
+            font-size: 10pt;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            color: hsl(var(--pdf-teal));
+            display: block;
+            margin-bottom: 12pt;
+        }
+
+        .valuation-report .cover-company-name {
+            font-size: 64pt;
+            font-weight: 800;
+            color: hsl(40, 15%, 97%);
+            line-height: 1.3;
+            letter-spacing: 0;
+            margin: 0;
+            max-width: 85%;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+
+        .valuation-report .cover-company-name.long-name {
+            font-size: 48pt;
+        }
+
+        .valuation-report .cover-company-name.very-long-name {
+            font-size: 36pt;
+        }
+
+        .valuation-report .cover-industry-badge {
+            display: inline-block;
+            margin-top: 8pt;
+            padding: 5pt 10pt 5pt 8pt;
+            background: hsla(224, 16%, 16%, 0.8);
+            border: 1pt solid hsla(224, 10%, 25%, 0.6);
+            border-radius: 4pt;
+        }
+
+        .valuation-report .cover-industry-badge span {
+            font-size: 10pt;
+            font-weight: 500;
+            color: hsl(224, 8%, 70%);
+            letter-spacing: 0.01em;
+        }
+
+        .valuation-report .cover-industry-icon {
+            width: 18pt;
+            height: 18pt;
+            margin-right: 6pt;
+            vertical-align: middle;
+            color: hsl(172, 65%, 48%);
+        }
+
+        /* Value Block */
+        .valuation-report .cover-value-block {
+            margin-top: 16pt;
+            max-width: 100%;
+            min-width: 0;
+        }
+
+        .valuation-report .cover-value-label {
+            font-size: 9pt;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: hsl(224, 10%, 50%);
+            display: block;
+            margin-bottom: 12pt;
+        }
+
+        .valuation-report .cover-value-amount {
+            font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;
+            font-size: 72pt;
+            font-weight: 700;
+            color: hsl(var(--pdf-teal));
+            letter-spacing: 0;
+            line-height: 1.35;
+            display: block;
+            max-width: 100%;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .valuation-report .cover-value-amount--long {
+            font-size: 60pt;
+        }
+
+        .valuation-report .cover-value-amount--very-long {
+            font-size: 48pt;
+        }
+
+        .valuation-report .cover-value-amount--extra-long {
+            font-size: 38pt;
+        }
+
+        .valuation-report .cover-value-range {
+            font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;
+            font-size: 14pt;
+            font-weight: 500;
+            color: hsl(224, 10%, 55%);
+            margin-top: 4pt;
+            display: block;
+            max-width: 100%;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .valuation-report .cover-value-range--long {
+            font-size: 12pt;
+        }
+
+        .valuation-report .cover-value-range--very-long {
+            font-size: 10pt;
+        }
+
+        .valuation-report .cover-value-note {
+            font-size: 7pt;
+            color: hsl(40, 12%, 65%);
+            display: block;
+            margin-top: 8pt;
+            max-width: 300pt;
+            line-height: 1.5;
+        }
+
+        /* ─── Bottom Bar: Data Grid ─────────────────────────────────────────────── */
+        .valuation-report .cover-bottom-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 28pt 40pt 30pt 40pt;
+            border-top: 1pt solid hsla(224, 10%, 20%, 0.6);
+            z-index: 1;
+        }
+
+        .valuation-report .cover-bottom-bar table {
+            width: 100%;
+            border-collapse: collapse;
+            border: none;
+            margin: 0;
+        }
+
+        .valuation-report .cover-bottom-bar table td {
+            border: none;
+            padding: 0;
+            vertical-align: bottom;
+            background: transparent;
+        }
+
+        /* A fixed three-cell layout is materially more reliable than flex in
+           WeasyPrint.  In particular, WeasyPrint can drop ``column-gap`` on
+           flex children, which visually concatenates labels on the cover.
+           Each cover always supplies three KPIs; labels may wrap within their
+           own third but may never overlap a neighbouring cell. */
+        .valuation-report .cover-data-grid {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        .valuation-report .cover-data-item {
+            display: table-cell;
+            vertical-align: bottom;
+            width: 33.333%;
+            max-width: none;
+            padding-right: 18pt;
+            overflow-wrap: break-word;
+        }
+
+        .valuation-report .cover-data-item:last-child {
+            padding-right: 0;
+        }
+
+        .valuation-report .cover-data-label {
+            font-size: 8pt;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: hsl(224, 10%, 55%);
+            display: block;
+            margin-bottom: 4pt;
+            white-space: normal;
+        }
+
+        .valuation-report .cover-data-value {
+            font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;
+            font-size: 14pt;
+            font-weight: 600;
+            color: hsl(40, 12%, 88%);
+            display: block;
+        }
+
+        /* Same distinction as the KPI tiles: a synthesis blend is a phrase and
+           needs a smaller size to sit on one cover line beside the figures. */
+        .valuation-report .cover-data-value--phrase {
+            font-size: 10.5pt;
+            line-height: 1.3;
+        }
+
+        /* Holding SOTP uses two distinct monetary bases plus the valuation
+           date.  WeasyPrint does not consistently honour flex ``column-gap``;
+           a fixed table layout keeps the three labels separated and prevents
+           EV/equity headings from being concatenated in the footer row. */
+        .valuation-report .cover-data-grid--holding-sotp {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        .valuation-report .cover-data-grid--holding-sotp .cover-data-item {
+            display: table-cell;
+            width: 33.333%;
+            max-width: none;
+            padding-right: 22pt;
+        }
+
+        .valuation-report .cover-data-grid--holding-sotp .cover-data-item:last-child {
+            padding-right: 0;
+        }
+
+        /* The transaction memo contains several small nested tables.  The
+           global report table rule adds 18pt above and below each one; seven
+           evidence cards therefore created a near-empty spill page.  Remove
+           that generic spacing only inside this section and keep each compact
+           evidence/challenge card intact across page boundaries. */
+        .valuation-report .transaction-readiness-page table {
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
+        .valuation-report .transaction-readiness-page .transaction-evidence-card,
+        .valuation-report .transaction-readiness-page .transaction-challenge-card {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        .valuation-report .cover-confidential {
+            font-size: 9pt;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: hsl(224, 10%, 55%);
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           SECTION HEADERS - TABLE-BASED FOR WEASYPRINT
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report .section-header {
+            break-after: avoid;
+            page-break-after: avoid;
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: separate;
+            margin-bottom: 16pt;
+            padding-bottom: 16pt;
+            border-bottom: 2pt solid hsl(224, 17%, 12%);
+        }
+
+        .valuation-report .section-number {
+            font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;
+            font-size: 14pt;
+            font-weight: 700;
+            color: hsl(var(--pdf-teal));
+            background: hsl(var(--pdf-teal-light));
+            padding: 8pt 14pt;
+            border-radius: 8pt;
+            display: table-cell;
+            width: 48pt;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        .valuation-report .section-title {
+            width: auto;
+            font-size: 18pt;
+            font-weight: 800;
+            line-height: 1.14;
+            color: hsl(224, 17%, 12%);
+            letter-spacing: 0;
+            margin: 0;
+            display: table-cell;
+            vertical-align: middle;
+            padding: 2pt 0 2pt 16pt;
+            overflow-wrap: anywhere;
+            word-break: normal;
+        }
+
+        /* The protected Advisor memorandum uses longer professional Dutch and
+           French headings than the legacy report. WeasyPrint can over-expand a
+           CSS table cell for those headings and then clip the first and last
+           words (including the running footer) outside the A4 content box.
+           Grid gives the badge an invariant track and lets the title shrink and
+           wrap inside the remaining width without changing the visual system. */
+        .valuation-report .a4-page[class*="sealed-"] .section-header {
+            display: grid;
+            grid-template-columns: 48pt minmax(0, 1fr);
+            column-gap: 16pt;
+            align-items: center;
+            table-layout: auto;
+        }
+
+        .valuation-report .a4-page[class*="sealed-"] .section-number {
+            display: block;
+            width: 48pt;
+            padding: 8pt 0;
+            text-align: center;
+        }
+
+        .valuation-report .a4-page[class*="sealed-"] .section-title {
+            display: block;
+            min-width: 0;
+            width: auto;
+            padding: 2pt 0;
+            overflow-wrap: break-word;
+        }
+
+        /* Brand-protected sealed cover artwork. The industry icon remains the
+           anchor; the card and graph are deliberately subordinate geometry. */
+        .valuation-report .sealed-cover-motif {
+            position: absolute;
+            top: 42mm;
+            right: 8mm;
+            width: 104mm;
+            height: 104mm;
+            opacity: 0.05;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .valuation-report .sealed-cover-motif svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .valuation-report .sealed-cover-motif path,
+        .valuation-report .sealed-cover-motif circle {
+            vector-effect: non-scaling-stroke;
+        }
+
+        .valuation-report .sealed-cover-card,
+        .valuation-report .sealed-cover-edge {
+            fill: none;
+            stroke: #8bd3c8;
+            stroke-width: 1.8;
+        }
+
+        .valuation-report .sealed-cover-node {
+            fill: #c87f63;
+        }
+
+        .valuation-report .sealed-cover-industry-icon {
+            fill: none;
+            stroke: #f7f7f5;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .valuation-report .cover-page.a4-page > *:not(.sealed-cover-motif) {
+            position: relative;
+            z-index: 1;
+        }
+
+        .valuation-report .sealed-chart {
+            width: 100%;
+            margin: 10pt 0 14pt;
+            page-break-inside: avoid;
+        }
+
+        .valuation-report .sealed-chart svg {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .valuation-report .sealed-chart-caption {
+            margin: 0 0 4pt;
+            font-family: 'JetBrains Mono', 'Noto Sans', 'Satoshi', monospace;
+            font-size: 6.5pt;
+            color: #737985;
+        }
+
+        .valuation-report .sealed-chart-axis {
+            stroke: #dfe2e7;
+            stroke-width: 1;
+        }
+
+        .valuation-report .sealed-chart-label {
+            font-family: 'JetBrains Mono', 'Noto Sans', 'Satoshi', monospace;
+            font-size: 8px;
+            fill: #737985;
+        }
+
+        .valuation-report .sealed-chart-revenue {
+            fill: none;
+            stroke: #2ba899;
+            stroke-width: 3;
+        }
+
+        .valuation-report .sealed-chart-ebitda {
+            fill: none;
+            stroke: #c87f63;
+            stroke-width: 3;
+        }
+
+        .valuation-report .sealed-chart-margin {
+            fill: none;
+            stroke: #737985;
+            stroke-width: 2;
+            stroke-dasharray: 5 4;
+        }
+
+        .valuation-report .sealed-chart-bar-positive { fill: #2ba899; }
+        .valuation-report .sealed-chart-bar-negative { fill: #c87f63; }
+
+        .valuation-report .sealed-method-value-chart svg {
+            max-height: 112pt;
+        }
+
+        .valuation-report .sealed-compact-normalizations h2 {
+            margin: 10pt 0 5pt;
+        }
+
+        .valuation-report .sealed-compact-normalizations table {
+            margin: 5pt 0;
+        }
+
+        .valuation-report .sealed-compact-normalizations td {
+            padding: 6pt 9pt;
+        }
+
+        .valuation-report .sealed-reconciliation-page .section-header,
+        .valuation-report .sealed-business-analysis-page .section-header,
+        .valuation-report .sealed-method-selection-page .section-header,
+        .valuation-report .sealed-evidence-page .section-header,
+        .valuation-report .sealed-attestation-page .section-header {
+            margin-bottom: 10pt;
+            padding-bottom: 10pt;
+        }
+
+        .valuation-report .sealed-reconciliation-page h2,
+        .valuation-report .sealed-business-analysis-page h2,
+        .valuation-report .sealed-method-selection-page h2,
+        .valuation-report .sealed-evidence-page h2,
+        .valuation-report .sealed-attestation-page h2 {
+            margin: 10pt 0 5pt;
+            padding-bottom: 4pt;
+        }
+
+        .valuation-report .sealed-reconciliation-page table,
+        .valuation-report .sealed-business-analysis-page table,
+        .valuation-report .sealed-method-selection-page table,
+        .valuation-report .sealed-evidence-page table,
+        .valuation-report .sealed-attestation-page table {
+            margin: 6pt 0;
+        }
+
+        .valuation-report .sealed-reconciliation-page td,
+        .valuation-report .sealed-reconciliation-page th,
+        .valuation-report .sealed-business-analysis-page td,
+        .valuation-report .sealed-business-analysis-page th,
+        .valuation-report .sealed-method-selection-page td,
+        .valuation-report .sealed-method-selection-page th,
+        .valuation-report .sealed-evidence-page td,
+        .valuation-report .sealed-evidence-page th,
+        .valuation-report .sealed-attestation-page td,
+        .valuation-report .sealed-attestation-page th {
+            padding: 6pt 8pt;
+        }
+
+        .valuation-report .sealed-business-analysis-page .pdf-card,
+        .valuation-report .sealed-method-selection-page .pdf-card,
+        .valuation-report .sealed-method-selection-page .callout {
+            padding: 10pt 12pt;
+            margin: 8pt 0;
+        }
+
+        .valuation-report .sealed-business-analysis-page p,
+        .valuation-report .sealed-business-analysis-page li,
+        .valuation-report .sealed-method-selection-page p,
+        .valuation-report .sealed-method-selection-page li {
+            font-size: 8.5pt;
+            line-height: 1.45;
+        }
+
+        .valuation-report .sealed-evidence-page .pdf-card,
+        .valuation-report .sealed-attestation-page .pdf-card,
+        .valuation-report .sealed-attestation-page .callout {
+            padding: 9pt 11pt;
+            margin-top: 8pt !important;
+        }
+
+        .valuation-report .sealed-audit-register {
+            table-layout: fixed;
+            font-size: 5.5pt;
+        }
+
+        .valuation-report .sealed-audit-register td:last-child {
+            white-space: normal;
+            letter-spacing: -0.02em;
+            overflow-wrap: anywhere;
+            word-break: break-all;
+        }
+
+        /* Sealed method pages carry dense, audited calculation tables. Keep
+           ordinary report spacing elsewhere, but prevent a single percentile
+           row from becoming an orphan page in the memorandum. */
+        .valuation-report .sealed-method-page .section-header {
+            margin-bottom: 10pt;
+            padding-bottom: 10pt;
+        }
+
+        .valuation-report .sealed-method-page .callout {
+            margin: 10pt 0;
+            padding: 14pt 16pt;
+        }
+
+        .valuation-report .sealed-method-page h2 {
+            margin: 18pt 0 8pt;
+            padding-bottom: 5pt;
+        }
+
+        .valuation-report .sealed-method-page table {
+            margin: 8pt 0;
+        }
+
+        .valuation-report .sealed-method-page td,
+        .valuation-report .sealed-method-page th {
+            padding: 8pt 12pt;
+        }
+
+        /* The sealed scope page carries eight engagement facts plus source,
+           reliance, limitation and conflict disclosures. Compact this one
+           audited page so those facts remain together without creating an
+           almost-empty overflow page. */
+        .valuation-report .sealed-scope-page .section-header {
+            margin-bottom: 8pt;
+            padding-bottom: 8pt;
+        }
+
+        .valuation-report .sealed-scope-page .callout {
+            margin: 6pt 0;
+            padding: 10pt 12pt;
+            font-size: 8pt;
+        }
+
+        .valuation-report .sealed-scope-page table {
+            margin: 5pt 0;
+            font-size: 8pt;
+        }
+
+        .valuation-report .sealed-scope-page td {
+            padding: 5pt 8pt;
+        }
+
+        .valuation-report .sealed-scope-page h2 {
+            margin: 8pt 0 4pt;
+            padding-bottom: 3pt;
+            font-size: 11pt;
+        }
+
+        .valuation-report .sealed-scope-page .pdf-card {
+            padding: 7pt 9pt;
+        }
+
+        .valuation-report .sealed-scope-page .pdf-prose,
+        .valuation-report .sealed-scope-page li {
+            font-size: 7pt;
+            line-height: 1.4;
+        }
+
+        .valuation-report .sealed-scope-page ul {
+            margin: 3pt 0;
+        }
+
+        /* Six audited financial columns must remain legible on A4 without
+           wrapping figures or pushing a single row onto an overflow page. */
+        .valuation-report .sealed-company-overview-page .section-header {
+            margin-bottom: 10pt;
+            padding-bottom: 10pt;
+        }
+
+        .valuation-report .sealed-company-overview-page h2 {
+            margin: 11pt 0 5pt;
+            padding-bottom: 4pt;
+        }
+
+        .valuation-report .sealed-company-overview-page table {
+            margin: 6pt 0;
+        }
+
+        .valuation-report .sealed-company-overview-page td,
+        .valuation-report .sealed-company-overview-page th {
+            padding: 6pt 5pt;
+        }
+
+        .valuation-report .sealed-company-overview-page .sealed-financial-history {
+            font-size: 6.8pt;
+            table-layout: fixed;
+        }
+
+        .valuation-report .sealed-company-overview-page .sealed-financial-history td {
+            white-space: nowrap;
+        }
+
+        .valuation-report .sealed-company-overview-page .sealed-financial-history th {
+            white-space: normal;
+            line-height: 1.2;
+            vertical-align: bottom;
+        }
+
+        .valuation-report .sealed-company-overview-page .sealed-financial-history th:nth-child(1) { width: 12%; }
+        .valuation-report .sealed-company-overview-page .sealed-financial-history th:nth-child(2) { width: 18%; }
+        .valuation-report .sealed-company-overview-page .sealed-financial-history th:nth-child(3) { width: 16%; }
+        .valuation-report .sealed-company-overview-page .sealed-financial-history th:nth-child(4) { width: 16%; }
+        .valuation-report .sealed-company-overview-page .sealed-financial-history th:nth-child(5) { width: 18%; }
+        .valuation-report .sealed-company-overview-page .sealed-financial-history th:nth-child(6) { width: 20%; }
+
+        .valuation-report .sealed-scope-page .sealed-scope-disclosures {
+            gap: 6pt;
+            margin-top: 6pt;
+        }
+
+        .valuation-report .sealed-scope-page .sealed-scope-disclosures .pdf-card {
+            padding: 6pt 7pt;
+            font-size: 7.2pt;
+            line-height: 1.35;
+        }
+
+        .valuation-report .sealed-scope-page .sealed-scope-disclosures p,
+        .valuation-report .sealed-scope-page .sealed-scope-disclosures ul {
+            margin: 3pt 0 0;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           VALUE CARDS - HERO FINANCIAL DISPLAYS
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report .value-hero {
+            /* Solid only: WeasyPrint has gradient rendering issues; #121519 matches Deep Slate */
+            background: #121519;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            color-adjust: exact;
+            border-radius: 16pt;
+            padding: 24pt;
+            margin: 10pt 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .valuation-report .value-hero-label {
+            font-size: 9pt;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: hsl(224, 8%, 55%);
+            margin-bottom: 8pt;
+        }
+
+        .valuation-report .value-hero-amount {
+            font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;
+            font-size: 42pt;
+            font-weight: 700;
+            color: hsl(var(--pdf-teal));
+            letter-spacing: 0;
+            white-space: nowrap;
+            margin: 0;
+        }
+
+        .valuation-report .value-hero-range {
+            font-size: 12pt;
+            color: hsl(224, 8%, 65%);
+            margin-top: 8pt;
+        }
+
+        .valuation-report .value-hero-basis {
+            font-size: 10pt;
+            color: hsl(224, 8%, 55%);
+            margin-top: 16pt;
+            padding-top: 16pt;
+            border-top: 1pt solid hsla(40, 12%, 90%, 0.1);
+        }
+
+        .valuation-report .stats-grid {
+            width: 100%;
+            margin: 12pt 0 16pt 0;
+        }
+
+        .valuation-report .stats-grid-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 8pt 0;
+            margin: 0;
+            table-layout: fixed;
+        }
+
+        .valuation-report .stats-grid-table td {
+            width: 33.33%;
+            vertical-align: top;
+            padding: 0;
+            border: none;
+            background: transparent;
+        }
+
+        .valuation-report .stat-card {
+            background: #faf9f7;
+            background: hsl(40, 15%, 98%);
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            border: 1pt solid hsl(224, 10%, 91%);
+            border-radius: 8pt;
+            padding: 18pt 12pt;
+            min-height: 100pt;
+            height: 112pt;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        .valuation-report .stat-card-label {
+            font-size: 7.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.065em;
+            line-height: 1.25;
+            color: hsl(224, 10%, 55%);
+            min-height: 20pt;
+            margin: 0 0 6pt 0;
+        }
+
+        .valuation-report .stat-card-value {
+            font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;
+            font-size: 17pt;
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: 0;
+            white-space: nowrap;
+            color: #1a1d23;
+            color: hsl(224, 17%, 12%);
+            margin: 0;
+        }
+
+        /* A KPI tile holds a short figure ("€280K") and is nowrap so a number
+           never breaks mid-amount. A synthesis blend ("70% markt + 30% DCF") is
+           a phrase, not a figure: at 17pt nowrap it ran straight out of its
+           ⅓-width card and over the neighbouring tile. Phrases wrap and step
+           down; figures keep the tighter treatment. */
+        .valuation-report .stat-card-value--phrase {
+            font-size: 12pt;
+            line-height: 1.25;
+            white-space: normal;
+            overflow-wrap: break-word;
+        }
+
+        .valuation-report .stat-card-change {
+            display: inline-block;
+            font-size: 9pt;
+            font-weight: 600;
+            margin-top: 8pt;
+            padding: 4pt 8pt;
+            border-radius: 4pt;
+        }
+
+        .valuation-report .stat-card-change.positive {
+            background: hsla(143, 40%, 42%, 0.1);
+            color: hsl(143, 40%, 42%);
+        }
+
+        .valuation-report .stat-card-change.negative {
+            background: hsla(6, 55%, 50%, 0.1);
+            color: hsl(6, 55%, 50%);
+        }
+
+        .valuation-report .stat-card-subtext {
+            font-size: 6.5pt;
+            line-height: 1.3;
+            color: hsl(224, 10%, 55%);
+            margin: 5pt 0 0 0;
+        }
+
+        .valuation-report .stat-card-subtext-value {
+            font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            color: hsl(224, 14%, 28%);
+        }
+
+        /* Summary cards must leave room for their supporting figures across
+           production font metrics. Keep type sizes; remove empty fixed height. */
+        .valuation-report .executive-summary-page .value-hero {
+            padding: 18pt 20pt;
+        }
+
+        .valuation-report .executive-summary-page .value-hero-label {
+            margin: 0 0 6pt;
+        }
+
+        .valuation-report .executive-summary-page .value-hero-range {
+            margin: 6pt 0;
+        }
+
+        .valuation-report .executive-summary-page .value-hero-basis {
+            margin: 10pt 0 0;
+            padding-top: 10pt;
+        }
+
+        .valuation-report .executive-summary-page .stats-grid {
+            margin: 8pt 0 12pt;
+        }
+
+        .valuation-report .executive-summary-page .stat-card {
+            min-height: 80pt;
+            height: auto;
+            padding: 12pt;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           TABLES - PROFESSIONAL REPORT STYLING
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18pt 0;
+            font-size: 9.5pt;
+        }
+
+        .valuation-report thead {
+            display: table-header-group;
+        }
+
+        .valuation-report th {
+            text-align: left;
+            font-size: 8pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: hsl(224, 10%, 55%);
+            padding: 12pt 16pt;
+            background: hsl(40, 15%, 98%);
+            border-bottom: 2pt solid hsl(224, 17%, 12%);
+        }
+
+        .valuation-report td {
+            padding: 12pt 16pt;
+            color: hsl(224, 14%, 28%);
+            border-bottom: 1pt solid hsl(224, 12%, 96%);
+            vertical-align: top;
+        }
+
+        .valuation-report tr:last-child td {
+            border-bottom: 1pt solid hsl(224, 10%, 91%);
+        }
+
+        .valuation-report td:first-child {
+            font-weight: 500;
+            color: hsl(224, 16%, 18%);
+        }
+
+        .valuation-report .text-right {
+            text-align: right;
+        }
+
+        .valuation-report .text-center {
+            text-align: center;
+        }
+
+        /* Result Row */
+        .valuation-report tr.row-result {
+            background: hsl(224, 17%, 12%);
+        }
+
+        .valuation-report tr.row-result td {
+            color: hsl(40, 12%, 94%);
+            font-weight: 600;
+            border-bottom: none;
+        }
+
+        .valuation-report tr.row-result td:first-child {
+            color: hsl(40, 12%, 94%);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           CALLOUTS & ALERTS
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report .callout {
+            padding: 20pt;
+            border-radius: 12pt;
+            margin: 16pt 0;
+            page-break-inside: avoid;
+        }
+
+        .valuation-report .callout-info {
+            background: hsl(var(--pdf-teal-light));
+            border-left: 4pt solid hsl(var(--pdf-teal));
+        }
+
+        .valuation-report .callout-warning {
+            background: hsla(37, 65%, 55%, 0.1);
+            border-left: 4pt solid hsl(37, 65%, 55%);
+        }
+
+        .valuation-report .callout-danger {
+            background: hsla(6, 55%, 50%, 0.1);
+            border-left: 4pt solid hsl(6, 55%, 50%);
+        }
+
+        .valuation-report .callout h4 {
+            font-size: 10pt;
+            font-weight: 700;
+            margin: 0 0 8pt 0;
+            color: hsl(224, 17%, 12%);
+        }
+
+        .valuation-report .callout p {
+            margin: 0;
+            color: hsl(224, 14%, 28%);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           BADGES & TAGS
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report .badge {
+            display: inline-block;
+            padding: 4pt 10pt;
+            border-radius: 4pt;
+            font-size: 8pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .valuation-report .badge-primary {
+            background: hsl(var(--pdf-teal-light));
+            color: hsl(var(--pdf-teal-dark));
+        }
+
+        .valuation-report .badge-success {
+            background: hsla(143, 40%, 42%, 0.15);
+            color: hsl(143, 40%, 42%);
+        }
+
+        .valuation-report .badge-warning {
+            background: hsla(37, 65%, 55%, 0.15);
+            color: hsl(17, 55%, 42%);
+        }
+
+        .valuation-report .badge-danger {
+            background: hsla(6, 55%, 50%, 0.15);
+            color: hsl(6, 55%, 50%);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           LISTS
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report ul,
+        .valuation-report ol {
+            margin: 16pt 0;
+            padding-left: 24pt;
+        }
+
+        .valuation-report li {
+            margin-bottom: 8pt;
+            color: hsl(224, 12%, 42%);
+        }
+
+        .valuation-report .check-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .valuation-report .check-list li {
+            padding: 8pt 0;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           PAGE HEADER & FOOTER - TABLE-BASED
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report .page-header {
+            padding-bottom: 12pt;
+            margin-bottom: 12pt;
+            border-bottom: 1pt solid hsl(224, 10%, 91%);
+            min-height: 32pt;
+        }
+
+        .valuation-report .page-header table {
+            width: 100%;
+            border-collapse: collapse;
+            border: none;
+            margin: 0;
+        }
+
+        .valuation-report .page-header table td {
+            border: none;
+            padding: 0;
+            vertical-align: top;
+            background: transparent;
+        }
+
+        .valuation-report .page-header-brand {
+            /* Was `white-space: nowrap`, which rode a long accountant-firm or
+               company name (e.g. "Industriële Substantiewaarde Holding België
+               NV · Vertrouwelijk") straight off the right page edge into the
+               meta column on every content page. Let it wrap to a second line
+               instead; short names still render on one line. */
+            white-space: normal;
+            overflow-wrap: break-word;
+        }
+
+        .valuation-report .page-header-text {
+            font-size: 9pt;
+            color: hsl(224, 14%, 28%);
+            font-weight: 500;
+            display: block;
+        }
+
+        .valuation-report .page-header-powered {
+            font-size: 7pt;
+            color: hsl(224, 10%, 65%);
+            display: block;
+            margin-top: 2pt;
+        }
+
+        .valuation-report .page-header-meta {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .valuation-report .page-header-meta-row {
+            white-space: nowrap;
+        }
+
+        .valuation-report .page-header-method {
+            display: inline-block;
+            margin-right: 6pt;
+            padding: 1.5pt 6pt;
+            border-radius: 999px;
+            background: hsl(172, 45%, 92%);
+            color: hsl(172, 60%, 32%);
+            font-size: 6pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .valuation-report .page-header-ref {
+            font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;
+            font-size: 9pt;
+            color: hsl(224, 14%, 28%);
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .valuation-report .page-header-date {
+            font-size: 8pt;
+            color: hsl(224, 10%, 55%);
+            margin: 0;
+        }
+
+        /* Page footer is rendered via @page margin boxes (@bottom-left, @bottom-right).
+           No in-flow footer element needed — saves ~30pt vertical space per page
+           and provides consistent footer on every physical page. */
+        .valuation-report .page-footer {
+            display: none;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           WATERFALL CHART STYLES
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report .waterfall-chart {
+            margin: 16pt 0;
+        }
+
+        .valuation-report .waterfall-chart svg {
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           SENSITIVITY TABLE STYLES
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report .sensitivity-table {
+            margin-top: 16pt;
+        }
+
+        .valuation-report .sensitivity-table table {
+            font-size: 8pt;
+        }
+
+        .valuation-report .sensitivity-table th.header-dark {
+            background: hsl(224, 15%, 20%);
+            color: white;
+        }
+
+        .valuation-report .sensitivity-table .cell-highlight {
+            background: hsla(var(--pdf-teal), 0.15);
+            font-weight: 700;
+            color: hsl(var(--pdf-teal));
+        }
+
+        .valuation-report .sensitivity-table .row-highlight {
+            background: hsla(var(--pdf-teal), 0.08);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           CALIBRATION LEDGER - TABLE-BASED
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report .value-bridge {
+            background: hsl(224, 15%, 97%);
+            border-radius: 8pt;
+            padding: 20pt 18pt;
+            margin-bottom: 10pt;
+            border: 1pt solid hsl(224, 10%, 90%);
+        }
+
+        /* Value bridge uses table layout for WeasyPrint */
+        .valuation-report .value-bridge-grid {
+            width: 100%;
+        }
+
+        .valuation-report .value-bridge-grid-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: none;
+            margin: 0;
+            table-layout: fixed;
+        }
+
+        .valuation-report .value-bridge-grid-table td {
+            text-align: center;
+            vertical-align: middle;
+            border: none;
+            padding: 8pt 4pt;
+            background: transparent;
+        }
+
+        .valuation-report .value-bridge-item {
+            text-align: center;
+        }
+
+        .valuation-report .value-bridge-label {
+            font-size: 7pt;
+            color: hsl(224, 10%, 50%);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 6pt;
+        }
+
+        .valuation-report .value-bridge-value {
+            font-size: 20pt;
+            font-weight: 700;
+            line-height: 1.05;
+            letter-spacing: 0;
+            font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;
+            color: hsl(224, 15%, 25%);
+        }
+
+        .valuation-report .value-bridge-number {
+            display: block;
+            max-width: 100%;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .valuation-report .value-bridge-number--long {
+            font-size: 17pt;
+        }
+
+        .valuation-report .value-bridge-number--very-long {
+            font-size: 14pt;
+        }
+
+        .valuation-report .value-bridge-number--extra-long {
+            font-size: 11pt;
+        }
+
+        .valuation-report .value-bridge-value.negative {
+            color: hsl(6, 55%, 50%);
+        }
+
+        .valuation-report .value-bridge-value.highlight {
+            color: white;
+        }
+
+        .valuation-report .value-bridge-operator {
+            font-size: 16pt;
+            color: hsl(224, 10%, 60%);
+            text-align: center;
+        }
+
+        .valuation-report .value-bridge-result {
+            background: hsl(var(--pdf-teal));
+            border-radius: 8pt;
+            padding: 12pt 12pt;
+        }
+
+        .valuation-report .value-bridge-result .value-bridge-label {
+            color: hsla(0, 0%, 100%, 0.7);
+        }
+
+        .valuation-report .value-bridge-bottom {
+            margin-top: 10pt;
+            padding-top: 10pt;
+            border-top: 1pt solid hsl(224, 10%, 85%);
+        }
+
+        .valuation-report .value-bridge-bottom table {
+            width: 100%;
+            border-collapse: collapse;
+            border: none;
+            margin: 0;
+        }
+
+        .valuation-report .value-bridge-bottom table td {
+            border: none;
+            padding: 0;
+            vertical-align: baseline;
+            background: transparent;
+        }
+
+        .valuation-report .value-bridge-bottom-text {
+            font-size: 9pt;
+            color: hsl(224, 10%, 50%);
+        }
+
+        .valuation-report .value-bridge-bottom-value {
+            font-size: 20pt;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;
+            color: hsl(var(--pdf-teal-40));
+            text-align: right;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .valuation-report .value-bridge-bottom-figure {
+            display: block;
+            max-width: 100%;
+            white-space: nowrap;
+            font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .valuation-report .value-bridge-bottom-figure--long {
+            font-size: 8pt !important;
+        }
+
+        .valuation-report .value-bridge-bottom-figure--very-long {
+            font-size: 7pt !important;
+        }
+
+        .valuation-report .value-bridge-bottom-figure--extra-long {
+            font-size: 6pt !important;
+        }
+
+        /* Calibration conclusion row */
+        .valuation-report .calibration-conclusion {
+            background: hsl(225, 18%, 14%);
+        }
+
+        .valuation-report .calibration-conclusion table {
+            width: 100%;
+            border-collapse: collapse;
+            border: none;
+            margin: 0;
+        }
+
+        .valuation-report .calibration-conclusion table td {
+            border: none;
+            padding: 14pt 16pt;
+            vertical-align: middle;
+            background: transparent;
+        }
+        /* A4-fit: ensure compact padding for new two-line conclusion layout */
+        .valuation-report tr.calibration-conclusion > td {
+            padding: 6pt 12pt !important;
+        }
+
+        .valuation-report .calibration-conclusion-bar {
+            width: 3pt;
+            height: 36pt;
+            background: hsl(var(--pdf-teal-50));
+            border-radius: 2pt;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 12pt;
+        }
+
+        .valuation-report .calibration-conclusion-label-small {
+            font-size: 7pt;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: hsl(224, 10%, 55%);
+            margin-bottom: 3pt;
+        }
+
+        .valuation-report .calibration-conclusion-label {
+            font-size: 10pt;
+            font-weight: 600;
+            color: hsl(40, 12%, 92%);
+        }
+
+        .valuation-report .calibration-conclusion-right {
+            text-align: right;
+            background: hsl(225, 18%, 12%);
+        }
+
+        .valuation-report .calibration-conclusion-item {
+            display: inline-block;
+            text-align: right;
+            margin-left: 20pt;
+        }
+
+        .valuation-report .calibration-conclusion-divider {
+            width: 1pt;
+            height: 28pt;
+            background: hsl(224, 10%, 25%);
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 20pt;
+        }
+
+        /* Last page: no trailing blank page, prevent orphan overflow */
+        .valuation-report .a4-page.last-report-page {
+            page-break-after: auto;
+            min-height: 0;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           PRINT OPTIMIZATIONS
+           ═══════════════════════════════════════════════════════════════════════════ */
+        @media print {
+            .valuation-report {
+                background: white;
+                orphans: 2;
+                widows: 2;
+            }
+            
+            .valuation-report h4 {
+                page-break-after: avoid;
+            }
+            
+            .valuation-report .no-print {
+                display: none !important;
+            }
+            
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            tr { page-break-inside: avoid; }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           LIQUIDATION TRACK — `.pdf-*` COMPONENT SYSTEM
+           ═══════════════════════════════════════════════════════════════════════════
+           The 16 main_report_pdf/pages/liquidation_*.html templates render on a
+           self-contained `.pdf-*` class system (cards, grids, compact financial
+           tables, statutory-anchor cells, prose, badges) that previously had ZERO
+           rule definitions — so every 5–6-column liquidation table fell through to
+           the generic `.valuation-report table` fallback (12pt/16pt cell padding,
+           auto table-layout, no right-aligned mono) and overflowed the ~453pt A4
+           content width (210mm − 2×25mm margins).
+
+           This is the missing stylesheet. Hardcoded pt + hsl only — no CSS custom
+           properties: WeasyPrint 68's var() support is unreliable, so this mirrors
+           the hardcoded-hsl pattern used throughout this file. Palette + spacing
+           track the Aurora tokens the screen twins use (main_report/base.html):
+             teal     hsl(172,55%,45%) · dark hsl(172,60%,32%) · light hsl(172,45%,92%)
+             slate    text hsl(225,18%,12%) · 800 hsl(224,16%,18%) · 700 hsl(224,14%,28%)
+                      · muted hsl(224,10%,45%) · 500 hsl(224,10%,55%)
+             borders  hsl(224,10%,91%) · light hsl(224,12%,96%)   cream hsl(40,15%,98%)
+             success  hsl(143,40%,42%)   warning hsl(37,65%,55%)   clay hsl(17,50%,59%)
+           Every selector is `.valuation-report`-scoped (two classes) so it outranks
+           the generic `.valuation-report td/th/table` element rules above on the
+           cascade. Placed last in the sheet so equal-specificity ties resolve here.
+           ═══════════════════════════════════════════════════════════════════════════ */
+
+        /* ─── Page container — twin of `.a4-page`. The liquidation pages use
+               `.pdf-page` instead, so without the same break behaviour all 16
+               sections would collapse onto one another. ───────────────────────── */
+        .valuation-report .pdf-page {
+            width: 100%;
+            padding: 0;
+            margin: 0;
+            background: #ffffff;
+            position: relative;
+            page-break-after: always;
+            box-sizing: border-box;
+        }
+        .valuation-report .pdf-page.last-report-page {
+            page-break-after: auto;
+            min-height: 0;
+        }
+
+        /* ─── Section header: number chip · title · right-floated subtitle badge.
+               Inline-block + float (NOT flex): WeasyPrint's flexbox is unreliable
+               here — `flex:1` failed to shrink/contain the badge and rode it past
+               the A4 edge. This mirrors the proven inline-block `.section-*` band
+               above; `overflow: hidden` establishes a BFC that contains the float
+               so the bottom border sits under both rows. ─────────────────────── */
+        .valuation-report .pdf-section-header {
+            margin-bottom: 14pt;
+            padding-bottom: 10pt;
+            border-bottom: 2pt solid hsl(224, 17%, 12%);
+            overflow: hidden;
+            page-break-after: avoid;
+        }
+        .valuation-report .pdf-section-number {
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 12pt;
+            font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;
+            font-size: 12pt;
+            font-weight: 700;
+            color: hsl(172, 60%, 32%);
+            background: hsl(172, 45%, 92%);
+            padding: 5pt 10pt;
+            border-radius: 6pt;
+            white-space: nowrap;
+        }
+        .valuation-report .pdf-section-title {
+            display: inline-block;
+            vertical-align: middle;
+            max-width: 68%;
+            font-size: 17pt;
+            font-weight: 800;
+            color: hsl(224, 17%, 12%);
+            margin: 0;
+            line-height: 1.12;
+        }
+        .valuation-report .pdf-badge {
+            float: right;
+            display: inline-block;
+            margin-top: 3pt;
+            max-width: 165pt;
+            padding: 3pt 8pt;
+            border-radius: 4pt;
+            font-size: 7pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-align: right;
+            background: hsl(172, 45%, 92%);
+            color: hsl(172, 60%, 32%);
+            white-space: normal;
+            overflow-wrap: break-word;
+        }
+
+        /* ─── Sub-heading — the "Orderly" / "Forced" scenario splits. Neutralise
+               the generic h2 underline + 32pt top margin. ─────────────────────── */
+        .valuation-report .pdf-h2 {
+            font-size: 10pt;
+            font-weight: 700;
+            color: hsl(224, 17%, 12%);
+            margin: 14pt 0 6pt 0;
+            padding-bottom: 0;
+            border-bottom: none;
+            page-break-after: avoid;
+        }
+
+        /* ─── Grids — WeasyPrint 68 supports CSS grid (already relied on by the
+               inline tornado chart in liquidation_sensitivity.html). ──────────── */
+        .valuation-report .pdf-grid {
+            display: grid;
+            gap: 10pt;
+            margin: 0 0 12pt 0;
+        }
+        .valuation-report .pdf-grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .valuation-report .pdf-grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .valuation-report .pdf-grid-4 { grid-template-columns: repeat(4, 1fr); }
+        /* Inside a grid the gap owns the inter-card spacing. */
+        .valuation-report .pdf-grid .pdf-card { margin-bottom: 0; }
+
+        /* ─── Cards. Default body is 8pt muted so bare `<div>` children (e.g. the
+               warning lists) don't inherit the 10.5pt report body size. ────────── */
+        .valuation-report .pdf-card {
+            background: #ffffff;
+            border: 1pt solid hsl(224, 10%, 91%);
+            border-radius: 8pt;
+            padding: 11pt 12pt;
+            margin: 0 0 10pt 0;
+            font-size: 8pt;
+            color: hsl(224, 12%, 42%);
+            page-break-inside: avoid;
+            break-inside: avoid;
+            overflow-wrap: break-word;
+        }
+        .valuation-report .pdf-card-primary { border-left: 3pt solid hsl(172, 55%, 45%); }
+        .valuation-report .pdf-card-muted {
+            background: hsl(40, 15%, 98%);
+            border-color: hsl(224, 10%, 91%);
+        }
+        .valuation-report .pdf-card-warning {
+            background: hsla(37, 65%, 55%, 0.08);
+            border-left: 3pt solid hsl(37, 65%, 55%);
+        }
+        .valuation-report .pdf-card-success {
+            background: hsla(143, 40%, 42%, 0.08);
+            border-left: 3pt solid hsl(143, 40%, 42%);
+        }
+        .valuation-report .pdf-card-eyebrow {
+            font-size: 7pt;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: hsl(224, 10%, 55%);
+            margin-bottom: 4pt;
+        }
+        .valuation-report .pdf-card-headline {
+            font-size: 16pt;
+            font-weight: 700;
+            line-height: 1.15;
+            color: hsl(224, 17%, 12%);
+            font-variant-numeric: tabular-nums;
+        }
+        .valuation-report .pdf-card-primary .pdf-card-headline { color: hsl(172, 60%, 32%); }
+        .valuation-report .pdf-card-subheadline {
+            font-size: 14pt;
+            font-weight: 600;
+            line-height: 1.2;
+            color: hsl(224, 16%, 18%);
+            font-variant-numeric: tabular-nums;
+        }
+        .valuation-report .pdf-card-meta {
+            font-size: 7pt;
+            color: hsl(224, 10%, 55%);
+            margin-top: 3pt;
+            line-height: 1.4;
+        }
+        .valuation-report .pdf-card-title {
+            font-size: 8.5pt;
+            font-weight: 600;
+            color: hsl(224, 17%, 12%);
+            margin-bottom: 4pt;
+        }
+        .valuation-report .pdf-card-body {
+            font-size: 8pt;
+            color: hsl(224, 12%, 42%);
+            line-height: 1.5;
+        }
+        /* Tighten hero figures in the 4-up sensitivity grid (~105pt columns) so
+           they don't wrap mid-number. */
+        .valuation-report .pdf-grid-4 .pdf-card-headline { font-size: 13pt; }
+        .valuation-report .pdf-grid-4 .pdf-card-subheadline { font-size: 12pt; }
+        /* Mini-tables nested in grid cards (buyer-scenarios) sit snug. */
+        .valuation-report .pdf-card .pdf-table { margin: 6pt 0; }
+
+        /* ─── Financial tables — THE overflow fix.
+               `table-layout: fixed` + `width: 100%` (+ global box-sizing:border-box)
+               makes horizontal overflow impossible: `.pdf-num` columns are pinned,
+               the label column absorbs the remainder, and over-long text wraps via
+               break-word instead of riding off the A4 edge. ──────────────────── */
+        .valuation-report .pdf-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            margin: 8pt 0;
+            font-size: 8pt;
+        }
+        .valuation-report .pdf-table th,
+        .valuation-report .pdf-table td {
+            padding: 4pt 5pt;
+            border-bottom: 1pt solid hsl(224, 12%, 96%);
+            vertical-align: top;
+            overflow-wrap: break-word;
+        }
+        .valuation-report .pdf-table th {
+            text-align: left;
+            font-size: 7pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: hsl(224, 10%, 55%);
+            background: hsl(40, 15%, 98%);
+            border-bottom: 1.5pt solid hsl(224, 17%, 12%);
+        }
+        .valuation-report .pdf-table td { color: hsl(224, 14%, 28%); }
+        .valuation-report .pdf-table tr:last-child td {
+            border-bottom: 1pt solid hsl(224, 10%, 91%);
+        }
+
+        /* Compact variant — the 5–6-column schedules / cascades / bridges. */
+        .valuation-report .pdf-table-compact { font-size: 7.5pt; }
+        .valuation-report .pdf-table-compact th,
+        .valuation-report .pdf-table-compact td { padding: 3pt 4pt; }
+        .valuation-report .pdf-table-compact th { font-size: 6.5pt; }
+
+        /* Numeric cells — right-aligned mono, pinned width so currency never
+           expands the column under table-layout:fixed. 64pt fits an 8-digit
+           "€12.345.678" at the compact mono size; a rare 9-digit figure breaks
+           via break-word rather than overflowing the page. */
+        .valuation-report .pdf-num {
+            width: 64pt;
+            text-align: right;
+            font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Statutory-anchor cells — legal cross-references ("Art. 38 Fw"). */
+        .valuation-report .pdf-anchor {
+            font-size: 6.5pt;
+            color: hsl(224, 10%, 55%);
+            line-height: 1.35;
+        }
+
+        /* Indented deduction label in the statement-of-affairs waterfall. */
+        .valuation-report .pdf-cell-indent { padding-left: 14pt; }
+
+        /* Row emphasis — subtotal < total < headline (the punchline net row). */
+        .valuation-report .pdf-row-subtotal td {
+            font-weight: 600;
+            color: hsl(224, 16%, 18%);
+            border-top: 1pt solid hsl(224, 10%, 85%);
+        }
+        .valuation-report .pdf-row-total td,
+        .valuation-report .pdf-table-total td {
+            font-weight: 700;
+            color: hsl(224, 17%, 12%);
+            border-top: 1.5pt solid hsl(224, 17%, 12%);
+        }
+        .valuation-report .pdf-row-headline td {
+            font-weight: 700;
+            color: hsl(224, 17%, 12%);
+            border-top: 1.5pt solid hsl(172, 55%, 45%);
+        }
+        .valuation-report .pdf-row-headline .pdf-num { color: hsl(172, 60%, 32%); }
+        /* Divider row (e.g. liabilities line before the equity total). */
+        .valuation-report .pdf-table-divider td {
+            border-bottom: 1pt solid hsl(224, 10%, 91%);
+        }
+
+        /* ─── Prose, lists, sources, misc. ───────────────────────────────────── */
+        .valuation-report .pdf-prose {
+            font-size: 8pt;
+            color: hsl(224, 12%, 42%);
+            line-height: 1.55;
+            margin: 0 0 6pt 0;
+        }
+        .valuation-report .pdf-prose:last-child { margin-bottom: 0; }
+        .valuation-report .pdf-prose p { margin: 0 0 6pt 0; color: hsl(224, 12%, 42%); }
+        .valuation-report .pdf-prose p:last-child { margin-bottom: 0; }
+        .valuation-report .pdf-prose-small {
+            font-size: 6.5pt;
+            color: hsl(224, 10%, 55%);
+            line-height: 1.4;
+            margin: 2pt 0 0 0;
+        }
+        .valuation-report .pdf-emphasis {
+            font-weight: 600;
+            color: hsl(224, 16%, 18%);
+        }
+        .valuation-report .pdf-mono {
+            font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;
+            font-size: 7.5pt;
+            color: hsl(224, 14%, 28%);
+            overflow-wrap: break-word;
+        }
+        .valuation-report .pdf-list {
+            margin: 6pt 0;
+            padding-left: 16pt;
+            font-size: 8pt;
+            color: hsl(224, 12%, 42%);
+        }
+        .valuation-report .pdf-list li { margin-bottom: 4pt; line-height: 1.45; }
+        .valuation-report .pdf-list-small { font-size: 7pt; }
+        .valuation-report .pdf-list-small li { margin-bottom: 3pt; }
+
+        .valuation-report .pdf-meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            column-gap: 20pt;
+            row-gap: 4pt;
+            font-size: 8pt;
+            color: hsl(224, 14%, 28%);
+            margin: 8pt 0;
+        }
+
+        /* Altman band legend inside the distress card — active zone bolded. */
+        .valuation-report .pdf-zone-legend {
+            margin-top: 6pt;
+            font-size: 6.5pt;
+            color: hsl(224, 10%, 55%);
+            line-height: 1.45;
+        }
+        .valuation-report .pdf-zone-legend .is-active {
+            font-weight: 700;
+            color: hsl(224, 17%, 12%);
+        }
+
+        /* Sources / footer-meta citation strip (DOIs + URLs → break-word). */
+        .valuation-report .pdf-sources,
+        .valuation-report .pdf-footer-meta {
+            margin-top: 10pt;
+            padding-top: 6pt;
+            border-top: 0.5pt solid hsl(224, 10%, 91%);
+            font-size: 6.5pt;
+            color: hsl(224, 10%, 55%);
+            line-height: 1.4;
+            overflow-wrap: break-word;
+        }
+        /* Indicative previews use the same readable type scale with less
+           table chrome. Dense evidence tables and their bridge must stay
+           together without creating near-empty continuation pages. */
+        {% if indicative_presentation|default(false) and not is_sealed_advisor_memorandum|default(false) %}
+        .valuation-report .multiple-evidence-page { line-height: 1.3; }
+        .valuation-report .multiple-evidence-page > table {
+            margin-top: 6pt !important;
+            margin-bottom: 6pt !important;
+        }
+        .valuation-report table { margin: 9pt 0; }
+        .valuation-report th,
+        .valuation-report td { padding: 7pt 10pt; }
+        .valuation-report .stat-card {
+            padding: 12pt 10pt;
+            min-height: 76pt;
+            height: auto;
+        }
+        .valuation-report .section-header {
+            margin-bottom: 12pt;
+            padding-bottom: 12pt;
+        }
+        {% endif %}
+    </style>
+</head>
+<body class="valuation-report">
+    {# Mirror the screen tree: the inner wrapper keeps the design-token class
+       on a ``<div>`` that survives Mercury's DOMPurify sanitisation pass.
+       WeasyPrint doesn't sanitise, so the structural parity is belt-and-
+       braces — but it keeps screen + PDF templates identical so future
+       audits don't have to track two shapes. #}
+    <div class="valuation-report"{% if is_sealed_advisor_memorandum|default(false) %} data-report-contract="{{ sealed_template_contract_version }}" data-render-snapshot-sha256="{{ render_snapshot_sha256 }}" data-valuation-run-sha256="{{ sealed_valuation_run_hash }}" data-display-model-sha256="{{ sealed_display_model_hash }}" data-report-locale="{{ locale }}" data-report-assurance="{{ report_assurance_level }}"{% endif %}>
+    {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

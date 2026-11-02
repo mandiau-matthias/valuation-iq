@@ -1,0 +1,472 @@
+{# 
+    VALUATION CALIBRATION PAGE
+    Page 4 of 5
+    
+    Contents:
+    - Value bridge (Market → Adjustments → Final)
+    - Calibration ledger table
+    - Reference notes
+#}
+
+<div class="a4-page">
+    {% set is_sde_method = is_sde_methodology|default(has_sde|default(false)) %}
+    {% set is_asset_anchored_method = is_asset_anchored_methodology|default(is_asset_methodology|default(false)) %}
+    {% set is_asset_method = is_asset_anchored_method %}
+    {% set is_yield_method = is_yield_methodology|default(false) %}
+    {% set _show_weighted_synthesis_bridge = has_weighted_synthesis|default(false) and not is_adaptive_multiples_only|default(false) %}
+    {# Page Header #}
+    {% include "main_report/partials/_page_header.html" %}
+    
+    {# Section Header #}
+    <div class="section-header">
+        <span class="section-number">{{ valuation_calibration_section_number }}</span>
+        <h1 class="section-title">{{ t.calib_title }}</h1>
+    </div>
+    
+    {% if canonical_fallback_disclosure|default(false) %}
+    {% include "shared/canonical_saved_pricing.html" %}
+    {% else %}
+    {# Methodology-specific introduction #}
+    {% if is_sde_method %}
+    <p style="margin-bottom: 10pt; font-size: 8pt; color: hsl(var(--report-text-muted));">
+        {{ t.calib_sde_intro }}
+        <span class="badge badge-primary" style="margin-left: 8pt; font-size: 6pt;">{{ t.calib_sde_badge }}</span>
+    </p>
+    {% elif is_dcf_only_methodology %}
+    <p style="margin-bottom: 10pt; font-size: 8pt; color: hsl(var(--report-text-muted));">
+        {{ t.calib_dcf_intro }}
+        <span class="badge badge-primary" style="margin-left: 8pt; font-size: 6pt;">{{ t.calib_dcf_badge }}</span>
+    </p>
+    {% elif is_asset_anchored_method %}
+    <p style="margin-bottom: 10pt; font-size: 8pt; color: hsl(var(--report-text-muted));">
+        {% if is_yield_method %}
+        {{ t.calib_yield_intro }}
+        <span class="badge badge-primary" style="margin-left: 8pt; font-size: 6pt;">{{ t.calib_yield_badge }}</span>
+        {% else %}
+        {{ t.calib_asset_intro }}
+        <span class="badge badge-primary" style="margin-left: 8pt; font-size: 6pt;">{{ t.calib_asset_badge }}</span>
+        {% endif %}
+    </p>
+    {# Adaptive lens: do not require numeric ``is_hybrid`` (either weight may be 0). #}
+    {% elif is_adaptive_only_path|default(false) %}
+    <p style="margin-bottom: 10pt; font-size: 8pt; color: hsl(var(--report-text-muted));">
+        {# VAL-2026-35A4: when DCF was excluded the base intro's claim that
+           "Een verkorte DCF-crosscheck ondersteunt de bandbreedte intern" is
+           factually wrong (no DCF ran). Switch to the multiples-only variant. #}
+                {% if is_adaptive_multiples_only|default(false) %}
+                {% if is_disclosed_external_market_fallback|default(false) %}
+                {{ accountant_firm_name|default('Upswitch', true) }} past uitsluitend de uitdrukkelijk aanvaarde externe marktreferentie van {{ fallback_applied_multiple|safe_round(2) }}× op de gerapporteerde EBITDA toe. Er is geen {{ fallback_market_key }} Index-contract, geen empirische steekproef en geen transactie-attributie; DCF en andere methoden dragen 0% bij.
+                {% else %}{{ t.calib_adaptive_lens_intro_multiples_only }}{% endif %}
+        <span class="badge badge-primary" style="margin-left: 8pt; font-size: 6pt;">{{ client_presentation_method_label if client_presentation_method_label|default(false) else t.calib_adaptive_lens_badge_multiples_only }}</span>
+        {% else %}
+        {% if suppress_engine_product_name|default(false) %}De synthese weegt de DCF en marktbenadering op ondernemingswaardebasis. Geen van beide methoden geldt als bewijs van een transactieprijs; de DCF blijft onderworpen aan prognose-attestatie en de externe marktreferentie is niet-statistisch.{% else %}{{ t.calib_adaptive_lens_intro }}{% endif %}
+        <span class="badge badge-primary" style="margin-left: 8pt; font-size: 6pt;">{{ client_presentation_method_label if client_presentation_method_label|default(false) else t.calib_adaptive_lens_badge }}</span>
+        {% endif %}
+    </p>
+    {% elif is_hybrid %}
+    <p style="margin-bottom: 10pt; font-size: 8pt; color: hsl(var(--report-text-muted));">
+        {{ t.calib_hybrid_intro }}
+        <span class="badge badge-primary" style="margin-left: 8pt; font-size: 6pt;">{{ t.calib_hybrid_badge }}</span>
+    </p>
+    {% else %}
+    <p style="margin-bottom: 10pt; font-size: 8pt; color: hsl(var(--report-text-muted));">
+        {{ t.calib_multiples_intro }}
+        {% if valuation_methodology %}
+        <span style="font-size: 7pt; color: hsl(var(--report-slate-500));">({{ t.calib_methodology_label }}: {{ valuation_methodology_display }})</span>
+        {% endif %}
+    </p>
+    {% endif %}
+    
+    {# Adaptive-only blend disclosure — when DCF contributed to the
+       headline blend, the multiples-side bridge below tells only HALF the
+       derivation. Without a context line the reader sees a multiple
+       bridge ending in ``applied_multiple × EBITDA = EV`` and reads it
+       as the headline math; in reality EV = mults_w × mults_value +
+       dcf_w × dcf_value. The banner stays inside this page (audit-trail
+       remains for the multiples leg) but points to the flagship Adaptive
+       page for the actual blend composition. ─────────────────────── #}
+    {% if is_adaptive_only_path|default(false) and not is_adaptive_multiples_only|default(false) and adaptive_presentation_dcf_weight is defined and adaptive_presentation_dcf_weight is not none and (adaptive_presentation_dcf_weight|float) > 0 %}
+    {% set _calib_w_mults_raw = (adaptive_presentation_multiples_weight|float) if (adaptive_presentation_multiples_weight is defined and adaptive_presentation_multiples_weight is not none) else 0 %}
+    {% set _calib_w_dcf_raw = (adaptive_presentation_dcf_weight|float) %}
+    {% set _calib_w_total = _calib_w_mults_raw + _calib_w_dcf_raw %}
+    {% if _calib_w_total > 0 %}
+        {% set _calib_w_mults_pct = ((_calib_w_mults_raw / _calib_w_total * 100)|safe_round(0))|int %}
+        {% set _calib_w_dcf_pct = 100 - _calib_w_mults_pct %}
+    {% else %}
+        {% set _calib_w_mults_pct = none %}
+        {% set _calib_w_dcf_pct = none %}
+    {% endif %}
+    {% if _calib_w_dcf_pct is not none and _calib_w_dcf_pct > 0 %}
+    {% set _is_en_calib = (locale|default('nl'))|lower == 'en' %}
+    {% set _is_fr_calib = (locale|default('nl'))|lower == 'fr' %}
+    <div style="margin-bottom: var(--space-3); padding: 6pt 10pt; border-radius: 4pt; background: hsla({{ teal_hsl }}, 0.06); border-left: 3pt solid hsl({{ teal_hsl }}); font-size: var(--font-size-xs); color: hsl(var(--report-slate-700)); line-height: 1.5;">
+        <strong style="color: hsl(var(--report-slate-900));">{% if _is_fr_calib %}Cette page audite uniquement la jambe multiples.{% elif _is_en_calib %}This page audits the multiples leg only.{% else %}Deze pagina toetst alleen het multiples-deel.{% endif %}</strong>
+        {% if suppress_engine_product_name|default(false) %}{% if _is_fr_calib %}La synthèse combine {{ _calib_w_mults_pct }} % d’approche de marché + {{ _calib_w_dcf_pct }} % de DCF — voir la page <em>Synthèse de valorisation</em>.{% elif _is_en_calib %}The synthesis combines {{ _calib_w_mults_pct }}% market approach + {{ _calib_w_dcf_pct }}% DCF — see the <em>Valuation synthesis</em> page.{% else %}De synthese combineert {{ _calib_w_mults_pct }}% marktbenadering + {{ _calib_w_dcf_pct }}% DCF — zie de pagina <em>Waarderingssynthese</em>.{% endif %}{% else %}{% if _is_fr_calib %}La valorisation adaptative principale est un mélange de {{ _calib_w_mults_pct }} % de multiples + {{ _calib_w_dcf_pct }} % de DCF — voir la page <em>Upswitch Adaptive</em> pour la composition complète.{% elif _is_en_calib %}The Adaptive headline is a {{ _calib_w_mults_pct }}% multiples + {{ _calib_w_dcf_pct }}% DCF blend — see the <em>Upswitch Adaptive</em> page for the full composition.{% else %}De Adaptive-hoofdwaardering is een blend van {{ _calib_w_mults_pct }}% multiples + {{ _calib_w_dcf_pct }}% DCF — zie de <em>Upswitch Adaptive</em>-pagina voor de volledige samenstelling.{% endif %}{% endif %}
+    </div>
+    {% endif %}
+    {% endif %}
+
+    {# Value Bridge - CSS Grid (Clarity design) #}
+    <div class="value-bridge">
+        <div class="value-bridge-grid" style="display: grid; grid-template-columns: minmax(0, 1.05fr) auto minmax(0, 0.7fr) auto minmax(0, 1.45fr); gap: 6pt; align-items: center;">
+            {# Market Median / Base #}
+            <div class="value-bridge-item">
+                <div class="value-bridge-label">
+                    {% if _show_weighted_synthesis_bridge %}{{ t.synthesis_section_composition }}
+                    {% elif is_sde_method %}{{ t.calib_sde_market_median }}
+                    {% elif is_dcf_only_methodology %}{{ t.calib_dcf_calculated_value }}
+                    {% elif is_asset_anchored_method %}{% if is_yield_method %}{{ t.calib_yield_basis_label }}{% else %}{{ t.calib_asset_basis_label }}{% endif %}
+                    {% else %}{{ t.calib_market_median }}{% endif %}
+                </div>
+                {% if is_asset_anchored_method %}
+                {% set _asset_basis_display_value = t.calib_yield_basis_value if is_yield_method else t.calib_asset_basis_value %}
+                {% endif %}
+                <div class="value-bridge-value{% if is_dcf_only_methodology or (not _show_weighted_synthesis_bridge and not is_asset_anchored_method) %} value-bridge-number{% endif %}"{% if is_asset_anchored_method %} aria-label="{{ _asset_basis_display_value }}"{% endif %}>
+                    {% if _show_weighted_synthesis_bridge %}
+                    {{ synthesis_method_count_label|default(synthesis_method_list|default(t.synthesis_title, true), true) }}
+                    {% elif is_dcf_only_methodology %}
+                    {{ valuation|format_currency }}
+                    {% elif is_asset_anchored_method %}
+                    {{ _asset_basis_display_value|replace(' / ', '<br>')|safe }}
+                    {% else %}
+                    {{ base_multiple|safe_round(2) }}×
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="value-bridge-operator">
+                {% if _show_weighted_synthesis_bridge or is_asset_anchored_method %}→{% elif is_dcf_only_methodology %}±{% else %}+{% endif %}
+            </div>
+            
+            {# Risk Discounts / Adjustments #}
+            <div class="value-bridge-item">
+                <div class="value-bridge-label">
+                    {% if _show_weighted_synthesis_bridge %}{{ t.synthesis_col_weight }}
+                    {% elif is_dcf_only_methodology %}{{ t.calib_dcf_market_validation }}
+                    {% elif is_asset_anchored_method %}{% if is_yield_method %}{{ t.calib_yield_adjustments_label }}{% else %}{{ t.calib_asset_adjustments_label }}{% endif %}
+                    {% elif is_disclosed_external_market_fallback|default(false) %}{% if (locale|default('nl'))|lower == 'fr' %}Ajustements{% elif (locale|default('nl'))|lower == 'en' %}Adjustments{% else %}Aanpassingen{% endif %}
+                    {% else %}{{ t.calib_risk_discounts }}{% endif %}
+                </div>
+                <div class="value-bridge-value{% if not _show_weighted_synthesis_bridge and not is_asset_anchored_method and not is_disclosed_external_market_fallback|default(false) %} negative{% endif %}"{% if _show_weighted_synthesis_bridge or is_asset_anchored_method %} style="font-size: 7.5pt; line-height: 1.35;"{% endif %}>
+                    {% if _show_weighted_synthesis_bridge %}
+                    {% if synthesis_weight_compact|default('') %}{{ synthesis_weight_compact }}{% elif report_scope|default('standard') == 'client_indicative' and _calib_w_mults_pct is defined and _calib_w_mults_pct is not none %}{% if (locale|default('nl'))|lower == 'fr' %}{{ _calib_w_mults_pct }}% marché + {{ _calib_w_dcf_pct }}% DCF{% elif (locale|default('nl'))|lower == 'en' %}{{ _calib_w_mults_pct }}% market + {{ _calib_w_dcf_pct }}% DCF{% else %}{{ _calib_w_mults_pct }}% markt + {{ _calib_w_dcf_pct }}% DCF{% endif %}{% else %}
+                    {{ synthesis_weight_summary|default(synthesis_methodology_label|default('', true), true) }}
+                    {% endif %}
+                    {% elif is_dcf_only_methodology %}
+                    0%
+                    {% elif is_asset_anchored_method %}
+                    {% if is_yield_method %}{{ t.calib_yield_adjustments_value }}{% else %}{{ t.calib_asset_adjustments_value }}{% endif %}
+                    {% else %}
+                    {{ total_discount|default(0)|safe_round(2) }}×
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="value-bridge-operator">=</div>
+            
+            {# Applied / Final #}
+            <div class="value-bridge-item value-bridge-result">
+                <div class="value-bridge-label">
+                    {% if _show_weighted_synthesis_bridge %}{{ t.synthesis_accountant_blend_label }}
+                    {% elif is_dcf_only_methodology %}{{ t.calib_dcf_final_value }}
+                    {% elif is_asset_anchored_method %}{% if is_yield_method %}{{ t.calib_yield_final_label }}{% else %}{{ t.calib_asset_final_label }}{% endif %}
+                    {% elif is_adaptive_multiples_only|default(false) %}{{ valuation_methodology_display|default(t.calib_adaptive_lens_badge_multiples_only) }}
+                    {% elif not supports_metric_to_ev_bridge %}{{ t.calib_hybrid_badge if is_hybrid else valuation_methodology_display }}
+                    {% else %}{{ t.calib_applied }}{% endif %}
+                </div>
+                {% if _show_weighted_synthesis_bridge %}
+                {% set _bridge_final_display = enterprise_value_mid|format_currency %}
+                {% elif is_dcf_only_methodology %}
+                {% set _bridge_final_display = valuation|format_currency %}
+                {% elif is_asset_anchored_method %}
+                {% set _bridge_final_display = equity_value|format_currency %}
+                {% elif not supports_metric_to_ev_bridge %}
+                {% set _bridge_final_display = enterprise_value_mid|format_currency %}
+                {% else %}
+                {% set _bridge_final_display = (applied_multiple|safe_round(2)) ~ '×' %}
+                {% endif %}
+                <div class="value-bridge-value value-bridge-number highlight{% if _bridge_final_display|length > 17 %} value-bridge-number--very-long value-bridge-number--extra-long{% elif _bridge_final_display|length > 13 %} value-bridge-number--very-long{% elif _bridge_final_display|length > 10 %} value-bridge-number--long{% endif %}">
+                    {{ _bridge_final_display }}
+                </div>
+            </div>
+        </div>
+        
+        {# Bottom Line - Result (Formula Bar) #}
+        <div class="value-bridge-bottom" style="margin-top: 8pt; padding-top: 8pt; border-top: 1pt solid hsl(var(--report-slate-200)); overflow: hidden;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex-wrap: nowrap; min-width: 0;">
+                    {% if supports_metric_to_ev_bridge and not _show_weighted_synthesis_bridge %}
+                {# Input Group #}
+                <div style="display: flex; align-items: center; gap: var(--space-3); flex-shrink: 0; min-width: 0;">
+                    <div>
+                        <div style="font-size: 6pt; color: hsl(var(--report-slate-500)); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1pt;">
+                            {% if is_sde_method %}{{ t.calib_sde_bottom_text }}
+                            {% elif multiple_metric_type == 'REVENUE' %}{{ multiple_display_label|default(t.exec_revenue_label) }}
+                            {% else %}{{ t.calib_multiples_bottom_text }}{% endif %}
+                        </div>
+                        {% if is_sde_method and sde_value is defined and sde_value %}
+                        {% set _bridge_basis_display = sde_value|format_currency %}
+                        {% elif multiple_metric_type == 'REVENUE' %}
+                        {% set _bridge_basis_display = revenue|format_currency %}
+                        {% else %}
+                        {% set _bridge_basis_display = sustainable_ebitda|format_currency %}
+                        {% endif %}
+                        <div class="value-bridge-bottom-figure{% if _bridge_basis_display|length > 17 %} value-bridge-bottom-figure--very-long value-bridge-bottom-figure--extra-long{% elif _bridge_basis_display|length > 13 %} value-bridge-bottom-figure--very-long{% elif _bridge_basis_display|length > 10 %} value-bridge-bottom-figure--long{% endif %}" style="font-size: 9pt; font-weight: 600; color: hsl(var(--report-slate-900));">
+                            {{ _bridge_basis_display }}
+                        </div>
+                    </div>
+                    <div style="color: hsl(var(--report-slate-400)); font-size: 10pt;">×</div>
+                    <div>
+                        <div style="font-size: 6pt; color: hsl(var(--report-slate-500)); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1pt;">
+                            {{ t.ledger_multiple_label }}
+                        </div>
+                        <div style="font-size: 9pt; font-weight: 600; color: hsl(var(--report-slate-900)); font-family: 'JetBrains Mono', monospace;">
+                            {% if is_sde_method and sde_multiple is defined and sde_multiple %}{{ sde_multiple|safe_round(2) }}×
+                            {% else %}{{ applied_multiple|safe_round(2) }}×{% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div style="color: hsl(var(--report-slate-400)); font-size: 10pt;">=</div>
+                {% else %}
+                <div style="min-width: 0;">
+                    <div style="font-size: 6pt; color: hsl(var(--report-slate-500)); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1pt;">
+                        {% if _show_weighted_synthesis_bridge %}{{ t.synthesis_title }}{% else %}{{ valuation_methodology_display }}{% endif %}
+                    </div>
+                    <div style="font-size: 7pt; color: hsl(var(--report-text-muted));">
+                        {% if _show_weighted_synthesis_bridge %}
+                        {{ synthesis_weight_summary|default(synthesis_methodology_label|default('', true), true) }}
+                        {% elif is_dcf_only_methodology %}
+                        {{ t.calib_dcf_projection_years }}: {{ dcf_projection_years|default(5) }}
+                        {% else %}
+                        {{ valuation_methodology_display }}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {# EV Result — short label for A4 fit #}
+                <div style="background: hsl(var(--report-slate-50)); padding: 4pt 8pt; border-radius: 4pt; border: 1pt solid hsl(var(--report-slate-200)); flex-shrink: 0;">
+                    <div style="font-size: 6pt; color: hsl(var(--report-slate-500)); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1pt;">
+                        {% if _show_weighted_synthesis_bridge %}{{ t.synthesis_accountant_blend_label }}
+                        {% elif show_ev_equity_bridge and equity_value and not show_enterprise_to_equity_bridge|default(true) %}{{ t.calib_dcf_calculated_value }}{% else %}{{ t.ledger_ev_short }}{% endif %}
+                    </div>
+                    {% if show_ev_equity_bridge and equity_value and not show_enterprise_to_equity_bridge|default(true) %}
+                    {% set _bridge_ev_display = equity_value|format_currency %}
+                    {% else %}
+                    {% set _bridge_ev_display = enterprise_value_mid|format_currency %}
+                    {% endif %}
+                    <div class="value-bridge-bottom-figure{% if _bridge_ev_display|length > 17 %} value-bridge-bottom-figure--very-long value-bridge-bottom-figure--extra-long{% elif _bridge_ev_display|length > 13 %} value-bridge-bottom-figure--very-long{% elif _bridge_ev_display|length > 10 %} value-bridge-bottom-figure--long{% endif %}" style="font-size: 10pt; font-weight: 700; color: hsl(var(--report-teal));">
+                        {{ _bridge_ev_display }}
+                    </div>
+                </div>
+            </div>
+
+            {# Bridge to Equity — itemized table #}
+            {% if show_enterprise_to_equity_bridge|default(true) and (has_net_debt_adjustment or has_tax_latencies or has_balance_sheet_adjustments) %}
+            <div class="ev-equity-bridge-section" style="margin-top: 8pt; padding-top: 8pt; border-top: 1pt dashed hsl(var(--report-slate-200));">
+                {% include "main_report/components/_equity_bridge_table.html" %}
+            </div>
+            {% endif %}
+            {% if saas_nrr_pct or saas_rule_of_40 or saas_gross_revenue_churn_pct %}
+            <div style="margin-top: 8pt; padding-top: 8pt; border-top: 1pt dashed hsl(var(--report-slate-200)); font-size: 7pt; color: hsl(var(--report-text-muted));">
+                <strong style="color: hsl(var(--report-text));">{{ t.exec_saas_quality_title }}:</strong>
+                {% if saas_nrr_pct %} {{ t.exec_saas_nrr_label }} {{ saas_nrr_pct|safe_round(0) }}%{% endif %}
+                {% if saas_rule_of_40 %}{% if saas_nrr_pct %} •{% endif %} {{ t.exec_saas_rule_of_40_label }} {{ saas_rule_of_40|safe_round(0) }}{% endif %}
+                {% if saas_gross_revenue_churn_pct %}{% if saas_nrr_pct or saas_rule_of_40 %} •{% endif %} {{ t.exec_saas_churn_label }} {{ saas_gross_revenue_churn_pct|safe_round(0) }}%{% endif %}
+            </div>
+            {% endif %}
+            {% include "main_report/components/_nwc_provenance_summary.html" %}
+        </div>
+    </div>
+    
+    <div style="page-break-inside: avoid; break-inside: avoid; margin-top: 4pt; margin-bottom: 6pt;">
+        {% if not is_dcf_only_methodology and applied_multiple is not none and applied_multiple != 0 %}
+        {% if is_governed_external_market_reference|default(false) %}
+        <div style="margin: 8pt 0; padding: 6pt 10pt; border-radius: 4pt; background: hsla({{ teal_hsl }}, 0.04); border: 0.5pt solid hsla({{ teal_hsl }}, 0.20); page-break-inside: avoid; break-inside: avoid;">
+            <p style="margin: 0; font-size: 7pt; color: hsl(var(--report-slate-700)); line-height: 1.4;">
+                {% set _calib_sample = ((advisor_multiple_transparency|default({})).benchmark_evidence|default({})).sample_disclosure|default(none) %}
+                <strong>Multiple-kalibratie:</strong> de marktcomponent gebruikt de verzegelde externe referentie van {{ applied_multiple|safe_round(2) }}× gerapporteerde EBITDA; de sensitiviteitscorridor bedraagt {{ multiple_low|safe_round(2) }}×–{{ multiple_high|safe_round(2) }}× en is geen percentielrange.{% if _calib_sample %} {{ _calib_sample }}{% endif %}
+                {% if governed_market_enterprise_value_low is not none and governed_market_enterprise_value_mid is not none and governed_market_enterprise_value_high is not none %}<br>{% set _gm_mid_is_high = (governed_market_enterprise_value_mid|float) == (governed_market_enterprise_value_high|float) %}{% if _gm_mid_is_high %}<strong>Marktgevoeligheid:</strong> {{ governed_market_enterprise_value_low|format_currency }}–{{ governed_market_enterprise_value_high|format_currency }} · <strong>toegepaste markt-EV:</strong> {{ governed_market_enterprise_value_mid|format_currency }}.{% else %}<strong>Markt-EV laag / midden / hoog:</strong> {{ governed_market_enterprise_value_low|format_currency }} / {{ governed_market_enterprise_value_mid|format_currency }} / {{ governed_market_enterprise_value_high|format_currency }}.{% endif %}{% endif %}
+            </p>
+        </div>
+        {% endif %}
+        {# Multiple calibration proof-of-work (hidden when no multiples: DCF-only, fiscal, NAV).
+           When the dedicated EV/EBITDA dossier renders above (`has_ebitda_multiple_page`)
+           the waterfall lives there; we emit a cross-reference here instead so a hybrid
+           report doesn't print the same waterfall twice (mirrors the PDF dedupe). #}
+        {% if not (has_ebitda_multiple_page or has_revenue_multiple_page) %}
+        {% include "main_report/components/_multiple_waterfall_chart.html" %}
+        {% else %}
+        <div style="margin: 8pt 0; padding: 6pt 10pt; border-radius: 4pt; background: hsla({{ teal_hsl }}, 0.04); border: 0.5pt solid hsla({{ teal_hsl }}, 0.20); page-break-inside: avoid; break-inside: avoid;">
+            <p style="margin: 0; font-size: 7pt; color: hsl(var(--report-slate-700)); line-height: 1.4;">
+                <span style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl({{ teal_hsl }});">{{ t.calib_waterfall_xref_label }}:</span>
+                {{ t.calib_waterfall_xref_caption }}
+            </p>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        {# EV-to-Equity proof-of-work #}
+        {% if show_enterprise_to_equity_bridge|default(true) %}
+        {% include "main_report/components/_valuation_waterfall_chart.html" %}
+        {% endif %}
+        {% include "main_report/components/_advisor_controls_audit.html" %}
+    </div>
+
+    {% if not is_dcf_only_methodology and applied_multiple is not none and applied_multiple != 0 %}
+    {# Full Calibration Ledger (hidden when no multiples: DCF-only, fiscal, NAV) #}
+    <h3 style="margin: 10pt 0 4pt 0; font-size: 9pt;">{{ t.calib_full_calculation }}</h3>
+
+    {% include "main_report/components/_calibration_ledger.html" %}
+
+    {# Blend reconciliation — see PDF twin. When the engine blends an SDE leg
+       into the headline, the ledger's last step (EBITDA leg) does not equal the
+       headline on its own; spell out the weighted bridge. #}
+    {% if sde_blend_applied|default(false) and sde_blend_leg_ev and ebitda_blend_leg_ev %}
+    <div style="margin-top: 6pt; padding: 6pt 9pt; border-radius: 4pt; background: hsla({{ teal_hsl }}, 0.05); border-left: 3pt solid hsl({{ teal_hsl }}); font-size: 7pt; color: hsl(var(--report-slate-700)); line-height: 1.5;">
+        <strong>{% if (locale|default('nl'))|lower == 'fr' %}Réconciliation du mélange{% elif (locale|default('nl'))|lower == 'en' %}Blend reconciliation{% else %}Blend-reconciliatie{% endif %}:</strong>
+        {{ ebitda_blend_leg_ev|format_currency_compact }} ({% if (locale|default('nl'))|lower == 'fr' %}jambe EBITDA{% elif (locale|default('nl'))|lower == 'en' %}EBITDA leg{% else %}EBITDA-leg{% endif %}, {{ ebitda_blend_weight_pct }}%) + {{ sde_blend_leg_ev|format_currency_compact }} ({% if (locale|default('nl'))|lower == 'fr' %}jambe SDE{% elif (locale|default('nl'))|lower == 'en' %}SDE leg{% else %}SDE-leg{% endif %}, {{ sde_blend_weight_pct }}%) = <strong style="color: hsl({{ teal_hsl }});">{{ sde_blend_headline_ev|format_currency_compact }}</strong>
+        {% if applied_multiple %}<span style="color: hsl(var(--report-slate-500));">({% if (locale|default('nl'))|lower == 'fr' %}multiple de la branche EBITDA{% elif (locale|default('nl'))|lower == 'en' %}EBITDA leg multiple{% else %}multiple van de EBITDA-component{% endif %} {{ applied_multiple|safe_round(2) }}×)</span>{% endif %}
+    </div>
+    {% endif %}
+
+    {# Reference Notes (multiples-specific) #}
+    <div style="margin-top: 6pt; font-size: 6pt; color: hsl(var(--report-slate-500)); line-height: 1.4;">
+        <p style="margin: 0 0 4pt 0;">
+            ¹ {% if is_disclosed_external_market_fallback|default(false) %}Bekendgemaakte externe referentie — geen Upswitch Index-benchmark, empirische percentielen, steekproef of bewijs van vergelijkbare transacties voor {{ fallback_market_key }}.{% elif show_benchmark_reference_without_table|default(false) %}{{ t.calib_ref_market_band_reference_only }}{% else %}{{ t.calib_ref_market_band }}{% endif %}
+        </p>
+        <p style="margin: 0 0 4pt 0;">
+            ² {% if show_size_discount_skipped_note|default(false) %}{{ t.calib_ref_size_discount_skipped }}{% else %}{{ t.calib_ref_size_discount }}{% endif %}
+        </p>
+        <p style="margin: 0;">
+            ³ {{ t.calib_ref_illiquidity }}
+        </p>
+    </div>
+
+    {# ── Owner Risk Reconciliation ──────────────────────────────────
+       M&A-grade single ledger of ALL owner-related discounts (multiple
+       side + equity side) on one auditable record, with the no-double-
+       count invariant quoted verbatim. Sourced from
+       `valuation.owner_risk_ledger` (typed Pydantic model built in
+       `synthesizer._build_owner_risk_ledger_safely`). The component
+       renders nothing when the ledger is None, so this is safe to
+       include unconditionally inside the multiples branch. #}
+    {% include "main_report/components/_owner_risk_ledger.html" %}
+    {% endif %}
+
+    {# DCF Sensitivity Analysis - For DCF/Hybrid methodologies #}
+    {# DCF sensitivity: suppressed on adaptive-only path — DCF detail lives in flagship adaptive chapter. #}
+    {% if has_dcf and not is_adaptive_only_path|default(false) %}
+    {% set dcf_secondary_axis_key = dcf_sensitivity_matrix_2d.secondary_axis_key if dcf_sensitivity_matrix_2d and dcf_sensitivity_matrix_2d.secondary_axis_key else ('exit_multiple' if dcf_terminal_value_methodology == 'exit_multiple' else 'terminal_growth') %}
+    <div style="margin-top: 20pt; padding: 12pt; background: hsl(var(--report-surface)); border-radius: 6pt;">
+        <h4 style="margin: 0 0 12pt 0; font-size: 9.5pt; color: hsl(var(--report-slate-900));">{{ t.calib_dcf_sensitivity_title }}</h4>
+        <div style="display: flex; gap: var(--space-6); font-size: 8pt;">
+            <span>
+                <span style="color: hsl(var(--report-text-muted));">{{ t.calib_dcf_wacc_label }}:</span>
+                <strong style="color: hsl(var(--report-teal));">{{ dcf_wacc|default(0.12)|format_percentage }}</strong>
+            </span>
+            <span>
+                <span style="color: hsl(var(--report-text-muted));">
+                    {% if dcf_secondary_axis_key == 'exit_multiple' %}{{ t.calib_dcf_exit_multiple }}{% else %}{{ t.calib_dcf_terminal_growth }}{% endif %}:
+                </span>
+                <strong>
+                    {% if dcf_secondary_axis_key == 'exit_multiple' %}
+                    {{ dcf_terminal_exit_multiple|default(0)|safe_round(1) }}×
+                    {% else %}
+                    {{ dcf_terminal_growth_rate|default(0.02)|format_percentage }}
+                    {% endif %}
+                </strong>
+            </span>
+            <span>
+                <span style="color: hsl(var(--report-text-muted));">{{ t.calib_dcf_projection_years }}:</span>
+                <strong>{{ dcf_projection_years|default(5) }}</strong>
+            </span>
+        </div>
+        <p style="margin: 8pt 0 0 0; font-size: 7pt; color: hsl(var(--report-text-muted));">
+            <span style="text-transform: uppercase; letter-spacing: 0.05em;">{{ t.calib_dcf_terminal_methodology_label }}:</span>
+            <strong>
+                {% if dcf_terminal_value_methodology == 'exit_multiple' %}
+                {{ t.calib_dcf_terminal_method_exit_multiple }}
+                {% else %}
+                {{ t.calib_dcf_terminal_method_gordon }}
+                {% endif %}
+            </strong>
+            ·
+            {% if dcf_terminal_value_methodology == 'exit_multiple' %}
+            {{ t.calib_dcf_sensitivity_note_exit_multiple }}
+            {% else %}
+            {{ t.calib_dcf_sensitivity_note_gordon }}
+            {% endif %}
+        </p>
+        {% if dcf_wacc_buildup %}
+        <p style="margin: 8pt 0 0 0; font-size: 7pt; color: hsl(var(--report-text-muted));">
+            <span style="text-transform: uppercase; letter-spacing: 0.05em;">{{ t.calib_dcf_wacc_buildup_label }}:</span>
+            {% if dcf_wacc_buildup.mode|default('') == 'direct_sector_wacc' %}
+            {# Direct-mode runs carry no CAPM components — rendering the CAPM
+               formula here printed "0,00% + 0,00 × 0,00%". Mirror the PDF twin:
+               applied rate, labelled source series, labelled model sensitivity
+               (derived from the same axis values the matrix renders from). #}
+            {% set _direct_contract = dcf_wacc_buildup.wacc_evidence_contract|default({}) %}
+            {% set _wacc_axis = dcf_sensitivity_matrix_2d.primary_axis_values|default([]) if dcf_sensitivity_matrix_2d else [] %}
+            {{ dcf_wacc_buildup.wacc|default(dcf_wacc)|format_percentage }}
+            ({% if (locale|default('nl'))|lower == 'fr' %}taux sectoriel publié appliqué directement{% elif (locale|default('nl'))|lower == 'en' %}published sector rate applied directly{% else %}gepubliceerde sectorrente rechtstreeks toegepast{% endif %}{% if _direct_contract.range_low_pct is defined and _direct_contract.range_high_pct is defined %}; {% if (locale|default('nl'))|lower == 'fr' %}série source observée{% elif (locale|default('nl'))|lower == 'en' %}observed source series{% else %}geobserveerde bronreeks{% endif %} {{ (_direct_contract.range_low_pct|float / 100)|format_percentage }}–{{ (_direct_contract.range_high_pct|float / 100)|format_percentage }}{% endif %}{% if _wacc_axis|length >= 2 %}; {% if (locale|default('nl'))|lower == 'fr' %}sensibilité du modèle{% elif (locale|default('nl'))|lower == 'en' %}model sensitivity{% else %}modelgevoeligheid{% endif %} {{ (_wacc_axis|map('float')|min)|format_percentage }}–{{ (_wacc_axis|map('float')|max)|format_percentage }}{% endif %}).
+            {% else %}
+            {{ dcf_wacc_buildup.risk_free_rate|default(0)|format_percentage }}
+            + {{ dcf_wacc_buildup.beta|default(0)|safe_round(2) }} × {{ dcf_wacc_buildup.equity_risk_premium|default(0)|format_percentage }}
+            {% if dcf_wacc_buildup.size_premium %}+ {{ dcf_wacc_buildup.size_premium|format_percentage }}{% endif %}
+            {% if dcf_wacc_buildup.company_specific_risk %}+ {{ dcf_wacc_buildup.company_specific_risk|format_percentage }}{% endif %}
+            {% endif %}
+        </p>
+        {% endif %}
+        {% if dcf_academic_cost_of_equity_formula %}
+        <p style="margin: 6pt 0 0 0; font-size: 7pt; color: hsl(var(--report-text-muted));">
+            <span style="text-transform: uppercase; letter-spacing: 0.05em;">{{ t.calib_dcf_academic_coe_label }}:</span>
+            {{ dcf_academic_cost_of_equity_formula }}
+        </p>
+        {% endif %}
+        <p style="margin: 6pt 0 0 0; font-size: 7pt; color: hsl(var(--report-text-muted));">
+            <span style="text-transform: uppercase; letter-spacing: 0.05em;">{{ t.calib_dcf_mid_year_label }}:</span>
+            {% if dcf_mid_year_discounting|default(true) %}
+                {{ t.calib_dcf_mid_year_note }}
+            {% else %}
+                {{ t.calib_dcf_year_end_note }}
+            {% endif %}
+        </p>
+        {% if dcf_terminal_value is defined and dcf_terminal_value and dcf_pv_terminal_value is defined %}
+        {% set _dcf_ev_for_terminal_split = (dcf_enterprise_value|default(valuation, true))|float %}
+        {% set _dcf_terminal_pct = (((dcf_pv_terminal_value|default(0)) / _dcf_ev_for_terminal_split) * 100) if _dcf_ev_for_terminal_split else 0 %}
+        <p style="margin: 8pt 0 0 0; font-size: 7pt; color: hsl(var(--report-text-muted));">
+            {{ t.dcf_pv_terminal_label }}{% if dcf_terminal_value_methodology == 'exit_multiple' and dcf_terminal_exit_multiple %} ({{ dcf_terminal_exit_multiple|safe_round(1) }}×){% endif %}:
+            {{ dcf_pv_terminal_value|format_currency_compact }}
+            ({{ _dcf_terminal_pct|safe_round(0) }}% {{ t.footer_of }} DCF EV)
+        </p>
+        {% endif %}
+        {% if dcf_terminal_value_pct_of_total or dcf_explicit_forecast_pct_of_total %}
+        <p style="margin: 6pt 0 0 0; font-size: 7pt; color: hsl(var(--report-text-muted));">
+            <span style="text-transform: uppercase; letter-spacing: 0.05em;">{{ t.calib_dcf_terminal_split_label }}:</span>
+            {% set _calib_split_dp = 1 if report_scope|default('') == 'client_indicative' else 0 %}
+            {{ t.calib_dcf_explicit_period_label }} {{ dcf_explicit_forecast_pct_of_total|default(0)|safe_round(_calib_split_dp) }}%
+            · {{ t.calib_dcf_terminal_period_label }} {{ dcf_terminal_value_pct_of_total|default(0)|safe_round(_calib_split_dp) }}%
+        </p>
+        {% endif %}
+        {% if dcf_historical_fcf_note %}
+        <div style="margin-top: 10pt; padding: 8pt 10pt; border-radius: 6pt; border: 1pt solid hsl(var(--report-slate-200)); background: hsl(var(--report-background));">
+            <div style="font-size: 6pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-teal)); margin-bottom: 3pt;">
+                {% if dcf_historical_fcf_status == 'explicit_fcff_forecast' %}{% if (locale|default('nl'))|lower == 'fr' %}Préparation des données DCF{% elif (locale|default('nl'))|lower == 'en' %}DCF input readiness{% else %}DCF-inputgereedheid{% endif %}{% else %}{{ t.dcf_historical_fcf_readiness_heading }}{% endif %}
+            </div>
+            <p style="margin: 0; font-size: 7pt; color: hsl(var(--report-text-muted)); line-height: 1.45;">
+                {{ dcf_historical_fcf_note }}
+                {% if dcf_historical_fcf_missing_fields %}
+                {{ t.dcf_historical_fcf_missing_fields_prefix }} {{ dcf_historical_fcf_missing_fields|join(', ') }}.
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% endif %}
+    {# Page Footer #}
+    {% with page_number=valuation_calibration_page_number|default(5 if show_dcf_before_calibration else 4), total_pages=total_pages %}
+    {% include "main_report/partials/_footer.html" %}
+    {% endwith %}
+</div>

@@ -1,0 +1,102 @@
+{#
+    BUYER-READY PACKAGE — Master template (Screen).
+    BET-241 / F1 scaffolding. Content shipped by F2-F6.
+
+    The buyer-ready package is the first concrete instance of the
+    "Readiness Case" atomic object (BET-247). One package = one entity
+    × one campaign. Composed from primitives already shipped
+    (TitanYearData, OwnerProfile, ValuationReport, SellabilityScore).
+
+    Render mode: screen (in-platform editor surface). PDF twin lives at
+    `templates/buyer_ready_package/pdf/buyer_ready_package.html`.
+
+    Context: `package: BuyerReadyPackageRender` (Pydantic payload
+    defined in `apps/valuation-iq/src/domain/buyer_ready_models.py`).
+
+    Section order matches F1 spec §6 (IM 12-15 page structure):
+      1.  Cover                              (F3)
+      2.  Executive summary                  (F3 LLM target)
+      3.  Business overview                  (F3 LLM target)
+      4.  Financial summary                  (F3)
+      5.  Normalised EBITDA bridge           (D4 / F3 sub)
+      6.  Customer mix                       (F3)
+      7.  Team & ownership                   (F3)
+      8.  Growth thesis                      (F3 LLM target)
+      9.  Deal terms                         (F3)
+      10. Transferability & risks            (F3)
+      11. Working-capital peg                (D5 / F5)
+      12. Tax-latency callouts               (D5 / F5)
+      13. Appendix — methodology + sources   (F3)
+      14. Appendix — missing-doc + data-room (D3 + D6)
+      15. Disclaimers                        (F3)
+
+    Buyer FAQ (D2) renders as a sibling deliverable, not inside the IM.
+    Missing-doc checklist (D3) summary appears in the IM appendix; full
+    interactive surface lives in Mercury (F2).
+    Legal-readiness handoff is a pre-counsel guardrail: gates and issue
+    list only, no NDA/LOI/SPA drafting or redlining.
+#}
+
+{% include "buyer_ready_package/_styles.html" %}
+
+<div class="buyer-ready-package brp-report-shell"
+     data-package-id="{{ package.package_id }}"
+     data-render-mode="screen"
+     data-document-family="buyer-ready-package">
+
+    {# Optional advisor co-brand header — falls back to Upswitch default when absent. #}
+    {% if package.advisor_brand %}
+    <div class="brp-advisor-brand">
+        <div class="brp-brand-left">
+            {% if package.advisor_brand.logo_url %}
+                <img src="{{ package.advisor_brand.logo_url }}" alt="{{ package.advisor_brand.firm_name }}">
+            {% endif %}
+            <span>{{ package.advisor_brand.firm_name }}</span>
+        </div>
+        <div class="brp-brand-meta">
+            Confidential buyer-ready package<br>
+            {{ package.advisor_brand.footer_text or "Prepared for qualified buyer review." }}
+        </div>
+    </div>
+    {% endif %}
+
+    {# ── Controlled transaction package envelope ── #}
+    {% include "buyer_ready_package/screen/_package_manifest.html" %}
+
+    {# ── D1 — IM/CIM ── #}
+    {% set brp_render_mode = "screen" %}
+    {% include "buyer_ready_package/screen/_im.html" %}
+
+    {# ── D4 — Normalised EBITDA bridge (inline one-pager) ── #}
+    {% include "buyer_ready_package/screen/_ebitda_bridge.html" %}
+
+    {# ── D5 — WC peg + tax-latency ── #}
+    {% if package.wc_peg %}
+        {% include "buyer_ready_package/screen/_wc_peg.html" %}
+    {% endif %}
+    {% include "buyer_ready_package/screen/_tax_latency.html" %}
+
+    {# ── D3 — Missing-doc checklist (summary in appendix; interactive UI in Mercury) ── #}
+    {% include "buyer_ready_package/screen/_missing_doc_checklist.html" %}
+
+    {# ── D6 — Data-room manifest (integration-fed vault index) ── #}
+    {% include "buyer_ready_package/screen/_data_room_manifest.html" %}
+
+    {# ── Legal-readiness handoff — pre-Legora / pre-counsel guardrail ── #}
+    {% include "buyer_ready_package/screen/_legal_readiness.html" %}
+
+    {# ── Deal-readiness advisory (data-derived; advisory only) ── #}
+    {% if package.deal_readiness %}
+        {% include "buyer_ready_package/screen/_deal_readiness.html" %}
+    {% endif %}
+
+    {# ── D2 — Buyer FAQ ── #}
+    {% include "buyer_ready_package/screen/_buyer_faq.html" %}
+
+    {# Footer: engine signals + Upswitch Index provenance #}
+    <div class="brp-footer" style="font-size: 11px; opacity: 0.6; margin-top: 24px;">
+        Package version {{ package.engine_signals.package_version }} ·
+        Generated {{ package.generated_at }} ·
+        LLM sections: {{ package.engine_signals.llm_sections_with_narrative }} narrative + {{ package.engine_signals.llm_sections_placeholder }} placeholder
+    </div>
+</div>

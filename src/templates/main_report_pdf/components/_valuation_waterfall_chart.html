@@ -1,0 +1,212 @@
+{% if valuation_waterfall_steps|default([])|length > 0 %}
+{# Availability is semantic: an unknown equity value must never become a zero bar. #}
+{% set bridge = namespace(complete=true) %}
+{% for step in valuation_waterfall_steps %}
+    {% if step.end_value is not number or step.end_value is boolean or (step.end_value|string|lower) in ['nan', 'snan', 'inf', '-inf', 'infinity', '-infinity'] %}
+        {% set bridge.complete = false %}
+    {% endif %}
+{% endfor %}
+{% if equity_value is not defined or equity_value is none %}
+<p class="valuation-bridge-unavailable" style="font-size: 9pt; line-height: 1.5;">
+{% if (locale|default('nl'))[:2] == 'fr' %}Valeur des capitaux propres non déterminée. Complétez et vérifiez les données du pont entre valeur d’entreprise et capitaux propres avant d’afficher ce graphique.
+{% elif (locale|default('nl'))[:2] == 'en' %}Equity value not determined. Complete and review the enterprise-to-equity bridge inputs before displaying this chart.
+{% else %}Aandelenwaarde niet bepaald. Vul de gegevens voor de brug van ondernemingswaarde naar aandelenwaarde aan en controleer ze voordat deze grafiek wordt getoond.
+{% endif %}
+</p>
+{% elif not bridge.complete %}
+<p class="valuation-bridge-unavailable" style="font-size: 9pt; line-height: 1.5;">
+{% if (locale|default('nl'))[:2] == 'fr' %}Le pont de valeur n’est pas encore disponible. Complétez et vérifiez ses données avant d’afficher ce graphique.
+{% elif (locale|default('nl'))[:2] == 'en' %}The value bridge is not available yet. Complete and review its inputs before displaying this chart.
+{% else %}De waardebrug is nog niet beschikbaar. Vul de gegevens aan en controleer ze voordat deze grafiek wordt getoond.
+{% endif %}
+</p>
+{% else %}
+{% set _is_asset_waterfall_feature = is_asset_anchored_method|default(is_asset_anchored_methodology|default(false)) %}
+{% set chart_width = valuation_chart_width|default(500) %}
+{% set chart_height = valuation_chart_height|default(300 if _is_asset_waterfall_feature else 148) %}
+{% set desired_bar_width = valuation_chart_bar_width|default(42 if _is_asset_waterfall_feature else 32) %}
+{% set padding_top = 42 if _is_asset_waterfall_feature else 26 %}
+{% set padding_bottom = 52 if _is_asset_waterfall_feature else 34 %}
+{% set padding_left = 48 %}
+{% set padding_right = 14 %}
+{% set chart_inner_width = chart_width - padding_left - padding_right %}
+{% set chart_inner_height = chart_height - padding_top - padding_bottom %}
+
+{% set plotted_values = [0] %}
+{% for step in valuation_waterfall_steps %}
+    {% set _ = plotted_values.append(step.start_value|default(0)|float) %}
+    {% set _ = plotted_values.append(step.end_value|default(0)|float) %}
+{% endfor %}
+{% set _raw_max = (plotted_values|max) %}
+{% set _raw_min = (plotted_values|min) %}
+{# Round-12 audit: snap €-denominated Y-axis ticks to a "nice" grid so they
+   read like financial reports (€2.0M/€2.5M/€3.0M instead of €1.93M/€2.42M/
+   €2.91M). Step ladder spans SME-deal sizes; min rounds DOWN, max rounds UP,
+   so bars never clip. #}
+{% set _nice_step =
+       1_000 if _raw_max <= 4_000
+  else 2_000 if _raw_max <= 8_000
+  else 5_000 if _raw_max <= 20_000
+  else 10_000 if _raw_max <= 40_000
+  else 25_000 if _raw_max <= 100_000
+  else 50_000 if _raw_max <= 200_000
+  else 100_000 if _raw_max <= 400_000
+  else 250_000 if _raw_max <= 1_000_000
+  else 500_000 if _raw_max <= 2_000_000
+  else 1_000_000 if _raw_max <= 4_000_000
+  else 2_500_000 if _raw_max <= 10_000_000
+  else 5_000_000 if _raw_max <= 20_000_000
+  else 10_000_000 %}
+{% set max_value = (((_raw_max / _nice_step)|round(0, 'ceil'))|int) * _nice_step %}
+{% set min_value = (((_raw_min / _nice_step)|round(0, 'floor'))|int) * _nice_step %}
+{% set value_range = (max_value - min_value) if (max_value - min_value) > 0 else 1 %}
+{% set total_bars = valuation_waterfall_steps|length %}
+{% set gap_divisor = total_bars - 1 if total_bars > 1 else 1 %}
+{% set min_gap = 3 %}
+{% set preferred_gap = 7 %}
+{% set bar_budget = (chart_inner_width - (gap_divisor * min_gap)) / total_bars if total_bars > 0 else desired_bar_width %}
+{% set computed_bar_width = desired_bar_width if desired_bar_width < bar_budget else bar_budget %}
+{% set bar_width = 12 if computed_bar_width < 12 else computed_bar_width %}
+{% set available_width = chart_inner_width - (total_bars * bar_width) %}
+{% set calculated_gap = available_width / gap_divisor %}
+{% set actual_gap = preferred_gap if calculated_gap > preferred_gap else (min_gap if calculated_gap < min_gap else calculated_gap) %}
+{% set zero_y = padding_top + ((max_value - 0) / value_range) * chart_inner_height %}
+{% set show_annotation = chart_width >= 460 %}
+
+<div style="margin-top: {% if _is_asset_waterfall_feature %}0{% else %}6pt{% endif %}; padding: {% if _is_asset_waterfall_feature %}14pt 12pt 16pt 12pt{% else %}7pt 9pt{% endif %}; background: hsl(40, 20%, 98%); border: 1pt solid hsl(224, 10%, 90%); border-radius: {% if _is_asset_waterfall_feature %}8pt{% else %}6pt{% endif %}; overflow: hidden; page-break-inside: avoid; break-inside: avoid;">
+    <table style="width: 100%; border-collapse: collapse; border: none; margin-bottom: {% if _is_asset_waterfall_feature %}10pt{% else %}6pt{% endif %};">
+        <tr>
+            <td style="border: none; padding: 0; vertical-align: top;">
+                <div style="font-size: {% if _is_asset_waterfall_feature %}9pt{% else %}8pt{% endif %}; font-weight: 700; color: hsl(225, 18%, 12%); text-transform: uppercase; letter-spacing: 0;">
+                    {{ t.calib_value_waterfall_title }}
+                </div>
+                <div style="font-size: {% if _is_asset_waterfall_feature %}7.5pt{% else %}7pt{% endif %}; color: hsl(224, 10%, 45%); line-height: 1.4; margin-top: 2pt;">
+                    {# Panel MAJOR (D1/D2): the default intro ("Van ondernemingswaarde
+                       naar finale aandelenwaarde") is EV-method boilerplate and is wrong
+                       on an asset/NAV (D1) or real-estate-yield (D2) dossier — there is no
+                       ondernemingswaarde (EV) leg (the waterfall starts from Substantie/
+                       Vastgoedwaarde). Render a method-correct, locale-aware caption inline
+                       (the dedicated catalog/contract keys do not exist, so we must not
+                       reference them). Presentation-only; multiples cases (A/B/C) unchanged. #}
+                    {% if _is_asset_waterfall_feature %}
+                    {% set _wf_intro_en = (locale|default('nl'))|lower == 'en' %}
+                    {% if is_yield_methodology|default(false) %}{% if ((locale|default('nl'))|lower)[:2] == 'fr' %}De la valeur de marché immobilière à la valeur finale des capitaux propres. La trésorerie, la dette portant intérêts et les autres ajustements de bilan sont rapprochés des données de bilan fournies.{% elif _wf_intro_en %}From property market value to final equity value. Cash, interest-bearing debt and other balance-sheet adjustments are reconciled to the provided balance inputs.{% else %}Van vastgoed-marktwaarde naar finale aandelenwaarde. Kas, rentedragende schuld en overige balanscorrecties zijn aangesloten op de aangeleverde balansinputs.{% endif %}{% else %}{% if ((locale|default('nl'))|lower)[:2] == 'fr' %}De la valeur substantielle (NAV) à la valeur finale des capitaux propres. La trésorerie, la dette portant intérêts et les autres ajustements de bilan sont rapprochés des données de bilan fournies.{% elif _wf_intro_en %}From substance value (NAV) to final equity value. Cash, interest-bearing debt and other balance-sheet adjustments are reconciled to the provided balance inputs.{% else %}Van substantiewaarde (NAV) naar finale aandelenwaarde. Kas, rentedragende schuld en overige balanscorrecties zijn aangesloten op de aangeleverde balansinputs.{% endif %}{% endif %}
+                    {% else %}
+                    {{ value_waterfall_intro_text or t.calib_value_waterfall_intro }}
+                    {% endif %}
+                </div>
+            </td>
+            <td style="border: none; padding: 0; text-align: right; vertical-align: top;">
+                <span style="display: inline-block; padding: {% if _is_asset_waterfall_feature %}5pt 9pt{% else %}4pt 8pt{% endif %}; border-radius: 999px; background: hsl(172, 45%, 92%); color: hsl(172, 60%, 32%); font-size: {% if _is_asset_waterfall_feature %}7.5pt{% else %}7pt{% endif %}; font-weight: 700; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; white-space: nowrap;">
+                    {{ equity_value|format_currency_compact }}
+                </span>
+            </td>
+        </tr>
+    </table>
+
+    <svg width="{{ chart_width }}" height="{{ chart_height }}" viewBox="0 0 {{ chart_width }} {{ chart_height }}" style="display: block; margin: 0 auto; font-family: 'Satoshi', 'Noto Sans', 'Noto Sans Symbols 2', sans-serif;">
+        <rect x="{{ padding_left - 8 }}" y="{{ padding_top - 10 }}" width="{{ chart_inner_width + 16 }}" height="{{ chart_inner_height + 16 }}" rx="4" fill="hsl(40, 20%, 99%)" />
+
+        {% for i in range(4) %}
+            {% set ratio = i / 3 %}
+            {% set grid_value = min_value + (value_range * ratio) %}
+            {% set y_pos = padding_top + ((max_value - grid_value) / value_range) * chart_inner_height %}
+            <line x1="{{ padding_left - 4 }}" y1="{{ y_pos }}" x2="{{ padding_left + chart_inner_width }}" y2="{{ y_pos }}" stroke="hsl(224, 10%, 90%)" {% if i > 0 %}stroke-dasharray="3,2"{% endif %}/>
+            <text x="{{ padding_left - 8 }}" y="{{ y_pos + 3 }}" text-anchor="end" font-size="7" fill="hsl(224, 10%, 55%)">{{ grid_value|format_currency_compact }}</text>
+        {% endfor %}
+
+        <line x1="{{ padding_left - 4 }}" y1="{{ zero_y }}" x2="{{ padding_left + chart_inner_width }}" y2="{{ zero_y }}" stroke="hsl(224, 8%, 70%)" stroke-width="1"/>
+
+        {% for step in valuation_waterfall_steps %}
+            {% set step_x = padding_left + (loop.index0 * (bar_width + actual_gap)) %}
+            {% set previous_end = valuation_waterfall_steps[loop.index0 - 1].end_value|float if loop.index0 > 0 else 0 %}
+            {% set start_value = step.start_value|float if step.start_value is number else previous_end %}
+            {% set end_value = step.end_value|default(0)|float %}
+            {% set is_total = step.kind in ['base', 'subtotal', 'total'] %}
+            {% set connector_value = valuation_waterfall_steps[loop.index0 - 1].end_value|default(start_value)|float if loop.index0 > 0 else start_value %}
+
+            {% if is_total %}
+                {% set top_value = end_value if end_value > 0 else 0 %}
+                {% set bottom_value = 0 if end_value > 0 else end_value %}
+            {% else %}
+                {% set top_value = start_value if start_value > end_value else end_value %}
+                {% set bottom_value = end_value if start_value > end_value else start_value %}
+            {% endif %}
+
+            {% set bar_y = padding_top + ((max_value - top_value) / value_range) * chart_inner_height %}
+            {% set bar_bottom = padding_top + ((max_value - bottom_value) / value_range) * chart_inner_height %}
+            {% set bar_height = bar_bottom - bar_y %}
+            {% set connector_y = padding_top + ((max_value - connector_value) / value_range) * chart_inner_height %}
+
+            {% if loop.index0 > 0 %}
+                {% set prev_x = padding_left + ((loop.index0 - 1) * (bar_width + actual_gap)) + bar_width %}
+                <line x1="{{ prev_x }}" y1="{{ connector_y }}" x2="{{ step_x }}" y2="{{ connector_y }}" stroke="hsl(224, 8%, 82%)" stroke-width="1.1" stroke-dasharray="3,2"/>
+            {% endif %}
+
+            {% if step.tone == 'positive' %}
+                {% set fill_color = 'hsl(143, 40%, 42%)' %}
+            {% elif step.tone == 'negative' %}
+                {% set fill_color = 'hsl(6, 55%, 50%)' %}
+            {% elif step.tone == 'bridge' %}
+                {% set fill_color = 'hsl(172, 60%, 32%)' %}
+            {% elif step.tone == 'brand' %}
+                {% set fill_color = 'hsl(172, 55%, 45%)' %}
+            {% else %}
+                {% set fill_color = 'hsl(224, 14%, 28%)' %}
+            {% endif %}
+
+            <rect x="{{ step_x + 1.5 }}" y="{{ bar_y + 1.5 }}" width="{{ bar_width }}" height="{{ bar_height }}" rx="3" fill="hsla(224, 12%, 22%, 0.08)"/>
+            <rect x="{{ step_x }}" y="{{ bar_y }}" width="{{ bar_width }}" height="{{ bar_height }}" rx="3" fill="{{ fill_color }}"/>
+
+            {% set label_y = (bar_y - 7) if end_value >= 0 else (bar_bottom + 11) %}
+            <text x="{{ step_x + (bar_width / 2) }}" y="{{ label_y }}" text-anchor="middle" font-size="7.2" font-weight="700" fill="hsl(225, 18%, 12%)">
+                {% if step.kind in ['increase', 'decrease'] %}
+                    {% set _delta_value = step.delta_value|float if step.delta_value is number else end_value - start_value %}
+                    {% if _delta_value > 0 %}+{% endif %}{{ _delta_value|format_currency_compact }}
+                {% else %}
+                    {{ step.end_value|format_currency_compact }}
+                {% endif %}
+            </text>
+
+            {# Annotation + short label — bound to the bar's column, so we
+               truncate with explicit `…` instead of letting long strings
+               overflow into the neighbour. Matches the round-8 waterfall
+               convention. #}
+            {% if show_annotation and step.annotation %}
+                <text x="{{ step_x + (bar_width / 2) }}" y="{{ label_y - 8 }}" text-anchor="middle" font-size="6.2" fill="hsl(224, 10%, 55%)">
+                    {{ step.annotation|truncate(18, True, '…') }}
+                </text>
+            {% endif %}
+
+            {# Panel MAJOR (D1/D2): the gross start node is the substance/property
+               value, not an "EV". On asset/yield waterfalls relabel the gross node
+               (the EV-labelled start bar) so the chart never prints a bare "EV" on a
+               NAV/income figure. The node has little width, so use a compact label
+               here (the calibration box carries the full "Substantiewaarde (bruto /
+               NAV)" wording). Match the gross node by its EV short_label so it works
+               regardless of the node's waterfall `kind` (it is a 'subtotal' on the
+               asset/yield path). Other nodes (cash/debt/equity) and all
+               multiples/DCF waterfalls keep their engine labels. #}
+            {% set _wf_is_yield = is_yield_method|default(is_yield_methodology|default(false)) %}
+            {% set _wf_is_en = (locale|default('nl'))|lower == 'en' %}
+            {% set _wf_is_gross_ev_node = step.short_label == t.ledger_ev_short %}
+            {% if _is_asset_waterfall_feature and _wf_is_gross_ev_node %}
+                {% if _wf_is_yield %}{% set _wf_base_label = 'Valeur immobilière' if ((locale|default('nl'))|lower)[:2] == 'fr' else ('Property value' if _wf_is_en else 'Vastgoedwaarde') %}
+                {% else %}{% set _wf_base_label = 'Substance (NAV)' if _wf_is_en else ('Substance (NAV)' if ((locale|default('nl'))|lower)[:2] == 'fr' else 'Substantie (NAV)') %}{% endif %}
+            {% else %}
+                {% set _wf_base_label = step.short_label %}
+            {% endif %}
+            <text x="{{ step_x + (bar_width / 2) }}" y="{{ padding_top + chart_inner_height + 14 }}" text-anchor="middle" font-size="6.2" fill="hsl(224, 10%, 45%)">
+                {{ _wf_base_label|truncate(16, True, '…') }}
+            </text>
+        {% endfor %}
+    </svg>
+    {% if has_weighted_synthesis|default(false) or is_dcf_only_methodology|default(false) %}
+    {# Variant paths only: the blended/DCF EV start bar rounds independently of
+       the precise equity, so the 0,1M bar labels may not sum to the end bar.
+       Frozen multiples-path renders are untouched (both flags False). #}
+    <p style="margin-top: 4pt; font-size: 7pt; color: hsl(224, 10%, 45%);">{% if ((locale|default('nl'))|lower)[:2] == 'fr' %}Valeurs des barres arrondies à 0,1 M€ ; en raison des arrondis, la somme des barres peut différer légèrement du montant final affiché — les montants exacts figurent dans les tableaux du pont EV-vers-capitaux propres du rapport.{% elif ((locale|default('nl'))|lower)[:2] == 'en' %}Bar values rounded to €0.1M; due to rounding the bars may not sum exactly to the displayed end value — exact amounts are in the report's EV-to-equity bridge tables.{% else %}Staafwaarden afgerond op €0,1M; door afronding kan de som van de staven beperkt afwijken van het weergegeven eindbedrag — de exacte bedragen staan in de EV-naar-eigenvermogenbrugtabellen van dit rapport.{% endif %}</p>
+    {% endif %}
+</div>
+{% endif %}
+{% endif %}

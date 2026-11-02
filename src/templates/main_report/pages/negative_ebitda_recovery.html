@@ -1,0 +1,67 @@
+{% set r = negative_ebitda_resolution %}
+{% set c = negative_ebitda_recovery_copy %}
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+    <div class="section-header">
+        <span class="section-number">{{ negative_ebitda_recovery_section_number|default('') }}</span>
+        <h1 class="section-title">{{ c.title }}</h1>
+    </div>
+    <p style="color: hsl(var(--report-text-muted)); margin-bottom: var(--space-4);">{{ c.subtitle }}</p>
+
+    <div style="padding: var(--space-4); border-radius: 10px; border: 1px solid hsl(var(--report-teal) / 0.24); background: hsl(var(--report-teal) / 0.06); margin-bottom: var(--space-4);">
+        <p style="margin: 0 0 4pt; font-size: var(--font-size-xs); text-transform: uppercase; color: hsl(var(--report-text-muted));">{{ c.conclusion }}</p>
+        <p style="margin: 0; font-size: 18pt; font-weight: 750; color: hsl(var(--report-text));">{{ negative_ebitda_conclusion }}</p>
+        <p style="margin: 6pt 0 0; font-size: var(--font-size-sm); color: hsl(var(--report-text-muted));">
+            {{ r.status|replace('_', ' ')|title }} · {{ r.confidence|title }} {{ c.confidence }} · {{ r.model_version }}
+        </p>
+    </div>
+
+    <h3 style="font-size: var(--font-size-sm); text-transform: uppercase;">{{ c.position }}</h3>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: var(--space-4); font-size: var(--font-size-sm);">
+        <tr style="border-bottom: 1px solid hsl(var(--report-slate-200));"><td style="padding: 7pt 0;">{{ c.reported_ebitda }}</td><td style="text-align: right; font-weight: 700;">{{ r.reported_ebitda|format_currency }}</td></tr>
+        <tr style="border-bottom: 1px solid hsl(var(--report-slate-200));"><td style="padding: 7pt 0;">{{ c.normalized_ebitda }}</td><td style="text-align: right; font-weight: 700;">{% if r.normalized_ebitda is not none %}{{ r.normalized_ebitda|format_currency }}{% else %}—{% endif %}</td></tr>
+        <tr><td style="padding: 7pt 0;">{{ c.operating_trajectory }}</td><td style="text-align: right; font-weight: 700;">{{ negative_ebitda_trajectory.direction|replace('_', ' ')|title }} ({{ negative_ebitda_trajectory.confidence }})</td></tr>
+    </table>
+    {% if negative_ebitda_trajectory.conflicts or negative_ebitda_trajectory.warnings %}<p style="margin:-6pt 0 var(--space-4);font-size:var(--font-size-xs);color:hsl(var(--report-text-muted));">{% for item in negative_ebitda_trajectory.conflicts %}{{ item|replace('_', ' ') }}{% if not loop.last or negative_ebitda_trajectory.warnings %} · {% endif %}{% endfor %}{% for item in negative_ebitda_trajectory.warnings %}{{ item|replace('_', ' ') }}{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-4);">
+        <div style="padding:var(--space-3);border:1px solid hsl(var(--report-slate-200));border-radius:8px;">
+            <h3 style="margin-top:0;font-size:var(--font-size-sm);">{{ c.normalization_bridge }}</h3>
+            <p style="font-size:var(--font-size-sm);margin:0;">{{ c.reported_ebitda }}: <strong>{{ negative_ebitda_normalization_bridge.reported_ebitda|format_currency_compact }}</strong><br>{{ c.accepted_adjustments }}: <strong>{{ negative_ebitda_normalization_bridge.accepted_adjustments|format_currency_compact }}</strong><br>{{ c.normalized_ebitda }}: <strong>{{ negative_ebitda_normalization_bridge.normalized_ebitda|format_currency_compact }}</strong></p>
+        </div>
+        <div style="padding:var(--space-3);border:1px solid hsl(var(--report-slate-200));border-radius:8px;">
+            <h3 style="margin-top:0;font-size:var(--font-size-sm);">{{ c.break_even_bridge }}</h3>
+            {% if negative_ebitda_break_even_bridge %}<p style="font-size:var(--font-size-sm);margin:0;">{{ c.break_even }}: <strong>{{ negative_ebitda_break_even_bridge.year }}</strong><br>{{ c.revenue_at_break_even }}: <strong>{{ negative_ebitda_break_even_bridge.revenue|format_currency_compact }}</strong><br>{{ c.ebitda_at_break_even }} / {{ c.fcff_at_break_even }}: <strong>{{ negative_ebitda_break_even_bridge.ebitda|format_currency_compact }} / {{ negative_ebitda_break_even_bridge.fcff|format_currency_compact }}</strong></p>{% else %}<p style="font-size:var(--font-size-sm);margin:0;">—</p>{% endif %}
+        </div>
+    </div>
+    {% if negative_ebitda_causes %}<p style="margin:-4pt 0 var(--space-4);font-size:var(--font-size-xs);color:hsl(var(--report-text-muted));"><strong>{{ c.causes }}:</strong> {{ negative_ebitda_causes|join(', ')|replace('_', ' ') }}</p>{% endif %}
+
+    {% if negative_ebitda_scenarios %}
+    <h3 style="font-size: var(--font-size-sm); text-transform: uppercase;">{{ c.scenarios }}</h3>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: var(--space-4); font-size: var(--font-size-xs);">
+        <thead><tr style="border-bottom: 2px solid hsl(var(--report-slate-200));"><th style="text-align:left;padding:6pt 0;">{{ c.scenario }}</th><th style="text-align:right;">{{ c.probability }}</th><th style="text-align:right;">{{ c.break_even }}</th><th style="text-align:right;">{{ c.funding_need }}</th><th style="text-align:right;">{{ c.enterprise_midpoint }}</th><th style="text-align:right;">{{ c.equity_midpoint }}</th></tr></thead>
+        <tbody>{% for s in negative_ebitda_scenarios %}<tr style="border-bottom: 1px solid hsl(var(--report-slate-100));"><td style="padding:7pt 0;font-weight:650;">{{ s.key|title }}<br><span style="font-weight:400;color:hsl(var(--report-text-muted));">{{ s.status|replace('_', ' ') }}</span></td><td style="text-align:right;">{{ s.probability_percent }}%</td><td style="text-align:right;">{{ s.break_even_year or '—' }}</td><td style="text-align:right;">{{ s.funding_gap|format_currency_compact }}</td><td style="text-align:right;">{% if s.enterprise_value_mid is not none %}{{ s.enterprise_value_mid|format_currency_compact }}{% else %}—{% endif %}</td><td style="text-align:right;">{% if s.equity_value_mid is not none %}{{ s.equity_value_mid|format_currency_compact }}{% else %}—{% endif %}</td></tr>{% endfor %}</tbody>
+    </table>
+    {% endif %}
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);">
+        <div style="padding:var(--space-3);border:1px solid hsl(var(--report-slate-200));border-radius:8px;">
+            <h3 style="margin-top:0;font-size:var(--font-size-sm);">{{ c.funding }}</h3>
+            <p style="font-size:var(--font-size-sm);margin:0;">{{ c.funding_need }}: {% if r.funding_gap is not none %}<strong>{{ r.funding_gap|format_currency_compact }}</strong>{% else %}—{% endif %}{% if negative_ebitda_equity_bridge %}<br>{{ c.current_cash }} / {{ c.minimum_cash }}: <strong>{{ negative_ebitda_equity_bridge.current_cash|format_currency_compact }} / {{ negative_ebitda_equity_bridge.minimum_operating_cash|format_currency_compact }}</strong><br>{{ c.excess_cash }} / {{ c.current_debt }}: <strong>{{ negative_ebitda_equity_bridge.excess_cash|format_currency_compact }} / {{ negative_ebitda_equity_bridge.current_debt|format_currency_compact }}</strong><br>{{ c.shareholder_basis }}: <strong>{{ negative_ebitda_equity_bridge.basis|replace('_', ' ') }}</strong>{% endif %}<br>{{ c.terminal_value_share }}: {% if r.terminal_value_share is not none %}<strong>{{ (r.terminal_value_share * 100)|round(1) }}%</strong>{% else %}—{% endif %}</p>
+        </div>
+        <div style="padding:var(--space-3);border:1px solid hsl(var(--report-slate-200));border-radius:8px;">
+            <h3 style="margin-top:0;font-size:var(--font-size-sm);">{{ c.cross_checks }}</h3>
+            <p style="font-size:var(--font-size-sm);margin:0;">{% if r.cross_check_methods %}{{ r.cross_check_methods|join(', ')|replace('_', ' ') }}{% else %}{{ c.no_cross_check }}{% endif %}</p>
+        </div>
+    </div>
+
+    {% if negative_ebitda_blockers or negative_ebitda_required_evidence %}
+    <div style="margin-top:var(--space-4);padding:var(--space-3);border-left:3pt solid hsl(35,85%,52%);background:hsl(35,80%,96%);">
+        <strong>{{ c.evidence }}</strong>
+        <ul style="margin:6pt 0 0;padding-left:16pt;font-size:var(--font-size-sm);">{% for item in negative_ebitda_required_evidence %}<li>{{ item|replace('_', ' ') }}</li>{% endfor %}{% for item in negative_ebitda_blockers %}<li>{{ item|replace('_', ' ') }}</li>{% endfor %}</ul>
+    </div>
+    {% endif %}
+    {% if negative_ebitda_actions %}<div style="margin-top:var(--space-3);"><strong>{{ c.actions }}</strong><ul style="margin:6pt 0 0;padding-left:16pt;font-size:var(--font-size-sm);">{% for item in negative_ebitda_actions %}<li>{{ item }}</li>{% endfor %}</ul></div>{% endif %}
+    <p style="margin-top:var(--space-4);font-size:var(--font-size-xs);color:hsl(var(--report-text-muted));"><strong>{{ c.limitations }}.</strong> {{ c.limitations_copy }}</p>
+    {% include "main_report/partials/_footer.html" %}
+</div>

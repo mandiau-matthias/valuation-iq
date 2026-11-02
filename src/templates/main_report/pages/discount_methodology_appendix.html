@@ -1,0 +1,11 @@
+{# DISCOUNT BUILD-UP & METHODOLOGY APPENDIX (screen) — see shared body. #}
+{% set _is_en_dmp = (locale|default('nl'))|lower == 'en' %}
+{% set _is_fr_dmp = (locale|default('nl'))|lower == 'fr' %}
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+    <div class="section-header">
+        <span class="section-number">{{ discount_methodology_appendix_section_number|default('B') }}</span>
+        <h1 class="section-title">{% if is_disclosed_external_market_fallback|default(false) or is_governed_external_market_reference|default(false) %}{% if _is_fr_dmp %}Passerelle du multiple et ajustements spécifiques{% elif _is_en_dmp %}Multiple bridge and company-specific adjustments{% else %}Multiplebrug en bedrijfsspecifieke aanpassingen{% endif %}{% elif _is_fr_dmp %}Construction et justification des décotes{% elif _is_en_dmp %}Discount build-up and methodology{% else %}Opbouw en onderbouwing van de kortingen{% endif %}</h1>
+    </div>
+    {% include "main_report/components/_discount_methodology_body.html" %}
+</div>

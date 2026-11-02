@@ -1,0 +1,51 @@
+{#
+    LIQUIDATION ANALYSIS — PAGE: PREMISE RECONCILIATION (PDF version)
+
+    PDF twin of main_report/pages/liquidation_premise_reconciliation.html.
+    Phase 3 §09b — IVS 104 §80: is going-concern still defensible?
+#}
+{% set lr = liquidation_report %}
+{% if lr.premise_reconciliation %}
+{% set r = lr.premise_reconciliation %}
+<section class="pdf-page liquidation-page">
+    <header class="pdf-section-header">
+        <span class="pdf-section-number">09b</span>
+        <h1 class="pdf-section-title">{{ lr.t.reconciliation_section_title }}</h1>
+        <span class="pdf-badge">{{ lr.t.reconciliation_section_subtitle }}</span>
+    </header>
+
+    <table class="pdf-table">
+        <thead>
+            <tr>
+                <th>{% if lr.locale == 'fr' %}Angle de prémisse{% elif lr.locale == 'en' %}Premise lens{% else %}Premissewaarde{% endif %}</th>
+                <th class="pdf-num">{% if lr.locale == 'fr' %}Valeur des capitaux propres{% elif lr.locale == 'en' %}Equity value{% else %}Eigen vermogen{% endif %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>{{ lr.t.reconciliation_lv }}</td><td class="pdf-num">€{{ r.liquidation_value|format_eur_amount }}</td></tr>
+            {% if r.adjusted_nav is not none %}
+            <tr><td>{{ lr.t.reconciliation_nav }}</td><td class="pdf-num">€{{ r.adjusted_nav|format_eur_amount }}</td></tr>
+            {% endif %}
+            {% if r.dcf_value is not none %}
+            <tr><td>{{ lr.t.reconciliation_dcf }}</td><td class="pdf-num">€{{ r.dcf_value|format_eur_amount }}</td></tr>
+            {% endif %}
+            {% if r.multiples_value is not none %}
+            <tr><td>{{ lr.t.reconciliation_multiples }}</td><td class="pdf-num">€{{ r.multiples_value|format_eur_amount }}</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <div class="pdf-card {% if r.going_concern_defensible %}pdf-card-success{% else %}pdf-card-warning{% endif %}">
+        <div class="pdf-card-eyebrow">{{ r.defensible_label }}</div>
+        <div class="pdf-prose"><strong>{{ lr.t.reconciliation_recommendation_label }}:</strong> {{ r.recommendation_label }}</div>
+    </div>
+
+    <div class="pdf-card pdf-card-muted">
+        <div class="pdf-prose">{{ r.rationale }}</div>
+    </div>
+
+    {% if r.sources %}
+    <div class="pdf-sources">{{ lr.t.sources_label }}: {{ r.sources|join(' · ') }}</div>
+    {% endif %}
+</section>
+{% endif %}

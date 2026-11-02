@@ -1,0 +1,133 @@
+{#
+    METHOD SECTION MACRO — shared scaffold for any per-method report page.
+    ========================================================================
+
+    Wraps a method page in the standard rails (page header, section header,
+    optional subtitle, body slot, method-citations footer block, page
+    footer) so that adding the eleventh method does not mean copying 200
+    lines of chrome.
+
+    Works against BOTH template trees:
+      - `main_report/`      (screen / Aurora design tokens)
+      - `main_report_pdf/`  (WeasyPrint / print-stable layout)
+
+    The caller passes `tree_root` so the macro reaches the correct
+    partials (`{tree_root}/partials/_page_header.html` etc.). Once the two
+    trees collapse (next phase of the refactor), the parameter becomes a
+    default and pages stop passing it.
+
+    USAGE
+
+        {% from "shared/macros/method_section.html" import method_section with context %}
+        {% call method_section(
+            method_key='dcf',
+            section_number=dcf_valuation_section_number,
+            title=t.dcf_page_title,
+            subtitle=t.dcf_page_subtitle,
+            badge_label=t.calib_dcf_badge,
+            tree_root='main_report',
+            page_number=dcf_valuation_page_number,
+            method=dcf_method,
+        ) %}
+            {% include "main_report/components/_dcf_wacc_buildup.html" %}
+            {% include "main_report/components/_dcf_projection_table.html" %}
+            … method-specific body …
+        {% endcall %}
+
+    PARAMETERS
+
+      method_key     (required)  Registry key — must match the keys in
+                                 `components/_method_citations.html`.
+      section_number (required)  Display number for the section header (e.g. "04").
+      title          (required)  Section title (already translated).
+      subtitle       (optional)  Short intro paragraph beneath the header.
+      badge_label    (optional)  Small chip rendered next to the subtitle.
+      tree_root      (default 'main_report')  Either 'main_report' or 'main_report_pdf'.
+      page_number    (optional)  Page number passed through to `_footer.html`.
+      total_pages    (optional)  Total page count passed through to `_footer.html`.
+      method         (optional)  A MethodResult Pydantic model. When supplied,
+                                 retained for caller compatibility; confidence
+                                 is not rendered as a badge.
+
+    CONTRACT NOTES
+
+      * The macro emits a `<div class="a4-page method-section ...">` so
+        tree-specific CSS can style print vs. screen without the macro
+        having to know.
+      * `_method_citations.html` is rendered at the end of the body slot
+        from the matching tree's component path (`{tree_root}/components/
+        _method_citations.html`), so the screen variant keeps its Aurora
+        tokens and the PDF variant its WeasyPrint-stable pt/hex values.
+        If the registry has no entry for `method_key`, the partial falls
+        back to a generic methodology paragraph (already handled inside
+        `_method_citations.html`).
+      * Visual styling of the subtitle/badge is intentionally minimal here;
+        each tree applies its own CSS (cream-box in PDF, flat paragraph on
+        screen). The macro only owns structure.
+#}
+
+{% macro method_section(
+    method_key,
+    section_number,
+    title,
+    subtitle=None,
+    badge_label=None,
+    tree_root='main_report',
+    page_number=None,
+    total_pages=None,
+    method=None,
+    show_citations=True,
+    show_flow_footer=True
+) %}
+<div class="a4-page method-section method-section--{{ method_key }}">
+
+    {# ── Page header (tree-specific) ── #}
+    {% include tree_root ~ '/partials/_page_header.html' %}
+
+    {# ── Section header ── #}
+    <div class="section-header">
+        <span class="section-number">{{ section_number }}</span>
+        <h1 class="section-title">{{ title }}</h1>
+    </div>
+
+    {# ── Subtitle (optional).
+       Aurora tokens carry literal fallbacks so the macro renders identically
+       in both trees: the screen tree resolves the var() to its Aurora value,
+       the PDF tree (which uses a separate `--pdf-*` palette) falls back to
+       the literal pt/hsl that the standalone PDF pages used pre-refactor.
+       Without the fallbacks, PDF would render the subtitle at default-browser
+       font-size with no margin — the same drift the screen citations rail had. #}
+    {% if subtitle %}
+    <p class="method-section-subtitle" style="margin-bottom: var(--space-3, 12pt); font-size: var(--font-size-sm, 8pt); color: hsl(var(--report-text-muted, 224 10% 45%));">
+        {{ subtitle }}
+        {% if badge_label %}
+        <span class="badge badge-primary method-section-badge" style="margin-left: var(--space-2, 8pt); font-size: 6pt;">{{ badge_label }}</span>
+        {% endif %}
+    </p>
+    {% endif %}
+
+    {# Evidence limitations belong in readable disclosures, never confidence badges. #}
+
+    {# ── Method-specific body (caller slot) ── #}
+    {{ caller() }}
+
+    {# ── Methodology foundations (citation registry — tree-specific) ──
+       Each tree owns its own _method_citations.html (Aurora tokens on
+       screen, hardcoded pt/hex on PDF for WeasyPrint stability).  Earlier
+       revisions always reached into `main_report_pdf/...`, which dragged
+       PDF-tuned spacing and colours onto the screen preview. #}
+    {% if show_citations %}
+        {% with method_key=method_key %}
+        {% include tree_root ~ '/components/_method_citations.html' %}
+        {% endwith %}
+    {% endif %}
+
+    {# ── Page footer (tree-specific) ── #}
+    {% if show_flow_footer %}
+        {% with page_number=page_number, total_pages=total_pages %}
+        {% include tree_root ~ '/partials/_footer.html' %}
+        {% endwith %}
+    {% endif %}
+
+</div>
+{% endmacro %}

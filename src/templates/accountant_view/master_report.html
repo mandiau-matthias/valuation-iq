@@ -1,0 +1,60 @@
+{% extends "accountant_view/base.html" %}
+
+{% block content %}
+    {# ================================================================== #}
+    {# COVER PAGE #}
+    {# ================================================================== #}
+    {% include "accountant_view/cover_page.html" %}
+
+    {# ================================================================== #}
+    {# TABLE OF CONTENTS #}
+    {# ================================================================== #}
+    {% include "accountant_view/table_of_contents.html" %}
+
+    {# ================================================================== #}
+    {# BODY SECTIONS - Automatic CSS Fragmentation Pagination #}
+    {# Each template contains a single .page wrapper (semantic container) #}
+    {# WeasyPrint's CSS Fragmentation engine handles page breaks automatically #}
+    {# based on content length and fragmentation rules in base.html #}
+    {# ================================================================== #}
+
+    {# SECTION 1: EXECUTIVE SUMMARY #}
+    {% include "accountant_view/executive_summary.html" %}
+
+    {# SECTION 1A: STRATEGIC ASSESSMENT & OPTIMIZATION #}
+    {% include "accountant_view/sections/_strategic_assessment.html" %}
+
+    {# SECTION 2: ECONOMIC REALITY (NORMALIZATION BRIDGE) #}
+    {# _ebitda_normalization.html handles both user-defined and automatic normalizations #}
+    {% include "accountant_view/sections/_ebitda_normalization.html" %}
+    
+    {# SECTION 2A: ENHANCED NORMALIZATION SCHEDULE (ASA BVS-III) - Optional/Conditional #}
+    {# Only shown when detailed normalization data is available or requested #}
+    {% if show_enhanced_normalization_schedule %}
+        {% include "accountant_view/sections/_enhanced_normalization_schedule.html" %}
+    {% endif %}
+
+    {# SECTION 3: VALUATION CHAINING (MASTER WATERFALL) #}
+    {% include "accountant_view/sections/_master_valuation_waterfall.html" %}
+
+    {# SECTION 4: OPERATIONAL RESILIENCE & RISK ASSESSMENT (PRIMITIVE 4) #}
+    {% include "accountant_view/financial_analysis.html" %}
+
+    {# SECTION 4B: BUSINESS VITALITY DASHBOARD #}
+    {% include "accountant_view/sections/_business_vitality_dashboard.html" %}
+
+    {# SECTION 4C: DATA QUALITY & COMPLIANCE #}
+    {% include "accountant_view/sections/_data_quality_compliance.html" %}
+
+    {# SECTION 5: STRATEGIC VALUE ROADMAP #}
+    {% include "accountant_view/sections/_strategic_roadmap.html" %}
+
+    {# SECTION 6: TECHNICAL APPENDICES #}
+    {% include "accountant_view/appendices.html" %}
+
+    {# APPENDIX C: INFORMATION SOURCES #}
+    {% include "accountant_view/sections/_appendix_information_sources.html" %}
+
+    {# APPENDIX E: AUDIT TRAIL #}
+    {% include "accountant_view/sections/_appendix_audit_trail.html" %}
+{% endblock %}

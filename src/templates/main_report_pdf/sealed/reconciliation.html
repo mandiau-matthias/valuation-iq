@@ -1,0 +1,21 @@
+<div class="a4-page sealed-reconciliation-page" style="page-break-before:always;">
+    <div class="section-header"><span class="section-number">08</span><h1 class="section-title">{{ sealed_memorandum.labels.reconciliation }}</h1></div>
+    <h2>{{ sealed_memorandum.labels.bridge }}</h2>
+    {% if sealed_memorandum.bridge.chart %}<div class="sealed-chart" data-chart-id="ev_to_equity_bridge"><svg viewBox="{{ sealed_memorandum.bridge.chart.view_box }}" role="img" aria-label="{{ sealed_memorandum.labels.bridge }}" xmlns="http://www.w3.org/2000/svg"><path d="M28 {{ sealed_memorandum.bridge.chart.baseline_y }}H492" stroke="#dfe2e7" stroke-width="1"></path>{% for bar in sealed_memorandum.bridge.chart.bars %}<rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.width }}" height="{{ bar.height }}" rx="4" fill="{{ '#c87f63' if bar.tone == 'negative' else '#2ba899' }}" data-sealed-field-id="{{ bar.field_id }}"></rect><text x="{{ bar.label_x }}" y="92" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#737985">{{ bar.label }}</text>{% endfor %}</svg></div>{% endif %}
+    <table><tbody>
+    {% for field in sealed_memorandum.bridge.rows %}
+    <tr><td style="width:70%;">{{ field.label }}</td><td style="width:8%; text-align:center;">{{ field.operator }}</td><td class="text-right" data-sealed-field-id="{{ field.field_id }}">{{ field.display }}</td></tr>
+    {% endfor %}
+    </tbody></table>
+    <div class="pdf-card pdf-card-muted keep-together" style="margin-top:10pt;">
+        <div class="pdf-card-eyebrow">{{ sealed_memorandum.bridge.net_debt.label }}</div>
+        <div class="pdf-card-headline" data-sealed-field-id="{{ sealed_memorandum.bridge.net_debt.field_id }}">{{ sealed_memorandum.bridge.net_debt.display }}</div>
+    </div>
+    <div class="keep-together">
+        <h2>{{ sealed_memorandum.labels.sensitivity }}</h2>
+        <table>
+            <thead><tr><th>{{ sealed_memorandum.labels.scenario }}</th>{% if sealed_memorandum.sensitivity.has_enterprise_value %}<th class="text-right">{{ sealed_memorandum.labels.enterprise_value }}</th>{% endif %}<th class="text-right">{{ sealed_memorandum.labels.equity_value }}</th></tr></thead>
+            <tbody>{% for row in sealed_memorandum.sensitivity.rows %}<tr><td>{{ row.scenario }}</td>{% if row.enterprise_value %}<td class="text-right" data-sealed-field-id="{{ row.enterprise_value.field_id }}">{{ row.enterprise_value.display }}</td>{% endif %}<td class="text-right" data-sealed-field-id="{{ row.equity_value.field_id }}">{{ row.equity_value.display }}</td></tr>{% endfor %}</tbody>
+        </table>
+    </div>
+</div>

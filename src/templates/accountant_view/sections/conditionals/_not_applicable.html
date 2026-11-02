@@ -1,0 +1,10 @@
+{# Standard "Not Applicable" message with reason #}
+<div class="report-callout" style="background-color: #FFFFFF; border-left: 4pt solid var(--text-muted); padding: 12pt; margin: 12pt 0;">
+    <p style="font-family: 'Inter', sans-serif; margin: 0; color: var(--text-muted);"><strong>{% if section_name %}{{ section_name }}: {% endif %}Not Applicable</strong></p>
+    {% if reason %}
+    <p style="font-family: 'Inter', sans-serif; margin: 8pt 0 0 0; color: var(--text-body);"><strong>Reason:</strong> {{ reason }}</p>
+    {% endif %}
+    {% if recommendation %}
+    <p style="font-family: 'Inter', sans-serif; margin: 8pt 0 0 0; font-style: italic; color: var(--text-muted);">{{ recommendation }}</p>
+    {% endif %}
+</div>

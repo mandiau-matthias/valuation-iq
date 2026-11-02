@@ -1,0 +1,302 @@
+{#
+    METHOD CITATIONS — advisor-facing methodology + academic foundations
+    Single source for method subtitles + cited standards.
+    Required: method_key, teal_hsl, locale (optional)
+    Engineering step contracts: apps/valuation-iq/docs/engineering/step-contracts.md
+#}
+
+{# Multiples-only subtitle uses the same gate as cover/exec/calib/header. #}
+{% set _adaptive_is_multiples_only = is_adaptive_multiples_only|default(false) %}
+
+{% set method_registry = {
+    'upswitch_adaptive': {
+        'label_en': 'Upswitch Adaptive',
+        'label_nl': 'Upswitch Adaptive',
+        'label_fr': 'Upswitch Adaptive',
+        'subtitle_en': ('Market-multiples approach — DCF excluded for this profile' if _adaptive_is_multiples_only else 'Hybrid weighted methodology, business-type-tuned'),
+        'subtitle_nl': ('Marktbenadering met multiples — DCF uitgesloten voor dit profiel' if _adaptive_is_multiples_only else 'Gewogen hybride methodologie, afgestemd op bedrijfstype'),
+        'subtitle_fr': ('Approche par multiples de marché — DCF exclu pour ce profil' if _adaptive_is_multiples_only else "Méthodologie hybride pondérée, ajustée au type d'entreprise"),
+        'sources': [
+            'Koller, Goedhart & Wessels (2020) — McKinsey weighted EBITDA standard',
+            'Damodaran (2012) — Multiples methodology + adjustment vehicle',
+            'Trugman (2017) — SME size and owner-dependency calibration',
+            'Pratt & Niculita (2008) — Multi-methodology reconciliation',
+            'IVS (2024 edition, effective 31-01-2025) — range methodology selection; methodological reference only',
+            'Duff & Phelps (2024) — Cost-of-Capital Navigator size premium',
+        ],
+        'sources_fr': [
+            'Koller, Goedhart & Wessels (2020) — standard McKinsey d’EBITDA pondéré',
+            'Damodaran (2012) — méthodologie des multiples et vecteur d’ajustement',
+            'Trugman (2017) — calibrage de la taille PME et de la dépendance au dirigeant',
+            'Pratt & Niculita (2008) — rapprochement multi-méthodes',
+            'IVS (édition 2024, effective 31-01-2025) — sélection de la méthodologie de fourchette; référence méthodologique uniquement',
+            'Duff & Phelps (2024) — prime de taille Cost-of-Capital Navigator',
+        ],
+    },
+    'upswitch_adaptive_multiples_only': {
+        'label_en': 'Upswitch Adaptive',
+        'label_nl': 'Upswitch Adaptive',
+        'label_fr': 'Upswitch Adaptive',
+        'subtitle_en': 'Market-multiples approach — DCF excluded for this profile',
+        'subtitle_nl': 'Marktbenadering met multiples — DCF uitgesloten voor dit profiel',
+        'subtitle_fr': 'Approche par multiples de marché — DCF exclu pour ce profil',
+        'sources': [
+            'Koller, Goedhart & Wessels (2020) — McKinsey weighted EBITDA standard',
+            'Damodaran (2012) — Multiples methodology + adjustment vehicle',
+            'Trugman (2017) — SME size and owner-dependency calibration',
+            'Pratt & Niculita (2008) — Multi-methodology reconciliation',
+            'IVS (2024 edition, effective 31-01-2025) — range methodology selection; methodological reference only',
+            'Duff & Phelps (2024) — Cost-of-Capital Navigator size premium',
+        ],
+        'sources_fr': [
+            'Koller, Goedhart & Wessels (2020) — standard McKinsey d’EBITDA pondéré',
+            'Damodaran (2012) — méthodologie des multiples et vecteur d’ajustement',
+            'Trugman (2017) — calibrage de la taille PME et de la dépendance au dirigeant',
+            'Pratt & Niculita (2008) — rapprochement multi-méthodes',
+            'IVS (édition 2024, effective 31-01-2025) — sélection de la méthodologie de fourchette; référence méthodologique uniquement',
+            'Duff & Phelps (2024) — prime de taille Cost-of-Capital Navigator',
+        ],
+    },
+    'dcf': {
+        'label_en': 'Discounted Cash Flow (DCF)',
+        'label_nl': 'Discounted Cash Flow (DCF)',
+        'label_fr': 'Flux de trésorerie actualisés (DCF)',
+        'subtitle_en': 'Present value of projected cash flows at the WACC',
+        'subtitle_nl': 'Contante waarde van geprojecteerde kasstromen tegen de WACC',
+        'subtitle_fr': 'Valeur actuelle des flux de trésorerie projetés au WACC',
+        'sources': [
+            'Koller, Goedhart & Wessels (2020) — DCF eligibility (rev ≥ €5M, 3+ y data)',
+            'Damodaran (2012) — Risk-free rate, equity risk premium, beta',
+            'Duff & Phelps (2024) — Size premium for SME WACC',
+        ],
+        'sources_fr': [
+            'Koller, Goedhart & Wessels (2020) — éligibilité DCF (CA ≥ 5 M€, données 3+ ans)',
+            'Damodaran (2012) — taux sans risque, prime de risque actions, bêta',
+            'Duff & Phelps (2024) — prime de taille pour WACC PME',
+        ],
+    },
+    'ebitda_multiple': {
+        'label_en': 'EV / EBITDA Multiple',
+        'label_nl': 'EV / EBITDA-multiple',
+        'label_fr': 'Multiple VE / EBITDA',
+        'subtitle_en': 'Calibrated peer-anchor multiple applied to normalised EBITDA',
+        'subtitle_nl': 'Gekalibreerde peer-multiple toegepast op genormaliseerde EBITDA',
+        'subtitle_fr': "Multiple de pairs calibré appliqué à l'EBITDA normalisé",
+        'sources': [
+            'Damodaran (2012) — Multiples should be adjusted for fundamental differences',
+            'Hitchner (2017) — Company-specific multiple reflects quality',
+            'McKinsey (2020) — Multiple as the adjustment vehicle',
+            'Marktlink + Vlerick (2024) — Belgian SME calibration',
+        ],
+        'sources_fr': [
+            'Damodaran (2012) — multiples à ajuster pour les différences fondamentales',
+            'Hitchner (2017) — le multiple propre à l’entreprise reflète la qualité',
+            'McKinsey (2020) — le multiple comme vecteur d’ajustement',
+            'Marktlink + Vlerick (2024) — calibrage des PME belges',
+        ],
+    },
+    'revenue_multiple': {
+        'label_en': 'EV / Revenue Multiple',
+        'label_nl': 'EV / Omzet-multiple',
+        'label_fr': "Multiple VE / chiffre d'affaires",
+        'subtitle_en': 'Revenue-anchored multiple for EBITDA-thin / pre-profit companies',
+        'subtitle_nl': 'Omzet-multiple voor EBITDA-arme / pre-winstgevende ondernemingen',
+        'subtitle_fr': "Multiple ancré sur le chiffre d'affaires pour entreprises à faible EBITDA ou avant rentabilité",
+        'sources': [
+            'Trugman (2017) / West (2012) — Revenue multiple SME calibration',
+            'Damodaran (2012) — Revenue multiples for unprofitable / growth firms',
+        ],
+        'sources_fr': [
+            "Trugman (2017) / West (2012) — calibrage PME des multiples de chiffre d'affaires",
+            "Damodaran (2012) — multiples de chiffre d'affaires pour entreprises déficitaires / en croissance",
+        ],
+    },
+    'sde_multiple': {
+        'label_en': "Seller's Discretionary Earnings (SDE)",
+        'label_nl': "Seller's Discretionary Earnings (SDE)",
+        'label_fr': 'Résultat discrétionnaire du vendeur (SDE)',
+        'subtitle_en': 'Owner-operated SME standard: EBITDA + owner compensation × industry multiple',
+        'subtitle_nl': 'Standaard voor eigenaar-geleide SME: EBITDA + eigenaarsvergoeding × sector-multiple',
+        'subtitle_fr': 'Référence PME dirigée par son propriétaire : EBITDA + rémunération du dirigeant × multiple sectoriel',
+        'sources': [
+            'Trugman (2017) — SDE as M&A standard for owner-operated',
+            'BizBuySell — SDE multiples database',
+            'Brookz (2024) — Belgian SME SDE calibration',
+        ],
+        'sources_fr': [
+            'Trugman (2017) — SDE comme standard M&A pour entreprises exploitées par leur dirigeant',
+            'BizBuySell — base de données de multiples SDE',
+            'Brookz (2024) — calibrage SDE des PME belges',
+        ],
+    },
+    'adjusted_nav': {
+        'label_en': 'Adjusted Net Asset Value (NAV)',
+        'label_nl': 'Aangepaste Net Asset Value (NAV)',
+        'label_fr': "Valeur nette d'actif ajustée (NAV)",
+        'subtitle_en': 'Floor-value methodology for asset-heavy and holding companies',
+        'subtitle_nl': 'Vloerwaarde-methodologie voor activumzware en holdingvennootschappen',
+        'subtitle_fr': "Méthodologie de valeur plancher pour sociétés patrimoniales ou à forte intensité d'actifs",
+        'sources': [
+            'Pratt & Niculita (2008) — NAV / book-value methodology',
+            'IVS 2022 — Asset-based valuation standard',
+            'Damodaran (2012) — Floor value vs. going-concern reconciliation',
+        ],
+        'sources_fr': [
+            'Pratt & Niculita (2008) — méthodologie NAV / valeur comptable',
+            'IVS 2022 — standard de valorisation fondée sur les actifs',
+            'Damodaran (2012) — rapprochement valeur plancher vs continuité d’exploitation',
+        ],
+        'sources_nl': [
+            'Pratt & Niculita (2008) — NAV / boekwaarde-methodologie',
+            'IVS 2022 — Standaard voor activagebaseerde waardering',
+            'Damodaran (2012) — Vloerwaarde versus going-concern reconciliatie',
+        ],
+    },
+    'real_estate_yield': {
+        'label_en': 'Real-estate income capitalisation (yield)',
+        'label_nl': 'Vastgoed inkomenskapitalisatie (yield)',
+        'label_fr': 'Capitalisation des revenus immobiliers (rendement)',
+        'subtitle_en': 'Sustainable net rent capitalised at a market cap-rate, with a NAV floor',
+        'subtitle_nl': 'Duurzame nettohuur gekapitaliseerd tegen een marktconforme cap-rate, met een NAV-vloer',
+        'subtitle_fr': 'Loyer net durable capitalisé à un rendement de marché, avec plancher NAV',
+        'sources': [
+            'IVS 2022 — Income approach for real property (capitalisation)',
+            'RICS Red Book (2022) — Investment method / all-risks yield',
+            'Pratt & Niculita (2008) — NAV floor for property-holding entities',
+        ],
+        'sources_fr': [
+            'IVS 2022 — approche par les revenus pour immobilier (capitalisation)',
+            'RICS Red Book (2022) — méthode d’investissement / rendement tous risques',
+            'Pratt & Niculita (2008) — plancher NAV pour entités immobilières',
+        ],
+        'sources_nl': [
+            'IVS 2022 — Inkomensbenadering voor vastgoed (kapitalisatie)',
+            'RICS Red Book (2022) — Investeringsmethode / all-risks yield',
+            'Pratt & Niculita (2008) — NAV-vloer voor vastgoedvennootschappen',
+        ],
+    },
+    'pe_ratio': {
+        'label_en': 'Price / Earnings (P/E)',
+        'label_nl': 'Koers / Winst (P/E)',
+        'label_fr': 'Prix / bénéfice (P/E)',
+        'subtitle_en': 'Equity-multiple methodology — net earnings × P/E ratio',
+        'subtitle_nl': 'Aandeelhouders-multiple — nettowinst × koers/winst-verhouding',
+        'subtitle_fr': 'Méthodologie de multiple des capitaux propres — résultat net × ratio P/E',
+        'sources': [
+            'Damodaran (2012) — P/E for stable-earnings comparables',
+            'Hitchner (2017) — Equity-multiple framework',
+        ],
+        'sources_fr': [
+            'Damodaran (2012) — P/E pour comparables à bénéfices stables',
+            'Hitchner (2017) — cadre des multiples de capitaux propres',
+        ],
+        'sources_nl': [
+            'Damodaran (2012) — P/E voor vergelijkbare ondernemingen met stabiele winst',
+            'Hitchner (2017) — Kader voor equity-multiples',
+        ],
+    },
+    'owner_adaptive': {
+        'label_en': 'Owner-Adaptive (Damodaran 12-Factor)',
+        'label_nl': 'Owner-Adaptive (Damodaran 12-factor)',
+        'label_fr': 'Owner-Adaptive (12 facteurs Damodaran)',
+        'subtitle_en': 'Transferability-weighted equity adjustment from the Owner Profile',
+        'subtitle_nl': 'Overdraagbaarheidsgewogen aandelenwaarde-aanpassing uit het Eigenaarsprofiel',
+        'subtitle_fr': 'Ajustement des capitaux propres pondéré par la transférabilité depuis le profil dirigeant',
+        'sources': [
+            'Damodaran — Distressed asset / owner-dependency framework',
+            'Trugman (2017) — Key-person discount methodology',
+        ],
+        'sources_fr': [
+            'Damodaran — cadre actifs en difficulté / dépendance au dirigeant',
+            'Trugman (2017) — méthodologie de décote personne-clé',
+        ],
+        'sources_nl': [
+            'Damodaran — Raamwerk voor distressed assets en eigenaarsafhankelijkheid',
+            'Trugman (2017) — Methodologie voor key-person discount',
+        ],
+    },
+    'custom_weighted': {
+        'label_en': 'Custom method weighting (advisor)',
+        'label_nl': 'Vastgelegde modelweging',
+        'label_fr': 'Pondération des méthodes personnalisée (conseiller)',
+        'subtitle_en': 'Advisor-defined weights across multiple methodologies',
+        'subtitle_nl': 'Volgens de vastgelegde modelweging over meerdere methodologieën',
+        'subtitle_fr': 'Pondérations définies par le conseiller entre plusieurs méthodologies',
+        'sources': [
+            'Pratt & Niculita (2008) — Multi-methodology reconciliation',
+            'IVS 2022 — Practitioner judgement weighting',
+        ],
+        'sources_fr': [
+            'Pratt & Niculita (2008) — rapprochement multi-méthodes',
+            'IVS 2022 — pondération fondée sur le jugement du praticien',
+        ],
+        'sources_nl': [
+            'Pratt & Niculita (2008) — Reconciliatie van meerdere methodologieën',
+            'IVS, editie 2024 — methodologische referentie; geen professioneel waarderingsoordeel en geen IVS-conformiteitsclaim',
+        ],
+    },
+} %}
+
+{# Merge dynamic registry over inline defaults so legacy keys
+   (owner_adaptive, custom_weighted, pe_ratio) keep resolving even when the
+   dynamic registry only ships canonical method profiles. Replacing instead
+   of merging — as a prior revision did — silently dropped those citations
+   into the generic fallback. #}
+{% if method_citation_registry is defined and method_citation_registry %}
+    {% set _merged = method_registry.copy() %}
+    {% set _ = _merged.update(method_citation_registry) %}
+    {% set method_registry = _merged %}
+{% endif %}
+
+{% set _method = method_registry.get(method_key) %}
+{% set _is_fr = ((locale|default('nl'))|lower)[:2] == 'fr' %}
+{% set _is_en = ((locale|default('nl'))|lower)[:2] == 'en' %}
+{% set _is_be_country = (country_code|default('BE')|upper) == 'BE' %}
+
+<div class="method-citations" style="margin-top: 8pt; padding: 8pt 12pt; border: 1pt solid hsl(224, 10%, 91%); border-radius: 6pt; background: hsl(40, 15%, 98%); page-break-inside: avoid; break-inside: avoid;">
+
+    <div style="display: flex; align-items: baseline; gap: 6pt; margin-bottom: 6pt;">
+        <span style="font-size: 6pt; letter-spacing: 0.6pt; text-transform: uppercase; color: hsl({{ teal_hsl }}); font-weight: 700;">
+            {% if _is_fr %}Fondements méthodologiques{% elif _is_en %}Methodology foundations{% else %}Methodologische onderbouwing{% endif %}
+        </span>
+        {% if _method %}
+        <span style="font-size: 6pt; color: hsl(224, 10%, 50%);">
+            · {% if _is_fr %}{{ _method.label_fr|default(_method.label_en) }}{% elif _is_en %}{{ _method.label_en }}{% else %}{{ _method.label_nl }}{% endif %}
+        </span>
+        {% endif %}
+    </div>
+
+    {% if _method %}
+        <p style="margin: 0 0 8pt 0; font-size: 7.5pt; color: hsl(224, 12%, 30%); line-height: 1.5;">
+            {% if _is_fr %}{{ _method.subtitle_fr|default(_method.subtitle_en) }}.{% elif _is_en %}{{ _method.subtitle_en }}.{% else %}{{ _method.subtitle_nl }}.{% endif %}
+        </p>
+
+        <div style="border-top: 1pt solid hsl(224, 10%, 91%); padding-top: 6pt;">
+            <span style="font-size: 6.5pt; color: hsl(224, 10%, 45%); display: block; margin-bottom: 3pt;">
+                {% if _is_fr %}Normes et références{% elif _is_en %}Standards & references{% else %}Literatuur & standaarden{% endif %}
+            </span>
+            {# Localised source list — see screen twin for full rationale.
+               Falls back to `sources` when no NL list is registered, so
+               legacy method profiles still render. #}
+            {% set _sources = _method.sources_fr if (_is_fr and _method.sources_fr) else (_method.sources if _is_en else (_method.sources_nl if _method.sources_nl else _method.sources)) %}
+            <ul style="margin: 0; padding-left: 12pt; font-size: 7pt; color: hsl(224, 12%, 35%); line-height: 1.55;">
+                {% for source in _sources %}
+                {% if _is_be_country or 'belg' not in source|lower %}
+                <li style="margin-bottom: 2pt;">{{ source }}</li>
+                {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <p style="margin: 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.5;">
+            {% if _is_fr %}
+            Cette méthodologie suit les pratiques courantes de valorisation M&amp;A et les normes internationales référencées ailleurs dans ce rapport.
+            {% elif _is_en %}
+            This methodology follows commonly applied M&amp;A valuation practice and international standards where referenced elsewhere in this report.
+            {% else %}
+            Deze methode volgt gangbare M&amp;A-waarderingspraktijk en internationale standaarden waar elders in dit rapport naar verwezen wordt.
+            {% endif %}
+        </p>
+    {% endif %}
+
+</div>

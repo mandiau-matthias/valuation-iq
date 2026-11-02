@@ -1,0 +1,90 @@
+{#
+    NAV Deal Structure — PDF version
+    ================================
+    Round-4 fix: moved from the FE DealStructureCompareSection result
+    tiles to the deliverable. Renders the share-deal vs. asset-deal
+    comparison + indifference premium + recommendation.
+
+    Required context (set in `omni_calc_overrides._apply_non_multiple_overrides`):
+      - has_nav_deal_structure: bool
+      - nav_deal_structure: dict {share_deal, asset_deal, indifference_premium, recommendation}
+        (each scenario: label, headline_price, seller_tax,
+         seller_net_proceeds, buyer_tax_shield_npv, buyer_net_cost, notes)
+#}
+{% if has_nav_deal_structure %}
+{% set _ds = nav_deal_structure %}
+<div style="margin-top: 18pt; padding: 10pt 12pt; border: 1pt solid hsl(224, 10%, 91%); border-radius: 6pt; background: hsl(0, 0%, 100%); page-break-inside: avoid; break-inside: avoid;">
+    <div style="margin-bottom: 8pt;">
+        <h4 style="font-size: 9pt; margin: 0 0 2pt 0; color: hsl(225, 18%, 12%);">{{ t.nav_deal_structure_title }}</h4>
+        <p style="margin: 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.45;">
+            {{ t.nav_deal_structure_subtitle }}
+        </p>
+    </div>
+
+    <table style="width: 100%; font-size: 7.5pt; border-collapse: collapse; margin-bottom: 8pt;">
+        <thead>
+            <tr>
+                <th style="text-align: left; padding: 3pt 6pt; font-weight: 600; color: hsl(224, 10%, 45%); border-bottom: 0.5pt solid hsl(224, 12%, 92%);"></th>
+                <th style="text-align: right; padding: 3pt 6pt; font-weight: 600; color: hsl(224, 10%, 45%); border-bottom: 0.5pt solid hsl(224, 12%, 92%);">{{ _ds.share_deal.label if _ds.share_deal else '—' }}</th>
+                <th style="text-align: right; padding: 3pt 6pt; font-weight: 600; color: hsl(224, 10%, 45%); border-bottom: 0.5pt solid hsl(224, 12%, 92%);">{{ _ds.asset_deal.label if _ds.asset_deal else '—' }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set _rows = [
+                ('headline_price', t.nav_deal_headline_price, none, false),
+                ('seller_tax', t.nav_deal_seller_tax, '6, 55%, 50%', false),
+                ('seller_net_proceeds', t.nav_deal_seller_net_proceeds, none, true),
+                ('buyer_tax_shield_npv', t.nav_deal_buyer_tax_shield, '143, 40%, 42%', false),
+                ('buyer_net_cost', t.nav_deal_buyer_net_cost, none, true),
+            ] %}
+            {% for key, label, color_hsl, emphasised in _rows %}
+            <tr>
+                <td style="padding: 2pt 6pt; color: hsl(224, 12%, 35%);{% if emphasised %} font-weight: 600;{% endif %}">{{ label }}</td>
+                {% for scenario in [_ds.share_deal, _ds.asset_deal] %}
+                <td style="padding: 2pt 6pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;{% if emphasised %} font-weight: 600;{% endif %}{% if color_hsl %} color: hsl({{ color_hsl }});{% endif %}">
+                    {% if scenario and scenario.get(key) is not none %}
+                        {% if key == 'seller_tax' %}−{% elif key == 'buyer_tax_shield_npv' and scenario[key] > 0 %}+{% endif %}{{ scenario[key]|abs|format_currency if key == 'seller_tax' else scenario[key]|format_currency }}
+                    {% else %}—{% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if _ds.indifference_premium is not none and _ds.indifference_premium != 0 %}
+    <div style="padding: 6pt 8pt; border-radius: 4pt; background: hsla({{ teal_hsl }}, 0.06); border: 0.5pt solid hsla({{ teal_hsl }}, 0.20);">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8pt;">
+            <span style="font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl({{ teal_hsl }});">{{ t.nav_deal_indifference_premium }}</span>
+            <span style="font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 700; font-size: 9pt; color: hsl({{ teal_hsl }});">{{ _ds.indifference_premium|format_currency }}</span>
+        </div>
+        <p style="margin: 4pt 0 0 0; font-size: 6.5pt; color: hsl(224, 10%, 50%); line-height: 1.45;">
+            {% if _ds.recommendation %}{{ _ds.recommendation }}{% else %}{{ t.nav_deal_indifference_caption }}{% endif %}
+        </p>
+    </div>
+    {% endif %}
+
+    {% set _share_notes = _ds.share_deal.notes if _ds.share_deal and _ds.share_deal.notes else [] %}
+    {% set _asset_notes = _ds.asset_deal.notes if _ds.asset_deal and _ds.asset_deal.notes else [] %}
+    {% if _share_notes or _asset_notes %}
+    <div style="margin-top: 6pt; display: flex; gap: 8pt; font-size: 6.5pt; color: hsl(224, 10%, 50%); line-height: 1.45;">
+        {% if _share_notes %}
+        <div style="flex: 1;">
+            <strong style="color: hsl(224, 10%, 45%);">{{ _ds.share_deal.label }}:</strong>
+            <ul style="margin: 2pt 0 0 0; padding-left: 12pt;">
+                {% for note in _share_notes %}<li>{{ note }}</li>{% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        {% if _asset_notes %}
+        <div style="flex: 1;">
+            <strong style="color: hsl(224, 10%, 45%);">{{ _ds.asset_deal.label }}:</strong>
+            <ul style="margin: 2pt 0 0 0; padding-left: 12pt;">
+                {% for note in _asset_notes %}<li>{{ note }}</li>{% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endif %}

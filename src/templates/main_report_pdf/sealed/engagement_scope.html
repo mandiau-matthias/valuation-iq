@@ -1,0 +1,29 @@
+<div class="a4-page sealed-scope-page" style="page-break-before:always;">
+    <div class="section-header"><span class="section-number">01</span><h1 class="section-title">{{ sealed_memorandum.labels.scope }}</h1></div>
+    <div class="callout callout-info keep-together"><p>{{ sealed_memorandum.identity.approval_disclosure }}</p></div>
+    <table class="keep-together">
+        <tbody>
+        {% for field in sealed_memorandum.scope.rows %}
+        <tr><td style="width:34%; color:#737985;">{{ field.label }}</td><td data-sealed-field-id="{{ field.field_id }}">{{ field.display }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <div class="pdf-grid pdf-grid-2" style="margin-top:6pt;">
+        <div class="pdf-card"><div class="pdf-card-eyebrow">{{ sealed_memorandum.labels.included_periods }}</div><p>{{ sealed_memorandum.scope.included_periods|join(', ') }}</p></div>
+        <div class="pdf-card"><div class="pdf-card-eyebrow">{{ sealed_memorandum.labels.excluded_periods }}</div><p>{% if sealed_memorandum.scope.excluded_periods %}{{ sealed_memorandum.scope.excluded_periods|join(', ') }}{% else %}{{ sealed_memorandum.labels.none }}{% endif %}</p></div>
+    </div>
+    <div class="pdf-grid pdf-grid-3 sealed-scope-disclosures">
+        <div class="pdf-card">
+            <div class="pdf-card-eyebrow">{{ sealed_memorandum.labels.limitations }}</div>
+            {% if sealed_memorandum.scope.limitations %}<ul>{% for limitation in sealed_memorandum.scope.limitations %}<li>{{ limitation }}</li>{% endfor %}</ul>{% else %}<p>{{ sealed_memorandum.labels.none }}</p>{% endif %}
+        </div>
+        <div class="pdf-card">
+            <div class="pdf-card-eyebrow">{{ sealed_memorandum.labels.information_reliance }}</div>
+            <p>{{ sealed_memorandum.scope.information_reliance }}</p>
+        </div>
+        <div class="pdf-card">
+            <div class="pdf-card-eyebrow">{{ sealed_memorandum.labels.conflicts }}</div>
+            <ul>{% for disclosure in sealed_memorandum.scope.conflict_disclosures %}<li>{{ disclosure }}</li>{% endfor %}</ul>
+        </div>
+    </div>
+</div>

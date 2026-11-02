@@ -1,0 +1,80 @@
+{#
+    Data-room manifest — D6 deliverable summary.
+
+    The vault UI and integrations live in Venus/Mercury; this page is the
+    buyer-package output that shows which files are indexed, what release
+    gate applies, and whether the data room has NDA-signed buyer access.
+#}
+
+{% if package.data_room_manifest %}
+<section class="brp-data-room-manifest" data-section="data_room_manifest"
+         data-doc-count="{{ package.data_room_manifest.doc_count }}"
+         data-nda-buyer-count="{{ package.data_room_manifest.nda_signed_buyer_count }}">
+    <div class="brp-page-header">
+        <div>
+            <div class="brp-section-kicker">Diligence vault</div>
+            <h2>Data-room manifest</h2>
+        </div>
+        <div class="brp-confidence-chip" data-confidence="{% if package.data_room_manifest.doc_count > 0 %}high{% else %}medium{% endif %}">
+            {% if package.data_room_manifest.doc_count > 0 %}indexed{% else %}pending{% endif %}
+        </div>
+    </div>
+
+    <div class="brp-data-room-summary-grid">
+        <div class="brp-data-room-summary-card" data-module="data-room-doc-count">
+            <span class="brp-figure-label">Indexed files</span>
+            <strong>{{ package.data_room_manifest.doc_count }}</strong>
+        </div>
+        <div class="brp-data-room-summary-card" data-module="data-room-nda-count">
+            <span class="brp-figure-label">NDA-signed buyers</span>
+            <strong>{{ package.data_room_manifest.nda_signed_buyer_count }}</strong>
+        </div>
+        <div class="brp-data-room-summary-card" data-module="data-room-assistant-surfaces">
+            <span class="brp-figure-label">Assistant access</span>
+            <strong>Venus / Mercury</strong>
+        </div>
+    </div>
+
+    <p class="brp-data-room-note">
+        This manifest is the controlled file index for buyer diligence. Venus and
+        Mercury keep the checklist fillable through integrations; ValuationIQ renders
+        the current buyer-package output for review and counsel handoff.
+    </p>
+
+    <table class="brp-data-room-table">
+        <thead>
+            <tr>
+                <th>File</th>
+                <th>Category</th>
+                <th>Version</th>
+                <th>Access gate</th>
+                <th>Uploaded</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for doc in package.data_room_manifest.docs_by_category %}
+                <tr data-category="{{ doc.category }}" data-access-gate="{{ doc.access_gate }}">
+                    <td><strong>{{ doc.filename }}</strong></td>
+                    <td>{{ doc.category.replace("_", " ") }}</td>
+                    <td>v{{ doc.version }}</td>
+                    <td>
+                        <span class="brp-status-chip brp-status-{% if doc.access_gate == 'after_nda' %}yellow{% else %}green{% endif %}">
+                            {{ doc.access_gate.replace("_", " ") }}
+                        </span>
+                    </td>
+                    <td>{{ doc.uploaded_at }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="brp-legal-notice brp-legal-notice-muted">
+        <strong>Vault control</strong>
+        <p>
+            File access remains controlled by the NDA-gated data room. This manifest
+            supports buyer preparation and legal review; the transaction legal advisor owns
+            legal diligence requests, redactions, and distribution decisions.
+        </p>
+    </div>
+</section>
+{% endif %}

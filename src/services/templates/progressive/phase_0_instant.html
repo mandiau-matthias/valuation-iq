@@ -1,0 +1,79 @@
+<!-- Phase 0: Instant Preview Template -->
+<div class="phase-0-instant-preview">
+    {{ welcome_html }}
+    
+    {{ progress_html }}
+    
+    <div class="placeholder-valuation bg-white rounded-lg p-6 mb-6 border border-gray-200">
+        <div class="text-center">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Estimated Value Range</h3>
+            <div class="shimmer-effect">
+                <p class="text-4xl font-bold text-blue-600 mb-2">{{ placeholder_range }}</p>
+                <p class="text-sm text-gray-500 mb-4">
+                    Refining as you answer questions...
+                </p>
+                <div class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                    <svg class="animate-pulse w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                    {{ confidence }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if next_steps %}
+    <div class="next-steps bg-gray-50 rounded-lg p-4 mb-6">
+        <h4 class="text-sm font-semibold text-gray-700 mb-2">Next Steps:</h4>
+        <ul class="text-sm text-gray-600 space-y-1">
+            {% for step in next_steps %}
+            <li class="flex items-center">
+                <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+                {{ step }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
+    <div class="data-summary bg-blue-50 rounded-lg p-4">
+        <div class="flex justify-between items-center text-sm">
+            <span class="text-blue-700 font-medium">Data Collected: {{ data_collected }}/{{ data_total }}</span>
+            <span class="text-blue-600">{{ timestamp }}</span>
+        </div>
+    </div>
+</div>
+
+<style>
+.shimmer-effect {
+    position: relative;
+    overflow: hidden;
+}
+
+.shimmer-effect::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+.phase-0-instant-preview {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>

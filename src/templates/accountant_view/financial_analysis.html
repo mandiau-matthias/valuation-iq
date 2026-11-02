@@ -1,0 +1,98 @@
+<div class="page">
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 24pt; border: none; border-top: none;">
+        <tr>
+            <td style="padding: 0; border: none; vertical-align: middle;" colspan="2">
+                <h1 id="section-4" style="margin: 0 0 32pt 0; page-break-before: always; break-before: page;">{{ t.accountant_section_operational_resilience }}</h1>
+            </td>
+        </tr>
+    </table>
+
+    <div class="report-section" style="margin-bottom: 32pt;">
+        <p style="font-size: 12pt; line-height: 1.6; color: #334155; margin-bottom: 16pt;">
+            {{ t.accountant_fa_intro | safe }}
+        </p>
+        <p style="font-size: 11pt; line-height: 1.5; color: #475569; margin-bottom: 24pt;">
+            <strong>{{ t.accountant_fa_market_context_label }}</strong> {{ t.accountant_fa_market_context_text }}
+        </p>
+    </div>
+
+<div class="report-section">
+    {# ELEVATED: Financial Anomalies (Primitive 4: Shared Reality) #}
+    {% if financial_analysis and financial_analysis.financial_warnings %}
+    <div style="margin-bottom: 40pt;">
+        <h2 style="color: #B91C1C; margin-bottom: 24pt;">{{ t.accountant_fa_critical_alerts_title }}</h2>
+        <div class="report-callout danger" style="padding: 16pt; background-color: #f5ebea; border-left: 4pt solid #b85c56; border-radius: 4px;">
+            {% if financial_analysis.financial_warnings|length == 1 %}
+                <table style="width: 100%; border-collapse: collapse; border: none; margin: 0; border-top: none;">
+                    <tr>
+                        <td style="padding: 0; border: none; vertical-align: top; width: 24pt;">
+                            <span style="font-size: 14pt;">⚠️</span>
+                        </td>
+                        <td style="padding: 0; border: none; vertical-align: top;">
+                            <p style="margin: 0; color: #b85c56; line-height: 1.5; font-weight: 600;">{{ financial_analysis.financial_warnings[0] }}</p>
+                        </td>
+                    </tr>
+                </table>
+            {% else %}
+                <ul style="margin: 0; margin-left: 16pt; color: #b85c56; font-weight: 600;">
+                    {% for warning in financial_analysis.financial_warnings %}
+                        <li style="margin-bottom: 8pt; line-height: 1.5;">{{ warning }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <h2 id="section-5-1" style="margin-bottom: 24pt;">{{ t.accountant_fa_historical_performance_title }}</h2>
+
+    <div style="margin-bottom: 24pt;">
+        <p style="font-size: 11pt; line-height: 1.6; color: #334155; margin-bottom: 12pt;">
+            {{ t.accountant_fa_historical_intro }}
+        </p>
+        <p style="font-size: 10pt; line-height: 1.5; color: #64748B; margin-bottom: 0;">
+            <strong>{{ t.accountant_fa_valuation_impact_label }}</strong> {{ t.accountant_fa_valuation_impact_text | safe }}
+        </p>
+    </div>
+
+    {% if years_of_data and years_of_data < 3 %}
+        <div class="report-callout warning" style="margin-bottom: 24pt;">
+            <h3 style="font-size: 11pt; color: #d9a558; margin-top: 0;">{{ t.accountant_fa_data_limitation_title }}</h3>
+            <p style="margin: 0;">{{ t.accountant_fa_data_limitation_text.format(years=years_of_data) }}</p>
+        </div>
+    {% endif %}
+
+    {# CAGR & Margin Summary Card - Robust Table Layout #}
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 32pt; border: none; border-top: none;">
+        <tr>
+            <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                <div class="stat-card">
+                    <p class="label">{{ t.accountant_fa_revenue_cagr_label }}</p>
+                    <p class="value">
+                        {{ financial_analysis.key_metrics.revenue_growth | format_percentage if financial_analysis.key_metrics.revenue_growth else 'N/A' }}
+                    </p>
+                    <p style="font-size: 10pt; color: #64748B; margin-top: 8pt;">{{ t.accountant_fa_revenue_cagr_caption }}</p>
+                </div>
+            </td>
+            <td style="width: 4%; border: none;"></td>
+            <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                <div class="stat-card">
+                    <p class="label">{{ t.accountant_fa_avg_ebitda_margin_label }}</p>
+                    <p class="value" style="color: #4a5d4f;">
+                        {{ financial_analysis.key_metrics.ebitda_margin | format_percentage if financial_analysis.key_metrics.ebitda_margin else 'N/A' }}
+                    </p>
+                    <p style="font-size: 10pt; color: #64748B; margin-top: 8pt;">{{ t.accountant_fa_avg_ebitda_margin_caption }}</p>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    {# VISUALIZATION: Historical Performance Chart #}
+    {% if historical_performance_chart %}
+    <div class="chart-container" style="margin: 24pt 0; padding: 18pt; background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 4px;">
+        <h3 style="font-family: 'Inter', sans-serif; font-size: 12pt; font-weight: 600; text-transform: uppercase; letter-spacing: 1pt; color: #4B5563; margin-top: 0; margin-bottom: 12pt;">{{ t.accountant_fa_performance_visualization_title }}</h3>
+        {{ historical_performance_chart | safe }}
+    </div>
+    {% endif %}
+</div>
+</div>

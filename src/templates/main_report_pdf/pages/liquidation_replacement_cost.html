@@ -1,0 +1,70 @@
+{#
+    LIQUIDATION ANALYSIS — PAGE: REPLACEMENT COST (PDF version)
+
+    PDF twin of main_report/pages/liquidation_replacement_cost.html.
+    Section 00b — M&A buyer ceiling per IVS 105 §60-90.
+#}
+{% set lr = liquidation_report %}
+{% if lr.replacement_cost %}
+{% set rc = lr.replacement_cost %}
+<section class="pdf-page liquidation-page">
+    <header class="pdf-section-header">
+        <span class="pdf-section-number">00b</span>
+        <h1 class="pdf-section-title">{{ lr.t.rc_section_title }}</h1>
+        <span class="pdf-badge">{{ lr.t.rc_section_subtitle }}</span>
+    </header>
+
+    <table class="pdf-table pdf-table-compact">
+        <thead>
+            <tr>
+                <th>{{ lr.t.rc_col_class }}</th>
+                <th class="pdf-num">{{ lr.t.rc_col_book }}</th>
+                <th class="pdf-num">{{ lr.t.rc_col_crn_mult }}</th>
+                <th class="pdf-num">{{ lr.t.rc_col_crn_value }}</th>
+                <th class="pdf-num">{{ lr.t.rc_col_remaining_life }}</th>
+                <th class="pdf-num">{{ lr.t.rc_col_depreciated }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in rc.lines %}
+            <tr>
+                <td>{{ line.class_label }}</td>
+                <td class="pdf-num">€{{ line.book_value|format_eur_amount }}</td>
+                <td class="pdf-num">{{ line.crn_multiplier|float|safe_round(2) }}×</td>
+                <td class="pdf-num">€{{ line.crn_value|format_eur_amount }}</td>
+                <td class="pdf-num">{{ line.remaining_life_factor|format_factor_pct(0) }}</td>
+                <td class="pdf-num">€{{ line.depreciated_value|format_eur_amount }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="pdf-row-subtotal">
+                <td>{{ lr.t.rc_total_tangible }}</td>
+                <td colspan="4"></td>
+                <td class="pdf-num">€{{ rc.tangible_replacement_value|format_eur_amount }}</td>
+            </tr>
+            <tr>
+                <td>
+                    {{ lr.t.rc_intangibles_uplift }}
+                    <div class="pdf-prose-small">
+                        {{ lr.t.rc_intangibles_uplift_caption.replace('{pct}', rc.identifiable_intangibles_uplift_pct|format_factor_pct(0)|replace('%','')|string) }}
+                    </div>
+                </td>
+                <td colspan="4"></td>
+                <td class="pdf-num">€{{ rc.identifiable_intangibles_uplift|format_eur_amount }}</td>
+            </tr>
+            <tr class="pdf-row-headline">
+                <td>{{ lr.t.rc_total_replacement }}</td>
+                <td colspan="4"></td>
+                <td class="pdf-num">€{{ rc.total_replacement_cost|format_eur_amount }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="pdf-card pdf-card-muted">
+        <div class="pdf-prose">{{ rc.rationale }}</div>
+    </div>
+
+    {% if rc.sources %}
+    <div class="pdf-sources">{{ lr.t.sources_label }}: {{ rc.sources|join(' · ') }}</div>
+    {% endif %}
+</section>
+{% endif %}

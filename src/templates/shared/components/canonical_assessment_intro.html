@@ -1,0 +1,15 @@
+{# State the executed method without assuming every method produces enterprise value. #}
+{% set _intro_lang = (locale|default('nl')|lower)[:2] %}
+<p class="lead canonical-assessment-intro" style="font-size: 9pt; line-height: 1.45; margin-bottom: 8pt;">
+    {% if _intro_lang == 'fr' %}Cette évaluation indicative de {{ company_name }} au {{ valuation_date }} utilise la méthode suivante :
+    {% elif _intro_lang == 'en' %}This indicative assessment of {{ company_name }} as of {{ valuation_date }} uses the following method:
+    {% else %}Deze indicatieve waardering van {{ company_name }} per {{ valuation_date }} gebruikt de volgende methode:
+    {% endif %}
+    {% if show_nav_bridge|default(false) %}{{ t.exec_methodology_asset }}{% else %}{{ primary_method_label|default(valuation_methodology_display, true) }}{% endif %}.
+    {% if financial_reference_date %}
+    {% if _intro_lang == 'fr' %}Date de référence des comptes :
+    {% elif _intro_lang == 'en' %}Financial reference date:
+    {% else %}Referentiedatum van de cijfers:
+    {% endif %} {{ financial_reference_date|format_date(locale|default('nl')) }}.
+    {% endif %}
+</p>

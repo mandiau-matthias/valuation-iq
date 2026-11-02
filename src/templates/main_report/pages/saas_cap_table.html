@@ -1,0 +1,91 @@
+{#
+    SAAS / ARR-MULTIPLE — CAP TABLE & DILUTION (Screen / Browser version)
+
+    Renders the cap-table simulator the engine attaches to
+    ``arr_multiple.details.cap_table_simulator`` when the founder
+    supplied a ``cap_table`` and/or ``investment_amount_sought`` on
+    the SaaS valuation request (Wintercircus rollout).  Pure read of
+    ``saas_cap_table_simulator`` from the report context — same
+    payload shape the startup engine emits, so the math here is the
+    single source of truth in ``startup_valuation/cap_table.py``.
+
+    Mounted from ``main_report/master_report.html`` directly after the
+    SaaS appendix when ``show_saas_cap_table`` is true.
+
+    All copy goes through the ``t.*`` translation surface so EN and NL
+    founders read this page in their own language.  Currency values use
+    ``|format_currency`` (locale-aware grouping) — never ``|safe_round``,
+    which would emit ``€1234567`` without thousand separators.
+
+    PDF twin: main_report_pdf/pages/saas_cap_table.html
+#}
+{% set sim = saas_cap_table_simulator %}
+
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div class="section-header">
+        {% if saas_cap_table_section_number %}
+        <span class="section-number">{{ saas_cap_table_section_number }}</span>
+        {% endif %}
+        <h1 class="section-title" style="margin: 0;">{{ t.saas_cap_table_title }}</h1>
+    </div>
+
+    {% if sim and sim.investment_amount and sim.pre_money %}
+    {# Headline simulator card — the actionable "if you raise €X
+       you dilute Y%" sentence + a reconciling pre/post/dilution
+       table.  Anchor is the post-debt EQUITY value (not enterprise
+       value), so the post-money figure here matches the headline
+       equity number on the cover. #}
+    <div class="card" style="padding: var(--space-4); border: 1pt solid hsl(var(--report-primary)); background: rgba(244, 99, 35, 0.04); margin-bottom: var(--space-4);">
+        <h2 style="font-size: var(--font-size-lg); margin: 0 0 var(--space-2); color: hsl(var(--report-primary));">{{ t.saas_cap_table_simulator_heading }}</h2>
+        <p style="font-size: var(--font-size-md); line-height: 1.55; margin: 0 0 var(--space-3);">
+            {{ t.saas_cap_table_headline_sentence|format(
+                investment=sim.investment_amount|format_currency,
+                pre_money=sim.pre_money|format_currency,
+                dilution_pct=(sim.founder_dilution_pct|safe_round(1) ~ '%')
+            )|safe }}
+        </p>
+        <table class="data-table" style="width: 100%; font-size: var(--font-size-sm); margin: 0;">
+            <tbody>
+                <tr><td>{{ t.saas_cap_table_pre_money_label }}</td><td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ sim.pre_money|format_currency }}</td></tr>
+                <tr><td>{{ t.saas_cap_table_round_label }}</td><td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ sim.investment_amount|format_currency }}</td></tr>
+                <tr style="font-weight: 600;"><td>{{ t.saas_cap_table_post_money_label }}</td><td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ sim.post_money|format_currency }}</td></tr>
+                <tr><td>{{ t.saas_cap_table_investor_dilution_label }}</td><td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ sim.investor_dilution_pct|safe_round(1) }}%</td></tr>
+                {% if sim.safe_dilution_pct and sim.safe_dilution_pct > 0 %}
+                <tr><td>{{ t.saas_cap_table_safe_dilution_label }}</td><td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ sim.safe_dilution_pct|safe_round(1) }}%</td></tr>
+                {% endif %}
+                {% if sim.option_pool_pct and sim.option_pool_pct > 0 %}
+                <tr><td>{{ t.saas_cap_table_option_pool_label }}</td><td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ sim.option_pool_pct|safe_round(1) }}%</td></tr>
+                {% endif %}
+                <tr style="font-weight: 600; color: hsl(var(--report-primary));"><td>{{ t.saas_cap_table_founder_dilution_label }}</td><td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ sim.founder_dilution_pct|safe_round(1) }}%</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    {% if sim.safe_total and sim.safe_total > 0 %}
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-3) 0 var(--space-2);">{{ t.saas_cap_table_safe_overview_heading }}</h2>
+    <table class="data-table" style="width: 100%; font-size: var(--font-size-sm); margin-bottom: var(--space-4);">
+        <tbody>
+            <tr>
+                <td>{{ t.saas_cap_table_safe_principal_label }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ sim.safe_total|format_currency }}</td>
+            </tr>
+            <tr>
+                <td>{{ t.saas_cap_table_safe_drag_label }}</td>
+                <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">{{ sim.safe_dilution_pct|safe_round(1) }}%</td>
+            </tr>
+        </tbody>
+    </table>
+    <p style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); margin-top: -8pt;">
+        {{ t.saas_cap_table_safe_assumption_note }}
+    </p>
+    {% endif %}
+    {% else %}
+    <p style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted));">
+        {{ t.saas_cap_table_unavailable_note }}
+    </p>
+    {% endif %}
+
+    {% include "main_report/partials/_footer.html" ignore missing %}
+</div>

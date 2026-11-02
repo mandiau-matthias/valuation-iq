@@ -1,0 +1,19 @@
+{# 
+    Page Footer Partial - TABLE-BASED FOR WEASYPRINT
+    Page numbering handled by @page CSS counters in base.html
+    
+    Expected context:
+    - t: ReportTranslations object
+    - company_name: str
+#}
+<div class="page-footer">
+    <table>
+        <tr>
+            <td>
+                {{ company_name }} · {{ report_certification_footer_label|default(t.footer_indicative_estimate) }} · {{ t.footer_confidential }}
+            </td>
+            <td style="text-align: right;">
+            </td>
+        </tr>
+    </table>
+</div>

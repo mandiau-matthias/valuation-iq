@@ -1,0 +1,67 @@
+<!-- 
+Section Footnotes Component
+
+Renders academic footnotes at the end of report sections.
+
+Usage:
+    {% include 'accountant_view/components/section_footnotes.html' with footnotes=section.footnotes %}
+
+Author: Upswitch CTO Team
+Date: December 2025
+-->
+
+{% if footnotes and footnotes|length > 0 %}
+<div class="section-footnotes">
+    <h4 class="footnotes-title">Academic References</h4>
+    <ol class="footnote-list">
+        {% for footnote in footnotes %}
+        <li id="ref-{{ footnote.source_id }}" class="footnote-item">
+            <span class="footnote-number">{{ footnote.number }}.</span>
+            <span class="footnote-text">{{ footnote.citation }}</span>
+        </li>
+        {% endfor %}
+    </ol>
+</div>
+
+<style>
+.section-footnotes {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px solid #e5e7eb;
+}
+
+.section-footnotes .footnotes-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #374151;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.footnote-list {
+    margin: 0;
+    padding-left: 25px;
+    list-style: none;
+    counter-reset: footnote-counter;
+}
+
+.footnote-item {
+    margin: 10px 0;
+    font-size: 13px;
+    color: #4b5563;
+    line-height: 1.6;
+}
+
+.footnote-number {
+    font-weight: bold;
+    color: #2563eb;
+    margin-right: 8px;
+}
+
+.footnote-text {
+    display: inline;
+}
+</style>
+{% endif %}
+

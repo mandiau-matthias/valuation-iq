@@ -1,0 +1,107 @@
+{#
+    LIQUIDATION ANALYSIS — PAGE: SENSITIVITY ANALYSIS (Section 09)
+
+    Phase 3 — Tornado + P10/P50/P90 quantiles via Latin-hypercube
+    sampling (Iman & Conover 1982). The McKinsey-grade uncertainty
+    panel a Big-4 partner expects to see before signing off.
+
+    Renders only when ``sensitivity`` is present.
+
+    PDF twin: main_report_pdf/pages/liquidation_sensitivity.html
+#}
+{% set lr = liquidation_report %}
+{% if lr.sensitivity %}
+{% set s = lr.sensitivity %}
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div class="section-header">
+        <span class="section-number">09</span>
+        <h1 class="section-title" style="margin: 0; flex: 1;">{{ lr.t.sensitivity_section_title }}</h1>
+        <div style="text-align: right;">
+            <span class="badge badge-primary" style="font-size: var(--font-size-xs);">
+                {{ lr.t.sensitivity_section_subtitle }}
+            </span>
+        </div>
+    </div>
+
+    {# Quantile hero — central + P10/P50/P90 cards #}
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); margin-bottom: var(--space-4);">
+        <div class="card" style="padding: var(--space-3); border-left: 3px solid hsl(var(--report-primary));">
+            <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); text-transform: uppercase;">{{ lr.t.sensitivity_central }}</div>
+            <div style="font-size: 1.4rem; font-weight: 700; margin-top: var(--space-1);">€{{ s.central|format_eur_amount }}</div>
+        </div>
+        <div class="card" style="padding: var(--space-3);">
+            <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); text-transform: uppercase;">{{ lr.t.sensitivity_p10 }}</div>
+            <div style="font-size: 1.2rem; font-weight: 600; margin-top: var(--space-1);">€{{ s.p10|format_eur_amount }}</div>
+        </div>
+        <div class="card" style="padding: var(--space-3);">
+            <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); text-transform: uppercase;">{{ lr.t.sensitivity_p50 }}</div>
+            <div style="font-size: 1.2rem; font-weight: 600; margin-top: var(--space-1);">€{{ s.p50|format_eur_amount }}</div>
+        </div>
+        <div class="card" style="padding: var(--space-3);">
+            <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); text-transform: uppercase;">{{ lr.t.sensitivity_p90 }}</div>
+            <div style="font-size: 1.2rem; font-weight: 600; margin-top: var(--space-1);">€{{ s.p90|format_eur_amount }}</div>
+        </div>
+    </div>
+
+    {# Tornado — sorted descending by impact range.  Renders as a
+       grid of (label · SVG bar · numeric range) rows so the reader
+       can eyeball which driver moves the needle the most without
+       reading the numbers (audit P1 #8: was a flat table; M&A reports
+       need a visual tornado).  Bar width is normalised to the largest
+       impact_range so the longest bar always fills the column. #}
+    {% if s.tornado %}
+    {# Pre-compute the max range; protect against divide-by-zero with a
+       fallback to 1 so a degenerate sample doesn't NaN the grid. #}
+    {% set tornado_max_range = (s.tornado | map(attribute='impact_range') | map('float') | map('abs') | max) if s.tornado else 1 %}
+    {% if tornado_max_range == 0 %}{% set tornado_max_range = 1 %}{% endif %}
+    <h2 style="font-size: var(--font-size-md); margin-top: var(--space-3); margin-bottom: var(--space-2);">
+        {{ lr.t.sensitivity_tornado_title }}
+    </h2>
+    <div style="font-size: var(--font-size-sm); margin-bottom: var(--space-3);" data-testid="tornado">
+        <div style="display: grid; grid-template-columns: minmax(140px, 1.5fr) 3fr minmax(140px, auto); gap: var(--space-2); padding: var(--space-1) 0; border-bottom: 1px solid hsl(var(--report-border)); font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); text-transform: uppercase; letter-spacing: 0.04em;">
+            <div>{{ lr.t.sensitivity_col_driver }}</div>
+            <div style="text-align: center;">{{ lr.t.sensitivity_col_impact_low }} ←→ {{ lr.t.sensitivity_col_impact_high }}</div>
+            <div style="text-align: right;">{{ lr.t.sensitivity_col_range }}</div>
+        </div>
+        {% for bar in s.tornado %}
+        {% set raw_bar_pct = (((bar.impact_range|float)|abs) / tornado_max_range) * 100 %}
+        {% set bar_pct = 100 if raw_bar_pct > 100 else raw_bar_pct %}
+        <div style="display: grid; grid-template-columns: minmax(140px, 1.5fr) 3fr minmax(140px, auto); gap: var(--space-2); padding: var(--space-2) 0; align-items: center; border-bottom: 1px solid hsl(var(--report-border-muted, var(--report-border)));">
+            <div>{{ bar.label }}</div>
+            <div style="position: relative; height: 18px; background: hsl(var(--report-surface-muted)); border-radius: 3px;">
+                {# Bar is anchored at the centre — low impact extends left,
+                   high impact extends right.  Each half is proportional
+                   to the absolute impact relative to the largest range. #}
+                {% set raw_low_pct = (((bar.impact_low|float)|abs) / tornado_max_range) * 50 %}
+                {% set raw_high_pct = (((bar.impact_high|float)|abs) / tornado_max_range) * 50 %}
+                {% set low_pct = 50 if raw_low_pct > 50 else raw_low_pct %}
+                {% set high_pct = 50 if raw_high_pct > 50 else raw_high_pct %}
+                <div style="position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-100%); width: {{ low_pct }}%; background: hsl(var(--report-warning, 30 90% 55%)); border-radius: 3px 0 0 3px;" title="low: €{{ bar.impact_low|format_eur_amount }}"></div>
+                <div style="position: absolute; top: 0; bottom: 0; left: 50%; width: {{ high_pct }}%; background: hsl(var(--report-primary)); border-radius: 0 3px 3px 0;" title="high: €{{ bar.impact_high|format_eur_amount }}"></div>
+                <div style="position: absolute; top: -3px; bottom: -3px; left: 50%; width: 1px; background: hsl(var(--report-border));"></div>
+                <span class="sr-only" data-testid="tornado-bar-pct">{{ bar_pct|round(0, 'common')|int }}%</span>
+            </div>
+            <div style="text-align: right; font-weight: 600;">€{{ bar.impact_range|format_eur_amount }}</div>
+        </div>
+        {% endfor %}
+        <div style="display: flex; justify-content: space-between; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); padding-top: var(--space-1);">
+            <span>€{{ ((tornado_max_range|float * -1))|format_eur_amount }}</span>
+            <span>0</span>
+            <span>+€{{ tornado_max_range|format_eur_amount }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">
+        {{ lr.t.sensitivity_sample_count }}: {{ s.sample_count }}
+    </div>
+
+    {% if s.sources %}
+    <div style="margin-top: var(--space-3); font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">
+        {{ lr.t.sources_label }}: {{ s.sources|join(' · ') }}
+    </div>
+    {% endif %}
+</div>
+{% endif %}

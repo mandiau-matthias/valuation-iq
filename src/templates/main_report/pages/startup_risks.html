@@ -1,0 +1,70 @@
+{#
+    STARTUP VALUATION — RISK REGISTER (Screen / browser version)
+
+    Institutional "investor objections" page.  Consolidates engine-side
+    findings (oversubscription, outlier-capped legs, sector mismatch,
+    low composite defensibility, active inception overlay) into a
+    single ranked list a founder can hand to a VC and pre-empt the
+    challenge.
+
+    Renders only when the engine produced ≥1 finding — empty payloads
+    are intentionally omitted from master_report (the page is dead
+    weight without findings).
+
+    PDF twin: main_report_pdf/pages/startup_risks.html
+#}
+{% set risks = startup_report.risks_register or [] %}
+
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div class="section-header">
+        {# B11 — section badge bound to context (renumbers when cap_table
+           is suppressed because the founder skipped the cap-table inputs). #}
+        <span class="section-number">{{ startup_risks_section_number|default('05') }}</span>
+        <h1 class="section-title" style="margin: 0;">{{ startup_report.t.risks_section_title }}</h1>
+    </div>
+
+    <p style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted)); margin-bottom: var(--space-3); max-width: 56rem;">
+        {{ startup_report.t.risks_section_caption }}
+    </p>
+
+    {% if risks|length == 0 %}
+    <div class="card" style="padding: var(--space-4); border-left: 3pt solid hsl(143, 60%, 40%);">
+        <p style="font-size: var(--font-size-sm); margin: 0; color: hsl(var(--report-text));">
+            {{ startup_report.t.risks_empty_state }}
+        </p>
+    </div>
+    {% else %}
+    <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+        {% for r in risks %}
+        {% set _accent = 'hsl(355, 70%, 38%)' if r.severity == 'high'
+                          else 'hsl(35, 75%, 32%)' if r.severity == 'medium'
+                          else 'hsl(220, 25%, 38%)' %}
+        {% set _bg = 'hsl(355, 75%, 96%)' if r.severity == 'high'
+                     else 'hsl(45, 95%, 96%)' if r.severity == 'medium'
+                     else 'hsl(220, 25%, 96%)' %}
+        {% set _label = startup_report.t.risks_severity_high if r.severity == 'high'
+                        else startup_report.t.risks_severity_medium if r.severity == 'medium'
+                        else startup_report.t.risks_severity_info %}
+        <div class="card" style="padding: var(--space-3) var(--space-4); border-left: 3pt solid {{ _accent }}; background: {{ _bg }};">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2);">
+                <h3 style="font-size: var(--font-size-md); font-weight: 700; color: hsl(var(--report-text)); margin: 0;">{{ r.title }}</h3>
+                <span style="font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: {{ _accent }};">
+                    {{ _label }}
+                </span>
+            </div>
+            <p style="font-size: var(--font-size-sm); line-height: 1.55; color: hsl(var(--report-text)); margin: 0 0 var(--space-2);">
+                {{ r.body }}
+            </p>
+            <p style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); margin: 0; padding-top: var(--space-2); border-top: 1pt solid hsl(var(--report-border));">
+                <strong style="color: {{ _accent }};">{{ startup_report.t.risks_col_action }}:</strong>
+                {{ r.action }}
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% include "main_report/partials/_footer.html" ignore missing %}
+</div>

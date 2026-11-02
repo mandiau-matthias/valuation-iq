@@ -1,0 +1,12 @@
+{
+  "BE": {
+    "seed": {
+      "average_pre_money": "2000000",
+      "berkus_max_per_milestone": "180000",
+      "comparable_exit_revenue_multiple": "3",
+      "default_target_roi_x": "8",
+      "default_dilution_pct": "0.25",
+      "default_yoy_growth_factor": "1.35"
+    }
+  }
+}

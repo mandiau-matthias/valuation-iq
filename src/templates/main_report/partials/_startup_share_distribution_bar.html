@@ -1,0 +1,43 @@
+{#
+    STARTUP VALUATION — SHARE DISTRIBUTION BAR (Screen)
+
+    Visual cap-table split that mirrors the Venus wizard's
+    RoundSimulatorStep bar — same 4 segments, same color palette — so
+    the founder sees a consistent picture in the studio and on the
+    angel-facing report.  The SAFE segment collapses to 0 % width when
+    no SAFEs are outstanding, so a clean priced-only round renders as
+    a 3-segment bar without conditionals.
+
+    Required context (provided by `startup_report_context.py`):
+      * `startup_report.cap_table_simulator` — the simulator payload
+        (investor_dilution_pct, option_pool_pct, safe_dilution_pct,
+        founder_dilution_pct).  Caller guards on truthy before
+        including this partial.
+      * `startup_report.t.share_distribution_title` /
+        `founders` / `option_pool` / `safe_converters` /
+        `new_investor` — localized labels.
+#}
+{% set sim = startup_report.cap_table_simulator %}
+{% set segments = startup_report.share_distribution_segments|default([]) %}
+{% if sim and segments %}
+<div class="share-distribution-bar" style="margin: var(--space-3) 0;">
+    <p style="font-size: var(--font-size-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--report-text-muted)); margin: 0 0 var(--space-2);">
+        {{ startup_report.t.share_distribution_title }}
+    </p>
+    <div style="display: flex; height: 40px; width: 100%; overflow: hidden; border-radius: 8px; border: 1px solid hsl(var(--report-border, 220 13% 91%)); font-family: 'JetBrains Mono', monospace;">
+        {% for segment in segments %}
+        <div style="display: flex; align-items: center; justify-content: center; background: {{ segment.color }}; color: white; font-size: 11px; font-weight: 600; width: {{ segment.pct }}%;" title="{{ segment.label }}: {{ segment.pct|safe_round(1) }}%">
+            {% if segment.show_inside_label %}{{ segment.pct|safe_round(0) }}%{% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    <div style="margin-top: var(--space-2); display: flex; flex-wrap: wrap; gap: var(--space-3); font-size: var(--font-size-xs); color: hsl(var(--report-text-muted));">
+        {% for segment in segments %}
+        <span style="display: inline-flex; align-items: center; gap: 6px;">
+            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: {{ segment.color }};"></span>
+            {{ segment.label }} {{ segment.pct|safe_round(1) }}%
+        </span>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}

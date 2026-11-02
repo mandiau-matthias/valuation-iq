@@ -1,0 +1,141 @@
+{#
+    DCF SENSITIVITY MATRIX COMPONENT — Screen version (Aurora Clarity)
+
+    Renders a 2D WACC × Terminal Growth sensitivity table showing Enterprise Value.
+    Falls back to 1D sensitivity if 2D matrix is not available.
+
+    Expected context:
+    - dcf_sensitivity_matrix_2d (dict with primary_axis_values, secondary_axis_values, matrix, etc.)
+    - dcf_sensitivity_wacc (dict, 1D fallback)
+    - dcf_sensitivity_growth (dict, 1D fallback)
+    - dcf_wacc (float, for highlighting the base case)
+    - dcf_terminal_growth_rate (float, for highlighting the base case)
+    - t (ReportTranslations)
+    - teal_hsl (string)
+#}
+{% set matrix = dcf_sensitivity_matrix_2d %}
+{% set apv_matrix = matrix and matrix.value_basis|default('') == 'apv_enterprise_value' %}
+{% set apv_locale = (locale|default('nl'))[:2] %}
+{% set wacc_base = dcf_wacc|default(0.10)|float %}
+{% set growth_base = dcf_terminal_growth_rate|default(0.02)|float %}
+
+{% if matrix and matrix.matrix %}
+{% set secondary_key = matrix.secondary_axis_key|default('terminal_growth') %}
+{# Base case for COLUMN highlight depends on which axis the engine produced.
+   For Gordon growth, axis values are decimals (0.02 = 2%); tolerance ~0.003 (0.3 pp).
+   For exit multiple, axis values are bare multiples (e.g. 6.0); tolerance ~0.05× (5%). #}
+{% set _secondary_base = (dcf_terminal_exit_multiple|default(0)|float) if secondary_key == 'exit_multiple' else growth_base %}
+{% set _secondary_tol = 0.05 if secondary_key == 'exit_multiple' else 0.003 %}
+<div style="margin-top: var(--space-6); page-break-inside: avoid;">
+    <h4 style="font-size: 9.5pt; margin: 0 0 var(--space-2) 0; color: hsl(var(--report-slate-900));">
+        {% include "shared/components/dcf_sensitivity_title.html" %}
+    </h4>
+    <p style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); margin: 0 0 var(--space-3) 0;">
+        {% if not apv_matrix %}{% if secondary_key == 'exit_multiple' %}{{ t.dcf_sensitivity_matrix_caption_exit_multiple }}{% else %}{{ t.dcf_sensitivity_matrix_caption_terminal }}{% endif %}{% endif %}
+    </p>
+
+    {% if matrix.value_basis|default('') == 'apv_enterprise_value' %}
+    <p style="font-size: 7pt; line-height: 1.4; color: #64748b; margin: 6pt 0;" data-apv-sensitivity="apv_tax_shield.v2">
+        {% set apv_locale = (locale|default('nl'))[:2] %}
+        {% if apv_locale == 'en' %}Each scenario includes the admitted financing tax shield once. The rate axis represents the unlevered base return.{% elif apv_locale == 'fr' %}Chaque scénario inclut une seule fois le bouclier fiscal admis. L’axe des taux représente le rendement de base sans dette.{% else %}Elk scenario bevat het toegelaten belastingschild eenmaal. De renteas toont het basisrendement zonder schuld.{% endif %}
+    </p>
+    {% endif %}
+
+    {% set primary_values = matrix.primary_axis_values|default([]) %}
+    {% set secondary_values = matrix.secondary_axis_values|default([]) %}
+    {% set grid = matrix.matrix|default({}) %}
+
+    <table style="width: 100%; font-size: 7.5pt; border-collapse: collapse;">
+        <thead>
+            <tr style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                <th style="text-align: left; padding: 5pt 6pt; background: hsl(var(--report-slate-800)); color: white; font-size: var(--font-size-xs); letter-spacing: 0.04em;">
+                    {% if apv_matrix %}{% if apv_locale == 'en' %}Base return{% elif apv_locale == 'fr' %}Rendement de base{% else %}Basisrendement{% endif %}{% else %}WACC{% endif %} ↓ / {% if secondary_key == 'exit_multiple' %}{{ t.calib_dcf_exit_multiple }}{% else %}{{ t.calib_dcf_terminal_growth }}{% endif %} →
+                </th>
+                {% for sv in secondary_values %}
+                {% set is_base_col = (sv|float - _secondary_base)|abs < _secondary_tol %}
+                <th style="text-align: center; padding: 5pt 6pt; background: hsl(var(--report-slate-800)); color: white; font-family: 'JetBrains Mono', monospace;">
+                    {% if secondary_key == 'exit_multiple' %}{{ sv|float|safe_round(1) }}×{% else %}{{ (sv|float * 100)|safe_round(1) }}%{% endif %}
+                    {% if is_base_col %}<span style="display: block; font-size: 5pt; color: hsl({{ teal_hsl }}); margin-top: 1pt;">●</span>{% endif %}
+                </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for pv in primary_values %}
+            {% set pv_str = pv|string %}
+            {% set is_base_row = (pv|float - wacc_base)|abs < 0.003 %}
+            <tr{% if is_base_row %} style="background: hsla({{ teal_hsl }}, 0.06); -webkit-print-color-adjust: exact; print-color-adjust: exact;"{% endif %}>
+                <td style="padding: 5pt 6pt; font-weight: 600; font-family: 'JetBrains Mono', monospace; color: hsl(var(--report-slate-800));">
+                    {{ (pv|float * 100)|safe_round(1) }}%
+                    {% if is_base_row %}<span style="color: hsl({{ teal_hsl }}); font-size: 5pt; margin-left: 2pt;">●</span>{% endif %}
+                </td>
+                {% for sv in secondary_values %}
+                {% set sv_str = sv|string %}
+                {% set is_base_col = (sv|float - _secondary_base)|abs < _secondary_tol %}
+                {% set is_center = is_base_row and is_base_col %}
+                {% set row_data = grid.get(pv_str, {}) if grid is mapping else {} %}
+                {% set cell_val = row_data.get(sv_str) if row_data is mapping else none %}
+                <td style="text-align: right; padding: 5pt 6pt; font-family: 'JetBrains Mono', monospace;{% if is_center %} background: hsla({{ teal_hsl }}, 0.15); font-weight: 700; color: hsl({{ teal_hsl }}); border-radius: 3pt;{% elif is_base_col or is_base_row %} font-weight: 500;{% endif %}">
+                    {% if cell_val is none %}—{% else %}{{ cell_val|float|format_currency_compact }}{% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if matrix.has_unavailable_cells|default(false) %}
+    <p style="font-size: 7pt; line-height: 1.4; color: #64748b; margin: 6pt 0 0;">
+        {% set sensitivity_locale = (locale|default('nl'))[:2] %}
+        {% if sensitivity_locale == 'en' %}—: scenario unavailable under the stated assumptions.{% elif sensitivity_locale == 'fr' %}— : scénario non disponible avec les hypothèses indiquées.{% else %}—: scenario niet beschikbaar met de vermelde aannames.{% endif %}
+    </p>
+    {% endif %}
+</div>
+
+{% elif dcf_sensitivity_wacc and dcf_sensitivity_growth %}
+{# 1D fallback: show two simple tables side by side #}
+<div style="margin-top: var(--space-6); page-break-inside: avoid;">
+    <h4 style="font-size: 9.5pt; margin: 0 0 var(--space-3) 0; color: hsl(var(--report-slate-900));">
+        {% include "shared/components/dcf_sensitivity_title.html" %}
+    </h4>
+    <div style="display: flex; gap: var(--space-4);">
+        <div style="flex: 1; padding: var(--space-3); background: hsl(var(--report-surface)); border-radius: 6pt; border: 1pt solid hsl(var(--report-slate-200));">
+            <p style="font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-text-muted)); margin: 0 0 var(--space-2) 0;">{{ t.calib_dcf_wacc_label }}</p>
+            <table style="width: 100%; font-size: var(--font-size-sm); border-collapse: collapse;">
+                {% for k, v in dcf_sensitivity_wacc.items() %}
+                {% set is_base = (k|float - wacc_base)|abs < 0.003 %}
+                <tr{% if is_base %} style="background: hsla({{ teal_hsl }}, 0.08);"{% endif %}>
+                    <td style="padding: 3pt 6pt; font-family: 'JetBrains Mono', monospace;">{{ (k|float * 100)|safe_round(1) }}%</td>
+                    <td style="text-align: right; padding: 3pt 6pt; font-family: 'JetBrains Mono', monospace;{% if is_base %} font-weight: 700; color: hsl({{ teal_hsl }});{% endif %}">{{ v|float|format_currency_compact }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        <div style="flex: 1; padding: var(--space-3); background: hsl(var(--report-surface)); border-radius: 6pt; border: 1pt solid hsl(var(--report-slate-200));">
+            <p style="font-size: var(--font-size-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--report-text-muted)); margin: 0 0 var(--space-2) 0;">{{ t.calib_dcf_terminal_growth }}</p>
+            <table style="width: 100%; font-size: var(--font-size-sm); border-collapse: collapse;">
+                {% for k, v in dcf_sensitivity_growth.items() %}
+                {% set is_base = (k|float - growth_base)|abs < 0.003 %}
+                <tr{% if is_base %} style="background: hsla({{ teal_hsl }}, 0.08);"{% endif %}>
+                    <td style="padding: 3pt 6pt; font-family: 'JetBrains Mono', monospace;">{{ (k|float * 100)|safe_round(1) }}%</td>
+                    <td style="text-align: right; padding: 3pt 6pt; font-family: 'JetBrains Mono', monospace;{% if is_base %} font-weight: 700; color: hsl({{ teal_hsl }});{% endif %}">{{ v|float|format_currency_compact }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if dcf_ebitda_margin_sensitivity %}
+<div style="margin-top: var(--space-4);">
+    <h4 style="font-size: var(--font-size-base); margin: 0 0 var(--space-2) 0;">EBITDA-margesensitiviteit</h4>
+    <table style="width: 100%; font-size: var(--font-size-sm); border-collapse: collapse;">
+        {% for margin, value in dcf_ebitda_margin_sensitivity.items() %}
+        <tr>
+            <td style="padding: 3pt 6pt;">{{ (margin|float * 100)|safe_round(1) }}%</td>
+            <td style="padding: 3pt 6pt; text-align: right; font-family: 'JetBrains Mono', monospace;">{{ value|float|format_currency_compact }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endif %}

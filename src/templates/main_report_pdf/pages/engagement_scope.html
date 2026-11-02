@@ -1,0 +1,63 @@
+{# Audited common memorandum core: no arithmetic and no fallback values. #}
+{% if engagement_scope %}
+{% set _scope = engagement_scope %}
+{% set _registry = registry_snapshot %}
+{% set _fr = (locale|default('nl'))|lower == 'fr' %}
+{% set _en = (locale|default('nl'))|lower == 'en' %}
+<div class="a4-page" style="page-break-before: always;">
+    {% include "main_report_pdf/partials/_page_header.html" %}
+
+    <div class="section-header">
+        <span class="section-number">01</span>
+        <h1 class="section-title">{% if _fr %}Mandat et périmètre de la valorisation{% elif _en %}Engagement and valuation scope{% else %}Opdracht en waarderingsscope{% endif %}</h1>
+    </div>
+
+    <div class="keep-together" style="padding: 12pt 14pt; margin-bottom: 12pt; background: hsl(224, 15%, 97%); border-left: 3pt solid hsl({{ teal_hsl }}); border-radius: 6pt;">
+        <p style="font-size: 8pt; line-height: 1.55; margin: 0; color: hsl(224, 10%, 28%);">
+            {% if report_assurance_level == 'advisor_approved' %}
+                {% if _fr %}Ce mémorandum correspond au dossier immuable examiné par le conseiller identifié. Le statut d’approbation se rapporte exclusivement à ce fichier et à son empreinte numérique.{% elif _en %}This memorandum is the immutable dossier reviewed by the identified advisor. Approval applies only to this exact file and its digital fingerprint.{% else %}Dit memorandum is het onveranderlijke dossier dat door de geïdentificeerde adviseur werd beoordeeld. De goedkeuring geldt uitsluitend voor dit exacte bestand en zijn digitale vingerafdruk.{% endif %}
+            {% else %}
+                {% if _fr %}Mémorandum indicatif — examen et approbation du conseiller en attente. Il ne s’agit ni d’une attestation externe ni d’une déclaration automatique de conformité IVS.{% elif _en %}Indicative memorandum — advisor review and approval pending. This is neither external certification nor an automatic statement of IVS compliance.{% else %}Indicatief memorandum — beoordeling en goedkeuring door de adviseur zijn nog hangende. Dit is geen externe certificering en geen automatische verklaring van IVS-conformiteit.{% endif %}
+            {% endif %}
+        </p>
+    </div>
+
+    <table class="keep-together" style="width: 100%; border-collapse: collapse; font-size: 8pt; margin-bottom: 14pt;">
+        <tbody>
+            <tr><td style="width: 31%; padding: 6pt 8pt; border-bottom: 1pt solid hsl(224,10%,90%); color: hsl(224,10%,50%);">{% if _fr %}Objet{% elif _en %}Purpose{% else %}Doel{% endif %}</td><td style="padding: 6pt 8pt; border-bottom: 1pt solid hsl(224,10%,90%);">{{ _scope.purpose }}</td></tr>
+            <tr><td style="padding: 6pt 8pt; border-bottom: 1pt solid hsl(224,10%,90%); color: hsl(224,10%,50%);">{% if _fr %}Utilisateurs prévus{% elif _en %}Intended users{% else %}Beoogde gebruikers{% endif %}</td><td style="padding: 6pt 8pt; border-bottom: 1pt solid hsl(224,10%,90%);">{{ _scope.intended_users|join(', ') }}</td></tr>
+            <tr><td style="padding: 6pt 8pt; border-bottom: 1pt solid hsl(224,10%,90%); color: hsl(224,10%,50%);">{% if _fr %}Intérêt valorisé{% elif _en %}Subject interest{% else %}Gewaardeerd belang{% endif %}</td><td style="padding: 6pt 8pt; border-bottom: 1pt solid hsl(224,10%,90%);">{{ _scope.subject_interest }} · {{ _scope.ownership_percentage|safe_round(2) }}%</td></tr>
+            <tr><td style="padding: 6pt 8pt; border-bottom: 1pt solid hsl(224,10%,90%); color: hsl(224,10%,50%);">{% if _fr %}Base de valeur{% elif _en %}Basis of value{% else %}Waarderingsbasis{% endif %}</td><td style="padding: 6pt 8pt; border-bottom: 1pt solid hsl(224,10%,90%);">{{ _scope.basis_of_value }}</td></tr>
+            <tr><td style="padding: 6pt 8pt; border-bottom: 1pt solid hsl(224,10%,90%); color: hsl(224,10%,50%);">{% if _fr %}Hypothèse de valeur{% elif _en %}Premise of value{% else %}Waarderingspremisse{% endif %}</td><td style="padding: 6pt 8pt; border-bottom: 1pt solid hsl(224,10%,90%);">{{ _scope.premise_of_value }}</td></tr>
+            <tr><td style="padding: 6pt 8pt; border-bottom: 1pt solid hsl(224,10%,90%); color: hsl(224,10%,50%);">{% if _fr %}Date de valorisation{% elif _en %}Valuation date{% else %}Waarderingsdatum{% endif %}</td><td style="padding: 6pt 8pt; border-bottom: 1pt solid hsl(224,10%,90%);">{{ _scope.valuation_date }}</td></tr>
+            <tr><td style="padding: 6pt 8pt; border-bottom: 1pt solid hsl(224,10%,90%); color: hsl(224,10%,50%);">{% if _fr %}Date des éléments probants{% elif _en %}Evidence date{% else %}Bewijsdatum{% endif %}</td><td style="padding: 6pt 8pt; border-bottom: 1pt solid hsl(224,10%,90%);">{{ _scope.evidence_date }}</td></tr>
+        </tbody>
+    </table>
+
+    <table style="width: 100%; border-collapse: collapse; border: none; margin-bottom: 14pt;">
+        <tr>
+            <td style="width: 50%; vertical-align: top; padding: 10pt 12pt; border: 1pt solid hsl(224,10%,88%); background: white;">
+                <h3 style="font-size: 8pt; margin: 0 0 6pt;">{% if _fr %}Périodes retenues{% elif _en %}Included source periods{% else %}Opgenomen bronperiodes{% endif %}</h3>
+                <p style="font-size: 7.5pt; line-height: 1.5; margin: 0;">{{ _scope.source_periods|join(', ') }}</p>
+            </td>
+            <td style="width: 2%; border: none; background: transparent;"></td>
+            <td style="width: 48%; vertical-align: top; padding: 10pt 12pt; border: 1pt solid hsl(224,10%,88%); background: white;">
+                <h3 style="font-size: 8pt; margin: 0 0 6pt;">{% if _fr %}Périodes exclues{% elif _en %}Excluded periods{% else %}Uitgesloten periodes{% endif %}</h3>
+                <p style="font-size: 7.5pt; line-height: 1.5; margin: 0;">{% if _scope.excluded_periods %}{{ _scope.excluded_periods|join(', ') }}{% else %}{% if _fr %}Aucune{% elif _en %}None{% else %}Geen{% endif %}{% endif %}</p>
+            </td>
+        </tr>
+    </table>
+
+    {% if _scope.scope_limitations %}
+    <div class="keep-together" style="margin-bottom: 14pt;">
+        <h3 style="font-size: 9pt; margin: 0 0 6pt;">{% if _fr %}Limites du périmètre{% elif _en %}Scope limitations{% else %}Scopebeperkingen{% endif %}</h3>
+        <ul style="font-size: 7.5pt; line-height: 1.5; margin: 0; padding-left: 14pt;">{% for item in _scope.scope_limitations %}<li>{{ item }}</li>{% endfor %}</ul>
+    </div>
+    {% endif %}
+
+    <div class="keep-together" style="padding: 9pt 11pt; border: 1pt solid hsl(224,10%,88%); border-radius: 5pt;">
+        <h3 style="font-size: 8pt; margin: 0 0 5pt;">{% if _fr %}Instantané du registre épinglé{% elif _en %}Pinned registry snapshot{% else %}Vastgelegde registermomentopname{% endif %}</h3>
+        <p style="font-size: 7pt; line-height: 1.45; margin: 0; color: hsl(224,10%,42%);">{{ _registry.source }} · {{ _registry.data_version }} · {{ _registry.snapshot_date }}<br><span style="font-family: 'JetBrains Mono', monospace; font-size: 6pt;">SHA-256 {{ _registry.archive_sha256 }}</span></p>
+    </div>
+</div>
+{% endif %}

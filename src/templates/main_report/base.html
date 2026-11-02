@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="{{ locale|default('nl') }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ company_name }} - {{ t.cover_estimate_label }} | {{ accountant_firm_name|default('Upswitch', true) }}</title>
+    <style>
+        /* Font Loading - Satoshi (primary) + Inter (fallback) + JetBrains Mono (financial figures) */
+        @import url('https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+        /* ============================================================================
+           UPSWITCH VALUATION REPORT - HYBRID AURORA DESIGN SYSTEM
+           ============================================================================
+           Professional valuation report layout | A4 Print-Ready
+           
+           Color System (60/30/10):
+           - 60% Deep Slate (#14171d) - Canvas
+           - 30% Aurora Teal (#2ba899) - Primary/Authority  
+           - 10% Burnt Clay (#c87f63) - Accent
+           ============================================================================ */
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           CSS CUSTOM PROPERTIES - HYBRID AURORA TOKENS
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report {
+            --report-slate-950: 225 18% 8%;
+            --report-slate-900: 224 17% 12%;
+            --report-slate-800: 224 16% 18%;
+            --report-slate-700: 224 14% 28%;
+            --report-slate-600: 224 12% 42%;
+            --report-slate-500: 224 10% 55%;
+            --report-slate-400: 224 8% 70%;
+            --report-slate-300: 224 8% 82%;
+            --report-slate-200: 224 10% 91%;
+            --report-slate-100: 224 12% 96%;
+            --report-slate-50: 40 20% 98%;
+
+            --report-teal: 172 55% 45%;
+            --report-teal-light: 172 45% 92%;
+            --report-teal-dark: 172 60% 32%;
+            --report-primary: var(--report-teal);
+            --report-primary-light: var(--report-teal-light);
+            --report-primary-dark: var(--report-teal-dark);
+
+            --report-clay: 17 50% 59%;
+            --report-clay-light: 17 45% 94%;
+            --report-clay-dark: 17 55% 42%;
+
+            --report-success: 143 40% 42%;
+            --report-warning: 37 65% 55%;
+            --report-danger: 6 55% 50%;
+
+            --report-bg: 0 0% 100%;
+            --report-surface: 40 15% 98%;
+            --report-cream: 40 20% 96%;
+            --report-text: 225 18% 12%;
+            --report-text-default: var(--report-text);
+            --report-text-muted: 224 10% 45%;
+
+            /* shadcn/tailwind aliases — owner_profiling.html uses these
+               (~95 inline references). Without the aliases the standalone
+               HTML preview falls back to default browser styling (no theme
+               coupling). Aliased here so the page picks up Aurora tones and
+               firm-color overrides automatically. */
+            --primary: var(--report-teal);
+            --foreground: var(--report-text);
+            --muted-foreground: var(--report-text-muted);
+            --muted: var(--report-slate-100);
+
+            --font-size-xxs: 6pt;
+            --font-size-xs: 7pt;
+            --font-size-sm: 8pt;
+            --font-size-base: 9pt;
+            --font-size-md: 10pt;
+            --font-size-lg: 12pt;
+            --space-1: 4pt;
+            --space-2: 8pt;
+            --space-3: 12pt;
+            --space-4: 16pt;
+            --space-5: 20pt;
+            --space-6: 24pt;
+            --space-8: 32pt;
+        }
+
+        {% if primary_color_hsl %}
+        .valuation-report {
+            --report-teal: {{ primary_color_hsl }};
+            --report-teal-light: {{ primary_color_hsl_light }};
+            --report-teal-dark: {{ primary_color_hsl_dark }};
+        }
+        {% endif %}
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           PAGE SETUP - A4 PROFESSIONAL MARGINS
+           ═══════════════════════════════════════════════════════════════════════════ */
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        @page cover {
+            margin: 0;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           BASE RESET
+           ═══════════════════════════════════════════════════════════════════════════ */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ─── Overflow safety net ───────────────────────────────────────────────
+           Defensive wrap for dynamic content: long company/firm names, long
+           Dutch asset labels, academic citations, DOIs/URLs, content hashes, and
+           the weighted-synthesis formula. On print/Save-as-PDF there is no
+           horizontal scroll, so without this an unbreakable token rides past the
+           A4 content column and clips. `break-word` only breaks when a token
+           cannot otherwise fit, so ordinary prose and space-separated figures
+           are unaffected; `white-space: nowrap` figure cells still win and never
+           break mid-number. */
+        .valuation-report p,
+        .valuation-report li,
+        .valuation-report dd,
+        .valuation-report dt,
+        .valuation-report h1,
+        .valuation-report h2,
+        .valuation-report h3,
+        .valuation-report h4,
+        .valuation-report td,
+        .valuation-report th,
+        .valuation-report .section-title,
+        .valuation-report blockquote {
+            overflow-wrap: break-word;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           BASE TYPOGRAPHY - SATOSHI + JETBRAINS MONO
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report {
+            font-family: 'Satoshi', 'Inter', system-ui, sans-serif;
+            font-size: 10.5pt;
+            line-height: 1.6;
+            color: hsl(var(--report-text));
+            background: hsl(var(--report-bg));
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .valuation-report * {
+            box-sizing: border-box;
+        }
+
+        /* Display Typography */
+        .valuation-report .display-hero {
+            font-size: 56pt;
+            font-weight: 800;
+            line-height: 0.95;
+            letter-spacing: 0;
+            color: hsl(var(--report-slate-900));
+        }
+
+        .valuation-report .display-1 {
+            font-size: 42pt;
+            font-weight: 800;
+            line-height: 1.0;
+            letter-spacing: 0;
+        }
+
+        .valuation-report .display-2 {
+            font-size: 28pt;
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: 0;
+        }
+
+        .valuation-report .display-3 {
+            font-size: 18pt;
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: 0;
+        }
+
+        /* Headings */
+        .valuation-report h1 {
+            font-size: 24pt;
+            font-weight: 800;
+            color: hsl(var(--report-slate-900));
+            letter-spacing: 0;
+            margin: 0 0 24pt 0;
+            page-break-after: avoid;
+        }
+
+        .valuation-report h2 {
+            font-size: 16pt;
+            font-weight: 700;
+            color: hsl(var(--report-slate-900));
+            letter-spacing: 0;
+            margin: 32pt 0 16pt 0;
+            padding-bottom: 8pt;
+            border-bottom: 1pt solid hsl(var(--report-slate-200));
+            page-break-after: avoid;
+        }
+
+        .valuation-report h3 {
+            font-size: 11pt;
+            font-weight: 700;
+            color: hsl(var(--report-slate-700));
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin: 24pt 0 12pt 0;
+            page-break-after: avoid;
+        }
+
+        .valuation-report h4 {
+            font-size: 10pt;
+            font-weight: 600;
+            color: hsl(var(--report-slate-600));
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 16pt 0 8pt 0;
+        }
+
+        /* Body Text */
+        .valuation-report p {
+            margin: 0 0 12pt 0;
+            color: hsl(var(--report-text-muted));
+        }
+
+        .valuation-report .lead {
+            font-size: 12pt;
+            line-height: 1.7;
+            color: hsl(var(--report-slate-600));
+        }
+
+        /* Monospace for Financial Data */
+        .valuation-report .mono,
+        .valuation-report .tabular {
+            font-family: 'JetBrains Mono', 'SF Mono', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           A4 PAGE CONTAINER
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report .a4-page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm 25mm 35mm 25mm;
+            margin: 0 auto 24px auto;
+            background: hsl(var(--report-bg));
+            position: relative;
+            page-break-after: always;
+            page-break-inside: avoid;
+            box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.12),
+                        0 8px 48px -8px rgba(0, 0, 0, 0.08);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           COVER PAGE - FLEXBOX LAYOUT
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report .cover-page {
+            width: 210mm;
+            height: 297mm;
+            padding: 0;
+            margin: 0 auto 24px auto;
+            background: hsl(var(--report-slate-950));
+            position: relative;
+            overflow: hidden;
+            page: cover;
+            page-break-after: always;
+            page-break-inside: avoid;
+            display: flex;
+            flex-direction: column;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            color-adjust: exact;
+        }
+
+        /* Defensibility scope banner — disclaimers section only (same HTML as ``build_defensibility_banner``). */
+        .valuation-report .upswitch-defensibility-banner {
+            display: block;
+            margin: 0 0 14pt 0;
+            padding: 10pt 14pt;
+            background: hsl(35, 90%, 96%);
+            border: 1pt solid hsl(35, 70%, 70%);
+            border-left: 4pt solid hsl(35, 80%, 50%);
+            border-radius: 4pt;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            page-break-inside: avoid;
+        }
+        .valuation-report .upswitch-defensibility-banner .ud-title {
+            display: block;
+            font-size: 9.5pt;
+            font-weight: 700;
+            color: hsl(35, 50%, 25%);
+            text-transform: uppercase;
+            letter-spacing: 0.5pt;
+            margin-bottom: 4pt;
+        }
+        .valuation-report .upswitch-defensibility-banner .ud-body {
+            display: block;
+            font-size: 8.5pt;
+            color: hsl(35, 50%, 30%);
+            line-height: 1.5;
+        }
+
+        /* Background Industry Icon - Faded watermark */
+        .valuation-report .cover-bg-icon {
+            position: absolute;
+            top: 50%;
+            right: 40pt;
+            width: 280pt;
+            height: 280pt;
+            opacity: 0.035;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .valuation-report .cover-bg-icon svg {
+            width: 100%;
+            height: 100%;
+            color: hsl(40, 15%, 90%);
+        }
+
+        .valuation-report .cover-bg-emoji {
+            font-size: 260pt;
+            line-height: 1;
+            text-align: center;
+            width: 100%;
+            height: 100%;
+            filter: grayscale(50%);
+        }
+
+        /* ─── Top Bar: Logo + Accountant Co-branding ────────────────────────────── */
+        .valuation-report .cover-top-bar {
+            padding: 36pt 40pt;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .valuation-report .cover-branding {
+            display: flex;
+            align-items: center;
+            gap: 0;
+        }
+
+        .valuation-report .cover-logo {
+            height: 22pt;
+            width: auto;
+            opacity: 0.95;
+        }
+
+        .valuation-report .cover-brand-divider {
+            font-size: 14pt;
+            font-weight: 300;
+            color: hsl(var(--report-slate-500));
+            padding: 0 8pt;
+        }
+
+        .valuation-report .cover-accountant-logo {
+            /* This is the ADVISOR's report, delivered under the advisor's brand.
+               Their mark was rendering smaller and fainter than ours (20pt @ .85 vs
+               our 22pt @ .95), and a 100pt width cap shrank wide firm wordmarks
+               further still because object-fit: contain honours both bounds. The
+               first paying advisor's first note to us was "logo op de rapporten
+               staat veel te klein". Give their mark room and full opacity. */
+            height: 28pt;
+            width: auto;
+            max-width: 170pt;
+            object-fit: contain;
+            opacity: 1;
+        }
+
+        .valuation-report .cover-accountant-name {
+            font-size: 12pt;
+            font-weight: 600;
+            color: hsl(40, 12%, 80%);
+            letter-spacing: 0.02em;
+        }
+
+        .valuation-report .cover-ref-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9pt;
+            font-weight: 500;
+            color: hsl(var(--report-slate-500));
+            letter-spacing: 0.06em;
+        }
+
+        /* ─── Hero Area ─────────────────────────────────────────────────────────── */
+        .valuation-report .cover-hero-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 40pt;
+        }
+
+        .valuation-report .cover-company {
+            margin-bottom: 48pt;
+        }
+
+        .valuation-report .cover-label {
+            font-size: var(--font-size-md);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            color: hsl(var(--report-teal));
+            display: block;
+            margin-bottom: 12pt;
+        }
+
+        .valuation-report .cover-company-name {
+            font-size: 64pt;
+            font-weight: 800;
+            color: hsl(40, 15%, 97%);
+            line-height: 0.92;
+            letter-spacing: 0;
+            margin: 0;
+            max-width: 85%;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+
+        .valuation-report .cover-company-name.long-name {
+            font-size: 48pt;
+        }
+
+        .valuation-report .cover-company-name.very-long-name {
+            font-size: 36pt;
+        }
+
+        .valuation-report .cover-industry-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6pt;
+            margin-top: 8pt;
+            padding: 5pt 10pt 5pt 8pt;
+            background: hsla(224, 16%, 16%, 0.8);
+            border: 1pt solid hsla(224, 10%, 25%, 0.6);
+            border-radius: 4pt;
+        }
+
+        .valuation-report .cover-industry-badge span {
+            font-size: var(--font-size-md);
+            font-weight: 500;
+            color: hsl(var(--report-slate-400));
+            letter-spacing: 0.01em;
+        }
+
+        .valuation-report .cover-industry-icon {
+            width: 18pt;
+            height: 18pt;
+            color: hsl(var(--report-teal));
+        }
+
+        /* Value Block */
+        .valuation-report .cover-value-block {
+            margin-top: var(--space-4);
+            max-width: 100%;
+            min-width: 0;
+        }
+
+        .valuation-report .cover-value-label {
+            font-size: 9pt;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: hsl(var(--report-slate-500));
+            display: block;
+            margin-bottom: var(--space-2);
+        }
+
+        .valuation-report .cover-value-amount {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 72pt;
+            font-weight: 700;
+            color: hsl(var(--report-teal));
+            letter-spacing: 0;
+            line-height: 1;
+            display: block;
+            max-width: 100%;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .valuation-report .cover-value-amount--long {
+            font-size: 60pt;
+        }
+
+        .valuation-report .cover-value-amount--very-long {
+            font-size: 48pt;
+        }
+
+        .valuation-report .cover-value-amount--extra-long {
+            font-size: 38pt;
+        }
+
+        .valuation-report .cover-value-range {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14pt;
+            font-weight: 500;
+            color: hsl(var(--report-slate-500));
+            margin-top: var(--space-1);
+            display: block;
+            max-width: 100%;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .valuation-report .cover-value-range--long {
+            font-size: 12pt;
+        }
+
+        .valuation-report .cover-value-range--very-long {
+            font-size: 10pt;
+        }
+
+        .valuation-report .cover-value-note {
+            font-size: var(--font-size-xs);
+            color: hsl(40, 12%, 65%);
+            display: block;
+            margin-top: var(--space-2);
+            max-width: 300pt;
+            line-height: 1.5;
+        }
+
+        /* ─── Bottom Bar: Data Grid ─────────────────────────────────────────────── */
+        .valuation-report .cover-bottom-bar {
+            padding: 32pt 40pt;
+            border-top: 1pt solid hsla(224, 10%, 20%, 0.6);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .valuation-report .cover-data-grid {
+            display: flex;
+            gap: 48pt;
+        }
+
+        .valuation-report .cover-data-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .valuation-report .cover-data-label {
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: hsl(var(--report-slate-500));
+            margin-bottom: var(--space-1);
+        }
+
+        .valuation-report .cover-data-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14pt;
+            font-weight: 600;
+            color: hsl(40, 12%, 88%);
+            /* Dates like "26 januari 2026" must stay on one line — without
+               `white-space: nowrap` the narrow flex column wraps each word
+               to its own line and the cover bottom-bar lays out 3-deep. */
+            white-space: nowrap;
+        }
+
+        .valuation-report .cover-confidential {
+            font-size: 9pt;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: hsl(var(--report-slate-500));
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           SECTION HEADERS - FLEXBOX
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report .section-header {
+            margin-bottom: var(--space-6);
+            padding-bottom: var(--space-4);
+            border-bottom: 2pt solid hsl(var(--report-slate-900));
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .valuation-report .section-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14pt;
+            font-weight: 700;
+            color: hsl(var(--report-teal));
+            background: hsl(var(--report-teal-light));
+            padding: 8pt 14pt;
+            border-radius: 8pt;
+        }
+
+        .valuation-report .section-title {
+            font-size: 20pt;
+            font-weight: 800;
+            color: hsl(var(--report-slate-900));
+            letter-spacing: 0;
+            margin: 0;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           VALUE CARDS - HERO FINANCIAL DISPLAYS
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report .value-hero {
+            background: linear-gradient(135deg, 
+                hsl(225, 18%, 10%) 0%, 
+                hsl(224, 17%, 14%) 100%
+            );
+            border-radius: 16pt;
+            padding: var(--space-8);
+            margin: var(--space-6) 0;
+            position: relative;
+            overflow: hidden;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            color-adjust: exact;
+        }
+
+        .valuation-report .value-hero-label {
+            font-size: 9pt;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: hsl(224, 8%, 55%);
+            margin-bottom: var(--space-2);
+        }
+
+        .valuation-report .value-hero-amount {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 42pt;
+            font-weight: 700;
+            color: hsl(var(--report-teal));
+            letter-spacing: 0;
+            white-space: nowrap;
+            margin: 0;
+        }
+
+        .valuation-report .value-hero-range {
+            font-size: 12pt;
+            color: hsl(224, 8%, 65%);
+            margin-top: var(--space-2);
+        }
+
+        .valuation-report .value-hero-basis {
+            font-size: var(--font-size-md);
+            color: hsl(224, 8%, 55%);
+            margin-top: var(--space-4);
+            padding-top: var(--space-4);
+            border-top: 1pt solid hsla(40, 12%, 90%, 0.1);
+        }
+
+        /* Stats Grid - CSS GRID layout */
+        .valuation-report .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            align-items: stretch;
+            gap: 12pt;
+            margin: var(--space-5) 0;
+        }
+
+        .valuation-report .stat-card {
+            background: hsl(var(--report-surface));
+            border: 1pt solid hsl(var(--report-slate-200));
+            border-radius: 8pt;
+            padding: 14pt 15pt;
+            min-width: 0;
+            min-height: 84pt;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        .valuation-report .stat-card-label {
+            font-size: var(--font-size-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            line-height: 1.25;
+            color: hsl(var(--report-slate-500));
+            min-height: 20pt;
+            margin: 0 0 6pt 0;
+        }
+
+        .valuation-report .stat-card-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18pt;
+            font-weight: 700;
+            line-height: 1.12;
+            letter-spacing: 0;
+            white-space: nowrap;
+            color: hsl(var(--report-slate-900));
+            margin: 0;
+        }
+
+        .valuation-report .stat-card-change {
+            display: inline-block;
+            font-size: 9pt;
+            font-weight: 600;
+            margin-top: var(--space-2);
+            padding: var(--space-1) var(--space-2);
+            border-radius: 4pt;
+        }
+
+        .valuation-report .stat-card-change.positive {
+            background: hsla(143, 40%, 42%, 0.1);
+            color: hsl(var(--report-success));
+        }
+
+        .valuation-report .stat-card-change.negative {
+            background: hsla(6, 55%, 50%, 0.1);
+            color: hsl(var(--report-danger));
+        }
+
+        .valuation-report .stat-card-subtext {
+            font-size: var(--font-size-xs);
+            line-height: 1.35;
+            color: hsl(var(--report-slate-500));
+            margin: 5pt 0 0 0;
+        }
+
+        .valuation-report .stat-card-subtext-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            color: hsl(var(--report-slate-700));
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           TABLES - PROFESSIONAL REPORT STYLING
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: var(--space-6) 0;
+            font-size: 9.5pt;
+            page-break-inside: avoid;
+        }
+
+        .valuation-report thead {
+            display: table-header-group;
+        }
+
+        .valuation-report th {
+            text-align: left;
+            font-size: var(--font-size-sm);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: hsl(var(--report-slate-500));
+            padding: var(--space-3) var(--space-4);
+            background: hsl(var(--report-surface));
+            border-bottom: 2pt solid hsl(var(--report-slate-900));
+        }
+
+        .valuation-report td {
+            padding: var(--space-3) var(--space-4);
+            color: hsl(var(--report-slate-700));
+            border-bottom: 1pt solid hsl(var(--report-slate-100));
+            vertical-align: top;
+        }
+
+        .valuation-report tr:last-child td {
+            border-bottom: 1pt solid hsl(var(--report-slate-200));
+        }
+
+        .valuation-report td:first-child {
+            font-weight: 500;
+            color: hsl(var(--report-slate-800));
+        }
+
+        .valuation-report .text-right {
+            text-align: right;
+        }
+
+        .valuation-report .text-center {
+            text-align: center;
+        }
+
+        /* Result Row */
+        .valuation-report tr.row-result {
+            background: hsl(var(--report-slate-900));
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            color-adjust: exact;
+        }
+
+        .valuation-report tr.row-result td {
+            color: hsl(40, 12%, 94%);
+            font-weight: 600;
+            border-bottom: none;
+        }
+
+        .valuation-report tr.row-result td:first-child {
+            color: hsl(40, 12%, 94%);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           CALLOUTS & ALERTS
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report .callout {
+            padding: var(--space-5);
+            border-radius: 12pt;
+            margin: var(--space-6) 0;
+            page-break-inside: avoid;
+        }
+
+        .valuation-report .callout-info {
+            background: hsl(var(--report-teal-light));
+            border-left: 4pt solid hsl(var(--report-teal));
+        }
+
+        .valuation-report .callout-warning {
+            background: hsla(37, 65%, 55%, 0.1);
+            border-left: 4pt solid hsl(var(--report-warning));
+        }
+
+        .valuation-report .callout-danger {
+            background: hsla(6, 55%, 50%, 0.1);
+            border-left: 4pt solid hsl(var(--report-danger));
+        }
+
+        .valuation-report .callout h4 {
+            font-size: var(--font-size-md);
+            font-weight: 700;
+            margin: 0 0 var(--space-2) 0;
+            color: hsl(var(--report-slate-900));
+        }
+
+        .valuation-report .callout p {
+            margin: 0;
+            color: hsl(var(--report-slate-700));
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           BADGES & TAGS
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6pt;
+            padding: var(--space-1) 10pt;
+            border-radius: 4pt;
+            font-size: var(--font-size-sm);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .valuation-report .badge-primary {
+            background: hsl(var(--report-teal-light));
+            color: hsl(var(--report-teal-dark));
+        }
+
+        .valuation-report .badge-success {
+            background: hsla(143, 40%, 42%, 0.15);
+            color: hsl(var(--report-success));
+        }
+
+        .valuation-report .badge-warning {
+            background: hsla(37, 65%, 55%, 0.15);
+            color: hsl(var(--report-clay-dark));
+        }
+
+        .valuation-report .badge-danger {
+            background: hsla(6, 55%, 50%, 0.15);
+            color: hsl(var(--report-danger));
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           LISTS
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report ul,
+        .valuation-report ol {
+            margin: var(--space-4) 0;
+            padding-left: 24pt;
+        }
+
+        .valuation-report li {
+            margin-bottom: var(--space-2);
+            color: hsl(var(--report-slate-600));
+        }
+
+        .valuation-report .check-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .valuation-report .check-list li {
+            padding: var(--space-2) 0;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           PAGE HEADER & FOOTER - FLEXBOX
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: var(--space-4);
+            margin-bottom: var(--space-6);
+            border-bottom: 1pt solid hsl(var(--report-slate-200));
+            min-height: 32pt;
+        }
+
+        .valuation-report .page-header-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 2pt;
+            min-height: 28pt;
+            justify-content: flex-start;
+        }
+
+        .valuation-report .page-header-text {
+            font-size: 9pt;
+            color: hsl(var(--report-slate-700));
+            font-weight: 500;
+        }
+
+        .valuation-report .page-header-powered {
+            font-size: 7pt;
+            color: hsl(var(--report-slate-400));
+        }
+
+        .valuation-report .page-header-meta {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            /* Lock two-line right column (chip+ref / date) so section
+               content starts at the same Y on every page. */
+            min-height: 28pt;
+        }
+
+        .valuation-report .page-header-meta-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8pt;
+            flex-wrap: nowrap;
+            white-space: nowrap;
+            max-width: 100%;
+        }
+
+        .valuation-report .page-header-method {
+            display: inline-block;
+            flex-shrink: 0;
+            white-space: nowrap;
+            padding: 2pt 7pt;
+            border-radius: 999px;
+            background: hsl(var(--report-teal-light));
+            color: hsl(var(--report-teal-dark));
+            font-size: 6.5pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .valuation-report .page-header-ref {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9pt;
+            color: hsl(var(--report-slate-700));
+            margin: 0;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .valuation-report .page-header-date {
+            font-size: var(--font-size-sm);
+            color: hsl(var(--report-slate-500));
+            margin: 0;
+        }
+
+        .valuation-report .page-footer {
+            position: absolute;
+            bottom: 20mm;
+            left: 25mm;
+            right: 25mm;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: var(--space-3);
+            border-top: 1pt solid hsl(var(--report-slate-200));
+            font-size: var(--font-size-sm);
+            color: hsl(var(--report-slate-500));
+        }
+
+        .valuation-report .page-footer-made-with {
+            font-weight: 400;
+            color: hsl(var(--report-slate-400));
+        }
+
+        .valuation-report .page-footer-upswitch {
+            font-weight: 700;
+            color: hsl(var(--report-teal));
+            letter-spacing: 0.02em;
+        }
+
+        .valuation-report .page-footer-divider {
+            margin: 0 var(--space-1);
+            color: hsl(var(--report-slate-300));
+        }
+
+        .valuation-report .page-footer-accountant {
+            font-weight: 500;
+            color: hsl(var(--report-slate-600));
+        }
+
+        .valuation-report .page-footer-report {
+            font-weight: 500;
+            color: hsl(var(--report-slate-600));
+        }
+
+        .valuation-report .page-footer-page {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            color: hsl(var(--report-slate-400));
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           WATERFALL CHART STYLES
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report .waterfall-chart {
+            margin: var(--space-6) 0;
+        }
+
+        .valuation-report .waterfall-chart svg {
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           SENSITIVITY TABLE STYLES
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report .sensitivity-table {
+            margin-top: var(--space-4);
+        }
+
+        .valuation-report .sensitivity-table table {
+            font-size: var(--font-size-sm);
+        }
+
+        .valuation-report .sensitivity-table th.header-dark {
+            background: hsl(224, 15%, 20%);
+            color: white;
+        }
+
+        .valuation-report .sensitivity-table .cell-highlight {
+            background: hsla(var(--report-teal), 0.15);
+            font-weight: 700;
+            color: hsl(var(--report-teal));
+        }
+
+        .valuation-report .sensitivity-table .row-highlight {
+            background: hsla(var(--report-teal), 0.08);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           CALIBRATION LEDGER
+           ═══════════════════════════════════════════════════════════════════════════ */
+        .valuation-report .value-bridge {
+            background: hsl(224, 15%, 97%);
+            border-radius: 8pt;
+            padding: var(--space-5);
+            margin-bottom: var(--space-5);
+            border: 1pt solid hsl(224, 10%, 90%);
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        /* Value bridge uses CSS Grid — no wrap, no overflow */
+        .valuation-report .value-bridge-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) auto minmax(0, 0.7fr) auto minmax(0, 1.45fr);
+            align-items: center;
+            gap: 6pt;
+            min-width: 0;
+        }
+
+        .valuation-report .value-bridge-item {
+            text-align: center;
+        }
+
+        .valuation-report .value-bridge-label {
+            font-size: var(--font-size-xs);
+            color: hsl(var(--report-slate-500));
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 6pt;
+        }
+
+        .valuation-report .value-bridge-value {
+            font-size: 20pt;
+            font-weight: 700;
+            line-height: 1.05;
+            letter-spacing: 0;
+            font-family: 'JetBrains Mono', monospace;
+            color: hsl(224, 15%, 25%);
+        }
+
+        .valuation-report .value-bridge-number {
+            display: block;
+            max-width: 100%;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .valuation-report .value-bridge-number--long {
+            font-size: 17pt;
+        }
+
+        .valuation-report .value-bridge-number--very-long {
+            font-size: 14pt;
+        }
+
+        .valuation-report .value-bridge-number--extra-long {
+            font-size: 11pt;
+        }
+
+        .valuation-report .value-bridge-value.negative {
+            color: hsl(var(--report-danger));
+        }
+
+        .valuation-report .value-bridge-value.highlight {
+            color: white;
+        }
+
+        .valuation-report .value-bridge-operator {
+            font-size: 16pt;
+            color: hsl(224, 10%, 60%);
+            text-align: center;
+        }
+
+        .valuation-report .value-bridge-result {
+            background: hsl(var(--report-teal));
+            border-radius: 8pt;
+            padding: 11pt 12pt;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            color-adjust: exact;
+            min-width: 0;
+        }
+
+        .valuation-report .value-bridge-result .value-bridge-label {
+            color: hsla(0, 0%, 100%, 0.7);
+        }
+
+        .valuation-report .value-bridge-bottom {
+            margin-top: var(--space-4);
+            padding-top: var(--space-4);
+            border-top: 1pt solid hsl(224, 10%, 85%);
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            align-items: stretch;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .valuation-report .value-bridge-bottom-text {
+            font-size: 9pt;
+            color: hsl(var(--report-slate-500));
+        }
+
+        .valuation-report .value-bridge-bottom-value {
+            font-size: 20pt;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: hsl(var(--report-teal));
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .valuation-report .value-bridge-bottom-figure {
+            display: block;
+            max-width: 100%;
+            white-space: nowrap;
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .valuation-report .value-bridge-bottom-figure--long {
+            font-size: 8pt !important;
+        }
+
+        .valuation-report .value-bridge-bottom-figure--very-long {
+            font-size: 7pt !important;
+        }
+
+        .valuation-report .value-bridge-bottom-figure--extra-long {
+            font-size: 6pt !important;
+        }
+
+        /* Calibration conclusion row */
+        .valuation-report .calibration-conclusion {
+            background: hsl(225, 18%, 14%);
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            color-adjust: exact;
+        }
+
+        /* A4-fit: ensure compact padding for new two-line conclusion layout */
+        .valuation-report tr.calibration-conclusion > td {
+            padding: 6pt 12pt !important;
+        }
+
+        .valuation-report .calibration-conclusion-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14pt var(--space-4);
+        }
+
+        .valuation-report .calibration-conclusion-bar {
+            width: 3pt;
+            height: 36pt;
+            background: hsl(var(--report-teal));
+            border-radius: 2pt;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: var(--space-3);
+        }
+
+        .valuation-report .calibration-conclusion-label-small {
+            font-size: var(--font-size-xs);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: hsl(var(--report-slate-500));
+            margin-bottom: 3pt;
+        }
+
+        .valuation-report .calibration-conclusion-label {
+            font-size: var(--font-size-md);
+            font-weight: 600;
+            color: hsl(40, 12%, 92%);
+        }
+
+        .valuation-report .calibration-conclusion-right {
+            display: flex;
+            align-items: center;
+            gap: var(--space-5);
+            background: hsl(225, 18%, 12%);
+            padding: 14pt var(--space-4);
+        }
+
+        .valuation-report .calibration-conclusion-item {
+            text-align: right;
+        }
+
+        .valuation-report .calibration-conclusion-divider {
+            width: 1pt;
+            height: 28pt;
+            background: hsl(224, 10%, 25%);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════
+           PRINT OPTIMIZATIONS
+           ═══════════════════════════════════════════════════════════════════════════ */
+        @media print {
+            .valuation-report {
+                background: white;
+                orphans: 2;
+                widows: 2;
+            }
+
+            .valuation-report .a4-page {
+                box-shadow: none;
+                margin: 0;
+                background: white !important;
+                page-break-after: always;
+                page-break-inside: avoid;
+            }
+
+            .valuation-report .cover-page {
+                box-shadow: none;
+                margin: 0;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                background: hsl(225, 18%, 8%) !important;
+                page-break-after: always;
+                page-break-inside: avoid;
+            }
+            
+            .valuation-report .no-print {
+                display: none !important;
+            }
+            
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            tr { page-break-inside: avoid; }
+            
+            .valuation-report * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+        }
+    </style>
+</head>
+<body class="valuation-report">
+    {# Mercury embeds the rendered HTML via ``SafeReportHtml`` which runs it
+       through DOMPurify; ``<body>`` is not on the allow-list and gets
+       stripped, taking the ``valuation-report`` class with it.  Every
+       ``.valuation-report .cover-*`` selector then silently misses and the
+       cover page renders as dark text on dark bg (Three Towers Capital
+       regression, 2026-05-26).  The inner wrapper keeps the class on a
+       ``<div>`` that survives sanitisation, so both the standalone page
+       render AND the Mercury-embedded view inherit the design tokens. #}
+    <div class="valuation-report">
+    {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

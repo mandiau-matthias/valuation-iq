@@ -1,0 +1,109 @@
+{#
+    DRIVER-IMPACT TORNADO — screen version (Aurora design tokens)
+    ==============================================================
+    Horizontal bar chart that ranks the engine's calibration steps by
+    €-impact on enterprise value, descending. The chart is the M&A reader's
+    answer to "which adjustments dominate the headline number?".
+
+    Data source: `multiple_pipeline.discount_waterfall` (preferred) or
+    `multiple_pipeline.stages` (legacy fallback). Each step's € impact is
+    computed as the basis (sustainable EBITDA) × the multiple delta the step
+    contributed. We DO NOT re-compute discounts — the engine is the source
+    of truth; we simply visualise what's already there.
+
+    Why this complements the existing waterfall component:
+      - The waterfall (`_multiple_waterfall_chart.html`) shows the *path*
+        from base multiple to applied multiple. Chronological narrative.
+      - This tornado shows the *magnitude ranking*. Decision-quality view —
+        a CFO asks "what moves the number most?", not "in what order did
+        the engine apply discounts?".
+      Both surfaces use the same underlying data; the divergent geometry
+      reflects the divergent question.
+
+    Defensive: silently hidden when there are fewer than 2 non-trivial steps
+    (a single-step "ranking" is meaningless), and when the EBITDA basis is
+    unavailable (the €-impact axis would be unscaled).
+
+    Expected context:
+      multiple_pipeline   dict (with .discount_waterfall or .stages)
+      sustainable_ebitda  number (or weighted_ebitda_total, or valuation_basis_value)
+      t                   ReportTranslations
+      teal_hsl            str
+#}
+{% set _basis_for_tornado = (sustainable_ebitda|default(0))|float %}
+{% if _basis_for_tornado <= 0 and weighted_ebitda_total is defined %}
+    {% set _basis_for_tornado = (weighted_ebitda_total|default(0))|float %}
+{% endif %}
+{% set _waterfall = multiple_pipeline.discount_waterfall|default(none) if multiple_pipeline is defined and multiple_pipeline else none %}
+{% set _stages = multiple_pipeline.stages|default(none) if multiple_pipeline is defined and multiple_pipeline else none %}
+{% set _raw_steps = _waterfall if _waterfall else _stages %}
+
+{% set _drivers = [] %}
+{% if _raw_steps and _basis_for_tornado > 0 %}
+    {% for s in _raw_steps %}
+        {% set _multi_before = (s.multiple_before_mid|default(s.multiple_before|default(none))) %}
+        {% set _multi_after = (s.multiple_after_mid|default(s.multiple_after|default(none))) %}
+        {% if _multi_before is not none and _multi_after is not none %}
+            {% set _delta_mult = (_multi_after|float) - (_multi_before|float) %}
+            {% set _impact_eur = _delta_mult * _basis_for_tornado %}
+            {# Filter trivial sub-€500 steps so the tornado stays scannable. #}
+            {% if _impact_eur|abs >= 500 %}
+                {% set _ = _drivers.append({
+                    'name': s.step_name|default(s.label|default('—')),
+                    'impact': _impact_eur,
+                    'sort_key': _impact_eur|abs,
+                    'delta_mult': _delta_mult,
+                    'before_mult': (_multi_before|float),
+                    'after_mult': (_multi_after|float),
+                }) %}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+{% if _drivers|length >= 2 %}
+{# Sort by absolute impact descending so the largest mover is on top. #}
+{% set _sorted = _drivers|sort(attribute='sort_key', reverse=true) %}
+{% set _max_abs = (_sorted|map(attribute='sort_key')|max)|float %}
+<div style="margin-top: var(--space-3); padding: var(--space-3); border: 1pt solid hsl(var(--report-slate-200)); border-radius: 6pt; background: white; page-break-inside: avoid; break-inside: avoid;">
+    <h4 style="font-size: 9pt; margin: 0 0 var(--space-1) 0; color: hsl(var(--report-slate-900));">
+        {{ t.driver_tornado_title }}
+    </h4>
+    <p style="margin: 0 0 var(--space-2) 0; font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); line-height: 1.45;">
+        {{ t.driver_tornado_subtitle }}
+    </p>
+    <table style="width: 100%; border-collapse: collapse;">
+        {% for d in _sorted %}
+        {% set _bar_pct = (d.impact|abs / _max_abs) * 60 %}
+        {% set _is_positive = d.impact >= 0 %}
+        <tr>
+            <td style="padding: 3pt 8pt 3pt 0; font-size: var(--font-size-xs); color: hsl(var(--report-slate-800)); width: 30%; vertical-align: middle; border: none;">
+                {{ d.name }}
+            </td>
+            <td style="padding: 3pt 0; vertical-align: middle; border: none;">
+                {# Two-half axis: negative impacts grow leftward from center,
+                   positives grow rightward. Center column = chart midpoint. #}
+                <div style="position: relative; height: 12pt;">
+                    <div style="position: absolute; left: 0; right: 0; top: 5pt; height: 1pt; background: hsl(var(--report-slate-200));"></div>
+                    <div style="position: absolute; left: 50%; top: 0; bottom: 0; width: 1pt; background: hsl(var(--report-slate-300));"></div>
+                    {% if _is_positive %}
+                    <div style="position: absolute; left: 50%; top: 2pt; height: 8pt; width: {{ _bar_pct }}%; background: hsl(var(--report-success)); border-radius: 0 2pt 2pt 0;"></div>
+                    {% else %}
+                    <div style="position: absolute; right: 50%; top: 2pt; height: 8pt; width: {{ _bar_pct }}%; background: hsl(var(--report-danger)); border-radius: 2pt 0 0 2pt;"></div>
+                    {% endif %}
+                </div>
+            </td>
+            <td style="padding: 3pt 0 3pt 8pt; font-family: 'JetBrains Mono', monospace; font-size: var(--font-size-xs); text-align: right; vertical-align: middle; width: 22%; border: none; color: {% if _is_positive %}hsl(var(--report-success)){% else %}hsl(var(--report-danger)){% endif %};">
+                {% if _is_positive %}+{% else %}−{% endif %}{{ (d.impact|abs)|format_currency_compact }}
+                <span style="display: block; font-size: 6.5pt; color: hsl(var(--report-slate-500));">
+                    ({% if _is_positive %}+{% else %}−{% endif %}{{ (d.delta_mult|abs)|safe_round(2) }}×)
+                </span>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <p style="margin: var(--space-2) 0 0 0; font-size: 6.5pt; color: hsl(var(--report-slate-500)); font-style: italic; line-height: 1.4;">
+        {{ t.driver_tornado_axis_label }} · {{ _basis_for_tornado|format_currency_compact }} {{ t.dcf_row_ebitda|default('EBITDA') }} {{ t.driver_tornado_basis_label }}
+    </p>
+</div>
+{% endif %}

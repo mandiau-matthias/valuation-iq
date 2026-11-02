@@ -1,0 +1,162 @@
+{#
+    ATTESTATION PAGE — Enterprise / accountant-branded reports only.
+
+    Screen twin of `main_report_pdf/pages/attestation.html`, rendered when
+    `accountant_firm_name` is set so the HTML preview and PDF pack expose
+    the same signature-ready closing page.
+
+    Uses Aurora design tokens (`var(--report-*)`, `var(--space-*)`,
+    `var(--font-size-*)`) so the panel inherits the screen theme — including
+    the firm-color override applied at master_report.html. The PDF twin
+    keeps hardcoded pt/hsl values because WeasyPrint does not resolve
+    nested custom-property fallbacks reliably; this file does NOT need that
+    workaround and was the only screen page still bypassing the tokens.
+#}
+
+<div class="a4-page">
+    {% set is_asset_anchored_method = is_asset_anchored_methodology|default(is_asset_methodology|default(false)) %}
+    {% set is_yield_method = is_yield_methodology|default(false) %}
+
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div class="section-header">
+        <span class="section-number">{{ attestation_section_number|default('') }}</span>
+        <h1 class="section-title">{{ t.attestation_title }}</h1>
+    </div>
+
+    <div class="keep-together"
+         style="margin: var(--space-1) 0 var(--space-4) 0;
+                padding: var(--space-4) var(--space-5);
+                background: hsl(var(--report-surface));
+                border-radius: 8pt;
+                border-left: 3pt solid hsl({{ teal_hsl }});">
+        <p style="margin: 0 0 var(--space-3) 0; font-size: var(--font-size-md); line-height: 1.55; color: hsl(var(--report-text));">
+            {% if is_asset_anchored_method %}
+            {{ t.attestation_intro_yield if is_yield_method else t.attestation_intro_asset }}
+            {% else %}
+            {{ t.attestation_intro }}
+            {% endif %}
+        </p>
+        <p style="margin: 0; font-size: var(--font-size-xs); line-height: 1.5; color: hsl(var(--report-text-muted));">
+            {{ t.attestation_caveat }}
+        </p>
+        <p style="margin: var(--space-2) 0 0 0; font-size: var(--font-size-xs); line-height: 1.5; font-weight: 700; color: hsl(20, 52%, 35%);">
+            {{ legal_attestation_calculation_caveat }}
+        </p>
+    </div>
+
+    {% if attestation_summary_rows %}
+    <table class="keep-together" style="width: 100%; border-collapse: collapse; margin: 0 0 var(--space-4) 0; font-size: var(--font-size-sm);">
+        <tbody>
+            {% for row in attestation_summary_rows %}
+            <tr style="border-bottom: 1pt solid hsl(var(--report-slate-200));">
+                <td style="width: 34%; padding: var(--space-2); color: hsl(var(--report-text-muted)); text-transform: uppercase; letter-spacing: 0.4pt; font-size: var(--font-size-xs); font-weight: 600;">
+                    {{ row.label }}
+                </td>
+                <td style="padding: var(--space-2); color: hsl(var(--report-text));">
+                    {{ row.value or '-' }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {# VZW / ASBL premise caveat — the basis table above states a
+       going-concern M&A market value, which presumes a transferable equity
+       interest.  A non-profit has none, so flag the structural mismatch here
+       on the page the parties sign. #}
+    {% if is_vzw|default(false) %}
+    <div class="keep-together" style="margin: 0 0 var(--space-4) 0; padding: 8pt 12pt; background: hsl(40, 90%, 96%); border-left: 3pt solid hsl(35, 75%, 60%); border-radius: 4pt;">
+        <p style="margin: 0; font-size: var(--font-size-xs); line-height: 1.55; color: hsl(30, 45%, 26%);">
+            {% if (locale|default('nl'))|lower == 'fr' %}
+            <strong>ASBL :</strong> la base de valeur ci-dessus suppose une participation cessible. Une ASBL ne distribue pas de bénéfices ; un transfert requiert une cession d'actifs, un transfert d'activité ou une conversion juridique. Consultez un notaire et un conseil fiscal.
+            {% elif (locale|default('nl'))|lower == 'en' %}
+            <strong>VZW / non-profit:</strong> the valuation basis above assumes a transferable equity interest. A VZW distributes no profit; a transfer requires an asset deal, activity transfer, or legal conversion. Consult a notary and tax counsel.
+            {% else %}
+            <strong>VZW:</strong> de waarderingsbasis hierboven veronderstelt een overdraagbaar aandelenbelang. Een VZW keert geen winst uit; een overdracht vereist een activa-overdracht, overgang van activiteit of juridische omzetting. Raadpleeg een notaris en fiscaal adviseur.
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+
+    <table style="width: 100%; border-collapse: collapse; border: none; margin: var(--space-2) 0 0 0;">
+        <tr>
+            <td style="width: 50%; vertical-align: top; padding: 0 var(--space-3) 0 0; border: none; background: transparent;">
+                <p style="margin: 0 0 36pt 0;
+                          font-size: var(--font-size-xs);
+                          color: hsl(var(--report-text-muted));
+                          text-transform: uppercase;
+                          letter-spacing: 0.6pt;
+                          font-weight: 600;">
+                    {{ t.attestation_preparer_role }}{% if attestation_preparer_display %} - {{ attestation_preparer_display }}{% elif accountant_firm_name %} - {{ accountant_firm_name }}{% endif %}
+                </p>
+                <div style="border-bottom: 0.75pt solid hsl(var(--report-slate-700));
+                            padding: 24pt 0 var(--space-1) 0;"></div>
+                <p style="margin: var(--space-1) 0 0 0;
+                          font-size: var(--font-size-xs);
+                          color: hsl(var(--report-text-muted));">
+                    {{ t.attestation_signature_label }}
+                </p>
+
+                <div style="border-bottom: 0.75pt solid hsl(var(--report-slate-700));
+                            padding: 24pt 0 var(--space-1) 0;
+                            margin-top: 18pt;"></div>
+                <p style="margin: var(--space-1) 0 0 0;
+                          font-size: var(--font-size-xs);
+                          color: hsl(var(--report-text-muted));">
+                    {{ t.attestation_date_label }}
+                </p>
+            </td>
+
+            <td style="width: 50%; vertical-align: top; padding: 0 0 0 var(--space-3); border: none; background: transparent;">
+                <p style="margin: 0 0 36pt 0;
+                          font-size: var(--font-size-xs);
+                          color: hsl(var(--report-text-muted));
+                          text-transform: uppercase;
+                          letter-spacing: 0.6pt;
+                          font-weight: 600;">
+                    {{ t.attestation_client_role }}{% if attestation_client_display %} - {{ attestation_client_display }}{% elif company_name %} - {{ company_name }}{% endif %}
+                </p>
+                <div style="border-bottom: 0.75pt solid hsl(var(--report-slate-700));
+                            padding: 24pt 0 var(--space-1) 0;"></div>
+                <p style="margin: var(--space-1) 0 0 0;
+                          font-size: var(--font-size-xs);
+                          color: hsl(var(--report-text-muted));">
+                    {{ t.attestation_signature_label }}
+                </p>
+
+                <div style="border-bottom: 0.75pt solid hsl(var(--report-slate-700));
+                            padding: 24pt 0 var(--space-1) 0;
+                            margin-top: 18pt;"></div>
+                <p style="margin: var(--space-1) 0 0 0;
+                          font-size: var(--font-size-xs);
+                          color: hsl(var(--report-text-muted));">
+                    {{ t.attestation_date_label }}
+                </p>
+            </td>
+        </tr>
+    </table>
+
+    <div class="keep-together"
+         style="margin-top: var(--space-6); padding-top: var(--space-3); border-top: 1pt solid hsl(var(--report-slate-300));">
+        <table style="width: 100%; border-collapse: collapse; border: none; margin: 0;">
+            <tr>
+                <td style="border: none; padding: 0; background: transparent; vertical-align: bottom;">
+                    <p style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); margin: 0;">
+                        {{ t.disc_prepared_by }} {% if accountant_firm_name %}{{ accountant_firm_name }}{% else %}Upswitch{% endif %} - {{ valuation_date }}
+                    </p>
+                </td>
+                <td style="border: none; padding: 0; text-align: right; background: transparent; vertical-align: bottom;">
+                    <p style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); margin: 0;">
+                        {{ t.disc_ref_label }}: {{ (report_id_display or report_id) | format_ref(valuation_date) }}
+                    </p>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    {% with page_number=attestation_page_number, total_pages=total_pages %}
+    {% include "main_report/partials/_footer.html" %}
+    {% endwith %}
+</div>

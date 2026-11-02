@@ -1,0 +1,86 @@
+{#
+    STARTUP — INVITE MY ACCOUNTANT CTA (PDF / WeasyPrint)
+    Table-based mirror of main_report/partials/_startup_advisor_cta.html.
+#}
+{# CTA URL — context-resolved locale-aware default lives in
+   ``startup_report_context.py`` so Mercury overrides still take
+   precedence and the EN founder doesn't land on the NL dashboard. #}
+{% set advisor_url = startup_report.advisor_cta_url %}
+
+<div class="a4-page">
+    {% include "main_report_pdf/partials/_page_header.html" ignore missing %}
+
+    <table style="width: 100%; margin-bottom: 8pt;">
+        <tr>
+            <td style="font-size: 18pt; font-weight: 700;">{{ startup_report.t.advisor_cta_section_title }}</td>
+        </tr>
+    </table>
+
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 12pt;">
+        <tr>
+            <td style="padding: 14pt; border: 1pt solid #f46323; background: #fff7f0;">
+                <p style="font-size: 10pt; line-height: 1.5; margin: 0 0 8pt 0;">
+                    {% set _saas_suffix = startup_report.t.advisor_cta_with_saas_suffix if 'saas_forward' in (startup_report.contributors or []) else '' %}
+                    {% set _p1 = startup_report.t.advisor_cta_lead_p1 %}
+                    {{ _p1.replace('{saas}', _saas_suffix) }}
+                </p>
+                <p style="font-size: 10pt; line-height: 1.5; margin: 0 0 12pt 0;">
+                    {{ startup_report.t.advisor_cta_lead_p2|safe }}
+                </p>
+                <table style="width: 100%;">
+                    <tr>
+                        <td style="vertical-align: middle;">
+                            <a href="{{ advisor_url }}" style="display: inline-block; background: #f46323; color: #ffffff; padding: 9pt 16pt; border-radius: 4pt; font-weight: 600; text-decoration: none; font-size: 10pt;">
+                                {{ startup_report.t.advisor_cta_button }}
+                            </a>
+                        </td>
+                        <td style="text-align: right; font-size: 8pt; color: #4a5460;">
+                            {{ startup_report.t.advisor_cta_footnote }}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    {# Inception-lens recommendation (PDF twin). See screen partial
+       for full rationale. #}
+    {% set ila = startup_report.inception_lens_advisory %}
+    {% if ila %}
+    <table style="width: 100%; margin: 6pt 0 10pt; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 10pt; border: 1pt dashed #f46323; background: #fffaf3;">
+                <div style="font-size: 9.5pt; font-weight: 700; color: #f46323; margin-bottom: 3pt;">
+                    {% if ila.kind == 'bet' %}{{ startup_report.t.inception_lens_advisory_bet_title }}
+                    {% else %}{{ startup_report.t.inception_lens_advisory_momentum_title }}{% endif %}
+                </div>
+                <p style="font-size: 8pt; line-height: 1.5; margin: 0 0 4pt 0; color: #1f2937;">
+                    {% if ila.kind == 'bet' %}{{ startup_report.t.inception_lens_advisory_bet_body }}
+                    {% else %}{{ startup_report.t.inception_lens_advisory_momentum_body }}{% endif %}
+                </p>
+                <p style="font-size: 8pt; line-height: 1.5; margin: 0; color: #4a5460;">
+                    {{ startup_report.t.inception_lens_advisory_action }}
+                </p>
+            </td>
+        </tr>
+    </table>
+    {% endif %}
+
+    <h2 style="font-size: 12pt; margin: 8pt 0 6pt;">{{ startup_report.t.advisor_cta_what_title }}</h2>
+    <table style="width: 100%; font-size: 9pt; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 4pt 0; border-bottom: 0.5pt solid #e1e4ea;">&bull; {{ startup_report.t.advisor_cta_li_1 }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 4pt 0; border-bottom: 0.5pt solid #e1e4ea;">&bull; {{ startup_report.t.advisor_cta_li_2 }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 4pt 0; border-bottom: 0.5pt solid #e1e4ea;">&bull; {{ startup_report.t.advisor_cta_li_3 }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 4pt 0;">&bull; {{ startup_report.t.advisor_cta_li_4 }}</td>
+        </tr>
+    </table>
+
+    {% include "main_report_pdf/partials/_footer.html" ignore missing %}
+</div>

@@ -1,0 +1,47 @@
+{# Conditional tax scenarios. Unknown tax must never render as zero or gross-as-net. #}
+{% set lr = liquidation_report %}
+<div class="a4-page">
+{% include "main_report/partials/_page_header.html" %}
+<header class="pdf-section-header section-header">
+    <span class="pdf-section-number section-number">06</span>
+    <h1 class="pdf-section-title section-title">{{ lr.t.tax_section_title }}</h1>
+</header>
+<p style="font-size: 10px;">{{ lr.t.tax_scope_note }}</p>
+<p style="font-size: 10px;">{{ lr.t.tax_calculation_note }}</p>
+{% for scenario_label, tax in [(lr.t.scenario_orderly, lr.tax_leakage_orderly), (lr.t.scenario_forced, lr.tax_leakage_forced)] %}
+<h2 class="pdf-h2" style="font-size: 14px; margin-top: 14px;">{{ scenario_label }}</h2>
+{% if tax %}
+<p style="font-size: 10px; overflow-wrap: anywhere;">{{ tax.subtitle }} · {{ lr.t.tax_year_label }}: {{ tax.tax_year }} · {{ lr.t.tax_evidence_label }}: {{ tax.evidence_reference }}</p>
+<p style="font-size: 10px;">{% if tax.jurisdiction == 'BE' %}{{ lr.t.tax_basis_label_be }}: €{{ tax.shareholder_tax_basis|format_eur_amount }} · {{ lr.t.tax_exempt_label }}: €{{ tax.exempt_liquidation_reserve|format_eur_amount }}{% else %}{{ lr.t.tax_basis_label_nl }}: €{{ tax.shareholder_tax_basis|format_eur_amount }} · {{ lr.t.tax_other_income_label }}: €{{ tax.other_box2_income|format_eur_amount }}{% endif %}</p>
+<table class="pdf-table pdf-table-compact" style="width: 100%; font-size: 11px; border-collapse: collapse;">
+    <thead><tr>
+        <th>{{ lr.t.tax_col_label }}</th><th>{{ lr.t.tax_col_anchor }}</th>
+        <th class="pdf-num">{{ lr.t.tax_col_gross }}</th><th class="pdf-num">{{ lr.t.tax_col_rate }}</th><th class="pdf-num">{{ lr.t.tax_col_amount }}</th>
+    </tr></thead>
+    <tbody>
+        <tr><td colspan="4">{{ lr.t.tax_gross_distribution }}</td><td class="pdf-num" style="text-align: right;">€{{ tax.gross_distribution|format_eur_amount }}</td></tr>
+        {% for line in tax.lines %}
+        <tr>
+            <td>{{ line.label }}</td><td class="pdf-anchor">{{ line.statutory_anchor }}</td>
+            <td class="pdf-num" style="text-align: right;">€{{ line.gross|format_eur_amount }}</td>
+            <td class="pdf-num" style="text-align: right;">{% if line.rate is not none %}{{ line.rate|format_factor_pct(1) }}{% else %}—{% endif %}</td>
+            <td class="pdf-num" style="text-align: right;">€{{ line.tax_amount|format_eur_amount }}</td>
+        </tr>
+        {% endfor %}
+        <tr class="pdf-row-total" style="font-weight: 600;"><td colspan="4">{{ lr.t.tax_total_label }}</td><td class="pdf-num" style="text-align: right;">€{{ tax.total_tax_leakage|format_eur_amount }}</td></tr>
+        <tr class="pdf-row-headline" style="font-weight: 700;"><td colspan="4">{{ lr.t.tax_net_to_shareholders }}</td><td class="pdf-num" style="text-align: right;">€{{ tax.net_to_shareholders|format_eur_amount }}</td></tr>
+        {% if tax.unfunded_corporate_tax %}
+        <tr><td colspan="4">{{ lr.t.tax_unfunded_label }}</td><td class="pdf-num" style="text-align: right;">€{{ tax.unfunded_corporate_tax|format_eur_amount }}</td></tr>
+        {% endif %}
+    </tbody>
+</table>
+
+{% else %}
+<p data-tax-status="not_assessed" style="font-size: 11px;">{{ lr.t.tax_not_assessed }}</p>
+{% endif %}
+{% endfor %}
+{% set source_tax = lr.tax_leakage_orderly or lr.tax_leakage_forced %}
+{% if source_tax %}
+<div class="pdf-sources" style="font-size: 9px; overflow-wrap: anywhere; margin-top: 10px;">{{ lr.t.tax_sources_label }}: {{ source_tax.sources|join(' · ') }}</div>
+{% endif %}
+</div>

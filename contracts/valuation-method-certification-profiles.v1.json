@@ -1,0 +1,367 @@
+{
+  "schemaVersion": 1,
+  "source": "UpswitchEU/valuation-iq/src/domain/method_certification_profiles.py",
+  "sourceSha256": "c99a3091ebbfecea1bdddfc05f8e8083aaf0ec75838db361f02895450d84e2aa",
+  "profileVersion": "method_certification_profile.v1",
+  "profiles": {
+    "adjusted_nav": {
+      "schema_version": "method_certification_profile.v1",
+      "method_key": "adjusted_nav",
+      "value_basis": "equity_value",
+      "supported_countries": [
+        "BE",
+        "EE",
+        "FR",
+        "IE",
+        "LT",
+        "SK"
+      ],
+      "required_evidence": [
+        "dated_assets",
+        "dated_liabilities",
+        "appraisals",
+        "title",
+        "tax_effects"
+      ],
+      "required_invariants": [
+        "measurement_date_basis",
+        "enterprise_value_not_applicable"
+      ],
+      "benchmark_requirement": "governed_non_sample_inputs",
+      "review_scope": "asset_liability_revaluation_and_tax",
+      "required_review_state": "accepted_governed_calculation_review",
+      "effective_from": "2026-01-01",
+      "effective_to": null,
+      "combinable": true,
+      "implementation_state": "canonical_runtime",
+      "implementation_limitation": null
+    },
+    "arr_multiple": {
+      "schema_version": "method_certification_profile.v1",
+      "method_key": "arr_multiple",
+      "value_basis": "enterprise_value",
+      "supported_countries": [
+        "BE",
+        "EE",
+        "FR",
+        "IE",
+        "LT",
+        "SK"
+      ],
+      "required_evidence": [
+        "arr",
+        "retention_and_margin_quality",
+        "metric_matched_benchmark_snapshot"
+      ],
+      "required_invariants": [
+        "arr_definition_reconciled",
+        "single_ev_equity_bridge"
+      ],
+      "benchmark_requirement": "metric_matched_market_sample",
+      "review_scope": "arr_quality_multiple_and_bridge",
+      "required_review_state": "accepted_governed_calculation_review",
+      "effective_from": "2026-01-01",
+      "effective_to": null,
+      "combinable": true,
+      "implementation_state": "canonical_runtime",
+      "implementation_limitation": null
+    },
+    "dcf": {
+      "schema_version": "method_certification_profile.v1",
+      "method_key": "dcf",
+      "value_basis": "enterprise_value",
+      "supported_countries": [
+        "BE",
+        "EE",
+        "FR",
+        "IE",
+        "LT",
+        "SK"
+      ],
+      "required_evidence": [
+        "explicit_fcff_forecast",
+        "economic_snapshot",
+        "wacc",
+        "terminal_assumption",
+        "forecast_review"
+      ],
+      "required_invariants": [
+        "fcff_only",
+        "terminal_policy_consistency",
+        "single_ev_equity_bridge"
+      ],
+      "benchmark_requirement": "governed_non_sample_inputs",
+      "review_scope": "forecast_wacc_terminal_value_and_bridge",
+      "required_review_state": "accepted_governed_calculation_review",
+      "effective_from": "2026-01-01",
+      "effective_to": null,
+      "combinable": true,
+      "implementation_state": "canonical_runtime",
+      "implementation_limitation": null
+    },
+    "ebitda_multiple": {
+      "schema_version": "method_certification_profile.v1",
+      "method_key": "ebitda_multiple",
+      "value_basis": "enterprise_value",
+      "supported_countries": [
+        "BE",
+        "EE",
+        "FR",
+        "IE",
+        "LT",
+        "SK"
+      ],
+      "required_evidence": [
+        "normalized_annual_ebitda",
+        "metric_matched_benchmark_snapshot"
+      ],
+      "required_invariants": [
+        "normalization_before_weighting",
+        "single_ev_equity_bridge"
+      ],
+      "benchmark_requirement": "metric_matched_market_sample",
+      "review_scope": "earnings_basis_multiple_and_bridge",
+      "required_review_state": "accepted_governed_calculation_review",
+      "effective_from": "2026-01-01",
+      "effective_to": null,
+      "combinable": true,
+      "implementation_state": "canonical_runtime",
+      "implementation_limitation": null
+    },
+    "fiscal_4x": {
+      "schema_version": "method_certification_profile.v1",
+      "method_key": "fiscal_4x",
+      "value_basis": "equity_value",
+      "supported_countries": [
+        "BE"
+      ],
+      "required_evidence": [
+        "belgian_statutory_inputs"
+      ],
+      "required_invariants": [
+        "labelled_reference_not_market_value",
+        "enterprise_value_not_applicable"
+      ],
+      "benchmark_requirement": "statutory_reference",
+      "review_scope": "belgian_statutory_reference_calculation",
+      "required_review_state": "accepted_governed_calculation_review",
+      "effective_from": "2026-01-01",
+      "effective_to": null,
+      "combinable": false,
+      "implementation_state": "canonical_runtime",
+      "implementation_limitation": null
+    },
+    "holding_sotp": {
+      "schema_version": "method_certification_profile.v1",
+      "method_key": "holding_sotp",
+      "value_basis": "mixed",
+      "supported_countries": [
+        "BE",
+        "EE",
+        "FR",
+        "IE",
+        "LT",
+        "SK"
+      ],
+      "required_evidence": [
+        "trusted_child_runs",
+        "ownership",
+        "eliminations",
+        "entity_tax",
+        "source_dated_fx"
+      ],
+      "required_invariants": [
+        "intercompany_elimination",
+        "minority_ownership",
+        "no_child_bridge_replay"
+      ],
+      "benchmark_requirement": "child_method_profiles",
+      "review_scope": "entity_runs_ownership_eliminations_tax_and_fx",
+      "required_review_state": "accepted_governed_calculation_review",
+      "effective_from": "2026-01-01",
+      "effective_to": null,
+      "combinable": true,
+      "implementation_state": "canonical_runtime",
+      "implementation_limitation": null
+    },
+    "liquidation_analysis": {
+      "schema_version": "method_certification_profile.v1",
+      "method_key": "liquidation_analysis",
+      "value_basis": "equity_value",
+      "supported_countries": [
+        "BE"
+      ],
+      "required_evidence": [
+        "realisation_schedule",
+        "claim_priority",
+        "tax_leakage",
+        "wind_down_costs"
+      ],
+      "required_invariants": [
+        "jurisdiction_priority_applied",
+        "enterprise_value_not_applicable"
+      ],
+      "benchmark_requirement": "governed_non_sample_inputs",
+      "review_scope": "liquidation_premise_realisations_priorities_and_leakage",
+      "required_review_state": "accepted_governed_calculation_review",
+      "effective_from": "2026-01-01",
+      "effective_to": null,
+      "combinable": false,
+      "implementation_state": "canonical_runtime",
+      "implementation_limitation": null
+    },
+    "omzet_multiple": {
+      "schema_version": "method_certification_profile.v1",
+      "method_key": "omzet_multiple",
+      "value_basis": "enterprise_value",
+      "supported_countries": [
+        "BE",
+        "EE",
+        "FR",
+        "IE",
+        "LT",
+        "SK"
+      ],
+      "required_evidence": [
+        "ltm_or_ntm_revenue",
+        "margin_quality",
+        "metric_matched_benchmark_snapshot"
+      ],
+      "required_invariants": [
+        "no_historical_revenue_averaging",
+        "single_ev_equity_bridge"
+      ],
+      "benchmark_requirement": "metric_matched_market_sample",
+      "review_scope": "revenue_basis_multiple_and_bridge",
+      "required_review_state": "accepted_governed_calculation_review",
+      "effective_from": "2026-01-01",
+      "effective_to": null,
+      "combinable": true,
+      "implementation_state": "canonical_runtime",
+      "implementation_limitation": null
+    },
+    "real_estate_yield": {
+      "schema_version": "method_certification_profile.v1",
+      "method_key": "real_estate_yield",
+      "value_basis": "enterprise_value",
+      "supported_countries": [
+        "BE",
+        "EE",
+        "FR",
+        "IE",
+        "LT",
+        "SK"
+      ],
+      "required_evidence": [
+        "property_title_or_appraisal",
+        "dated_noi",
+        "occupancy",
+        "yield_snapshot",
+        "property_debt"
+      ],
+      "required_invariants": [
+        "market_rent_exactly_once",
+        "single_property_debt_bridge",
+        "nav_floor_like_for_like"
+      ],
+      "benchmark_requirement": "metric_matched_market_sample",
+      "review_scope": "property_income_yield_and_debt_bridge",
+      "required_review_state": "accepted_governed_calculation_review",
+      "effective_from": "2026-01-01",
+      "effective_to": null,
+      "combinable": true,
+      "implementation_state": "canonical_runtime",
+      "implementation_limitation": null
+    },
+    "sde_multiple": {
+      "schema_version": "method_certification_profile.v1",
+      "method_key": "sde_multiple",
+      "value_basis": "enterprise_value",
+      "supported_countries": [
+        "BE",
+        "EE",
+        "FR",
+        "IE",
+        "LT",
+        "SK"
+      ],
+      "required_evidence": [
+        "annual_owner_compensation",
+        "replacement_compensation",
+        "sde_benchmark_snapshot"
+      ],
+      "required_invariants": [
+        "annual_sde_weighted_exactly_once",
+        "no_fabricated_owner_compensation",
+        "single_ev_equity_bridge"
+      ],
+      "benchmark_requirement": "metric_matched_market_sample",
+      "review_scope": "owner_earnings_transferability_and_equity_value",
+      "required_review_state": "accepted_governed_calculation_review",
+      "effective_from": "2026-01-01",
+      "effective_to": null,
+      "combinable": true,
+      "implementation_state": "canonical_runtime",
+      "implementation_limitation": null
+    },
+    "startup_valuation": {
+      "schema_version": "method_certification_profile.v1",
+      "method_key": "startup_valuation",
+      "value_basis": "equity_value",
+      "supported_countries": [
+        "BE",
+        "EE",
+        "FR",
+        "IE",
+        "LT",
+        "SK"
+      ],
+      "required_evidence": [
+        "stage",
+        "scenarios",
+        "cap_table",
+        "dated_startup_benchmarks"
+      ],
+      "required_invariants": [
+        "dilution_reconciled",
+        "enterprise_value_not_applicable"
+      ],
+      "benchmark_requirement": "metric_matched_market_sample",
+      "review_scope": "stage_scenarios_cap_table_and_pre_money_value",
+      "required_review_state": "accepted_governed_calculation_review",
+      "effective_from": "2026-01-01",
+      "effective_to": null,
+      "combinable": false,
+      "implementation_state": "canonical_runtime",
+      "implementation_limitation": null
+    },
+    "upswitch_adaptive": {
+      "schema_version": "method_certification_profile.v1",
+      "method_key": "upswitch_adaptive",
+      "value_basis": "mixed",
+      "supported_countries": [
+        "BE",
+        "EE",
+        "FR",
+        "IE",
+        "LT",
+        "SK"
+      ],
+      "required_evidence": [
+        "every_positive_weight_child_profile"
+      ],
+      "required_invariants": [
+        "eligible_weights_sum_to_one",
+        "no_ineligible_child_method"
+      ],
+      "benchmark_requirement": "child_method_profiles",
+      "review_scope": "adaptive_synthesis_and_every_positive_weight_child",
+      "required_review_state": "accepted_governed_calculation_review",
+      "effective_from": "2026-01-01",
+      "effective_to": null,
+      "combinable": true,
+      "implementation_state": "canonical_runtime",
+      "implementation_limitation": null
+    }
+  }
+}

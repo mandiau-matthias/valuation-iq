@@ -1,0 +1,200 @@
+{#
+    DCF WACC BUILDUP COMPONENT — PDF version (WeasyPrint / Aurora Clarity)
+
+    Same logic as screen version; hardcoded HSL colors and table layout for WeasyPrint.
+
+    Expected context: dcf_wacc_buildup, dcf_wacc, t, teal_hsl
+#}
+{% if dcf_apv_contract_version|default('') == 'apv_tax_shield.v2' and dcf_has_apv_tax_shield|default(false) %}
+{% include "shared/components/apv_discount_basis.html" %}
+{% elif not dcf_wacc_buildup %}
+{# Fallback panel: WACC was typed directly, no CAPM buildup. Surface this transparently
+   so the report doesn't silently drop the discount-rate provenance — defensibility hole. #}
+<div style="margin-top: 18pt; padding: 10pt; background: hsl(40, 15%, 98%); border-radius: 6pt; border: 1pt solid hsl(224, 10%, 91%); border-left: 3pt solid hsl(35, 80%, 55%); page-break-inside: avoid; break-inside: avoid;">
+    <h4 style="font-size: 9.5pt; margin: 0 0 6pt 0; color: hsl(225, 18%, 12%);">
+        {{ t.dcf_wacc_buildup_fallback_title }}
+    </h4>
+    <p style="margin: 0 0 6pt 0; font-size: 7.5pt; color: hsl(224, 10%, 45%); line-height: 1.5;">
+        {{ t.dcf_wacc_buildup_fallback_body }}
+    </p>
+    {% if dcf_wacc %}
+    <table style="width: 100%; font-size: 8pt; border-collapse: collapse; border-top: 1pt solid hsl(224, 10%, 91%); margin-top: 6pt;">
+        <tr>
+            <td style="padding: 4pt 0 0 0; font-size: 7pt; color: hsl(224, 10%, 45%); text-transform: uppercase; letter-spacing: 0.05em; border: none;">{{ t.dcf_wacc_buildup_fallback_applied_label }}</td>
+            <td style="padding: 4pt 0 0 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 700; color: hsl({{ teal_hsl }}); border: none;">{{ dcf_wacc|format_percentage }}</td>
+        </tr>
+    </table>
+    {% endif %}
+</div>
+{% else %}
+<div style="margin-top: 18pt; page-break-inside: avoid; break-inside: avoid;">
+    <h4 style="font-size: 9.5pt; margin: 0 0 10pt 0; color: hsl(225, 18%, 12%);">
+        {{ t.dcf_wacc_buildup_title }}
+    </h4>
+    {% if dcf_wacc_buildup.mode|default('') == 'direct_sector_wacc' %}
+    {% set _direct_contract = dcf_wacc_buildup.wacc_evidence_contract|default({}) %}
+    <table style="width: 100%; font-size: 8pt; border-collapse: collapse; border: 1pt solid hsl(224, 10%, 91%); border-left: 3pt solid hsl({{ teal_hsl }});">
+        <tr>
+            <td style="padding: 9pt; vertical-align: top; border: none;">
+                <div style="font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(224, 10%, 45%); margin-bottom: 5pt;">{% if (locale|default('nl'))|lower == 'fr' %}WACC sectoriel direct{% elif (locale|default('nl'))|lower == 'en' %}Direct sector WACC{% else %}Directe sector-WACC{% endif %}</div>
+                <div style="font-size: 7.5pt; color: hsl(224, 10%, 45%); line-height: 1.5;">{% if (locale|default('nl'))|lower == 'fr' %}Taux publié appliqué directement ; aucune décomposition CAPM fictive n’est présentée.{% elif (locale|default('nl'))|lower == 'en' %}Published rate applied directly; no synthetic CAPM decomposition is shown.{% else %}Gepubliceerde rente rechtstreeks toegepast; er wordt geen fictieve CAPM-opbouw getoond.{% endif %}</div>
+            </td>
+            <td style="width: 32%; padding: 9pt; text-align: right; vertical-align: top; border: none;">
+                <div style="font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-size: 15pt; font-weight: 700; color: hsl({{ teal_hsl }});">{{ dcf_wacc_buildup.wacc|default(dcf_wacc)|format_percentage }}</div>
+                {# Two distinct ranges live around a direct sector WACC: the
+                   published source series (market context) and the model's own
+                   sensitivity span (the matrix rows). Printing the source band
+                   unlabelled next to a matrix with a different span reads as a
+                   contradiction — label both, and derive the sensitivity span
+                   from the SAME axis values the matrix renders from. #}
+                {% if _direct_contract.range_low_pct is defined and _direct_contract.range_high_pct is defined %}<div style="font-size: 7pt; color: hsl(224, 10%, 45%);">{% if (locale|default('nl'))|lower == 'fr' %}Série source observée{% elif (locale|default('nl'))|lower == 'en' %}Observed source series{% else %}Geobserveerde bronreeks{% endif %}: {{ (_direct_contract.range_low_pct|float / 100)|format_percentage }} – {{ (_direct_contract.range_high_pct|float / 100)|format_percentage }}</div>{% endif %}
+                {% set _wacc_axis = dcf_sensitivity_matrix_2d.primary_axis_values|default([]) if dcf_sensitivity_matrix_2d else [] %}
+                {% if _wacc_axis|length >= 2 %}<div style="font-size: 7pt; color: hsl(224, 10%, 45%);">{% if (locale|default('nl'))|lower == 'fr' %}Sensibilité du modèle (matrice){% elif (locale|default('nl'))|lower == 'en' %}Model sensitivity (matrix){% else %}Modelgevoeligheid (matrix){% endif %}: {{ (_wacc_axis|map('float')|min)|format_percentage }} – {{ (_wacc_axis|map('float')|max)|format_percentage }}</div>{% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" style="padding: 7pt 9pt; border: none; border-top: 1pt solid hsl(224, 10%, 91%); font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.5;">
+                {% if _direct_contract.period is defined %}<strong>{% if (locale|default('nl'))|lower == 'fr' %}Période{% elif (locale|default('nl'))|lower == 'en' %}Period{% else %}Periode{% endif %}:</strong> {{ _direct_contract.period }}{% endif %}{% if _direct_contract.chart_locator is defined %} · {{ _direct_contract.chart_locator }}{% endif %}
+                {% if _direct_contract.includes_size_premium|default(false) %}<br>{% if (locale|default('nl'))|lower == 'fr' %}La prime de petite entreprise est déjà incluse dans la méthodologie source ; aucune prime de taille supplémentaire n’a été ajoutée.{% elif (locale|default('nl'))|lower == 'en' %}The source methodology already includes its small-firm premium; no additional size premium was added.{% else %}De bronmethodologie bevat reeds de kleinbedrijfpremie; er werd geen bijkomende omvangspremie toegevoegd.{% endif %}{% endif %}
+            </td>
+        </tr>
+    </table>
+    {% else %}
+    {% if dcf_wacc_buildup.wacc_override_applied %}
+    <p style="margin: 0 0 8pt 0; font-size: 7.5pt; color: hsl(224, 10%, 45%); line-height: 1.5;">
+        {% if is_governed_external_market_reference|default(false) %}De toegepaste voet is een sector-WACC-proxy (genoteerde sectorpeers, mediane sectorkapitaalstructuur, inclusief kleinbedrijfpremie), datumvast gebonden aan de hieronder vermelde bron. Hij is niet bedrijfsspecifiek voor deze onderneming gekalibreerd; er is geen bijkomende niet-onderbouwde risicopremie toegevoegd.{% else %}{{ t.dcf_wacc_buildup_override_note | default('Applied WACC reflects advisor/sector input; size premium in CAPM may be implied from the override.') }}{% endif %}
+    </p>
+    {% endif %}
+
+    <table style="width: 100%; font-size: 8pt; border-collapse: collapse;">
+        <tr>
+            {# Cost of Equity buildup — teal accent bar #}
+            <td style="width: 50%; vertical-align: top; padding-right: 10pt;">
+                <table style="width: 100%; font-size: 8pt; border-collapse: collapse; border: 1pt solid hsl(224, 10%, 91%); border-left: 3pt solid hsl({{ teal_hsl }}); border-radius: 6pt;">
+                    <tr><td colspan="2" style="padding: 8pt 8pt 6pt 8pt; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(224, 10%, 45%); border: none;">{{ t.dcf_cost_of_equity_label }} (CAPM)</td></tr>
+                    <tr>
+                        <td style="padding: 3pt 8pt; color: hsl(224, 10%, 45%); border: none;">{{ t.dcf_risk_free_rate_label }}</td>
+                        <td style="padding: 3pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">{{ dcf_wacc_buildup.risk_free_rate|default(0)|format_percentage }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 3pt 8pt; color: hsl(224, 10%, 45%); border: none;">{{ t.dcf_beta_label }}</td>
+                        <td style="padding: 3pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">{{ dcf_wacc_buildup.beta|default(0)|safe_round(2) }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 3pt 8pt; color: hsl(224, 10%, 45%); border: none;">{{ t.dcf_erp_label }}</td>
+                        <td style="padding: 3pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">{{ dcf_wacc_buildup.equity_risk_premium|default(0)|format_percentage }}</td>
+                    </tr>
+                    {% if dcf_wacc_buildup.size_premium %}
+                    <tr>
+                        <td style="padding: 3pt 8pt; color: hsl(224, 10%, 45%); border: none;">{{ t.dcf_size_premium_label }}</td>
+                        <td style="padding: 3pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">{{ dcf_wacc_buildup.size_premium|format_percentage }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if dcf_wacc_buildup.company_specific_risk %}
+                    <tr>
+                        <td style="padding: 3pt 8pt; color: hsl(224, 10%, 45%); border: none;">{{ t.dcf_csr_label }}</td>
+                        <td style="padding: 3pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">{{ dcf_wacc_buildup.company_specific_risk|format_percentage }}</td>
+                    </tr>
+                    {% endif %}
+                    {# The "= cost of equity"
+                       total must FOOT to the CAPM components printed above it
+                       (Rf + β·ERP + SP + CSR). The engine stores a rounded Ke
+                       (e.g. 13,00%) that it actually runs the WACC with, while
+                       the components compute 12,95% — printing the stored value
+                       next to components that sum differently reads as a table
+                       that does not add up. Same presentation-reconciliation
+                       pattern as the "= WACC" row below: show the computed sum
+                       as the buildup total, disclose the applied (rounded) rate
+                       on a separate line whenever it differs by >0,1pp. #}
+                    {% set _ke_rf = dcf_wacc_buildup.risk_free_rate|default(0)|float %}
+                    {% set _ke_beta = dcf_wacc_buildup.beta|default(0)|float %}
+                    {% set _ke_erp = dcf_wacc_buildup.equity_risk_premium|default(0)|float %}
+                    {% set _ke_sp = dcf_wacc_buildup.size_premium|default(0)|float %}
+                    {% set _ke_csr = dcf_wacc_buildup.company_specific_risk|default(0)|float %}
+                    {% set _ke_computed = _ke_rf + (_ke_beta * _ke_erp) + _ke_sp + _ke_csr %}
+                    {% set _ke_applied = dcf_wacc_buildup.cost_of_equity|default(0)|float %}
+                    {% set _ke_show_computed = _ke_computed > 0.0001 %}
+                    {% set _ke_total_display = _ke_computed if _ke_show_computed else _ke_applied %}
+                    {# 0,02pp threshold (vs 0,1pp for WACC): small rounding gaps
+                       still matter because the
+                       right-hand WACC column prints the APPLIED Ke, so even a
+                       small gap needs the disclosure line or the two columns
+                       silently contradict each other. #}
+                    {% set _ke_reconcile = _ke_show_computed and _ke_applied > 0.0001 and ((_ke_computed - _ke_applied)|abs > 0.0002) %}
+                    <tr style="border-top: 1.5pt solid hsl(224, 8%, 82%);">
+                        <td style="padding: 5pt 8pt; font-weight: 700; color: hsl({{ teal_hsl }}); border: none;">= {{ t.dcf_cost_of_equity_label }}{% if _ke_reconcile %} ({% if (locale|default('nl'))|lower == 'fr' %}construction CAPM{% elif (locale|default('nl'))|lower == 'en' %}CAPM buildup{% else %}CAPM-opbouw{% endif %}){% endif %}</td>
+                        <td style="padding: 5pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 700; color: hsl({{ teal_hsl }}); border: none;">{{ _ke_total_display|format_percentage }}</td>
+                    </tr>
+                    {% if _ke_reconcile %}
+                    <tr>
+                        <td colspan="2" style="padding: 4pt 8pt 2pt 8pt; font-size: 6.8pt; color: hsl(224, 10%, 45%); border: none; line-height: 1.4;">
+                            {% if (locale|default('nl'))|lower == 'fr' %}Appliqué dans le WACC : {{ _ke_applied|format_percentage }} (arrondi){% elif (locale|default('nl'))|lower == 'en' %}Applied in WACC: {{ _ke_applied|format_percentage }} (rounded){% else %}Toegepast in WACC: {{ _ke_applied|format_percentage }} (afgerond){% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </td>
+            {# WACC calculation #}
+            <td style="width: 50%; vertical-align: top;">
+                <table style="width: 100%; font-size: 8pt; border-collapse: collapse; border: 1pt solid hsl(224, 10%, 91%); border-radius: 6pt;">
+                    <tr><td colspan="2" style="padding: 8pt 8pt 6pt 8pt; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(224, 10%, 45%); border: none;">{{ t.calib_dcf_wacc_label }}</td></tr>
+                    <tr>
+                        <td style="padding: 3pt 8pt; color: hsl(224, 10%, 45%); border: none;">{{ t.dcf_cost_of_equity_label }} (Ke)</td>
+                        <td style="padding: 3pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">{{ dcf_wacc_buildup.cost_of_equity|default(0)|format_percentage }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 3pt 8pt; color: hsl(224, 10%, 45%); border: none;">{{ t.dcf_equity_weight_label }}</td>
+                        <td style="padding: 3pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">{{ dcf_wacc_buildup.equity_weight|default(0)|format_percentage }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 3pt 8pt; color: hsl(224, 10%, 45%); border: none;">{{ t.dcf_cost_of_debt_label }} (Kd)</td>
+                        <td style="padding: 3pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">{{ dcf_wacc_buildup.cost_of_debt|default(0)|format_percentage }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 3pt 8pt; color: hsl(224, 10%, 45%); border: none;">{{ t.dcf_debt_weight_label }}</td>
+                        <td style="padding: 3pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">{{ dcf_wacc_buildup.debt_weight|default(0)|format_percentage }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 3pt 8pt; color: hsl(224, 10%, 45%); border: none;">{{ t.dcf_tax_rate_label }}</td>
+                        <td style="padding: 3pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">{{ dcf_wacc_buildup.tax_rate|default(0)|format_percentage }}</td>
+                    </tr>
+                    {# Panel blocker: the "= WACC" total must FOOT to the component
+                       weights printed above it (Ke·We + Kd·Wd·(1−t)). The engine may
+                       store a different applied/rounded WACC that the DCF actually ran
+                       at; printing that stored value next to weights that compute a
+                       different number reads as a table that does not add up. So we
+                       compute the total in-template from the SAME dict and show THAT as
+                       the CAPM-buildup total, then disclose the applied rate on a
+                       separate line whenever it differs by >0,1pp. No engine math, no EV
+                       restatement — pure presentation reconciliation. #}
+                    {% set _wacc_we = dcf_wacc_buildup.equity_weight|default(0)|float %}
+                    {% set _wacc_wd = dcf_wacc_buildup.debt_weight|default(0)|float %}
+                    {% set _wacc_ke = dcf_wacc_buildup.cost_of_equity|default(0)|float %}
+                    {% set _wacc_kd = dcf_wacc_buildup.cost_of_debt|default(0)|float %}
+                    {% set _wacc_tax = dcf_wacc_buildup.tax_rate|default(0)|float %}
+                    {% set _wacc_computed = (_wacc_we * _wacc_ke) + (_wacc_wd * _wacc_kd * (1 - _wacc_tax)) %}
+                    {% set _wacc_applied = (dcf_wacc_buildup.wacc|default(dcf_wacc)|default(0))|float %}
+                    {# Only override the displayed total when the components actually
+                       compute a non-trivial WACC; otherwise fall back to the stored
+                       value so consistent fixtures render exactly as before. #}
+                    {% set _wacc_show_computed = _wacc_computed > 0.0001 %}
+                    {% set _wacc_total_display = _wacc_computed if _wacc_show_computed else _wacc_applied %}
+                    {% set _wacc_reconcile = _wacc_show_computed and _wacc_applied > 0.0001 and ((_wacc_computed - _wacc_applied)|abs > 0.001) %}
+                    <tr style="border-top: 1.5pt solid hsl(224, 8%, 82%);">
+                        <td style="padding: 5pt 8pt; font-weight: 700; color: hsl({{ teal_hsl }}); border: none;">= {{ t.calib_dcf_wacc_label }}{% if _wacc_reconcile %} ({% if (locale|default('nl'))|lower == 'fr' %}construction CAPM{% elif (locale|default('nl'))|lower == 'en' %}CAPM buildup{% else %}CAPM-opbouw{% endif %}){% endif %}</td>
+                        <td style="padding: 5pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 700; color: hsl({{ teal_hsl }}); border: none;">{{ _wacc_total_display|format_percentage }}</td>
+                    </tr>
+                    {% if _wacc_reconcile %}
+                    <tr>
+                        <td colspan="2" style="padding: 4pt 8pt 2pt 8pt; font-size: 6.8pt; color: hsl(224, 10%, 45%); border: none; line-height: 1.4;">
+                            {% if (locale|default('nl'))|lower == 'fr' %}Appliqué dans le modèle DCF : {{ _wacc_applied|format_percentage }} (arrondi){% elif (locale|default('nl'))|lower == 'en' %}Applied in DCF model: {{ _wacc_applied|format_percentage }} (rounded){% else %}Toegepast in DCF-model: {{ _wacc_applied|format_percentage }} (afgerond){% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </td>
+        </tr>
+    </table>
+    {% endif %}
+</div>
+{% endif %}

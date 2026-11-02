@@ -1,0 +1,196 @@
+{#
+    STARTUP VALUATION — METHODOLOGY APPENDIX (Screen / browser version)
+
+    The audit-trail page an M&A reviewer or accountant uses to stress-test
+    the report's machinery.  Designed to answer four questions in order:
+
+      1. Which valuation methods drove the headline?
+      2. What's the math behind each one?
+      3. How is the canonical headline picked when methods disagree?
+      4. Where do the benchmarks come from?
+
+    The earlier pages (one-pager, exec summary, method breakdown) carry
+    the founder-facing numbers; this page carries the *defensibility*.
+    It's the section a reviewer prints out and reads alone.
+
+    PDF twin: main_report_pdf/pages/startup_methodology.html
+#}
+
+<div class="a4-page">
+    {% include "main_report/partials/_page_header.html" %}
+
+    <div class="section-header">
+        <span class="section-number">{{ startup_methodology_section_number|default('06') }}</span>
+        <h1 class="section-title" style="margin: 0;">{{ startup_report.t.methodology_section_title }}</h1>
+    </div>
+
+    <p style="font-size: var(--font-size-sm); color: hsl(var(--report-text-muted)); margin-bottom: var(--space-3); max-width: 56rem;">
+        {{ startup_report.t.methodology_section_lead }}
+    </p>
+
+    {# ------------------------------------------------------------------
+       1. The three methods (Berkus + Scorecard + VC + SaaS Forward).
+       Each card mirrors the order the calculation model applies them and the order
+       the method-breakdown page renders them.  The math line is the
+       single equation a reviewer can recompute by hand from the inputs.
+       ------------------------------------------------------------------ #}
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-4) 0 var(--space-2);">
+        {{ startup_report.t.methodology_methods_title }}
+    </h2>
+
+    <div style="display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-4);">
+        <div class="card" style="padding: var(--space-3) var(--space-4); border-left: 3pt solid hsl(var(--report-primary));">
+            <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); text-transform: uppercase; letter-spacing: 0.04em;">
+                {{ startup_report.t.method_berkus }}
+            </div>
+            <h3 style="font-size: var(--font-size-md); font-weight: 700; margin: 2pt 0 4pt;">
+                {{ startup_report.t.methodology_berkus_purpose }}
+            </h3>
+            <p style="font-size: var(--font-size-sm); line-height: 1.55; margin: 0 0 var(--space-2);">
+                {{ startup_report.t.methodology_berkus_body }}
+            </p>
+            <p style="font-family: 'JetBrains Mono', monospace; font-size: var(--font-size-xs); background: rgba(244, 99, 35, 0.04); border-left: 2pt solid hsl(var(--report-primary)); padding: 4pt 8pt; margin: 0 0 var(--space-1);">
+                {{ startup_report.t.methodology_berkus_formula }}
+            </p>
+            <p style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); margin: 0;">
+                <strong>{{ startup_report.t.methodology_source_label }}:</strong>
+                {{ startup_report.t.methodology_berkus_source }}
+            </p>
+        </div>
+
+        <div class="card" style="padding: var(--space-3) var(--space-4); border-left: 3pt solid hsl(var(--report-primary));">
+            <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); text-transform: uppercase; letter-spacing: 0.04em;">
+                {{ startup_report.t.method_scorecard_payne }}
+            </div>
+            <h3 style="font-size: var(--font-size-md); font-weight: 700; margin: 2pt 0 4pt;">
+                {{ startup_report.t.methodology_scorecard_purpose }}
+            </h3>
+            <p style="font-size: var(--font-size-sm); line-height: 1.55; margin: 0 0 var(--space-2);">
+                {{ startup_report.t.methodology_scorecard_body }}
+            </p>
+            <p style="font-family: 'JetBrains Mono', monospace; font-size: var(--font-size-xs); background: rgba(244, 99, 35, 0.04); border-left: 2pt solid hsl(var(--report-primary)); padding: 4pt 8pt; margin: 0 0 var(--space-1);">
+                {{ startup_report.t.methodology_scorecard_formula }}
+            </p>
+            <p style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); margin: 0;">
+                <strong>{{ startup_report.t.methodology_source_label }}:</strong>
+                {{ startup_report.t.methodology_scorecard_source }}
+            </p>
+        </div>
+
+        <div class="card" style="padding: var(--space-3) var(--space-4); border-left: 3pt solid hsl(var(--report-primary));">
+            <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); text-transform: uppercase; letter-spacing: 0.04em;">
+                {{ startup_report.t.method_vc }}
+            </div>
+            <h3 style="font-size: var(--font-size-md); font-weight: 700; margin: 2pt 0 4pt;">
+                {{ startup_report.t.methodology_vc_purpose }}
+            </h3>
+            <p style="font-size: var(--font-size-sm); line-height: 1.55; margin: 0 0 var(--space-2);">
+                {{ startup_report.t.methodology_vc_body }}
+            </p>
+            <p style="font-family: 'JetBrains Mono', monospace; font-size: var(--font-size-xs); background: rgba(244, 99, 35, 0.04); border-left: 2pt solid hsl(var(--report-primary)); padding: 4pt 8pt; margin: 0 0 var(--space-1);">
+                {{ startup_report.t.methodology_vc_formula }}
+            </p>
+            <p style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); margin: 0;">
+                <strong>{{ startup_report.t.methodology_source_label }}:</strong>
+                {{ startup_report.t.methodology_vc_source }}
+            </p>
+        </div>
+
+        <div class="card" style="padding: var(--space-3) var(--space-4); border-left: 3pt solid hsl(var(--report-primary));">
+            <div style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); text-transform: uppercase; letter-spacing: 0.04em;">
+                {{ startup_report.t.method_saas_forward }}
+            </div>
+            <h3 style="font-size: var(--font-size-md); font-weight: 700; margin: 2pt 0 4pt;">
+                {{ startup_report.t.methodology_saas_forward_purpose }}
+            </h3>
+            <p style="font-size: var(--font-size-sm); line-height: 1.55; margin: 0 0 var(--space-2);">
+                {{ startup_report.t.methodology_saas_forward_body }}
+            </p>
+            <p style="font-family: 'JetBrains Mono', monospace; font-size: var(--font-size-xs); background: rgba(244, 99, 35, 0.04); border-left: 2pt solid hsl(var(--report-primary)); padding: 4pt 8pt; margin: 0 0 var(--space-1);">
+                {{ startup_report.t.methodology_saas_forward_formula }}
+            </p>
+            <p style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); margin: 0;">
+                <strong>{{ startup_report.t.methodology_source_label }}:</strong>
+                {{ startup_report.t.methodology_saas_forward_source }}
+            </p>
+        </div>
+    </div>
+
+    {# ------------------------------------------------------------------
+       2. The canonical headline — how the two blends combine.
+       Spelled out so a reviewer never has to ask "which number is THE
+       number?".
+       ------------------------------------------------------------------ #}
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-4) 0 var(--space-2);">
+        {{ startup_report.t.methodology_canonical_title }}
+    </h2>
+    <p style="font-size: var(--font-size-sm); line-height: 1.55; margin-bottom: var(--space-2); max-width: 56rem;">
+        {{ startup_report.t.methodology_canonical_body }}
+    </p>
+    <ul style="font-size: var(--font-size-sm); line-height: 1.6; padding-left: 1.25rem; margin-bottom: var(--space-3);">
+        <li style="margin-bottom: 4pt;"><strong>{{ startup_report.t.methodology_canonical_advisor_label }}</strong> — {{ startup_report.t.methodology_canonical_advisor_body }}</li>
+        <li style="margin-bottom: 4pt;"><strong>{{ startup_report.t.methodology_canonical_founder_label }}</strong> — {{ startup_report.t.methodology_canonical_founder_body }}</li>
+        <li><strong>{{ startup_report.t.methodology_canonical_headline_label }}</strong> — {{ startup_report.t.methodology_canonical_headline_body }}</li>
+    </ul>
+
+    {# ------------------------------------------------------------------
+       3. The overlay layers — pedigree, inception lens, outlier policy.
+       These are the engine-applied adjustments that sit on top of the
+       leg blend.  Surfacing them here means a reviewer can audit which
+       knobs moved the headline.
+       ------------------------------------------------------------------ #}
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-4) 0 var(--space-2);">
+        {{ startup_report.t.methodology_overlays_title }}
+    </h2>
+    <table class="data-table" style="width: 100%; font-size: var(--font-size-sm); margin-bottom: var(--space-4);">
+        <thead>
+            <tr>
+                <th style="text-align: left;">{{ startup_report.t.methodology_overlay_col_layer }}</th>
+                <th style="text-align: left;">{{ startup_report.t.methodology_overlay_col_what }}</th>
+                <th style="text-align: left;">{{ startup_report.t.methodology_overlay_col_when }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="font-weight: 600;">{{ startup_report.t.methodology_overlay_pedigree_layer }}</td>
+                <td>{{ startup_report.t.methodology_overlay_pedigree_what }}</td>
+                <td style="color: hsl(var(--report-text-muted));">{{ startup_report.t.methodology_overlay_pedigree_when }}</td>
+            </tr>
+            <tr>
+                <td style="font-weight: 600;">{{ startup_report.t.methodology_overlay_lens_layer }}</td>
+                <td>{{ startup_report.t.methodology_overlay_lens_what }}</td>
+                <td style="color: hsl(var(--report-text-muted));">{{ startup_report.t.methodology_overlay_lens_when }}</td>
+            </tr>
+            <tr>
+                <td style="font-weight: 600;">{{ startup_report.t.methodology_overlay_outlier_layer }}</td>
+                <td>{{ startup_report.t.methodology_overlay_outlier_what }}</td>
+                <td style="color: hsl(var(--report-text-muted));">{{ startup_report.t.methodology_overlay_outlier_when }}</td>
+            </tr>
+            <tr>
+                <td style="font-weight: 600;">{{ startup_report.t.methodology_overlay_sector_layer }}</td>
+                <td>{{ startup_report.t.methodology_overlay_sector_what }}</td>
+                <td style="color: hsl(var(--report-text-muted));">{{ startup_report.t.methodology_overlay_sector_when }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    {# ------------------------------------------------------------------
+       4. Sources — every benchmark the engine consults.
+       ------------------------------------------------------------------ #}
+    <h2 style="font-size: var(--font-size-lg); margin: var(--space-4) 0 var(--space-2);">
+        {{ startup_report.t.methodology_sources_title }}
+    </h2>
+    <ul style="font-size: var(--font-size-sm); line-height: 1.6; padding-left: 1.25rem; margin-bottom: var(--space-3);">
+        <li style="margin-bottom: 4pt;">{{ startup_report.t.methodology_source_atomico }}</li>
+        <li style="margin-bottom: 4pt;">{{ startup_report.t.methodology_source_dealroom }}</li>
+        <li style="margin-bottom: 4pt;">{{ startup_report.t.methodology_source_bessemer }}</li>
+        <li style="margin-bottom: 4pt;">{{ startup_report.t.methodology_source_keybanc }}</li>
+        <li>{{ startup_report.t.methodology_source_damodaran }}</li>
+    </ul>
+
+    <p style="font-size: var(--font-size-xs); color: hsl(var(--report-text-muted)); margin-top: var(--space-2); border-top: 1pt solid hsl(var(--report-border)); padding-top: var(--space-2); max-width: 56rem;">
+        {{ startup_report.t.methodology_disclaimer }}
+    </p>
+
+    {% include "main_report/partials/_footer.html" ignore missing %}
+</div>

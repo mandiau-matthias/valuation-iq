@@ -1,0 +1,16 @@
+<div class="a4-page sealed-business-analysis-page" style="page-break-before:always;">
+    <div class="section-header"><span class="section-number">03</span><h1 class="section-title">{{ sealed_memorandum.labels.business_market_analysis }}</h1></div>
+    <div class="pdf-grid pdf-grid-2">
+        <div class="pdf-card pdf-card-primary"><div class="pdf-card-eyebrow">{{ sealed_memorandum.labels.business_model }}</div><p>{{ sealed_memorandum.scope.business.business_model }}</p></div>
+        <div class="pdf-card"><div class="pdf-card-eyebrow">{{ sealed_memorandum.labels.products_services }}</div><ul>{% for item in sealed_memorandum.scope.business.products_services %}<li>{{ item }}</li>{% endfor %}</ul></div>
+    </div>
+    <h2>{{ sealed_memorandum.labels.market_sector }}</h2>
+    <p class="pdf-prose">{{ sealed_memorandum.scope.business.market_sector_overview }}</p>
+    <h2>{{ sealed_memorandum.labels.competition }}</h2>
+    <p class="pdf-prose">{{ sealed_memorandum.scope.business.competition_overview }}</p>
+    <div class="pdf-grid pdf-grid-2">
+        <div class="pdf-card"><div class="pdf-card-eyebrow">{{ sealed_memorandum.labels.dependencies }}</div><p><strong>{{ sealed_memorandum.labels.customer_concentration }}:</strong> {{ sealed_memorandum.scope.business.customer_concentration }}</p>{% if sealed_memorandum.scope.business.supplier_dependencies %}<ul>{% for item in sealed_memorandum.scope.business.supplier_dependencies %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}{% if sealed_memorandum.scope.business.key_person_dependencies %}<ul>{% for item in sealed_memorandum.scope.business.key_person_dependencies %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}</div>
+        <div class="pdf-card pdf-card-muted"><div class="pdf-card-eyebrow">{{ sealed_memorandum.labels.material_business_risks }}</div><ul>{% for item in sealed_memorandum.scope.business.material_business_risks %}<li>{{ item }}</li>{% endfor %}</ul></div>
+    </div>
+    {% if sealed_memorandum.scope.professional.material_esg_factors %}<h2>{{ sealed_memorandum.labels.material_esg_factors }}</h2><ul>{% for item in sealed_memorandum.scope.professional.material_esg_factors %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+</div>

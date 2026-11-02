@@ -1,0 +1,321 @@
+{% extends "main_report/base.html" %}
+{# 
+    UPSWITCH VALUATION REPORT - MASTER TEMPLATE
+    ============================================
+    Pages (ordering aligned with PDF twin):
+    1.  Cover Page
+    2.  Executive Summary
+    2b. SaaS Analysis (conditional — first-class section for SaaS companies)
+    3.  EBITDA Normalization (+ 3b DCF conditional)
+    4.  Valuation Calibration (+ 4b Synthesis conditional)
+    5.  Disclaimers
+    6.  Fiscal Reference (conditional)
+    7.  Method Override (conditional)
+#}
+
+{% block content %}
+    {# Firm-color variables for inline styles — each derived from hex_color_variants() #}
+    {% set teal_hsl = primary_color_hsl or '172, 55%, 45%' %}
+    {% set teal_dark_hsl = primary_color_hsl_dark or '172, 55%, 35%' %}
+    {% set teal_light_hsl = primary_color_hsl_light or '172, 45%, 92%' %}
+    {% set is_asset_anchored_method = is_asset_anchored_methodology|default(is_asset_methodology|default(false)) %}
+
+    {# Page 1: Cover Page (shared across SME and Startup variants) #}
+    {% include "main_report/pages/cover_page.html" %}
+
+    {% if is_startup_valuation_report %}
+    {# Startup track — replaces SME pages 2..7 with venture-specific sections.
+       The fundraising one-pager is intentionally rendered FIRST so the
+       founder can hand the first PDF page to an investor as a
+       self-contained pitch artefact; the executive summary + method
+       breakdown that follow act as the audit-trail appendix. #}
+    {% if not is_sealed_advisor_memorandum|default(false) %}
+    {% include "main_report/pages/startup_one_pager.html" %}
+    {% endif %}
+    {% include "main_report/pages/startup_executive_summary.html" %}
+    {% include "main_report/pages/startup_method_breakdown.html" %}
+    {% if startup_report and startup_report.cap_table %}
+    {% include "main_report/pages/startup_cap_table.html" %}
+    {% endif %}
+    {# Risk register — renders only when the engine flagged ≥1 finding
+       (oversubscription, outlier-capped legs, sector mismatch, low
+       defensibility, active inception lens).  Empty payloads are
+       silently skipped so a clean report never sees an empty page. #}
+    {% if startup_report and startup_report.risks_register and startup_report.risks_register|length > 0 %}
+    {% include "main_report/pages/startup_risks.html" %}
+    {% endif %}
+    {# Methodology appendix — defensibility audit trail. Always
+       rendered: every M&A reviewer / accountant who reads the PDF
+       expects to find "the math + sources" page (added 2026-05-10). #}
+    {% include "main_report/pages/startup_methodology.html" %}
+    {# Canonical evidence and action projections are derived exclusively from
+       the sealed run. Specialty routing must not bypass these audit pages. #}
+    {% if show_canonical_evidence_adjustments_appendix|default(false) %}
+    {% include "main_report/pages/canonical_evidence_adjustments.html" %}
+    {% include "main_report/pages/canonical_actionable_adjustments.html" %}
+    {% endif %}
+    {# Viral hook — bridges founder self-service to the paid advisor flow. #}
+    {% if not is_sealed_advisor_memorandum|default(false) %}
+    {% include "main_report/partials/_startup_advisor_cta.html" %}
+    {% endif %}
+    {% include "main_report/pages/disclaimers.html" %}
+    {% elif is_liquidation_report %}
+    {# Liquidation track — replaces SME pages 2..7 with the orderly +
+       forced scenario report. This is a downside-scenario lens, not a
+       going-concern equity estimate, so SME synthesis / owner-profiling
+       / sellability are deliberately suppressed (they would be
+       misleading on a wind-down narrative).
+
+       Phase 1 (Big-4 academic depth): the executive summary is
+       followed by the IVS 104 §60–80 premise statement, the Altman Z''
+       distress score, and the EY/KPMG-format 12-class realisation
+       schedule. Each page renders only if its block is present in the
+       liquidation_report context (legacy payloads gracefully degrade
+       to the original single-page report). #}
+    {# Section 00 — Statement of Affairs (EY/KPMG M&A cover). The
+       single-page summary that appears FIRST so a deal-room reader
+       can grasp the whole picture before drilling into sections. #}
+    {% include "main_report/pages/liquidation_statement_of_affairs.html" %}
+    {# Section 00b — Replacement Cost (M&A buyer ceiling, IVS 105 §60-90) #}
+    {% include "main_report/pages/liquidation_replacement_cost.html" %}
+    {# Section 00c — Strategic Buyer Scenarios (M&A negotiation map,
+       McKinsey Ch. 18 + Damodaran Ch. 24): financial / strategic / MBO
+       bid bands. Critical for M&A counsel evaluating stalking-horse bids. #}
+    {% if not is_sealed_advisor_memorandum|default(false) %}
+    {% include "main_report/pages/liquidation_buyer_scenarios.html" %}
+    {% endif %}
+    {% include "main_report/pages/liquidation_executive_summary.html" %}
+    {% include "main_report/pages/liquidation_premise.html" %}
+    {% include "main_report/pages/liquidation_distress_score.html" %}
+    {% include "main_report/pages/liquidation_realisation_schedule.html" %}
+    {# Phase 2 — EY-grade insolvency cascade + tax + wind-down #}
+    {% include "main_report/pages/liquidation_priority_cascade.html" %}
+    {# Section 05a — Sufficiency Memo (lawyer's first question:
+       "can the estate cover each tier?"). Renders directly after
+       the cascade so the Yes/No verdict reads as a distillation. #}
+    {% include "main_report/pages/liquidation_sufficiency_memo.html" %}
+    {% include "main_report/pages/liquidation_tax_leakage.html" %}
+    {% include "main_report/pages/liquidation_wind_down_costs.html" %}
+    {# Phase 3 — Time value + sensitivity + premise reconciliation #}
+    {% include "main_report/pages/liquidation_pv_disposal.html" %}
+    {% include "main_report/pages/liquidation_sensitivity.html" %}
+    {% include "main_report/pages/liquidation_premise_reconciliation.html" %}
+    {# Phase 4 — IVS 104 §10 / USPAP STANDARD 9 / IFRS 13 disclosure
+       block + audit-trail metadata (run_id + payload SHA + calculation model version)
+       + Phase 5 Independence Statement + Conflicts disclosure. #}
+    {% include "main_report/pages/liquidation_disclosure.html" %}
+    {# Preserve the same sealed evidence/action audit layer as every canonical
+       going-concern report. The included templates only format precomputed
+       projections and perform no monetary calculations. #}
+    {% if show_canonical_evidence_adjustments_appendix|default(false) %}
+    {% include "main_report/pages/canonical_evidence_adjustments.html" %}
+    {% include "main_report/pages/canonical_actionable_adjustments.html" %}
+    {% endif %}
+    {# Section 11 — Auto-drafted creditor notification letters
+       (§XX.39 WER / Art. 38 Fw). Lawyer's killer feature: per-tier
+       draft text with statutory anchor + expected dividend. #}
+    {% if not is_sealed_advisor_memorandum|default(false) %}
+    {% include "main_report/pages/liquidation_creditor_letters.html" %}
+    {% endif %}
+    {% include "main_report/pages/disclaimers.html" %}
+    {% else %}
+    {# SME track — Adaptive / SaaS / DCF / synthesis (unchanged ordering) #}
+
+    {# Meerwaarde-tax dossier flag — when fiscal_4x is the standalone
+       choice and the forfait headline is computable, suppress the M&A
+       method pages so the dossier reads as a focused tax-filing
+       artefact. The fiscal_reference page is the deliverable; cover
+       hero is already reframed by cover_page.html. #}
+    {% set is_fiscal_method_only = (selected_method|default('') == 'fiscal_4x') and fiscal_value_complete|default(false) %}
+    {% set is_holding_sotp_method = has_holding_sotp_page|default(false) %}
+
+    {% if sme_report_sections is defined and sme_report_sections %}
+    {# Manifest-driven SME composition. Cover is already rendered above
+       because startup/liquidation tracks share the same cover page. #}
+    {% for section in sme_report_sections %}
+    {% if section.id != 'cover' %}
+    {% include section.screen_template %}
+    {% endif %}
+    {% endfor %}
+    {% else %}
+
+    {# Page 2: Executive Summary / Metrics #}
+    {% include "main_report/pages/executive_summary.html" %}
+
+    {% if is_holding_sotp_method %}
+    {% include "main_report/pages/holding_sotp_valuation.html" %}
+    {% endif %}
+
+    {# Page 2b: SaaS Analysis (conditional — first-class section for SaaS companies) #}
+    {% if show_saas_appendix %}
+    {% include "main_report/pages/saas_appendix.html" %}
+    {# Page 2c: SaaS Cap-table (conditional — when the founder filled
+       in capital history and/or an investment ask). Shares the
+       saas-appendix gate so the cap-table never appears alone. #}
+    {% if show_saas_cap_table %}
+    {% include "main_report/pages/saas_cap_table.html" %}
+    {% endif %}
+    {% endif %}
+
+    {# Page 3: EBITDA Normalization / Bridge #}
+    {% if include_ebitda_normalization_page is not sameas false and not is_holding_sotp_method %}
+    {% include "main_report/pages/ebitda_normalization.html" %}
+    {% endif %}
+
+    {# Page 3a: Upswitch Adaptive Flagship (conditional — when no single-method
+       override is in force). Mirrors the PDF tree's Page 3a; same gate,
+       same content, screen-optimised layout. See methods-roadmap.md. #}
+    {% if has_upswitch_adaptive_page and not is_fiscal_method_only and not is_holding_sotp_method %}
+    {% include "main_report/pages/upswitch_adaptive_valuation.html" %}
+    {% endif %}
+
+    {# Page 3b: DCF Valuation — suppressed on the Adaptive-only path so the
+       report reads as one unified Adaptive narrative instead of pretending
+       three independent methods ran. The DCF inputs and weights are still
+       visible inside the Adaptive flagship page above; advisors who need
+       the full DCF cascade can pick DCF as a standalone method.
+       Suppressed on fiscal_method_only — DCF is M&A intrinsic-value, not
+       statutory forfait. #}
+    {% if has_dcf and not is_adaptive_only_path|default(false) and not is_fiscal_method_only and not is_holding_sotp_method %}
+    {% include "main_report/pages/dcf_valuation.html" %}
+    {% endif %}
+
+    {# Page 3c: Adjusted NAV (Floor Value) dedicated dossier — round-1
+       fix C1 mirrors the PDF tree's adjusted_nav_valuation.html so the
+       on-screen report carries the same defensible artefact instead of
+       only a small bridge inside the executive summary. Same gate as
+       the PDF (`has_adjusted_nav_page`). Suppressed on fiscal_method_only —
+       corrected NAV is an M&A intrinsic-value lens, not the meerwaarde
+       forfait artefact. #}
+    {% if has_adjusted_nav_page and not is_fiscal_method_only and not is_holding_sotp_method %}
+    {% include "main_report/pages/adjusted_nav_valuation.html" %}
+    {% endif %}
+
+    {# Page 3d: EV/EBITDA Multiple dedicated dossier — closes the
+       screen-vs-PDF asymmetry we caught in audit (EV/EBITDA had a
+       dedicated PDF page since 2026-05-03 but no screen twin, so the
+       in-app preview shrank a 4-page narrative into bullet points
+       inside the executive summary). Same gate as the PDF
+       (`has_ebitda_multiple_page` AND not is_adaptive_only_path).
+       Suppressed on fiscal_method_only — market multiples don't apply
+       to the statutory forfait dossier. #}
+    {% if has_ebitda_multiple_page and not is_adaptive_only_path|default(false) and not is_fiscal_method_only and not is_holding_sotp_method %}
+    {% include "main_report/pages/ebitda_multiple_valuation.html" %}
+    {% endif %}
+
+    {# Page 3e: SDE dedicated dossier — closes the screen-vs-PDF parity
+       gap caught in audit 2026-05-10 (B1).  PDF has shipped the SDE
+       valuation page since 2026-05-03; the screen master previously
+       omitted it entirely, so an advisor selecting SDE saw the in-app
+       preview lacking the dedicated SDE narrative until the PDF
+       arrived.  Same gate as the PDF (`has_sde_page`).  Suppressed on
+       fiscal_method_only. #}
+    {% if has_sde_page and not is_fiscal_method_only and not is_holding_sotp_method %}
+    {% include "main_report/pages/sde_valuation.html" %}
+    {% endif %}
+
+    {# Page 3f: EV/Sales (Revenue Multiple) dedicated dossier — same
+       parity fix as SDE.  Audit 2026-05-10 (B2).  Same gate as the
+       PDF (`has_revenue_multiple_page`).  Suppressed on
+       fiscal_method_only. #}
+    {% if has_revenue_multiple_page and not is_fiscal_method_only and not is_holding_sotp_method %}
+    {% include "main_report/pages/revenue_multiple_valuation.html" %}
+    {% endif %}
+
+    {# Page 4: Valuation Calibration — kept on every path including
+       Adaptive-only because it's the auditable multiple-build cascade
+       (P25/P75 → discounts → applied multiple). Hiding this would compromise
+       defensibility even when Adaptive is the user-facing lens.
+       Exception: fiscal_method_only — the statutory forfait formula
+       (book equity + 4×EBITDA) doesn't go through SME multiple
+       calibration, so the calibration page would mislead readers into
+       thinking the forfait was triangulated against M&A multiples. #}
+    {% if not is_fiscal_method_only and not is_holding_sotp_method %}
+    {% include "main_report/pages/valuation_calibration.html" %}
+    {% endif %}
+
+    {# Page 4b: Weighted Synthesis — only when an accountant blended
+       multiple user-selected methods. On Adaptive-only the engine's
+       internal hybrid blend is already narrated by the flagship page,
+       so a separate "Weighted Synthesis" section would duplicate it.
+       fiscal_4x is STANDALONE in Venus (cannot be blended), so this
+       is structurally never relevant on a meerwaarde dossier. #}
+    {% if has_weighted_synthesis and not is_adaptive_only_path|default(false) and not is_fiscal_method_only and not is_holding_sotp_method %}
+    {% include "main_report/pages/valuation_synthesis.html" %}
+    {% endif %}
+
+    {# Page 4b·5: Transparent Calculation Breakdown — BET-463. Renders the
+       honest, stage-graded "how this value was computed" view fed by the
+       `stage_aware_breakdown` payload Titan attaches before /render. Unlike
+       owner-profiling / sellability this is NOT suppressed on asset-anchored
+       or fiscal-only methods: the breakdown is meaningful at every lifecycle
+       stage, and the aggregator emits a suppressed no-op when the payload is
+       absent (legacy reports render byte-identically). Placed after the
+       synthesis it explains, before owner profiling. #}
+    {% if show_stage_aware_breakdown_section %}
+    {% include "main_report/pages/stage_aware_breakdown.html" %}
+    {% endif %}
+
+    {# Page 4b·6: Business Growth Maturity — revenue/team-size operating
+       roadmap. Renders only when the aggregator has real revenue or team-size
+       evidence; suppressed on fiscal-only tax dossiers because the forfait
+       report is not a growth strategy deliverable. #}
+    {% if show_business_growth_maturity_section and not is_fiscal_method_only %}
+    {% include "main_report/pages/business_growth_maturity.html" %}
+    {% endif %}
+
+    {# Page 4c: Owner Profiling — OP-6. Always emits when the response carries
+       owner-dependency data OR when the assessment was skipped on an
+       owner-dep methodology (multiples / SDE / hybrid). Suppressed on
+       ASSET / NAV reports — owner-dep haircut never applies to a
+       replacement-cost valuation, so a skipped CTA there is noise. Pure
+       DCF is gated upstream in the aggregator (see
+       _build_owner_profiling_section_context). Also suppressed on
+       fiscal_method_only — forfait is owner-agnostic by construction. #}
+    {% if show_owner_profiling_section and not is_asset_anchored_method and not is_fiscal_method_only %}
+    {% include "main_report/pages/owner_profiling.html" %}
+    {% endif %}
+
+    {# Page 4d: Sellability — BET-204. Renders as a sibling section to
+       Owner Profiling, NOT a parallel PDF. Same gating: suppressed on
+       ASSET methodology because a sellability narrative on a
+       replacement-cost valuation is misleading. The aggregator's
+       _build_sellability_section_context handles the "skipped"
+       (no data) vs "low_confidence" / "sale_ready" / "normal"
+       branches. Also suppressed on fiscal_method_only — sellability
+       score is an M&A-readiness lens, not a tax-filing artefact. #}
+    {% if show_sellability_section and not is_asset_anchored_method and not is_fiscal_method_only %}
+    {% include "main_report/pages/sellability.html" %}
+    {% endif %}
+
+    {% include "main_report/partials/_seller_advisor_cta.html" %}
+
+    {# Appendix: Advisor multiple transparency — the single report-facing
+       consumer of multiple_build_up / discount_build_up, placed at the end
+       of the commercial report body before legal disclaimers. #}
+    {% if show_advisor_multiple_transparency_appendix|default(false) and not is_fiscal_method_only and not is_holding_sotp_method %}
+    {% include "main_report/pages/advisor_multiple_transparency_appendix.html" %}
+    {% endif %}
+
+    {# Page 5: Disclaimers #}
+    {% include "main_report/pages/disclaimers.html" %}
+
+    {# Page 6: Fiscal Reference (conditional — Belgian meerwaardebelasting) #}
+    {% if show_fiscal_reference %}
+    {% include "main_report/pages/fiscal_reference.html" %}
+    {% endif %}
+
+    {# Page 7: Manual Method Override (conditional — when accountant chose a manual method) #}
+    {% if show_method_override and not is_holding_sotp_method %}
+    {% include "main_report/pages/method_override.html" %}
+    {% endif %}
+
+    {# Page A: Attestation (Enterprise / accountant-branded reports only).
+       Mirrors the PDF signature page so the HTML preview carries the
+       same page count and closing artefact as the downloadable pack. #}
+    {% if has_attestation_page %}
+    {% include "main_report/pages/attestation.html" %}
+    {% endif %}
+    {% endif %}
+    {% endif %}
+{% endblock %}

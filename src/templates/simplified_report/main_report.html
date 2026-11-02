@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bedrijfsschatting - {{ company_name }}</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ============================================================================
+           UPSWITCH VALUATION REPORT - HYBRID AURORA DESIGN SYSTEM
+           ============================================================================
+           Color System (60/30/10):
+           - 60% Deep Slate (#14171d) - Canvas
+           - 30% Aurora Teal (#2ba899) - Primary/Authority  
+           - 10% Burnt Clay (#c87f63) - Accent
+           ============================================================================ */
+        
+        :root {
+            /* Core Palette */
+            --slate-950: hsl(225 18% 8%);
+            --slate-900: hsl(224 17% 12%);
+            --slate-800: hsl(224 16% 18%);
+            --slate-700: hsl(224 14% 28%);
+            --slate-600: hsl(224 12% 42%);
+            --slate-500: hsl(224 10% 55%);
+            --slate-400: hsl(224 8% 70%);
+            --slate-300: hsl(224 8% 82%);
+            --slate-200: hsl(224 10% 91%);
+            --slate-100: hsl(224 12% 96%);
+            --slate-50: hsl(40 20% 98%);
+            
+            /* Aurora Teal - Primary */
+            --teal: hsl(172 55% 45%);
+            --teal-light: hsl(172 45% 92%);
+            --teal-dark: hsl(172 60% 32%);
+            
+            /* Burnt Clay - Accent */
+            --clay: hsl(17 50% 59%);
+            --clay-light: hsl(17 45% 94%);
+            --clay-dark: hsl(17 55% 42%);
+            
+            /* Semantic */
+            --success: hsl(143 40% 42%);
+            --warning: hsl(37 65% 55%);
+            --danger: hsl(6 55% 50%);
+            
+            /* Print Surfaces */
+            --bg: hsl(0 0% 100%);
+            --surface: hsl(40 15% 98%);
+            --text: hsl(225 18% 12%);
+            --text-muted: hsl(224 10% 45%);
+        }
+        
+        /* Base Reset */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 10.5pt;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--bg);
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        
+        /* Page Setup */
+        @page {
+            size: A4;
+            margin: 20mm 25mm 25mm 25mm;
+        }
+        
+        @page cover {
+            margin: 0;
+        }
+        
+        /* A4 Page Container */
+        .a4-page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm 25mm 35mm 25mm;
+            margin: 0 auto 24px auto;
+            background: var(--bg);
+            position: relative;
+            page-break-after: always;
+        }
+        
+        @media print {
+            .a4-page {
+                margin: 0;
+                page-break-after: always;
+            }
+        }
+        
+        /* Typography */
+        h1 {
+            font-size: 24pt;
+            font-weight: 800;
+            color: var(--slate-900);
+            letter-spacing: 0;
+            margin: 0 0 24pt 0;
+        }
+        
+        h2 {
+            font-size: 16pt;
+            font-weight: 700;
+            color: var(--slate-900);
+            letter-spacing: 0;
+            margin: 32pt 0 16pt 0;
+            padding-bottom: 8pt;
+            border-bottom: 1pt solid var(--slate-200);
+        }
+        
+        h3 {
+            font-size: 11pt;
+            font-weight: 700;
+            color: var(--slate-700);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin: 24pt 0 12pt 0;
+        }
+        
+        h4 {
+            font-size: 10pt;
+            font-weight: 600;
+            color: var(--slate-600);
+            margin: 16pt 0 8pt 0;
+        }
+        
+        p {
+            margin: 0 0 12pt 0;
+            color: var(--text-muted);
+        }
+        
+        .lead {
+            font-size: 12pt;
+            line-height: 1.7;
+            color: var(--slate-600);
+        }
+        
+        .mono, .tabular {
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        
+        /* ============================================================================
+           COVER PAGE - DIETER RAMS "LESS BUT BETTER"
+           ============================================================================ */
+        .cover-page {
+            width: 210mm;
+            min-height: 297mm;
+            height: 297mm;
+            padding: 0;
+            margin: 0 auto 24px auto;
+            background: var(--slate-950);
+            position: relative;
+            overflow: visible;
+            page: cover;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        @media print {
+            .cover-page {
+                margin: 0;
+                background: hsl(225 18% 8%) !important;
+                page-break-after: always;
+            }
+        }
+        
+        .cover-page::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4pt;
+            background: linear-gradient(90deg, var(--teal) 0%, var(--teal) 60%, transparent 100%);
+        }
+        
+        .cover-bg-emoji {
+            position: absolute;
+            top: 50%;
+            right: 40pt;
+            transform: translateY(-50%);
+            font-size: 260pt;
+            line-height: 1;
+            opacity: 0.035;
+            pointer-events: none;
+            z-index: 0;
+            filter: grayscale(50%);
+        }
+        
+        .cover-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 36pt 40pt;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .cover-branding {
+            display: flex;
+            align-items: center;
+            gap: 16pt;
+        }
+        
+        .cover-logo {
+            font-size: 20pt;
+            font-weight: 800;
+            color: var(--teal);
+            letter-spacing: 0;
+        }
+        
+        .cover-brand-divider {
+            font-size: 14pt;
+            font-weight: 300;
+            color: hsl(224 10% 35%);
+        }
+        
+        .cover-accountant-name {
+            font-size: 12pt;
+            font-weight: 600;
+            color: hsl(40 12% 80%);
+            letter-spacing: 0.02em;
+        }
+        
+        .cover-ref-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9pt;
+            font-weight: 500;
+            color: hsl(224 10% 45%);
+            letter-spacing: 0.06em;
+        }
+        
+        .cover-hero-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 40pt;
+            gap: 64pt;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .cover-company {
+            display: flex;
+            flex-direction: column;
+            gap: 12pt;
+        }
+        
+        .cover-label {
+            font-size: 10pt;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            color: var(--teal);
+        }
+        
+        .cover-company-name {
+            font-size: 64pt;
+            font-weight: 800;
+            color: hsl(40 15% 97%);
+            line-height: 0.92;
+            letter-spacing: 0;
+            margin: 0;
+            max-width: 85%;
+        }
+        
+        .cover-company-name.long-name { font-size: 48pt; }
+        .cover-company-name.very-long-name { font-size: 36pt; }
+        
+        .cover-industry-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6pt;
+            margin-top: 8pt;
+            padding: 5pt 10pt 5pt 8pt;
+            background: hsla(224, 16%, 16%, 0.8);
+            border: 1pt solid hsla(224, 10%, 25%, 0.6);
+            border-radius: 4pt;
+            width: fit-content;
+        }
+        
+        .cover-industry-badge span {
+            font-size: 10pt;
+            font-weight: 500;
+            color: hsl(224 8% 70%);
+            letter-spacing: 0.01em;
+        }
+
+        .cover-signoff-line {
+            margin-top: 2pt;
+            font-size: 10pt;
+            font-weight: 500;
+            color: hsl(40 12% 78%);
+            max-width: 70%;
+            line-height: 1.35;
+        }
+        
+        .cover-value-block {
+            display: flex;
+            flex-direction: column;
+            gap: 8pt;
+            max-width: 100%;
+            min-width: 0;
+        }
+        
+        .cover-value-label {
+            font-size: 9pt;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: hsl(224 10% 50%);
+        }
+        
+        .cover-value-amount {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 72pt;
+            font-weight: 700;
+            color: var(--teal);
+            letter-spacing: 0;
+            line-height: 1;
+            max-width: 100%;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .cover-value-amount--long {
+            font-size: 60pt;
+        }
+
+        .cover-value-amount--very-long {
+            font-size: 48pt;
+        }
+
+        .cover-value-amount--extra-long {
+            font-size: 38pt;
+        }
+        
+        .cover-value-range {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14pt;
+            font-weight: 500;
+            color: hsl(224 10% 55%);
+            margin-top: 4pt;
+            max-width: 100%;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .cover-value-range--long {
+            font-size: 12pt;
+        }
+
+        .cover-value-range--very-long {
+            font-size: 10pt;
+        }
+        
+        .cover-value-note {
+            font-size: 7pt;
+            color: hsl(40 12% 65%);
+            display: block;
+            margin-top: 8pt;
+            max-width: 300pt;
+            line-height: 1.5;
+        }
+        
+        .cover-bottom-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 32pt 40pt;
+            border-top: 1pt solid hsla(224, 10%, 20%, 0.6);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .cover-data-grid {
+            display: flex;
+            gap: 48pt;
+        }
+        
+        .cover-data-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4pt;
+        }
+        
+        .cover-data-label {
+            font-size: 8pt;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: hsl(224 10% 45%);
+        }
+        
+        .cover-data-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14pt;
+            font-weight: 600;
+            color: hsl(40 12% 88%);
+        }
+        
+        .cover-confidential {
+            font-size: 6pt;
+            color: hsl(40 12% 50%);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+        
+        /* ============================================================================
+           PAGE HEADER & FOOTER
+           ============================================================================ */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 16pt;
+            margin-bottom: 24pt;
+            border-bottom: 1pt solid var(--slate-200);
+        }
+        
+        .page-header-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 2pt;
+        }
+        
+        .page-header-text {
+            font-size: 9pt;
+            color: var(--slate-700);
+            font-weight: 500;
+        }
+        
+        .page-header-powered {
+            font-size: 7pt;
+            color: var(--slate-400);
+        }
+        
+        .page-header-meta { text-align: right; }
+        
+        .page-header-ref {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9pt;
+            color: var(--slate-700);
+            margin: 0;
+        }
+        
+        .page-header-date {
+            font-size: 8pt;
+            color: var(--slate-500);
+            margin: 0;
+        }
+        
+        .page-footer {
+            position: absolute;
+            bottom: 20mm;
+            left: 25mm;
+            right: 25mm;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 12pt;
+            border-top: 1pt solid var(--slate-200);
+            font-size: 8pt;
+            color: var(--slate-500);
+        }
+        
+        .page-footer-page {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 8pt;
+            font-weight: 500;
+            color: var(--slate-400);
+        }
+        
+        /* ============================================================================
+           SECTION HEADERS
+           ============================================================================ */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 16pt;
+            margin-bottom: 24pt;
+            padding-bottom: 16pt;
+            border-bottom: 2pt solid var(--slate-900);
+        }
+        
+        .section-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14pt;
+            font-weight: 700;
+            color: var(--teal);
+            background: var(--teal-light);
+            padding: 8pt 14pt;
+            border-radius: 8pt;
+        }
+        
+        .section-title {
+            font-size: 20pt;
+            font-weight: 800;
+            color: var(--slate-900);
+            letter-spacing: 0;
+            margin: 0;
+        }
+        
+        /* ============================================================================
+           VALUE CARDS - HERO FINANCIAL DISPLAYS
+           ============================================================================ */
+        .value-hero {
+            background: linear-gradient(135deg, hsl(225 18% 10%) 0%, hsl(224 17% 14%) 100%);
+            border-radius: 16pt;
+            padding: 32pt;
+            margin: 24pt 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .value-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3pt;
+            background: linear-gradient(90deg, var(--teal) 0%, hsl(270 45% 55%) 100%);
+        }
+        
+        .value-hero-label {
+            font-size: 9pt;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: hsl(224 8% 55%);
+            margin-bottom: 8pt;
+        }
+        
+        .value-hero-amount {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 42pt;
+            font-weight: 700;
+            color: var(--teal);
+            letter-spacing: 0;
+            white-space: nowrap;
+            margin: 0;
+        }
+        
+        .value-hero-range {
+            font-size: 12pt;
+            color: hsl(224 8% 65%);
+            margin-top: 8pt;
+        }
+        
+        .value-hero-basis {
+            font-size: 10pt;
+            color: hsl(224 8% 55%);
+            margin-top: 16pt;
+            padding-top: 16pt;
+            border-top: 1pt solid hsla(40, 12%, 90%, 0.1);
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            align-items: stretch;
+            gap: 12pt;
+            margin: 22pt 0;
+        }
+        
+        .stat-card {
+            background: var(--surface);
+            border: 1pt solid var(--slate-200);
+            border-radius: 8pt;
+            padding: 14pt 15pt;
+            min-width: 0;
+            min-height: 84pt;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        
+        .stat-card-label {
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            line-height: 1.25;
+            color: var(--slate-500);
+            min-height: 20pt;
+            margin: 0 0 6pt 0;
+        }
+        
+        .stat-card-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18pt;
+            font-weight: 700;
+            line-height: 1.12;
+            letter-spacing: 0;
+            white-space: nowrap;
+            color: var(--slate-900);
+            margin: 0;
+        }
+        
+        .stat-card-note {
+            font-size: 7pt;
+            line-height: 1.35;
+            color: var(--slate-500);
+            margin: 5pt 0 0 0;
+        }
+
+        .stat-card-note-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            color: var(--slate-700);
+        }
+        
+        /* ============================================================================
+           TABLES - PROFESSIONAL REPORT STYLING
+           ============================================================================ */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24pt 0;
+            font-size: 9.5pt;
+        }
+        
+        thead { display: table-header-group; }
+        
+        th {
+            text-align: left;
+            font-size: 8pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--slate-500);
+            padding: 12pt 16pt;
+            background: var(--surface);
+            border-bottom: 2pt solid var(--slate-900);
+        }
+        
+        td {
+            padding: 12pt 16pt;
+            color: var(--slate-700);
+            border-bottom: 1pt solid var(--slate-100);
+            vertical-align: top;
+        }
+        
+        tr:last-child td {
+            border-bottom: 1pt solid var(--slate-200);
+        }
+        
+        td:first-child {
+            font-weight: 500;
+            color: var(--slate-800);
+        }
+        
+        tr.row-result {
+            background: var(--slate-900);
+        }
+        
+        tr.row-result td {
+            color: hsl(40 12% 94%);
+            font-weight: 600;
+            border-bottom: none;
+        }
+        
+        /* ============================================================================
+           CALLOUTS & ALERTS
+           ============================================================================ */
+        .callout {
+            padding: 20pt;
+            border-radius: 12pt;
+            margin: 24pt 0;
+        }
+        
+        .callout-info {
+            background: var(--teal-light);
+            border-left: 4pt solid var(--teal);
+        }
+        
+        .callout-warning {
+            background: hsla(37, 65%, 55%, 0.1);
+            border-left: 4pt solid var(--warning);
+        }
+        
+        .callout-danger {
+            background: hsla(6, 55%, 50%, 0.1);
+            border-left: 4pt solid var(--danger);
+        }
+        
+        .callout h4 {
+            font-size: 10pt;
+            font-weight: 700;
+            margin: 0 0 8pt 0;
+            color: var(--slate-900);
+        }
+        
+        .callout p {
+            margin: 0;
+            color: var(--slate-700);
+        }
+        
+        /* ============================================================================
+           BADGES
+           ============================================================================ */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6pt;
+            padding: 4pt 10pt;
+            border-radius: 4pt;
+            font-size: 8pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .badge-primary {
+            background: var(--teal-light);
+            color: var(--teal-dark);
+        }
+        
+        .badge-success {
+            background: hsla(143, 40%, 42%, 0.15);
+            color: var(--success);
+        }
+        
+        .badge-warning {
+            background: hsla(37, 65%, 55%, 0.15);
+            color: hsl(17 55% 42%);
+        }
+        
+        .badge-danger {
+            background: hsla(6, 55%, 50%, 0.15);
+            color: var(--danger);
+        }
+        
+        /* ============================================================================
+           CALIBRATION BRIDGE
+           ============================================================================ */
+        .calibration-bridge {
+            background: hsl(224 15% 97%);
+            border-radius: 8pt;
+            padding: 20pt;
+            margin-bottom: 20pt;
+            border: 1pt solid hsl(224 10% 90%);
+        }
+        
+        .bridge-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr auto 1fr;
+            align-items: center;
+            gap: 12pt;
+            text-align: center;
+        }
+        
+        .bridge-item-label {
+            font-size: 7pt;
+            color: var(--slate-500);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 6pt;
+        }
+        
+        .bridge-item-value {
+            font-size: 22pt;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--slate-900);
+        }
+
+        .bridge-item-value--financial {
+            display: block;
+            max-width: 100%;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .bridge-item-value--long {
+            font-size: 16pt !important;
+        }
+
+        .bridge-item-value--very-long {
+            font-size: 13pt !important;
+        }
+
+        .bridge-item-value--extra-long {
+            font-size: 10pt !important;
+        }
+        
+        .bridge-operator {
+            font-size: 16pt;
+            color: hsl(224 10% 60%);
+        }
+        
+        .bridge-final {
+            background: var(--teal);
+            border-radius: 6pt;
+            padding: 12pt 16pt;
+        }
+        
+        .bridge-final .bridge-item-label {
+            color: hsla(0, 0%, 100%, 0.7);
+        }
+        
+        .bridge-final .bridge-item-value {
+            font-size: 24pt;
+            color: white;
+        }
+        
+        .bridge-result {
+            margin-top: 16pt;
+            padding-top: 16pt;
+            border-top: 1pt solid hsl(224 10% 85%);
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 12pt;
+            min-width: 0;
+        }
+        
+        .bridge-result-label {
+            font-size: 9pt;
+            color: var(--slate-500);
+        }
+        
+        .bridge-result-value {
+            font-size: 20pt;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: hsl(172 55% 40%);
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .bridge-result-value--compact {
+            font-size: 16pt;
+        }
+
+        .bridge-result-value--long {
+            font-size: 16pt;
+        }
+
+        .bridge-result-value--very-long {
+            font-size: 13pt;
+        }
+
+        .bridge-result-value--extra-long {
+            font-size: 10pt;
+        }
+        
+        /* ============================================================================
+           CONCLUSION ROW
+           ============================================================================ */
+        .conclusion-row {
+            background: hsl(225 18% 14%);
+        }
+        
+        .conclusion-row td {
+            padding: 0;
+        }
+        
+        .conclusion-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+        }
+        
+        .conclusion-left {
+            display: flex;
+            align-items: center;
+            gap: 12pt;
+            padding: 14pt 16pt;
+        }
+        
+        .conclusion-accent {
+            width: 3pt;
+            height: 36pt;
+            background: hsl(172 55% 50%);
+            border-radius: 2pt;
+        }
+        
+        .conclusion-label-small {
+            font-size: 7pt;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: hsl(224 10% 55%);
+            margin-bottom: 3pt;
+        }
+        
+        .conclusion-label-main {
+            font-size: 10pt;
+            font-weight: 600;
+            color: hsl(40 12% 92%);
+        }
+        
+        .conclusion-right {
+            display: flex;
+            align-items: center;
+            gap: 20pt;
+            padding: 14pt 16pt;
+            background: hsl(225 18% 12%);
+        }
+        
+        .conclusion-value-group { text-align: right; }
+        
+        .conclusion-value-label {
+            font-size: 7pt;
+            color: hsl(224 10% 50%);
+            margin-bottom: 2pt;
+        }
+        
+        .conclusion-value-label.teal {
+            color: hsl(172 55% 55%);
+        }
+        
+        .conclusion-value {
+            font-size: 13pt;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: hsl(40 12% 75%);
+        }
+        
+        .conclusion-value.teal {
+            font-size: 18pt;
+            font-weight: 700;
+            color: hsl(172 55% 60%);
+        }
+        
+        .conclusion-divider {
+            width: 1pt;
+            height: 28pt;
+            background: hsl(224 10% 25%);
+        }
+        
+        /* ============================================================================
+           UTILITIES
+           ============================================================================ */
+        .color-teal { color: var(--teal) !important; }
+        .color-success { color: var(--success) !important; }
+        .color-danger { color: var(--danger) !important; }
+        .color-muted { color: var(--slate-500) !important; }
+        
+        .mt-0 { margin-top: 0 !important; }
+        .mb-0 { margin-bottom: 0 !important; }
+        .mb-4 { margin-bottom: 4pt !important; }
+        .mb-8 { margin-bottom: 8pt !important; }
+        .mb-16 { margin-bottom: 16pt !important; }
+        .mt-12 { margin-top: 12pt !important; }
+        .mt-16 { margin-top: 16pt !important; }
+        .mt-20 { margin-top: 20pt !important; }
+        
+        .small { font-size: 8pt; }
+        .xsmall { font-size: 7pt; }
+        .italic { font-style: italic; }
+        .bold { font-weight: 700; }
+        
+        /* Print Optimizations */
+        @media print {
+            body { background: white; }
+            
+            .cover-page {
+                background: hsl(225 18% 8%) !important;
+            }
+            
+            .cover-page * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ============================================================================
+         PAGE 1: COVER PAGE
+         ============================================================================ -->
+    <div class="cover-page">
+        {% if industry_emoji %}
+        <div class="cover-bg-emoji">{{ industry_emoji }}</div>
+        {% endif %}
+        
+        <div class="cover-top-bar">
+            <div class="cover-branding">
+                <span class="cover-logo">UpSwitch</span>
+                {% if accountant_firm_name %}
+                <span class="cover-brand-divider">×</span>
+                {% if accountant_logo_url %}
+                {# Parity with main_report/base.html .cover-accountant-logo — the advisor's
+                   mark is the primary brand on a report they deliver to their own client. #}
+                <img src="{{ accountant_logo_url }}" alt="{{ accountant_firm_name }}" class="cover-accountant-logo" style="height: 28pt; width: auto; max-width: 170pt; object-fit: contain;">
+                {% else %}
+                <span class="cover-accountant-name">{{ accountant_firm_name }}</span>
+                {% endif %}
+                {% endif %}
+            </div>
+            <div>
+                <span class="cover-ref-id">{{ valuation_id_display or valuation_id }}</span>
+            </div>
+        </div>
+        
+        <div class="cover-hero-area">
+            <div class="cover-company">
+                <span class="cover-label">Bedrijfsschatting</span>
+                <h1 class="cover-company-name {% if company_name|length > 30 %}very-long-name{% elif company_name|length > 18 %}long-name{% endif %}">{{ company_name }}</h1>
+                {% if industry %}
+                <div class="cover-industry-badge">
+                    {% if industry_emoji %}<span style="font-size: 13pt;">{{ industry_emoji }}</span>{% endif %}
+                    <span>{{ industry }}</span>
+                </div>
+                {% endif %}
+                {% if discussion_signoff_line %}
+                <div class="cover-signoff-line">{{ discussion_signoff_line }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="cover-value-block">
+                <span class="cover-value-label">{% if valuation_value_basis|default('enterprise_value') == 'equity_value' %}{% if honest_present_range|default(false) %}Indicatieve aandelenwaarderingsrange{% else %}Indicatieve aandelenwaarde{% endif %}{% elif honest_present_range|default(false) %}Indicatieve waarderingsrange (EV){% else %}Indicatieve Ondernemingswaarde (EV){% endif %}</span>
+                {% set _cover_value_display = ((valuation_low_formatted|string) ~ ' — ' ~ (valuation_high_formatted|string)) if honest_present_range|default(false) and valuation_low is not none and valuation_high is not none and valuation_low < valuation_high else valuation_formatted|string %}
+                <span class="cover-value-amount{% if _cover_value_display|length > 17 %} cover-value-amount--very-long cover-value-amount--extra-long{% elif _cover_value_display|length > 13 %} cover-value-amount--very-long{% elif _cover_value_display|length > 9 %} cover-value-amount--long{% endif %}">{{ _cover_value_display }}</span>
+                {# Also requires ``valuation_band_is_meaningful`` (aggregator-
+                   set, half-spread ≥ 2 %) so a band thinner than display
+                   rounding does not render as "€1,7M — €1,7M" (METANOUS
+                   regression: collapsed Step-11 multiples). #}
+                {% if valuation_low is not none and valuation_high is not none and valuation_low < valuation_high
+                      and valuation_band_is_meaningful|default(true) %}
+                {% set _cover_range_display = (valuation_low_formatted|string) ~ ' — ' ~ (valuation_high_formatted|string) %}
+                <span class="cover-value-range{% if _cover_range_display|length > 32 %} cover-value-range--long cover-value-range--very-long{% elif _cover_range_display|length > 24 %} cover-value-range--long{% endif %}">{{ _cover_range_display }}</span>
+                {% endif %}
+                <span class="cover-value-note">
+                    {% if valuation_value_basis|default('enterprise_value') == 'equity_value' %}Directe aandelenwaardering; ondernemingswaarde is voor de gekozen methode niet van toepassing.{% else %}Indicatieve ondernemingswaarde bij kas- en schuldvrije veronderstelling. Netto-opbrengst hangt af van schuld, kas en werkkapitaal op transactiedatum.{% endif %}
+                </span>
+            </div>
+        </div>
+        
+        <div class="cover-bottom-bar">
+            <div class="cover-data-grid">
+                <div class="cover-data-item">
+                    <span class="cover-data-label">{{ metric_basis_label }}</span>
+                    <span class="cover-data-value">{{ metric_basis_value_formatted }}</span>
+                </div>
+                <div class="cover-data-item">
+                    <span class="cover-data-label">Toegepaste Multiple ({{ multiple_display_label }})</span>
+                    <span class="cover-data-value">{{ multiple }}×</span>
+                </div>
+                <div class="cover-data-item">
+                    <span class="cover-data-label">Datum</span>
+                    <span class="cover-data-value">{{ generated_at }}</span>
+                </div>
+            </div>
+            <span class="cover-confidential">Vertrouwelijk</span>
+        </div>
+    </div>
+    
+    <!-- ============================================================================
+         PAGE 2: EXECUTIVE SUMMARY
+         ============================================================================ -->
+    <div class="a4-page">
+        <div class="page-header">
+            <div class="page-header-brand">
+                <span class="page-header-text">Vertrouwelijk</span>
+                <span class="page-header-powered">Powered by Upswitch</span>
+            </div>
+            <div class="page-header-meta">
+                <p class="page-header-ref">{{ valuation_id_display or valuation_id }}</p>
+                <p class="page-header-date">{{ generated_at }}</p>
+            </div>
+        </div>
+        
+        <div class="section-header">
+            <span class="section-number">01</span>
+            <h1 class="section-title">Samenvatting</h1>
+        </div>
+        
+        <p class="lead">
+            Deze bedrijfsschatting geeft de indicatieve ondernemingswaarde van {{ company_name }} per {{ generated_at }}, berekend via de {{ valuation_methodology_description }}.
+        </p>
+
+        {# ====================================================================
+           HIGH-SEVERITY DATA QUALITY CALLOUT (Pass-4 → Pass-7 backstop)
+           --------------------------------------------------------------------
+           Pass-7 moved warning resolution into the Venus AI assistant so
+           shipping reports look polished. This callout is now a DEFENSIVE
+           BACKSTOP only — it renders when:
+
+             1. The engine produced high-severity warnings, AND
+             2. The caller explicitly asked for them on the report by
+                setting `show_quality_warnings_callout=True` in context.
+
+           Default is to suppress the callout. The assistant rail is the
+           primary surface; if the advisor ships anyway, Titan can re-enable
+           the callout per-firm or per-report for stricter shops.
+           ==================================================================== #}
+        {% if show_quality_warnings_callout and report_quality_warnings_high and report_quality_warnings_high|length > 0 and render_quality_warnings_in_report|default(false) %}
+        <div class="callout callout-danger" style="margin-top: 14pt; margin-bottom: 18pt;">
+            <h4>⚠️ {{ high_severity_callout_title }}</h4>
+            <p style="margin-bottom: 8pt;">{{ high_severity_callout_lead }}</p>
+            <ul style="margin: 6pt 0 0 16pt; padding: 0; color: var(--slate-700); font-size: 9pt;">
+                {% for w in report_quality_warnings_high %}
+                <li style="margin-bottom: 4pt;">
+                    <strong>{{ w.message or w.type }}</strong>
+                    {% if w.recommendation %}
+                    <span style="display: block; color: var(--slate-500); font-size: 8.5pt;">{{ w.recommendation }}</span>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Valuation Hero Card -->
+        <div class="value-hero">
+            <p class="value-hero-label">{% if valuation_value_basis|default('enterprise_value') == 'equity_value' %}Indicatieve aandelenwaarde{% elif valuation_value_basis|default('enterprise_value') == 'enterprise_value' %}Indicatieve ondernemingswaarde (EV){% else %}Waardering nog niet beschikbaar{% endif %}</p>
+            <p class="value-hero-amount">{% if honest_present_range|default(false) and valuation_low is not none and valuation_high is not none and valuation_low < valuation_high %}{{ valuation_low_formatted }} — {{ valuation_high_formatted }}{% else %}{{ valuation_formatted }}{% endif %}</p>
+            {# Also requires ``valuation_band_is_meaningful`` (aggregator-
+               set, half-spread ≥ 2 %) so a band thinner than display
+               rounding does not render as "€1,7M — €1,7M" (METANOUS
+               regression: collapsed Step-11 multiples). #}
+            {% if not honest_present_range|default(false) and valuation_low is not none and valuation_high is not none and valuation_low < valuation_high
+                  and valuation_band_is_meaningful|default(true) %}
+            <p class="value-hero-range">Bandbreedte: {{ valuation_low_formatted }} — {{ valuation_high_formatted }}</p>
+            {% endif %}
+            {% if has_weighted_synthesis|default(false) and synthesis_formula_display %}
+            <p class="value-hero-basis">{{ synthesis_formula_display }}</p>
+            {% elif formula_reconciles|default(false) %}
+            <p class="value-hero-basis">{{ metric_basis_value_formatted }} × {{ multiple }}× = {{ valuation_formatted }}</p>
+            {% endif %}
+        </div>
+        
+        <!-- Key Metrics Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <p class="stat-card-label">{{ metric_basis_label }}</p>
+                <p class="stat-card-value color-teal">{{ metric_basis_value_formatted }}</p>
+                {% if latest_normalized_ebitda is not none and multiple_metric_type != 'REVENUE' %}
+                <p class="stat-card-note">Genormaliseerd {{ current_year }}: <span class="stat-card-note-value">{{ latest_normalized_ebitda_formatted }}</span></p>
+                {% elif multiple_metric_type == 'REVENUE' and ebitda %}
+                <p class="stat-card-note">Genormaliseerde EBITDA (gewogen): <span class="stat-card-note-value">{{ ebitda_formatted }}</span></p>
+                {% endif %}
+            </div>
+            <div class="stat-card">
+                <p class="stat-card-label">Toegepaste Multiple ({{ multiple_display_label }})</p>
+                <p class="stat-card-value">{{ multiple }}×</p>
+                {% if multiple_low is not none and multiple_high is not none %}
+                <p class="stat-card-note">Bandbreedte: <span class="stat-card-note-value">{{ multiple_low }}–{{ multiple_high }}×</span></p>
+                {% endif %}
+            </div>
+            <div class="stat-card">
+                <p class="stat-card-label">Omzet</p>
+                <p class="stat-card-value">{% if revenue is not none %}{{ revenue_formatted }}{% else %}—{% endif %}</p>
+            </div>
+        </div>
+        
+        <!-- EV ≠ Equity explanation -->
+        <div class="callout callout-info mt-16 mb-16">
+            <p style="font-size: 9pt; margin: 0 0 6pt 0; font-weight: 600; color: var(--slate-900);">
+                Dit is ondernemingswaarde (EV), niet wat u netto ontvangt.
+            </p>
+            <p style="font-size: 8pt; margin: 0 0 4pt 0;">
+                <strong>Netto-opbrengst</strong> hangt af van: schuld, cash, en werkkapitaalcorrecties bij overdracht.
+            </p>
+            {# Pass-5: surface the actual working-capital adjustment (or its
+               absence) instead of the previous static "not assessed" line.
+               Pre-formatted by main_report_data_aggregator._format_nwc_disclosure
+               so this block stays declarative. #}
+            <p style="font-size: 8pt; margin: 0; color: var(--slate-500);">
+                {{ nwc_disclosure_text }}
+            </p>
+        </div>
+        
+        <!-- Sensitivity Table -->
+        <div class="mt-16">
+            <h3 style="font-size: 10pt; margin-bottom: 8pt;">Gevoeligheidsanalyse</h3>
+            <p style="font-size: 8pt; color: var(--slate-500); margin-bottom: 12pt;">
+                Ondernemingswaarde bij verschillende {{ 'omzet-' if multiple_metric_type == 'REVENUE' else 'EBITDA-' }} en multiple-scenario's (€ duizenden)
+            </p>
+            <table style="font-size: 8pt;">
+                <thead>
+                    <tr>
+                        <th style="background: var(--slate-900); color: white; padding: 6pt 8pt;">
+                            {{ 'Omzet' if multiple_metric_type == 'REVENUE' else 'EBITDA' }} ↓ / Multiple →
+                        </th>
+                        <th class="text-center" style="padding: 6pt 8pt;">
+                            {{ sensitivity_multiple_low }}×<br>
+                            <span style="font-size: 7pt; color: var(--slate-500);">Laag</span>
+                        </th>
+                        <th class="text-center" style="padding: 6pt 8pt;">
+                            {{ multiple }}×<br>
+                            <span style="font-size: 7pt; color: var(--teal);">Basis</span>
+                        </th>
+                        <th class="text-center" style="padding: 6pt 8pt;">
+                            {{ sensitivity_multiple_high }}×<br>
+                            <span style="font-size: 7pt; color: var(--slate-500);">Hoog</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in sensitivity_table|default([]) %}
+                    <tr style="{% if row.is_base %}background: hsla(172, 55%, 45%, 0.08);{% endif %}">
+                        <td style="font-weight: 600; padding: 6pt 8pt;">
+                            {{ row.metric_formatted }}
+                            {% if row.is_base %}<span style="font-size: 7pt; color: var(--teal); margin-left: 4pt;">Basis</span>{% endif %}
+                        </td>
+                        <td class="text-right tabular" style="padding: 6pt 8pt;">{{ row.ev_low }}</td>
+                        <td class="text-right tabular" style="padding: 6pt 8pt; {% if row.is_base %}font-weight: 700; color: var(--teal); background: hsla(172, 55%, 45%, 0.15);{% endif %}">{{ row.ev_mid }}</td>
+                        <td class="text-right tabular" style="padding: 6pt 8pt;">{{ row.ev_high }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="page-footer">
+            <span>{{ company_name }} • Indicatieve schatting • Vertrouwelijk</span>
+            <span class="page-footer-page">Pagina 2 van 5</span>
+        </div>
+    </div>
+    
+    <!-- ============================================================================
+         PAGE 3: EBITDA NORMALIZATION
+         ============================================================================ -->
+    <div class="a4-page">
+        <div class="page-header">
+            <div class="page-header-brand">
+                <span class="page-header-text">Vertrouwelijk</span>
+                <span class="page-header-powered">Powered by Upswitch</span>
+            </div>
+            <div class="page-header-meta">
+                <p class="page-header-ref">{{ valuation_id_display or valuation_id }}</p>
+                <p class="page-header-date">{{ generated_at }}</p>
+            </div>
+        </div>
+        
+        <div class="section-header">
+            <span class="section-number">02</span>
+            <h1 class="section-title">EBITDA Normalisatie</h1>
+        </div>
+        
+        <p>
+            Normalisatie past de gerapporteerde EBITDA aan om de duurzame winstcapaciteit te weerspiegelen, 
+            door eigenaarsspecifieke, eenmalige en niet-operationele posten te verwijderen conform standaard M&A-praktijk.
+        </p>
+        
+        {# Review-required normalisation disclaimer (simplified report). Surfaced
+           above the bridge so the recipient sees the "confirm before relying"
+           framing. Silent when no normalisations are
+           present. #}
+        {% if ebitda_adjustments and ebitda_adjustments|length > 0 %}
+        <div class="callout callout-warning mb-12 mt-12" style="padding: 6pt 8pt; border-left: 3pt solid #d97706; background-color: #fffbeb;">
+            <p style="font-size: 8pt; margin: 0;">
+                <strong>Te bevestigen normalisatievoorstellen.</strong> Onderstaande normalisaties zijn patroongebaseerde voorstellen op basis van de grootboekdata. Bevestig elke aanpassing met bewijsstukken en adviseursoordeel vóór fiscale, juridische of M&amp;A-verdediging. Dit is geen formeel boekhoudkundig advies.
+            </p>
+        </div>
+        {% endif %}
+
+        <div class="callout callout-info mb-16 mt-12">
+            <p style="font-size: 8pt; margin: 0; font-style: italic;">
+                Aanpassingen zijn gebaseerd op door de gebruiker verstrekte categorisatie en kunnen door een adviseur worden herzien.
+            </p>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <p class="stat-card-label">Gerapporteerde EBITDA ({{ current_year }})</p>
+                <p class="stat-card-value">{% if reported_ebitda is not none %}{{ reported_ebitda_formatted }}{% else %}—{% endif %}</p>
+            </div>
+            <div class="stat-card">
+                <p class="stat-card-label">Totale Aanpassingen</p>
+                <p class="stat-card-value color-success">{{ total_adjustments_formatted }}</p>
+            </div>
+            <div class="stat-card">
+                <p class="stat-card-label">Genormaliseerd ({{ current_year }})</p>
+                <p class="stat-card-value color-teal">{{ latest_normalized_ebitda_formatted }}</p>
+            </div>
+        </div>
+        
+        <!-- Adjustments Table -->
+        <h3>Aanpassingsoverzicht</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 40%;">Omschrijving</th>
+                    <th style="width: 20%;">Bron</th>
+                    <th style="width: 20%;">Categorie</th>
+                    <th class="text-right" style="width: 20%;">Bedrag (€)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for adj in ebitda_adjustments|default([]) %}
+                {% if adj.type == 'base' %}
+                <tr>
+                    <td><strong>{{ adj.label }}</strong></td>
+                    <td>
+                        {% if adj.source_ref %}
+                        <span style="font-size: 8pt; font-family: 'JetBrains Mono', monospace; color: var(--slate-500);">{{ adj.source_ref }}</span>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td><span class="badge badge-primary">Basis</span></td>
+                    <td class="text-right tabular"><strong>{{ adj.amount_formatted }}</strong></td>
+                </tr>
+                {% elif adj.type != 'result' %}
+                <tr>
+                    <td>
+                        {{ adj.label }}
+                        {% if adj.description %}
+                        <span style="display: block; font-size: 8pt; color: var(--slate-500); margin-top: 2pt;">{{ adj.description }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span style="font-size: 8pt; font-family: 'JetBrains Mono', monospace; color: {% if adj.source == 'yuki' %}var(--teal){% elif adj.source == 'exact' %}hsl(210 60% 50%){% elif adj.source == 'suggestion' %}var(--warning){% else %}var(--slate-500){% endif %};">
+                            {{ adj.source_ref or ('Manueel' if adj.source == 'manual' else '—') }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge {% if adj.category == 'owner' %}badge-primary{% else %}badge-warning{% endif %}">
+                            {% if adj.category == 'owner' %}Eigenaar{% else %}Eenmalig{% endif %}
+                        </span>
+                    </td>
+                    <td class="text-right tabular" style="color: {% if adj.type == 'add' %}var(--success){% else %}var(--danger){% endif %};">
+                        {{ '+' if adj.type == 'add' else '−' }}{{ adj.amount_formatted }}
+                    </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+                
+                {% for adj in ebitda_adjustments|default([]) if adj.type == 'result' %}
+                <tr class="row-result">
+                    <td><strong>{{ adj.label }}</strong></td>
+                    <td>—</td>
+                    <td><span class="badge" style="background: hsla(172, 55%, 45%, 0.2); color: var(--teal);">Resultaat</span></td>
+                    <td class="text-right tabular"><strong>{{ adj.amount_formatted }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {% set _ebitda_sources = ebitda_adjustments|default([])|map(attribute='source')|list %}
+        {% set _show_yuki_source = 'yuki' in _ebitda_sources %}
+        {% set _show_exact_source = 'exact' in _ebitda_sources %}
+        {% set _show_suggestion_source = 'suggestion' in _ebitda_sources %}
+        {% set _show_manual_source = 'manual' in _ebitda_sources or 'metadata' in _ebitda_sources %}
+        {% if _show_yuki_source or _show_exact_source or _show_suggestion_source or _show_manual_source %}
+        <!-- Audit Trail Legend -->
+        <div style="margin-top: 12pt; padding: 10pt 14pt; background: hsl(40 15% 97%); border-radius: 6pt; font-size: 7pt; color: var(--slate-500); display: flex; gap: 16pt; flex-wrap: wrap;">
+            <span><strong>Bronverklaring:</strong></span>
+            {% if _show_yuki_source %}
+            <span style="color: var(--teal);">● Yuki</span>
+            {% endif %}
+            {% if _show_exact_source %}
+            <span style="color: hsl(210 60% 50%);">● Exact</span>
+            {% endif %}
+            {% if _show_suggestion_source %}
+            <span style="color: var(--warning);">● Suggestie Upswitch</span>
+            {% endif %}
+            {% if _show_manual_source %}
+            <span>● Manueel</span>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Multi-Year EBITDA Summary -->
+        {% if multi_year_ebitda and multi_year_ebitda|length > 1 %}
+        <div class="mt-20" style="page-break-inside: avoid; break-inside: avoid;">
+            <h3 style="margin-bottom: 10pt;">Meerjarig Overzicht — Basis voor Waardering</h3>
+            <p style="font-size: 8pt; color: var(--slate-500); margin-bottom: 12pt;">
+                {% if multiple_metric_type == 'REVENUE' %}
+                De genormaliseerde EBITDA-historiek wordt hieronder ter context getoond. De waarderingsberekening hierboven gebruikt <strong>omzet ({{ revenue_formatted }})</strong> als basis (EV = Omzet × Multiple).
+                {% elif use_weighted_for_valuation %}
+                De <strong>genormaliseerde EBITDA ({{ ebitda_formatted }})</strong> is berekend als gewogen gemiddelde van {{ multi_year_ebitda|length }} boekjaren. 
+                Dit is de basis voor de waarderingsberekening (EV = Genormaliseerde EBITDA × Multiple).
+                {% else %}
+                De <strong>genormaliseerde EBITDA ({{ ebitda_formatted }})</strong> is de basis voor de waarderingsberekening (EV = Genormaliseerde EBITDA × Multiple).
+                {% endif %}
+            </p>
+            <table style="font-size: 8pt; width: 100%; table-layout: fixed; page-break-inside: avoid; break-inside: avoid;">
+                <thead>
+                    <tr>
+                        <th style="width: 18%;">Jaar</th>
+                        <th class="text-right" style="width: 22%;">Gerapporteerd</th>
+                        <th class="text-right" style="width: 22%;">Genormaliseerd</th>
+                        <th class="text-right" style="width: 18%;">Weging</th>
+                        <th class="text-right" style="width: 20%;">Gewogen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for year in multi_year_ebitda|default([]) %}
+                    <tr>
+                        <td style="font-weight: 600;">{{ year.year_display|default(year.year) }}</td>
+                        <td class="text-right tabular">{{ year.reported_formatted }}</td>
+                        <td class="text-right tabular color-teal">{{ year.normalized_formatted }}</td>
+                        <td class="text-right tabular">{{ year.weight_pct }}%</td>
+                        <td class="text-right tabular" style="font-weight: 500;">{{ year.weighted_formatted }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr style="background: hsl(224 15% 97%);">
+                        <td style="font-weight: 500; color: var(--slate-500);">Berekend totaal</td>
+                        <td></td>
+                        <td></td>
+                        <td class="text-right" style="font-weight: 500; color: var(--slate-500);">100%</td>
+                        <td class="text-right tabular" style="font-weight: 500; color: var(--slate-500);">{{ weighted_total_formatted }}</td>
+                    </tr>
+                    <tr style="background: hsla(172, 55%, 45%, 0.08); font-weight: 700;">
+                        <td>Afgerond voor waardering</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td class="text-right tabular color-teal">{{ ebitda_formatted }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="font-size: 7pt; color: var(--slate-500); margin-top: 8pt; font-style: italic;">
+                Gewogen gemiddelde = Σ (Genormaliseerde EBITDA × Weging). Recente jaren wegen zwaarder dan oudere jaren. 
+                Bedragen afgerond op €K tenzij anders vermeld.
+            </p>
+        </div>
+        {% endif %}
+        
+        <div class="page-footer">
+            <span>{{ company_name }} • Indicatieve schatting • Vertrouwelijk</span>
+            <span class="page-footer-page">Pagina 3 van 5</span>
+        </div>
+    </div>
+    
+    <!-- ============================================================================
+         PAGE 4: VALUATION CALIBRATION
+         ============================================================================ -->
+    <div class="a4-page">
+        <div class="page-header">
+            <div class="page-header-brand">
+                <span class="page-header-text">Vertrouwelijk</span>
+                <span class="page-header-powered">Powered by Upswitch</span>
+            </div>
+            <div class="page-header-meta">
+                <p class="page-header-ref">{{ valuation_id_display or valuation_id }}</p>
+                <p class="page-header-date">{{ generated_at }}</p>
+            </div>
+        </div>
+        
+        <div class="section-header">
+            <span class="section-number">03</span>
+            <h1 class="section-title">Waarderingskalibratie</h1>
+        </div>
+        
+        <p style="margin-bottom: 16pt; font-size: 9pt; color: var(--text-muted);">
+            Elke stap van marktmultiple naar finale ondernemingswaarde — volledige transparantie.
+        </p>
+        
+        <!-- Clean Value Bridge -->
+        <div class="calibration-bridge">
+            {% if has_weighted_synthesis|default(false) and synthesis_formula_display %}
+            <div class="bridge-grid">
+                <div>
+                    <div class="bridge-item-label">Samenstelling</div>
+                    <div class="bridge-item-value" style="font-size: 12pt;">Methodemix</div>
+                </div>
+                <div class="bridge-operator">+</div>
+                <div>
+                    <div class="bridge-item-label">Gewicht</div>
+                    <div class="bridge-item-value" style="font-size: 12pt;">Adviseursweging</div>
+                </div>
+                <div class="bridge-operator">=</div>
+                <div class="bridge-final">
+                    <div class="bridge-item-label">Gewogen modeluitkomst</div>
+                    {% set _bridge_grid_value_display = valuation_formatted|string %}
+                    <div class="bridge-item-value bridge-item-value--financial{% if _bridge_grid_value_display|length > 17 %} bridge-item-value--very-long bridge-item-value--extra-long{% elif _bridge_grid_value_display|length > 13 %} bridge-item-value--very-long{% elif _bridge_grid_value_display|length > 9 %} bridge-item-value--long{% endif %}">{{ _bridge_grid_value_display }}</div>
+                </div>
+            </div>
+            <div class="bridge-result" style="align-items: flex-start; gap: 12pt;">
+                <span class="bridge-result-label" style="flex: 1; line-height: 1.5;">{{ synthesis_formula_display }}</span>
+                {% set _bridge_result_display = valuation_formatted|string %}
+                <span class="bridge-result-value bridge-result-value--compact{% if _bridge_result_display|length > 17 %} bridge-result-value--very-long bridge-result-value--extra-long{% elif _bridge_result_display|length > 13 %} bridge-result-value--very-long{% elif _bridge_result_display|length > 9 %} bridge-result-value--long{% endif %}">{{ _bridge_result_display }}</span>
+            </div>
+            {% else %}
+            <div class="bridge-grid">
+                <div>
+                    <div class="bridge-item-label">Markt Mediaan</div>
+                    <div class="bridge-item-value">{{ base_multiple }}×</div>
+                </div>
+                <div class="bridge-operator">+</div>
+                <div>
+                    <div class="bridge-item-label">Risicokortingen</div>
+                    <div class="bridge-item-value color-danger">{{ total_discount }}×</div>
+                </div>
+                <div class="bridge-operator">=</div>
+                <div class="bridge-final">
+                    <div class="bridge-item-label">Toegepast</div>
+                    <div class="bridge-item-value">{{ multiple }}×</div>
+                </div>
+            </div>
+            <div class="bridge-result">
+                <span class="bridge-result-label">Opgeslagen ondernemingswaarde (EV)</span>
+                {% set _bridge_result_display = valuation_formatted|string %}
+                <span class="bridge-result-value{% if _bridge_result_display|length > 17 %} bridge-result-value--very-long bridge-result-value--extra-long{% elif _bridge_result_display|length > 13 %} bridge-result-value--very-long{% elif _bridge_result_display|length > 9 %} bridge-result-value--long{% endif %}">{{ _bridge_result_display }}</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Full Calibration Ledger — compact for A4 fit -->
+        <h3 style="margin-bottom: 4pt;">Volledige Berekening</h3>
+        
+        <table style="font-size: 6.5pt; width: 100%; table-layout: fixed;">
+            <thead>
+                <tr style="background: var(--slate-900); color: white;">
+                    <th style="padding: 5pt 6pt; text-align: left; width: 40%;">Stap</th>
+                    <th style="padding: 5pt 6pt; text-align: right; width: 15%;">Multiple</th>
+                    <th style="padding: 5pt 6pt; text-align: right; width: 15%;">Impact</th>
+                    <th style="padding: 5pt 6pt; text-align: right; width: 15%;">EV</th>
+                    <th style="padding: 5pt 6pt; text-align: left; width: 15%;">Ref</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for step in calibration_steps|default([]) %}
+                <tr style="{% if loop.index is odd %}background: hsl(40 15% 98%);{% endif %}">
+                    <td style="padding: 5pt 6pt; word-wrap: break-word; overflow-wrap: break-word;">
+                        {{ step.label }}
+                        {% if step.description %}
+                        <span style="display: block; font-size: 5.5pt; color: var(--slate-500); margin-top: 0.5pt;">{{ step.description }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 5pt 6pt; text-align: right; font-family: 'JetBrains Mono', monospace; {% if loop.first %}font-weight: 700;{% endif %}">
+                        {{ step.running_multiple }}×
+                    </td>
+                    {% set _impact_value = step.impact|default(0)|float %}
+                    <td style="padding: 5pt 6pt; text-align: right; font-family: 'JetBrains Mono', monospace; color: {% if _impact_value != 0 %}var(--danger){% else %}var(--slate-500){% endif %};">
+                        {{ step.impact_formatted }}
+                    </td>
+                    <td style="padding: 5pt 6pt; text-align: right; font-family: 'JetBrains Mono', monospace;">
+                        {{ step.ev_formatted }}
+                    </td>
+                    <td style="padding: 5pt 6pt; color: var(--teal);">{{ step.ref or '' }}</td>
+                </tr>
+                {% endfor %}
+                
+                <!-- Conclusion Row — compact two-line layout for A4 fit (short labels: EV, Netto kas, Eigen vermogen) -->
+                <tr class="conclusion-row" style="background: var(--slate-950);">
+                    <td colspan="5" style="padding: 5pt 10pt; border: none;">
+                        <div style="font-size: 6.5pt; line-height: 1.25;">
+                            <div style="display: flex; align-items: center; gap: 5pt; margin-bottom: 2pt;">
+                                <div style="width: 3pt; height: 12pt; background: var(--teal); border-radius: 2pt;"></div>
+                                <span style="text-transform: uppercase; letter-spacing: 0.06em; color: var(--slate-400); font-weight: 500;">Conclusie</span>
+                                <span style="font-weight: 600; color: var(--slate-50);">EV:</span>
+                                <span style="font-family: 'JetBrains Mono', monospace; color: var(--slate-300);">{{ multiple }}×</span>
+                                <span style="color: var(--slate-600);">→</span>
+                                <span style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--teal);">{{ valuation_formatted }}</span>
+                            </div>
+                            {% if has_net_debt_adjustment %}
+                            <div style="padding-left: 11pt; color: var(--slate-300); font-family: 'JetBrains Mono', monospace;">
+                                {% if bridge_uses_net_cash_label %}Netto kas{% else %}Netto schuld{% endif %} {{ bridge_net_debt_operator }} {{ bridge_net_debt_amount|format_currency_compact }} = <strong style="color: var(--teal);">Eigen vermogen {{ equity_value|format_currency_compact }}</strong>
+                            </div>
+                            {% endif %}
+                            {% if bridge_evidence_status|default('unavailable') == 'unavailable' %}
+                            <p>EV-naar-eigenvermogensbrug niet beschikbaar: bevestig de bij deze waardering gebruikte schuld-, kas- en overige correcties.</p>
+                            {% elif bridge_evidence_status == 'reconciliation_required' %}
+                            <p>EV-naar-eigenvermogensbrug vereist reconciliatie. Verschil: {{ bridge_reconciliation_delta_formatted }}. De opgeslagen uitkomsten zijn behouden.</p>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <!-- Reference Notes -->
+        <div style="margin-top: 6pt; font-size: 6pt; color: var(--slate-500); line-height: 1.5;">
+            <p style="margin: 0 0 4pt 0;">
+                ¹ Marktband en referentiemultiple gebaseerd op Europese KMO-transactiedata waar beschikbaar; peer-setdetails worden alleen vermeld wanneer ze expliciet in het dossier zijn meegeleverd.
+            </p>
+            <p style="margin: 0 0 4pt 0;">² Omvangs- en micro-KMO-correctie zoals weergegeven in de kalibratiestappen; geen vaste omzetgrens in de voetnoot.</p>
+            <p style="margin: 0;">
+                ³ Illiquiditeitskorting conform gangbare praktijk voor niet-beursgenoteerde ondernemingen (restricted-stock studies).
+            </p>
+        </div>
+        
+        <div class="page-footer">
+            <span>{{ company_name }} • Indicatieve schatting • Vertrouwelijk</span>
+            <span class="page-footer-page">Pagina 4 van 5</span>
+        </div>
+    </div>
+    
+    <!-- ============================================================================
+         PAGE 5: DISCLAIMERS
+         ============================================================================ -->
+    <div class="a4-page">
+        <div class="page-header">
+            <div class="page-header-brand">
+                <span class="page-header-text">Vertrouwelijk</span>
+                <span class="page-header-powered">Powered by Upswitch</span>
+            </div>
+            <div class="page-header-meta">
+                <p class="page-header-ref">{{ valuation_id_display or valuation_id }}</p>
+                <p class="page-header-date">{{ generated_at }}</p>
+            </div>
+        </div>
+        
+        <div class="section-header">
+            <span class="section-number">04</span>
+            <h1 class="section-title">Belangrijke Opmerkingen</h1>
+        </div>
+        
+        <!-- Primary Disclaimer Banner -->
+        <div class="callout callout-danger mb-16">
+            <h4 style="margin-bottom: 8pt; font-size: 10pt; font-weight: 700;">
+                Indicatieve Schatting — Geen Financieel Advies
+            </h4>
+            <p style="font-size: 9pt; margin: 0;">
+                Dit document biedt een <strong>indicatieve waardeschatting</strong> uitsluitend ter informatie.
+                Het vormt geen financieel, juridisch of fiscaal advies, geen fairness opinion en geen wettelijke 
+                waardering. Win onafhankelijk professioneel advies in 
+                voordat u investerings- of transactiebeslissingen neemt.
+            </p>
+        </div>
+        
+        <!-- Key Notices Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16pt; margin-bottom: 20pt;">
+            <div>
+                <h4 style="font-size: 9pt; margin-bottom: 6pt; font-weight: 600;">Regelgevende Status</h4>
+                <p style="font-size: 8pt; color: var(--text-muted); margin: 0;">
+                    UpSwitch is geen erkend beleggingsbedrijf of auditor. Deze schatting certificeert geen naleving van
+                    wettelijke of toezichtsvereisten in de toepasselijke jurisdictie.
+                </p>
+            </div>
+            <div>
+                <h4 style="font-size: 9pt; margin-bottom: 6pt; font-weight: 600;">Data-afhankelijkheid</h4>
+                <p style="font-size: 8pt; color: var(--text-muted); margin: 0;">
+                    Analyse gebaseerd op verstrekte informatie zonder onafhankelijke audit. UpSwitch is niet 
+                    verantwoordelijk voor nauwkeurigheid of volledigheid van data.
+                </p>
+            </div>
+            <div>
+                <h4 style="font-size: 9pt; margin-bottom: 6pt; font-weight: 600;">Derden Beperking</h4>
+                <p style="font-size: 8pt; color: var(--text-muted); margin: 0;">
+                    Opgesteld uitsluitend voor {{ company_name }}. Derden mogen niet op dit rapport vertrouwen 
+                    zonder voorafgaande schriftelijke toestemming van UpSwitch.
+                </p>
+            </div>
+            <div>
+                <h4 style="font-size: 9pt; margin-bottom: 6pt; font-weight: 600;">Geldigheidsduur</h4>
+                <p style="font-size: 8pt; color: var(--text-muted); margin: 0;">
+                    Geldig tot <strong>90 dagen</strong> na {{ generated_at }}. 
+                    Materiële wijzigingen kunnen conclusies beïnvloeden.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Legal Summary -->
+        <div style="margin-bottom: 20pt; padding: 12pt; background: hsl(224 15% 97%); border-radius: 6pt;">
+            <h4 style="font-size: 9pt; margin-bottom: 8pt;">Juridische Samenvatting</h4>
+            <ul style="font-size: 8pt; color: var(--text-muted); margin: 0; padding-left: 16pt; line-height: 1.6;">
+                <li><strong>Alleen indicatieve schatting</strong> — geen financieel advies of wettelijke waardering</li>
+                <li><strong>Gebaseerd op verstrekte data</strong> — niet onafhankelijk geaudit</li>
+                <li><strong>Alleen voor genoemde ontvanger</strong> — vertrouwen door derden vereist toestemming</li>
+            </ul>
+            <p style="font-size: 7pt; color: var(--slate-500); margin-top: 8pt; margin-bottom: 0;">
+                Volledige voorwaarden op upswitch.app/terms-and-conditions • Toepasselijke rechtskeuze volgens de gebruiksvoorwaarden
+            </p>
+        </div>
+        
+        <!-- Methodology Note -->
+        <div style="margin-bottom: 20pt;">
+            <h4 style="font-size: 9pt; margin-bottom: 6pt;">Methodologie</h4>
+            <p style="font-size: 8pt; color: var(--text-muted); margin: 0 0 6pt 0;">
+                Marktbenadering met {{ multiple_display_label }}-multiples, conform gangbare waarderingspraktijk. Alternatieve methodes (DCF, asset-based) kunnen andere resultaten opleveren.
+            </p>
+            <p style="font-size: 8pt; color: var(--text-muted); margin: 0;">
+                <strong>Benchmarks:</strong> Europese KMO-transactiedata; sector- en omzetband afgestemd waar beschikbaar.
+                <span style="font-style: italic;"> Technische standaarden (IVS, USPAP) beschikbaar op aanvraag.</span>
+            </p>
+        </div>
+        
+        <!-- Report Certification -->
+        <div style="margin-top: auto; padding-top: 16pt; border-top: 1pt solid var(--slate-200);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                <div>
+                    <p style="font-size: 7pt; color: var(--slate-500); margin: 0;">
+                        Opgesteld door {{ accountant_firm_name or 'Upswitch' }} • {{ generated_at }}
+                        {% if accountant_email or accountant_phone %}
+                        <br><span style="font-size: 6pt;">{{ accountant_email or '' }}{% if accountant_email and accountant_phone %} · {% endif %}{{ accountant_phone or '' }}</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="font-size: 7pt; color: var(--slate-500); margin: 0;">
+                        Ref: {{ valuation_id_display or valuation_id }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="page-footer">
+            <span>{{ company_name }} • Indicatieve schatting • Vertrouwelijk</span>
+            <span class="page-footer-page">Pagina 5 van 5</span>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,81 @@
+{#
+    ADVISOR ANALYSIS — EQUIVALENT-WACC RECONCILIATION (feedback #5)
+    Renders from context.advisor_equivalent_wacc. Yield/asset dossiers only;
+    gated by show_equivalent_wacc. Single-entity (decoupled from SOTP).
+#}
+{% set ew = advisor_equivalent_wacc or {} %}
+{% set _ew_is_fr = ((locale|default('nl'))|lower)[:2] == 'fr' %}
+{% set _ew_is_en = ((locale|default('nl'))|lower)[:2] == 'en' %}
+<div class="a4-page">
+    {% include "main_report_pdf/partials/_page_header.html" %}
+
+    <div class="section-header">
+        <span class="section-number">{{ advisor_equivalent_wacc_section_number }}</span>
+        <h1 class="section-title">{% if _ew_is_fr %}WACC équivalent — rendement immobilier{% elif _ew_is_en %}Equivalent WACC — property yield{% else %}Equivalente WACC — vastgoed-yield{% endif %}</h1>
+    </div>
+
+    <div style="margin-top: 6pt; margin-bottom: 14pt; padding: 8pt 10pt; border-radius: 6pt; border: 1pt solid hsl(224, 10%, 91%); background: hsl(40, 15%, 98%); page-break-inside: avoid;">
+        <p style="margin: 0; font-size: 8pt; color: hsl(224, 12%, 35%); line-height: 1.55;">
+            {% if _ew_is_fr %}
+            Une valorisation par rendement immobilier (valeur = loyer net ÷ cap-rate) et un DCF/WACC opérationnel sont comparables sur
+            une même base de taux d’actualisation. Pour une perpétuité de Gordon avec croissance : valeur = NOI / (r − g),
+            donc <strong>cap-rate = r − g</strong> et le taux d’actualisation implicite de l’immobilier est
+            <strong>r = cap-rate + croissance locative à long terme</strong>.
+            {% elif _ew_is_en %}
+            A property-yield valuation (value = net rent ÷ cap rate) and an operating DCF/WACC can be compared on the
+            same discount-rate basis. Under a Gordon perpetuity with growth: value = NOI / (r − g),
+            so <strong>cap rate = r − g</strong> and the implied real-estate discount rate is
+            <strong>r = cap rate + long-term rental growth</strong>.
+            {% else %}
+            Een vastgoed-yieldwaardering (waarde = nettohuur ÷ cap-rate) en een operationele DCF/WACC zijn op één
+            discontovoet-basis vergelijkbaar. Voor een Gordon-perpetuïteit met groei geldt: waarde = NOI / (r − g),
+            dus <strong>cap-rate = r − g</strong> en de impliciete discontovoet van het vastgoed is
+            <strong>r = cap-rate + langetermijn huurgroei</strong>.
+            {% endif %}
+        </p>
+    </div>
+
+    <table style="width: 100%; border-collapse: collapse; font-size: 8.5pt;">
+        <tbody>
+            <tr><td style="padding: 5pt 8pt; color: hsl(224,10%,45%);">{% if _ew_is_fr %}Cap-rate implicite (loyer net durable ÷ valeur de marché immobilière){% elif _ew_is_en %}Implied cap rate (sustainable net rent ÷ property market value){% else %}Impliciete cap-rate (duurzame nettohuur ÷ vastgoed-marktwaarde){% endif %}</td><td style="padding: 5pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">≈ {{ ew.cap_rate_pct }}</td></tr>
+            <tr><td style="padding: 5pt 8pt; color: hsl(224,10%,45%);">+ {% if _ew_is_fr %}Croissance locative à long terme (indexation){% elif _ew_is_en %}Long-term rental growth (indexation){% else %}Langetermijn huurgroei (indexatie){% endif %}</td><td style="padding: 5pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">≈ {{ ew.rental_growth_pct }}</td></tr>
+            <tr style="border-top: 1pt solid hsl(224,10%,82%); font-weight: 700;"><td style="padding: 6pt 8pt; color: hsl(224,16%,18%);">= {% if _ew_is_fr %}Taux d’actualisation immobilier implicite (r){% elif _ew_is_en %}Implied real-estate discount rate (r){% else %}Impliciete vastgoed-discontovoet (r){% endif %}</td><td style="padding: 6pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl(172,55%,32%);">≈ {{ ew.implied_discount_pct }}</td></tr>
+            <tr><td style="padding: 5pt 8pt; color: hsl(224,10%,45%);">{% if _ew_is_fr %}WACC opérationnel / groupe (construction CAPM en référence){% elif _ew_is_en %}Operating / group WACC (CAPM buildup as reference){% else %}Operationele / groeps-WACC (CAPM-opbouw ter referentie){% endif %}</td><td style="padding: 5pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">≈ {{ ew.opco_wacc_pct }}</td></tr>
+            <tr style="border-top: 1pt solid hsl(224,10%,82%); font-weight: 700;"><td style="padding: 6pt 8pt; color: hsl(224,16%,18%);">{% if _ew_is_fr %}Spread opérationnel − immobilier{% elif _ew_is_en %}Operating − real-estate spread{% else %}Spread operationeel − vastgoed{% endif %}</td><td style="padding: 6pt 8pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace;">≈ {{ ew.spread_pp }}</td></tr>
+        </tbody>
+    </table>
+
+    <p style="margin-top: 14pt; font-size: 8pt; line-height: 1.55; color: hsl(224, 12%, 35%);">
+        {% if _ew_is_fr %}
+        Le taux d’actualisation plus faible de l’immobilier reflète le profil de risque plus faible des flux locatifs contractuels et indexés
+        par rapport aux flux opérationnels — d’où un multiple plus élevé / un rendement plus faible pour l’immobilier. Le loyer net durable
+        est estimé à {{ ew.noi }} face à une valeur de marché immobilière de {{ ew.property_value }}.
+        {% elif _ew_is_en %}
+        The lower discount rate for the property reflects the lower risk profile of contractual, indexed rental cash flows
+        compared with operating cash flows — hence the higher multiple / lower yield for real estate. Sustainable net rent
+        is estimated at {{ ew.noi }} against a property market value of {{ ew.property_value }}.
+        {% else %}
+        De lagere discontovoet voor het vastgoed weerspiegelt het lagere risicoprofiel van contractuele, geïndexeerde
+        huurstromen tegenover operationele kasstromen — vandaar een hogere multiple / lagere yield op vastgoed. De duurzame
+        nettohuur is geraamd op {{ ew.noi }} tegenover een vastgoed-marktwaarde van {{ ew.property_value }}.
+        {% endif %}
+    </p>
+
+    <div style="margin-top: 12pt; padding: 8pt 10pt; border-left: 3pt solid hsl(37, 65%, 45%); background: hsl(224, 15%, 97%);">
+        <p style="margin: 0; font-size: 7.5pt; line-height: 1.45; color: hsl(224, 10%, 45%);">
+            {% if _ew_is_fr %}
+            Indicatif : le rapprochement définitif exige le loyer de marché et le cap-rate vérifiés par immeuble,
+            la construction WACC opérationnelle et — en cas de structure de groupe mixte — les jambes OpCo/PropCo distinctes dans une
+            valorisation par somme des parties.
+            {% elif _ew_is_en %}
+            Indicative: final reconciliation requires verified market rent and cap rate per property,
+            the operating WACC buildup and, in a mixed group structure, separate OpCo/PropCo legs in a
+            sum-of-the-parts valuation.
+            {% else %}
+            Indicatief: de definitieve reconciliatie vereist de getoetste markthuur en cap-rate per pand, de
+            operationele WACC-opbouw en — bij een gemengde groepsstructuur — de afzonderlijke OpCo/PropCo-legs in een
+            sum-of-the-parts-waardering.
+            {% endif %}
+        </p>
+    </div>
+</div>

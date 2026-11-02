@@ -1,0 +1,10 @@
+{% if range_provenance_disclosure %}
+<div class="callout callout-info keep-together" data-range-provenance="range-provenance.v1" style="margin-top:8pt; font-size:8pt; line-height:1.45;">
+    <strong>{{ range_provenance_disclosure.title }} · {{ range_provenance_disclosure.kind_label }}</strong>
+    <p>{{ range_provenance_disclosure.calibration_disclosure }}</p>
+    {% if range_provenance_disclosure.excluded_methods %}
+    <p><strong>{{ range_provenance_disclosure.exclusions_label }}</strong></p>
+    <ul>{% for method, reason in range_provenance_disclosure.excluded_methods.items() %}<li>{{ range_provenance_disclosure.excluded_method_labels.get(method, method) }}: {{ reason }}</li>{% endfor %}</ul>
+    {% endif %}
+</div>
+{% endif %}

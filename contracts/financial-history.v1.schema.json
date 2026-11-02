@@ -1,0 +1,229 @@
+{
+  "$defs": {
+    "FinancialYearSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "attributes": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "propertyNames": {
+            "enum": [
+              "revenue_source",
+              "ebitda_basis",
+              "source_identifier",
+              "source_record_id",
+              "source_parser_version",
+              "source_currency",
+              "currency_basis"
+            ]
+          },
+          "title": "Attributes",
+          "type": "object"
+        },
+        "ebitda_normalized": {
+          "default": false,
+          "title": "Ebitda Normalized",
+          "type": "boolean"
+        },
+        "facts": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "maxLength": 98,
+                "pattern": "^-?[0-9]{1,48}(?:\\.[0-9]{1,48})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "propertyNames": {
+            "enum": [
+              "revenue",
+              "gross_margin",
+              "ebitda",
+              "reported_ebitda",
+              "normalized_ebitda",
+              "cogs",
+              "operating_revenue",
+              "gross_profit",
+              "financial_income",
+              "extraordinary_income",
+              "extraordinary_items",
+              "operating_expenses",
+              "ebit",
+              "operating_profit",
+              "depreciation",
+              "depreciation_amortization",
+              "amortization",
+              "interest_expense",
+              "tax_expense",
+              "rent_expense",
+              "owner_director_compensation",
+              "personnel_costs",
+              "filed_employee_fte",
+              "net_income",
+              "total_assets",
+              "current_assets",
+              "cash",
+              "accounts_receivable",
+              "accounts_payable",
+              "inventory",
+              "total_liabilities",
+              "current_liabilities",
+              "short_term_debt",
+              "total_debt",
+              "lease_liabilities",
+              "total_equity",
+              "minority_interest_result_share",
+              "fixed_assets",
+              "paid_up_capital",
+              "capital_subsidies",
+              "deferred_tax_liabilities",
+              "buildings",
+              "machinery_equipment",
+              "other_provisions",
+              "capex",
+              "nwc_change",
+              "operating_cash_flow",
+              "investing_cash_flow",
+              "financing_cash_flow",
+              "free_cash_flow"
+            ]
+          },
+          "title": "Facts",
+          "type": "object",
+          "x-non-negative-fields": [
+            "revenue",
+            "cogs",
+            "operating_revenue",
+            "operating_expenses",
+            "depreciation",
+            "depreciation_amortization",
+            "amortization",
+            "interest_expense",
+            "tax_expense",
+            "rent_expense",
+            "owner_director_compensation",
+            "personnel_costs",
+            "filed_employee_fte",
+            "total_assets",
+            "current_assets",
+            "cash",
+            "accounts_receivable",
+            "accounts_payable",
+            "inventory",
+            "total_liabilities",
+            "current_liabilities",
+            "short_term_debt",
+            "total_debt",
+            "lease_liabilities",
+            "fixed_assets",
+            "paid_up_capital",
+            "capital_subsidies",
+            "deferred_tax_liabilities",
+            "buildings",
+            "machinery_equipment",
+            "other_provisions",
+            "capex"
+          ]
+        },
+        "normalization_metadata": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Normalization Metadata"
+        },
+        "period_end": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Period End"
+        },
+        "period_start": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Period Start"
+        },
+        "year": {
+          "maximum": 2100,
+          "minimum": 2000,
+          "title": "Year",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "year",
+        "facts"
+      ],
+      "title": "FinancialYearSnapshot",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "actual_years": {
+      "items": {
+        "$ref": "#/$defs/FinancialYearSnapshot"
+      },
+      "maxItems": 101,
+      "minItems": 1,
+      "title": "Actual Years",
+      "type": "array"
+    },
+    "currency": {
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "type": "string"
+    },
+    "current_year": {
+      "maximum": 2100,
+      "minimum": 2000,
+      "title": "Current Year",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": "financial-history.v1",
+      "default": "financial-history.v1",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "currency",
+    "current_year",
+    "actual_years"
+  ],
+  "title": "FinancialHistorySnapshot",
+  "type": "object"
+}

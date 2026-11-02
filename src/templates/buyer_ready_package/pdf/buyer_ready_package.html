@@ -1,0 +1,59 @@
+{#
+    BUYER-READY PACKAGE — Master template (PDF twin).
+    BET-241 / F1 scaffolding. Content shipped by F2-F6.
+
+    PDF twin of `templates/buyer_ready_package/screen/buyer_ready_package.html`.
+    Differences are intentionally minimal at F1: same Jinja logic, same
+    section order, same payload contract. F3 will refine WeasyPrint-
+    specific styling (page breaks, headers, footers) once content lands.
+
+    Context: `package: BuyerReadyPackageRender` (same as screen twin).
+#}
+
+{% include "buyer_ready_package/_styles.html" %}
+
+<div class="buyer-ready-package brp-report-shell brp-pdf"
+     data-render-mode="pdf"
+     data-package-id="{{ package.package_id }}"
+     data-document-family="buyer-ready-package">
+
+    {% if package.advisor_brand %}
+    <div class="brp-advisor-brand">
+        <div class="brp-brand-left">
+            {% if package.advisor_brand.logo_url %}
+                <img src="{{ package.advisor_brand.logo_url }}" alt="{{ package.advisor_brand.firm_name }}">
+            {% endif %}
+            <span>{{ package.advisor_brand.firm_name }}</span>
+        </div>
+        <div class="brp-brand-meta">
+            Confidential buyer-ready package<br>
+            {{ package.advisor_brand.footer_text or "Prepared for qualified buyer review." }}
+        </div>
+    </div>
+    {% endif %}
+
+    {% include "buyer_ready_package/pdf/_package_manifest.html" %}
+
+    {% set brp_render_mode = "pdf" %}
+    {% include "buyer_ready_package/pdf/_im.html" %}
+    {% include "buyer_ready_package/pdf/_ebitda_bridge.html" %}
+
+    {% if package.wc_peg %}
+        {% include "buyer_ready_package/pdf/_wc_peg.html" %}
+    {% endif %}
+    {% include "buyer_ready_package/pdf/_tax_latency.html" %}
+
+    {% include "buyer_ready_package/pdf/_missing_doc_checklist.html" %}
+    {% include "buyer_ready_package/pdf/_data_room_manifest.html" %}
+    {% include "buyer_ready_package/pdf/_legal_readiness.html" %}
+    {% if package.deal_readiness %}
+        {% include "buyer_ready_package/pdf/_deal_readiness.html" %}
+    {% endif %}
+    {% include "buyer_ready_package/pdf/_buyer_faq.html" %}
+
+    <div class="brp-footer" style="font-size: 10px; opacity: 0.6; margin-top: 24px;">
+        Package version {{ package.engine_signals.package_version }} ·
+        Generated {{ package.generated_at }} ·
+        LLM sections: {{ package.engine_signals.llm_sections_with_narrative }} narrative + {{ package.engine_signals.llm_sections_placeholder }} placeholder
+    </div>
+</div>

@@ -1,0 +1,19 @@
+{
+  "schema_version": "assessment_method_registry.v1",
+  "registry_version": "canonical_runtime_methods.2026-10-01",
+  "owner": "valuation-iq/src/api/schemas/valuation_assessment.py::ASSESSMENT_V1_METHOD_KEYS",
+  "methods": [
+    "upswitch_adaptive",
+    "ebitda_multiple",
+    "omzet_multiple",
+    "dcf",
+    "sde_multiple",
+    "arr_multiple",
+    "adjusted_nav",
+    "real_estate_yield",
+    "fiscal_4x",
+    "startup_valuation",
+    "liquidation_analysis",
+    "holding_sotp"
+  ]
+}

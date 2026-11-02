@@ -1,0 +1,134 @@
+<div class="page">
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 24pt; border: none; border-top: none;">
+        <tr>
+            <td style="padding: 0; border: none; vertical-align: middle;" colspan="2">
+                <h1 id="section-4-2" style="margin: 0 0 32pt 0; page-break-before: always; break-before: page;">{{ t.accountant_dq_section_title }}</h1>
+            </td>
+        </tr>
+    </table>
+
+    <div class="report-section" style="margin-bottom: 32pt;">
+        <p style="font-size: 12pt; line-height: 1.6; color: #334155; margin-bottom: 16pt;">
+            {{ t.accountant_dq_intro | safe }}
+        </p>
+        <p style="font-size: 11pt; line-height: 1.5; color: #475569; margin-bottom: 24pt;">
+            {{ t.accountant_dq_pro_standard | safe }}
+        </p>
+    </div>
+
+    <div class="report-section">
+        {% if financial_analysis and financial_analysis.data_quality_assessment %}
+            {% set data_quality_assessment = financial_analysis.data_quality_assessment %}
+
+            <h2 style="margin-bottom: 24pt; color: #2b303a;">{{ t.accountant_dq_assessment_title }}</h2>
+
+            <p style="font-size: 11pt; line-height: 1.6; color: #334155; margin-bottom: 24pt;">
+                {{ t.accountant_dq_assessment_intro }}
+            </p>
+
+            <!-- Overall Quality Scores -->
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 32pt; border: none; border-top: none;">
+                <tr>
+                    <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                        <div style="background: #2b303a; color: #FFFFFF; padding: 24pt; border-radius: 8px;">
+                            <p style="font-size: 9pt; text-transform: uppercase; letter-spacing: 1pt; color: #94A3B8; margin-bottom: 8pt; font-weight: 700;">{{ t.accountant_dq_overall_label }}</p>
+                            <p style="font-size: 32pt; font-weight: 800; margin: 0;">{{ data_quality_assessment.quality_score | round }}%</p>
+                            <p style="font-size: 10pt; color: #94A3B8; margin-top: 8pt;">{{ t.accountant_dq_overall_caption }}</p>
+                        </div>
+                    </td>
+                    <td style="width: 4%; border: none;"></td>
+                    <td style="width: 48%; padding: 0; border: none; vertical-align: top;">
+                        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 24pt; border-radius: 8px;">
+                            <p style="font-size: 9pt; text-transform: uppercase; letter-spacing: 1pt; color: #64748B; margin-bottom: 8pt; font-weight: 700;">{{ t.accountant_dq_confidence_label }}</p>
+                            <p style="font-size: 32pt; font-weight: 800; color: {% if data_quality_assessment.confidence_score >= 80 %}#6b8e72{% elif data_quality_assessment.confidence_score >= 60 %}#d9a558{% else %}#b85c56{% endif %}; margin: 0;">
+                                {{ data_quality_assessment.confidence_score }}%
+                            </p>
+                            <p style="font-size: 10pt; color: #64748B; margin-top: 8pt;">{{ t.accountant_dq_confidence_caption }}</p>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+            {% if data_quality_assessment.dimension_scores %}
+            <h3 style="font-family: 'Inter', sans-serif; font-size: 14pt; font-weight: 700; color: #2b303a; margin-top: 32pt; margin-bottom: 16pt;">{{ t.accountant_dq_dimensions_title }}</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 0; border: none; border-top: none;">
+                {% for row in data_quality_assessment.dimension_scores.items() | batch(2) %}
+                <tr>
+                    {% for dimension, score in row %}
+                    {% set score_int = score | round | int %}
+                    {% set dim_color = '#6b8e72' if score_int >= 80 else '#d9a558' if score_int >= 60 else '#b85c56' %}
+                    <td style="width: 48%; padding: 0; border: none; vertical-align: top; padding-bottom: 16pt;">
+                        <div style="background-color: #FFFFFF; border: 1px solid var(--border-light); padding: 16pt;">
+                            <table style="width: 100%; border-collapse: collapse; margin: 0; border: none; border-top: none;">
+                                <tr>
+                                    <td style="padding: 0; border: none; vertical-align: middle;">
+                                        <span style="font-family: 'Inter', sans-serif; font-weight: 600; font-size: 11pt; color: #2b303a;">{{ dimension.replace('_', ' ').title() }}</span>
+                                        <div style="font-size: 9pt; color: #64748B; margin-top: 2pt;">
+                                            {% if dimension == 'completeness' %}
+                                                {{ t.accountant_dq_dim_completeness }}
+                                            {% elif dimension == 'accuracy' %}
+                                                {{ t.accountant_dq_dim_accuracy }}
+                                            {% elif dimension == 'consistency' %}
+                                                {{ t.accountant_dq_dim_consistency }}
+                                            {% elif dimension == 'timeliness' %}
+                                                {{ t.accountant_dq_dim_timeliness }}
+                                            {% else %}
+                                                {{ t.accountant_dq_dim_default }}
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td style="padding: 0; border: none; text-align: right; vertical-align: middle;">
+                                        <span style="font-family: 'Inter', sans-serif; font-weight: 700; color: {{ dim_color }}; font-size: 18pt;">{{ score_int }}%</span>
+                                    </td>
+                                </tr>
+                            </table>
+                            <div style="width: 100%; background-color: #F1F5F9; height: 4pt; overflow: hidden; margin-top: 8pt;">
+                                <div style="height: 100%; background-color: {{ dim_color }}; width: {{ score_int }}%;"></div>
+                            </div>
+                        </div>
+                    </td>
+                    {% if loop.first and not loop.last %}
+                    <td style="width: 4%; border: none;"></td>
+                    {% endif %}
+                    {% endfor %}
+                    {% if row|length == 1 %}
+                    <td style="width: 4%; border: none;"></td>
+                    <td style="width: 48%; border: none;"></td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </table>
+            {% endif %}
+
+            {% if data_quality_assessment.quality_warnings %}
+            <div class="report-callout warning" style="margin-top: 24pt;">
+                <h4 style="font-family: 'Inter', sans-serif; font-size: 12pt; margin-top: 0; margin-bottom: 12pt; color: #d9a558;">{{ t.accountant_dq_warnings_title }}</h4>
+                <ul style="margin: 0; padding-left: 14pt; font-family: 'Inter', sans-serif; font-size: 11pt; color: #d9a558;">
+                    {% for warning in data_quality_assessment.quality_warnings %}
+                        <li style="margin-bottom: 8pt;">
+                            {% if warning.severity %}<strong>{{ warning.severity | title }}:</strong> {% endif %}
+                            {{ warning.message if warning.message else warning }}
+                            {% if warning.recommended_action %}
+                            <br><em style="font-size: 11pt; color: #B45309;">{{ t.accountant_dq_recommendation_label }} {{ warning.recommended_action }}</em>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="report-callout warning">
+                <h4 style="color: #d9a558;">{{ t.accountant_dq_unavailable_title }}</h4>
+                <p>{{ t.accountant_dq_unavailable_body }}</p>
+            </div>
+        {% endif %}
+
+        <!-- Professional Standards Callout -->
+        <div style="margin-top: 48pt; padding: 20pt; background-color: #f4f1ea; border: 1px solid #E2E8F0; border-radius: 4px;">
+            <h4 style="font-family: 'Inter', sans-serif; font-size: 9pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1pt; color: #64748B; margin: 0 0 12pt 0;">{{ t.accountant_dq_guardrail_title }}</h4>
+            <p style="font-size: 9pt; color: #475569; line-height: 1.6; margin: 0;">
+                {{ t.accountant_dq_guardrail_body | safe }}
+            </p>
+        </div>
+    </div>
+</div>

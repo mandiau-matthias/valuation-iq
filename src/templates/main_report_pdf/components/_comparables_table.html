@@ -1,0 +1,66 @@
+{#
+    COMPARABLE-DEALS TABLE — PDF version (WeasyPrint, hardcoded HSL)
+    ================================================================
+    Twin of `main_report/components/_comparables_table.html`.
+
+    Same gating contract: silently hidden when `comparables` is empty.
+    Same 8-row cap. Hardcoded HSL because WeasyPrint's CSS-var support is
+    spotty across versions; matches the ledger / sensitivity-table styling.
+
+    See the screen twin's docstring for the M&A defensibility rationale.
+#}
+{% if comparables and comparables|length > 0 %}
+{% set _rows = comparables[:8] %}
+<div style="margin-top: 12pt; padding: 8pt 10pt; border: 1pt solid hsl(224, 10%, 91%); border-radius: 6pt; background: white; page-break-inside: avoid; break-inside: avoid;">
+    <table style="width: 100%; border-collapse: collapse; border: none; margin-bottom: 4pt;">
+        <tr>
+            <td style="border: none; padding: 0; vertical-align: baseline;">
+                <h4 style="font-size: 9pt; margin: 0; color: hsl(225, 18%, 12%);">{{ t.comparables_table_title }}</h4>
+            </td>
+            <td style="border: none; padding: 0; text-align: right; vertical-align: baseline;">
+                <span style="font-size: 7pt; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl(224, 10%, 45%);">
+                    n={{ comparables|length }}
+                    {% if comparables|length > 8 %}<span style="font-style: italic; color: hsl(224, 10%, 55%);"> · top 8</span>{% endif %}
+                </span>
+            </td>
+        </tr>
+    </table>
+    <p style="margin: 0 0 6pt 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.45;">
+        {{ t.comparables_table_subtitle }}
+    </p>
+    <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt;">
+        <thead>
+            <tr style="border-bottom: 1pt solid hsl(224, 10%, 88%);">
+                <th style="text-align: left; padding: 3pt 5pt; font-size: 6.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(224, 16%, 25%); border: none;">
+                    {{ t.comparables_table_col_name }}
+                </th>
+                <th style="text-align: right; padding: 3pt 5pt; font-size: 6.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(224, 16%, 25%); border: none;">
+                    {{ t.comparables_table_col_ev_ebitda }}
+                </th>
+                <th style="text-align: right; padding: 3pt 5pt; font-size: 6.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(224, 16%, 25%); border: none;">
+                    {{ t.comparables_table_col_ev_revenue }}
+                </th>
+                <th style="text-align: right; padding: 3pt 5pt; font-size: 6.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(224, 16%, 25%); border: none;">
+                    {{ t.comparables_table_col_pe }}
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in _rows %}
+            <tr style="border-bottom: 1pt solid hsl(224, 12%, 96%);">
+                <td style="padding: 3pt 5pt; color: hsl(224, 16%, 18%); border: none;">{{ c.name|default('—') }}</td>
+                <td style="padding: 3pt 5pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl(225, 18%, 12%); border: none;">
+                    {% if c.ev_ebitda_multiple is not none %}{{ c.ev_ebitda_multiple|safe_round(2) }}×{% else %}—{% endif %}
+                </td>
+                <td style="padding: 3pt 5pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl(224, 16%, 18%); border: none;">
+                    {% if c.ev_revenue_multiple is not none %}{{ c.ev_revenue_multiple|safe_round(2) }}×{% else %}—{% endif %}
+                </td>
+                <td style="padding: 3pt 5pt; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl(224, 16%, 18%); border: none;">
+                    {% if c.pe_ratio is not none %}{{ c.pe_ratio|safe_round(2) }}×{% else %}—{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}

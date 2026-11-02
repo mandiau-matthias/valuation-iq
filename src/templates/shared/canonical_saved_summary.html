@@ -1,0 +1,19 @@
+{# Both report surfaces read the same saved ranges. Never derive a range from a sensitivity grid. #}
+{% set _lang = (locale|default('en')|lower)[:2] %}
+<span class="saved-valuation-summary">
+{% if enterprise_value_mid is not none %}
+<span data-value-basis="enterprise_value">
+{% if _lang == 'fr' %}Valeur d’entreprise indicative{% elif _lang == 'nl' %}Indicatieve ondernemingswaarde{% else %}Indicative enterprise value{% endif %}:
+<strong>{{ enterprise_value_mid|format_currency_compact }}</strong>
+{% if enterprise_value_low is not none and enterprise_value_high is not none and enterprise_value_low < enterprise_value_high %}
+({{ enterprise_value_low|format_currency_compact }} — {{ enterprise_value_high|format_currency_compact }}){% endif %}.
+</span>
+{% endif %}
+<span data-value-basis="equity_value">
+{% if _lang == 'fr' %}Valeur indicative des capitaux propres{% elif _lang == 'nl' %}Indicatieve aandelenwaarde{% else %}Indicative equity value{% endif %}:
+<strong>{{ equity_value|format_currency_compact if equity_value is not none else '—' }}</strong>
+{% if equity_value_low is not none and equity_value_high is not none and equity_value_low < equity_value_high %}
+({{ equity_value_low|format_currency_compact }} — {{ equity_value_high|format_currency_compact }}){% endif %}.
+</span>
+{% if _lang == 'fr' %}Valeurs et fourchettes du calcul enregistré ; hypothèses et pont de valeur détaillés dans ce rapport.{% elif _lang == 'nl' %}Waarden en bereiken uit de opgeslagen berekening; aannames en waardebrug staan in dit rapport.{% else %}Values and ranges from the saved calculation; assumptions and the value bridge are detailed in this report.{% endif %}
+</span>

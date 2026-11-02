@@ -1,0 +1,176 @@
+{#
+    ADJUSTED NAV (Gecorrigeerde Netto Actiefwaarde) — PDF version
+    ============================================================
+    Conditionally included when `has_adjusted_nav_page` is True (asset-
+    methodology cases or hybrid cases that surface NAV as a secondary lens).
+
+    Mirrors the rigour of `dcf_valuation.html` so asset-heavy SMEs (Belgian
+    holdings, real-estate BVs, manufacturing entities with revaluation
+    reserves) get a first-class dedicated page rather than a slot inside the
+    calibration ledger.
+
+    Contents:
+    1. Methodology intro + asset-base anchor badge
+    2. Book Equity → Corrected NAV bridge (uses _nav_bridge_table.html)
+    3. Tax latencies table (uses _tax_latencies_table.html — only if data present)
+    4. Intrinsic Value summary card (mirrors DCF EV summary card)
+    5. Methodology footnote / sources
+
+    Migrated 2026-05-15 to share the `method_section` macro with the
+    screen twin.  Only the print-stable body (subtitle, methodology
+    callout, bridge table, tax latencies, intrinsic-value summary
+    card, audit trail, deal structure, footnote) lives here.  The
+    hardcoded-hex subtitle is rendered inside the body slot (not via
+    the macro's `subtitle=` parameter) to preserve print typography
+    until screen+PDF CSS converges.
+
+    Context variables consumed (populated by omni_calc_overrides + aggregator):
+      show_nav_bridge, nav_book_equity, nav_gross_corrections,
+      nav_tax_latency_deduction, nav_off_balance_deduction,
+      nav_corrected_value, nav_manual_adjustments,
+      tax_latencies, has_tax_latencies, tax_latency_net_impact,
+      has_adjusted_nav_page, valuation_methodology, ownership_multiplier,
+      adjusted_nav_method (MethodResult — hoisted from engine in aggregator)
+#}
+
+{% from "shared/macros/method_section.html" import method_section with context %}
+
+{% call method_section(
+    method_key='adjusted_nav',
+    section_number=adjusted_nav_section_number|default('N'),
+    title=t.nav_page_title,
+    tree_root='main_report_pdf',
+    page_number=adjusted_nav_page_number|default(total_pages - 2),
+    method=adjusted_nav_method
+) %}
+
+    <p style="margin-bottom: 10pt; font-size: 8pt; color: hsl(224, 10%, 45%);">
+        {{ t.nav_page_subtitle }}
+        <span class="badge badge-primary" style="margin-left: 8pt; font-size: 6pt;">{{ t.nav_page_badge }}</span>
+    </p>
+
+    {# ── 1. Methodology intro ── #}
+    <div style="margin-top: 6pt; margin-bottom: 14pt; padding: 8pt 10pt; border-radius: 6pt; border: 1pt solid hsl(224, 10%, 91%); background: hsl(40, 15%, 98%); page-break-inside: avoid; break-inside: avoid;">
+        <p style="margin: 0; font-size: 8pt; color: hsl(224, 12%, 35%); line-height: 1.55;">
+            {{ t.nav_methodology_intro }}
+        </p>
+    </div>
+
+    {# ── 2. Book Equity → Corrected NAV bridge ──
+       The partial gates itself on `show_nav_bridge`; we only reach this
+       page when the aggregator set has_adjusted_nav_page=True, which
+       implies bridge data is present, but we keep the partial's own
+       guard so any context-builder bug fails closed (empty section)
+       rather than crashing render. #}
+    {% include "main_report_pdf/components/_nav_bridge_table.html" %}
+
+    {# ── 3. Tax latencies (deferred tax assets/liabilities) ──
+       The partial is already self-gating on has_tax_latencies; on entities
+       with no temp differences (e.g. small chocolaterie) it renders nothing
+       and the page collapses naturally. #}
+    {% include "main_report_pdf/components/_tax_latencies_table.html" %}
+
+    {# ── 4. Intrinsic Value summary card (mirrors DCF EV-summary visual rhythm) ──
+       Round-1 fix C3 + C4:
+         - Renders even when NAV ≤ 0 (net-liability lens). Sign-based copy
+           swap pulls a different summary header + adds a callout instead of
+           silently suppressing the dossier — the lens is most useful when
+           the company is underwater.
+         - The uplift % is clamped: book equity below an absolute €10k floor
+           explodes the ratio into 50,000%+ noise, so we collapse it to a
+           "×N revaluation multiple" framing for those degenerate cases. #}
+    {% set _sealed_nav = sealed_display.nav if sealed_display is defined else none %}
+    {% if (_sealed_nav.corrected_value if _sealed_nav else nav_corrected_value|default(none)) is not none %}
+    {% set nav_book_value = _sealed_nav.book_equity if _sealed_nav else nav_book_equity|default(0)|float %}
+    {% set nav_corrected_float = _sealed_nav.corrected_value if _sealed_nav else nav_corrected_value|float %}
+    {% set nav_uplift = _sealed_nav.uplift if _sealed_nav else nav_corrected_float - nav_book_value %}
+    {% set _nav_book_abs = (nav_book_value|abs) %}
+    {% set _nav_is_negative = nav_corrected_float < 0 %}
+    {% set _border_color_hsl = (teal_hsl) if not _nav_is_negative else '6, 55%, 50%' %}
+    <div style="margin-top: 18pt; padding: 10pt; border: 1pt solid hsl(224, 10%, 91%); border-left: 3pt solid hsl({{ _border_color_hsl }}); border-radius: 6pt; page-break-inside: avoid; break-inside: avoid;">
+        <h4 style="font-size: 9.5pt; margin: 0 0 8pt 0; color: hsl(225, 18%, 12%);">
+            {% if _nav_is_negative %}{{ t.nav_net_liability_summary_header }}{% else %}{{ t.nav_intrinsic_summary_header }}{% endif %}
+        </h4>
+
+        <table style="width: 100%; font-size: 8pt; border-collapse: collapse;">
+            <tr style="border-bottom: 1pt solid hsl(224, 12%, 96%);">
+                <td style="padding: 3pt 0; color: hsl(224, 10%, 45%); border: none;">{{ t.nav_intrinsic_book_equity_label }}</td>
+                <td data-sealed-field-id="method.adjusted_nav.book_equity" style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">{{ nav_book_value|format_currency }}</td>
+            </tr>
+            <tr style="border-bottom: 1pt solid hsl(224, 12%, 96%);">
+                <td style="padding: 3pt 0; color: hsl(224, 10%, 45%); border: none;">
+                    {% if nav_uplift >= 0 %}+ {% else %}− {% endif %}{{ t.nav_intrinsic_revaluation_uplift_label }}
+                </td>
+                <td data-sealed-field-id="method.adjusted_nav.revaluation_uplift" style="padding: 3pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 600; color: hsl(224, 16%, 18%); border: none;">{{ nav_uplift|abs|format_currency }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 5pt 0; font-weight: 700; font-size: 9pt; color: hsl({{ _border_color_hsl }}); border: none;">= {{ t.nav_intrinsic_value_label }}</td>
+                {# Round-3 polish: headline value uses compact notation
+                   (€5.1M / €350K) for at-a-glance readability, with the
+                   exact figure repeated in the bridge breakdown above
+                   for audit reconciliation. #}
+                <td data-sealed-field-id="method.adjusted_nav.corrected_value" style="padding: 5pt 0; text-align: right; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; font-weight: 700; font-size: 9pt; color: hsl({{ _border_color_hsl }}); border: none;" title="{{ nav_corrected_float|format_currency }}">{{ nav_corrected_float|format_currency_compact }}</td>
+            </tr>
+        </table>
+
+        {# Uplift ratio block — three regimes:
+           1) book equity ≥ €10k → standard percentage
+           2) book equity < €10k but > 0 → switch to "×N" multiple framing
+           3) book equity ≤ 0 → suppress the line (any % is meaningless when
+              the denominator is zero/negative; the absolute uplift row above
+              already carries the information). #}
+        {% if _nav_book_abs >= 10000 %}
+        {% set nav_uplift_pct = _sealed_nav.uplift_pct if _sealed_nav else nav_uplift / nav_book_value * 100 %}
+        <p style="margin: 6pt 0 0 0; font-size: 7pt; color: hsl(224, 10%, 45%);">
+            {{ t.nav_intrinsic_uplift_pct_label }}: <strong style="color: hsl(224, 16%, 18%);">
+            {%- if nav_uplift >= 0 %}+{% else %}−{% endif -%}
+            {{ nav_uplift_pct|abs|safe_round(1) }}%</strong>
+            {% set _ownership_pct = _sealed_nav.ownership_pct if _sealed_nav else (ownership_multiplier|float * 100 if ownership_multiplier else none) %}
+            {% if _ownership_pct is not none and _ownership_pct < 100 %}
+            · {{ t.nav_intrinsic_ownership_label }}: <strong style="color: hsl(224, 16%, 18%);">{{ _ownership_pct|safe_round(0) }}%</strong>
+            {% endif %}
+        </p>
+        {% elif nav_book_value > 0 %}
+        {% set nav_uplift_x = _sealed_nav.uplift_multiple if _sealed_nav else nav_corrected_float / nav_book_value %}
+        <p style="margin: 6pt 0 0 0; font-size: 7pt; color: hsl(224, 10%, 45%);">
+            {{ t.nav_intrinsic_uplift_pct_label }}:
+            <strong style="color: hsl(224, 16%, 18%);">{{ nav_uplift_x|safe_round(1) }}× {{ t.nav_intrinsic_book_equity_label|lower }}</strong>
+            {% set _ownership_pct = _sealed_nav.ownership_pct if _sealed_nav else (ownership_multiplier|float * 100 if ownership_multiplier else none) %}
+            {% if _ownership_pct is not none and _ownership_pct < 100 %}
+            · {{ t.nav_intrinsic_ownership_label }}: <strong style="color: hsl(224, 16%, 18%);">{{ _ownership_pct|safe_round(0) }}%</strong>
+            {% endif %}
+        </p>
+        {% endif %}
+
+        {% if _nav_is_negative %}
+        <p style="margin: 8pt 0 0 0; padding: 6pt 8pt; font-size: 7pt; color: hsl(6, 35%, 35%); background: hsla(6, 55%, 50%, 0.06); border-radius: 4pt; line-height: 1.5;">
+            {{ t.nav_net_liability_callout }}
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {# ── 4b. Audit trail (round-4 — moved from FE BelgianSmeAuditPanel) ──
+       Renders the per-asset deferred-tax breakdown, SME-rate eligibility
+       trail, real-estate book→appraisal swap audit and equipment
+       lifespan reconstruction. Self-gates on `has_nav_audit_trail`. #}
+    {% include "main_report_pdf/components/_nav_audit_trail.html" %}
+
+    {# ── 4c. Deal-structure comparison (round-4 — moved from FE) ──
+       Aandelen vs. Handelsfonds with goodwill amortisation tax shield
+       and capital-gains tax. Self-gates on `has_nav_deal_structure`. #}
+    {% include "main_report_pdf/components/_nav_deal_structure.html" %}
+
+    {# ── 5. Methodology footnote / sources ── #}
+    <div style="margin-top: 18pt; padding: 8pt 10pt; border-radius: 6pt; border: 1pt solid hsl(224, 10%, 91%); background: hsl(40, 15%, 98%); page-break-inside: avoid; break-inside: avoid;">
+        <p style="margin: 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.5;">
+            {{ t.nav_assumptions_note }}
+        </p>
+        {% if nav_manual_adjustments_note %}
+        <p style="margin: 4pt 0 0 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.5;">
+            {{ nav_manual_adjustments_note }}
+        </p>
+        {% endif %}
+    </div>
+
+{% endcall %}

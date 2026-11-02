@@ -1,0 +1,96 @@
+{
+  "valuation_id": "val_1000000000_canalworks",
+  "company_name": "Canal Works \u2014 fictional company",
+  "country_code": "BE",
+  "currency": "EUR",
+  "industry": "technology",
+  "business_model": "services",
+  "founding_year": 2015,
+  "methodology": "HYBRID",
+  "current_year": {
+    "year": 2025,
+    "revenue": "1000000",
+    "ebitda": "200000",
+    "cash": "25000",
+    "total_debt": "100000"
+  },
+  "historical_years": [
+    {
+      "year": 2023,
+      "revenue": "850000",
+      "ebitda": "150000"
+    },
+    {
+      "year": 2024,
+      "revenue": "925000",
+      "ebitda": "180000"
+    }
+  ],
+  "normalizations": [],
+  "business_type_calibration": {
+    "business_type_id": "software",
+    "category_id": "technology",
+    "industry": "technology",
+    "ev_ebitda_median": "6.0",
+    "ev_ebitda_p25": "4.8",
+    "ev_ebitda_p75": "7.2",
+    "ev_revenue_median": "1.5",
+    "typical_ebitda_margin": "0.18",
+    "dcf_preference": "0.5",
+    "multiples_preference": "0.5",
+    "benchmark_contract": {
+      "status": "resolved",
+      "source": "DELPHI_BENCHMARK_CONTRACT",
+      "primary_metric": "ev_ebitda",
+      "benchmark_id": "fictional-software-be",
+      "dataset_version_id": "fictional-tutorial-v1",
+      "country_code": "BE",
+      "region_key": "BE",
+      "tier": "native",
+      "walk_step": null,
+      "walk_proximity": 0,
+      "sample_size": 58,
+      "confidence_band": "high",
+      "confidence_score": 0.91,
+      "source_mix": {
+        "transaction": 40,
+        "listing_proxy": 14,
+        "public_market_proxy": 4
+      },
+      "evidence_summary": "Invented figures for the Canal Works tutorial. No observed market transactions.",
+      "published_at": "2026-05-01T00:00:00Z",
+      "methodology_version": "delphi-benchmark-v1",
+      "benchmark_scope": "country",
+      "benchmark_kind": "native",
+      "is_borrowed": false,
+      "scope_stage": "native_benelux",
+      "metrics": {
+        "ev_ebitda": {
+          "benchmark_id": "bench-software-be-2026q2",
+          "sample_size": 58,
+          "confidence_band": "high",
+          "business_type_id": "software",
+          "p25": "4.8",
+          "median": "6.0",
+          "p75": "7.2"
+        },
+        "ev_revenue": {
+          "benchmark_id": "bench-software-revenue-be-2026q2",
+          "sample_size": 41,
+          "confidence_band": "medium",
+          "business_type_id": "software",
+          "median": "1.5"
+        }
+      },
+      "business_type_id": "software"
+    }
+  },
+  "economic_context": {
+    "risk_free_rate": "0.025",
+    "gdp_growth_rate": "0.015",
+    "terminal_growth_rate": "0.02",
+    "country_code": "BE"
+  },
+  "shares_for_sale": "100",
+  "selected_method": "ebitda_multiple"
+}

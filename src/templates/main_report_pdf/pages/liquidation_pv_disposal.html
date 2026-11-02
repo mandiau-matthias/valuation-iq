@@ -1,0 +1,101 @@
+{#
+    LIQUIDATION ANALYSIS — PAGE: PV-DISCOUNTED DISPOSAL (PDF version)
+
+    PDF twin of main_report/pages/liquidation_pv_disposal.html.
+    Phase 3 §08 — Damodaran (2012) Ch. 23 distress WACC over disposal.
+#}
+{% set lr = liquidation_report %}
+{% if lr.disposal_schedule_pv_orderly %}
+{% set po = lr.disposal_schedule_pv_orderly %}
+<section class="pdf-page liquidation-page">
+    <header class="pdf-section-header">
+        <span class="pdf-section-number">08</span>
+        <h1 class="pdf-section-title">{{ lr.t.pv_section_title }}</h1>
+        <span class="pdf-badge">{{ lr.t.pv_section_subtitle }}</span>
+    </header>
+
+    <div class="pdf-prose">
+        {{ lr.t.pv_wacc_label }}: <strong>{{ po.discount_rate_annual|format_factor_pct(1) }}</strong>
+    </div>
+
+    <h2 class="pdf-h2">{{ lr.t.scenario_orderly }}</h2>
+    <table class="pdf-table pdf-table-compact">
+        <thead>
+            <tr>
+                <th>{{ lr.t.pv_col_class }}</th>
+                <th class="pdf-num">{{ lr.t.pv_col_nominal }}</th>
+                <th class="pdf-num">{{ lr.t.pv_col_month }}</th>
+                <th class="pdf-num">{{ lr.t.pv_col_factor }}</th>
+                <th class="pdf-num">{{ lr.t.pv_col_pv }}</th>
+                <th class="pdf-num">{{ lr.t.pv_col_haircut }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in po.lines %}
+            <tr>
+                <td>{{ line.class_label }}</td>
+                <td class="pdf-num">€{{ line.nominal_value|format_eur_amount }}</td>
+                <td class="pdf-num">{{ line.disposal_month }}</td>
+                <td class="pdf-num">{{ (line.discount_factor|float)|safe_round(4) }}</td>
+                <td class="pdf-num">€{{ line.pv_value|format_eur_amount }}</td>
+                <td class="pdf-num">€{{ line.pv_haircut|format_eur_amount }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="pdf-row-total">
+                <td>{{ lr.t.pv_total_label }}</td>
+                <td class="pdf-num">€{{ po.total_nominal|format_eur_amount }}</td>
+                <td colspan="2"></td>
+                <td class="pdf-num">€{{ po.total_pv|format_eur_amount }}</td>
+                <td class="pdf-num">€{{ po.total_pv_haircut|format_eur_amount }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    {% if lr.disposal_schedule_pv_forced %}
+    {% set pf = lr.disposal_schedule_pv_forced %}
+    {# Forced — symmetric to orderly.  Previous inline summary leaked
+       Dutch ("nominaal", "tijdkorting") into EN renders.  Mirror of the
+       screen-template fix. #}
+    <div class="pdf-prose">
+        {{ lr.t.pv_wacc_label }}: <strong>{{ pf.discount_rate_annual|format_factor_pct(1) }}</strong>
+    </div>
+
+    <h2 class="pdf-h2">{{ lr.t.scenario_forced }}</h2>
+    <table class="pdf-table pdf-table-compact">
+        <thead>
+            <tr>
+                <th>{{ lr.t.pv_col_class }}</th>
+                <th class="pdf-num">{{ lr.t.pv_col_nominal }}</th>
+                <th class="pdf-num">{{ lr.t.pv_col_month }}</th>
+                <th class="pdf-num">{{ lr.t.pv_col_factor }}</th>
+                <th class="pdf-num">{{ lr.t.pv_col_pv }}</th>
+                <th class="pdf-num">{{ lr.t.pv_col_haircut }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in pf.lines %}
+            <tr>
+                <td>{{ line.class_label }}</td>
+                <td class="pdf-num">€{{ line.nominal_value|format_eur_amount }}</td>
+                <td class="pdf-num">{{ line.disposal_month }}</td>
+                <td class="pdf-num">{{ (line.discount_factor|float)|safe_round(4) }}</td>
+                <td class="pdf-num">€{{ line.pv_value|format_eur_amount }}</td>
+                <td class="pdf-num">€{{ line.pv_haircut|format_eur_amount }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="pdf-row-total">
+                <td>{{ lr.t.pv_total_label }}</td>
+                <td class="pdf-num">€{{ pf.total_nominal|format_eur_amount }}</td>
+                <td colspan="2"></td>
+                <td class="pdf-num">€{{ pf.total_pv|format_eur_amount }}</td>
+                <td class="pdf-num">€{{ pf.total_pv_haircut|format_eur_amount }}</td>
+            </tr>
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if po.sources %}
+    <div class="pdf-sources">{{ lr.t.sources_label }}: {{ po.sources|join(' · ') }}</div>
+    {% endif %}
+</section>
+{% endif %}

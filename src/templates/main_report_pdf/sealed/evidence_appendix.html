@@ -1,0 +1,10 @@
+<div class="a4-page sealed-evidence-page" style="page-break-before:always;">
+    <div class="section-header"><span class="section-number">A</span><h1 class="section-title">{{ sealed_memorandum.labels.evidence }}</h1></div>
+    <h2>{{ sealed_memorandum.labels.sources }}</h2>
+    {% if sealed_memorandum.evidence.source_references %}<ol>{% for source in sealed_memorandum.evidence.source_references %}<li>{{ source.label }}{% if source.detail %}<br><span class="pdf-mono">{{ source.detail }}</span>{% endif %}</li>{% endfor %}</ol>{% else %}<p>{{ sealed_memorandum.labels.none }}</p>{% endif %}
+    <div class="pdf-card pdf-card-muted" style="margin-top:16pt;"><div class="pdf-card-eyebrow">{{ sealed_memorandum.labels.fingerprint }}</div><table style="margin:6pt 0 0;"><tbody>{% for row in sealed_memorandum.evidence.verification_rows %}<tr><td>{{ row.label }}</td><td class="pdf-mono text-right">{{ row.short }}</td></tr>{% endfor %}</tbody></table></div>
+    <div class="pdf-card" style="margin-top:10pt;"><div class="pdf-card-eyebrow">{{ sealed_memorandum.labels.data_quality }}</div><p>{{ sealed_memorandum.evidence.data_quality_status }}</p></div>
+    <div class="pdf-card" style="margin-top:10pt;"><div class="pdf-card-eyebrow">{{ sealed_memorandum.labels.registry }}</div><p>{{ sealed_memorandum.scope.registry.source }} · {{ sealed_memorandum.scope.registry.data_version }} · {{ sealed_memorandum.scope.registry.snapshot_date }}</p><p class="pdf-mono">SHA-256 {{ sealed_memorandum.scope.registry.archive_sha256 }}</p></div>
+    <h2>{{ sealed_memorandum.labels.audit_register }}</h2>
+    <table class="sealed-audit-register"><thead><tr><th style="width:31%;">{{ sealed_memorandum.labels.audit_object }}</th><th>SHA-256</th></tr></thead><tbody>{% for row in sealed_memorandum.evidence.verification_rows %}<tr><td>{{ row.label }}</td><td class="pdf-mono">{{ row.full }}</td></tr>{% endfor %}</tbody></table>
+</div>

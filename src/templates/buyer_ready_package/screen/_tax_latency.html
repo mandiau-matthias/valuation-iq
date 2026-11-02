@@ -1,0 +1,38 @@
+{#
+    Tax-latency flagger — D5 Part B.
+    BET-241 / F1 scaffold; rules owned by F5 (BET-245).
+
+    Rules route by `package.tax_latency.jurisdiction` (BE or NL).
+    Each flag has its own `severity` (info / warning / critical) that
+    drives visual treatment.
+#}
+
+<section class="brp-tax-latency" data-section="tax_latency"
+         data-jurisdiction="{{ package.tax_latency.jurisdiction }}">
+    <h2>Tax-latency callouts ({{ package.tax_latency.jurisdiction }})</h2>
+
+    {% if package.tax_latency.flag_count == 0 %}
+        <p class="brp-tax-empty">
+            No latent tax issues detected. Advisor review still recommended before legal handoff.
+        </p>
+    {% else %}
+        <p class="brp-tax-summary">
+            {{ package.tax_latency.flag_count }} latent tax issue{{ 's' if package.tax_latency.flag_count != 1 else '' }}
+            surfaced. Address before legal handoff to avoid post-closing adjustments.
+        </p>
+
+        <ul class="brp-tax-flag-list">
+            {% for flag in package.tax_latency.flags %}
+                <li class="brp-tax-flag" data-severity="{{ flag.severity }}">
+                    <strong>{{ flag.label }}</strong>
+                    <span class="brp-tax-flag-rationale">{{ flag.rationale }}</span>
+                    {% if flag.estimated_impact_eur is not none %}
+                        <span class="brp-tax-flag-impact">
+                            Estimated impact: €{{ '{:,.0f}'.format(flag.estimated_impact_eur) }}
+                        </span>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</section>

@@ -1,0 +1,78 @@
+{% if has_trial_balance_anomalies or (trial_balance_anomalies and trial_balance_anomalies.scan_error) %}
+<div style="margin-top: var(--space-4); padding: var(--space-4); background: hsl(var(--report-surface)); border-radius: 6pt; border-left: 3pt solid {% if has_trial_balance_anomalies %}hsl(var(--report-warning)){% else %}hsl(var(--report-slate-300)){% endif %};">
+    <h3 style="margin: 0 0 var(--space-2) 0;">
+        {{ t.anomaly_detection_title }}
+    </h3>
+    {% if has_trial_balance_anomalies %}
+        {% set flag = trial_balance_anomaly_primary_flag %}
+        <p style="font-size: var(--font-size-sm); margin: 0 0 var(--space-2) 0; color: hsl(var(--report-text-muted));">
+            {{ trial_balance_anomaly_summary }}
+        </p>
+        <table style="font-size: var(--font-size-sm); width: 100%; table-layout: fixed;">
+            <tbody>
+                <tr>
+                    <td style="font-weight: 600; width: 30%;">{{ t.anomaly_label_account }}</td>
+                    <td>{{ flag.account_label or flag.account }}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: 600;">{{ t.anomaly_label_year }}</td>
+                    <td>{{ flag.year }}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: 600;">{{ t.anomaly_label_z_score }}</td>
+                    <td>
+                        {{ flag.z_score|safe_round(2) }}
+                        {# Round-10 audit: human-readable severity tier next
+                           to the raw z-score so reviewers don't have to
+                           memorise NIST thresholds. |z| ≥ 3 critical · ≥ 2
+                           severe · ≥ 1 moderate · else low. #}
+                        {% set _abs_z = (flag.z_score|default(0)|float)|abs %}
+                        {% if _abs_z >= 3 %}
+                            {% set _sev_label = t.anomaly_severity_critical %}
+                            {% set _sev_bg = 'hsla(6, 55%, 50%, 0.16)' %}
+                            {% set _sev_fg = 'hsl(6, 55%, 38%)' %}
+                        {% elif _abs_z >= 2 %}
+                            {% set _sev_label = t.anomaly_severity_severe %}
+                            {% set _sev_bg = 'hsla(35, 70%, 50%, 0.16)' %}
+                            {% set _sev_fg = 'hsl(35, 60%, 32%)' %}
+                        {% elif _abs_z >= 1 %}
+                            {% set _sev_label = t.anomaly_severity_moderate %}
+                            {% set _sev_bg = 'hsla(45, 75%, 55%, 0.16)' %}
+                            {% set _sev_fg = 'hsl(45, 60%, 30%)' %}
+                        {% else %}
+                            {% set _sev_label = t.anomaly_severity_low %}
+                            {% set _sev_bg = 'hsla(143, 35%, 42%, 0.14)' %}
+                            {% set _sev_fg = 'hsl(143, 40%, 30%)' %}
+                        {% endif %}
+                        <span style="margin-left: 6pt; padding: 1pt 6pt; border-radius: 999px; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; background: {{ _sev_bg }}; color: {{ _sev_fg }};">
+                            {{ _sev_label }}
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-weight: 600;">{{ t.anomaly_label_confidence }}</td>
+                    {# 1dp so a 49.4% confidence doesn't render as 49% and a
+                       49.6% as 50% — anomaly thresholds are sensitive to
+                       sub-percent moves (audit round 8). #}
+                    <td>{{ ((flag.confidence or 0) * 100)|safe_round(1) }}%</td>
+                </tr>
+                {% if flag.suggested_normalization is not none %}
+                <tr>
+                    <td style="font-weight: 600;">{{ t.anomaly_label_suggested_normalization }}</td>
+                    <td>{{ flag.suggested_normalization|format_currency }}</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        {% if flag.explanation %}
+        <p style="font-size: var(--font-size-xs); margin: var(--space-2) 0 0 0; color: hsl(var(--report-text-muted));">
+            {{ flag.explanation }}
+        </p>
+        {% endif %}
+    {% else %}
+        <p style="font-size: var(--font-size-sm); margin: 0; color: hsl(var(--report-text-muted));">
+            {{ t.anomaly_scan_payload_missing }}
+        </p>
+    {% endif %}
+</div>
+{% endif %}

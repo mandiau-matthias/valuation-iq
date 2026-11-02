@@ -1,0 +1,25 @@
+{# Each amount comes from its named, canonical value basis. `valuation` is a
+   configurable headline and must never be relabelled as enterprise value. #}
+{% set _summary_lang = (locale|default('nl')|lower)[:2] %}
+{% set _summary_copy = {
+    'en': {'ev': 'Indicative enterprise value', 'equity': 'Indicative equity value', 'range': 'Model range', 'note': 'Purchase consideration, transaction costs and completion adjustments are separate.', 'pending': 'Unquantified normalisations can move the final value materially beyond this model range.'},
+    'fr': {'ev': 'Valeur d’entreprise indicative', 'equity': 'Valeur indicative des capitaux propres', 'range': 'Fourchette du modèle', 'note': 'Le prix d’acquisition, les frais de transaction et les ajustements à la réalisation sont distincts.', 'pending': 'Des normalisations non quantifiées peuvent porter la valeur finale sensiblement au-delà de cette fourchette du modèle.'},
+    'nl': {'ev': 'Indicatieve ondernemingswaarde', 'equity': 'Indicatieve eigenvermogenswaarde', 'range': 'Modelbandbreedte', 'note': 'Overnameprijs, transactiekosten en afrekeningscorrecties staan hier los van.', 'pending': 'Niet-gekwantificeerde normalisaties kunnen de uiteindelijke waarde materieel buiten deze modelbandbreedte brengen.'}
+}.get(_summary_lang, {}) %}
+<div class="canonical-value-summary saved-valuation-summary" style="margin: 4pt 0 8pt; padding: 8pt 10pt; border-radius: 6pt; border: 1pt solid #e5e6e9; background: #faf9f7; font-size: 8pt; line-height: 1.5; break-inside: avoid;">
+    {% for _basis, _mid, _low, _high, _label in [
+        ('enterprise_value', enterprise_value_mid, enterprise_value_low, enterprise_value_high, _summary_copy.ev),
+        ('equity_value', equity_value, equity_value_low, equity_value_high, _summary_copy.equity)
+    ] %}
+    {% if _mid is defined and _mid is not none and (_basis != 'enterprise_value' or enterprise_value_applicability|default('applicable') != 'not_applicable') %}
+    <p data-value-basis="{{ _basis }}" style="margin: 0 0 3pt;">
+        {{ _label }}:
+        {% if not honest_present_range|default(false) %}<strong>{{ _mid|format_currency_compact }}</strong>.{% endif %}
+        {% if _low is defined and _low is not none and _high is defined and _high is not none %}
+        {{ _summary_copy.range }}: <strong>{{ _low|format_currency_compact }} — {{ _high|format_currency_compact }}</strong>.
+        {% endif %}
+    </p>
+    {% endif %}
+    {% endfor %}
+    <p style="margin: 0;">{{ _summary_copy.note }}{% if headline_ebitda_is_reported|default(false) and enterprise_value_applicability|default('applicable') != 'not_applicable' %} <strong>{{ _summary_copy.pending }}</strong>{% endif %}</p>
+</div>

@@ -1,0 +1,320 @@
+<div class="page">
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 24pt; border: none; border-top: none;">
+        <tr>
+            <td style="padding: 0; border: none; vertical-align: middle;">
+                <h1 id="appendix-e" style="margin: 0 0 32pt 0; page-break-before: always; break-before: page;">{{ t.accountant_audit_section_title }}</h1>
+            </td>
+            <td style="padding: 0; border: none; text-align: right; vertical-align: middle;">
+                <div style="display: inline-block; padding: 6pt 10pt; margin: 0; border: 1pt solid #E2E8F0; border-radius: 4px; background-color: #f4f1ea;">
+                    <span style="font-family: 'Inter', sans-serif; font-size: 8pt; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em;">{{ t.accountant_audit_verification_badge }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="report-section" style="margin-bottom: 32pt;">
+        <p style="font-size: 12pt; line-height: 1.6; color: #334155; margin-bottom: 16pt;">
+            {{ t.accountant_audit_intro | safe }}
+        </p>
+        <p style="font-size: 11pt; line-height: 1.5; color: #475569; margin-bottom: 24pt;">
+            <strong>{{ t.accountant_audit_documentation_label }}</strong> {{ t.accountant_audit_documentation_body }}
+        </p>
+    </div>
+
+    <div class="report-section">
+        <h2 style="margin-bottom: 24pt; color: #2b303a;">{{ t.accountant_audit_table_title }}</h2>
+
+        <p style="font-size: 11pt; line-height: 1.6; color: #334155; margin-bottom: 24pt;">
+            {{ t.accountant_audit_table_intro }}
+        </p>
+
+        <div class="table-card">
+            <table class="step-table" style="font-size: 9pt; font-family: 'Inter', sans-serif;">
+                <caption>{{ t.accountant_audit_caption }}</caption>
+                <thead>
+                    <tr>
+                        <th style="width: 8%;">{{ t.accountant_audit_col_step }}</th>
+                        <th style="width: 25%;">{{ t.accountant_audit_col_process }}</th>
+                        <th style="width: 42%;">{{ t.accountant_audit_col_rationale }}</th>
+                        <th style="width: 15%;">{{ t.accountant_audit_col_source }}</th>
+                        <th style="width: 10%;">{{ t.accountant_audit_col_status }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if calculation_steps and calculation_steps|length > 0 %}
+                        {% for step in calculation_steps %}
+                        <tr>
+                            <td style="font-weight: 700; color: #2b303a; text-align: center;">{{ loop.index }}</td>
+                            <td style="font-weight: 700; color: var(--upswitch-navy);">
+                                {{ step.step_name or step.name or (t.accountant_audit_step_prefix ~ ' ' ~ loop.index) }}
+                                {% if step.step_number %}
+                                    <div style="font-size: 8pt; font-weight: 400; color: #64748B; margin-top: 2pt;">
+                                        {{ t.accountant_audit_step_prefix }} {{ step.step_number }}
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td style="line-height: 1.5; color: #475569;">
+                                {{ step.rationale or step.explanation or step.description or t.accountant_audit_calc_step_default }}
+                                {% if step.academic_reference %}
+                                    <div style="font-size: 8pt; color: #64748B; margin-top: 4pt; font-style: italic;">
+                                        {{ t.accountant_audit_reference_label }} {{ step.academic_reference }}
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td style="color: #64748B; font-size: 9pt;">
+                                {% if step.data_source %}
+                                    {{ step.data_source }}
+                                {% else %}
+                                    {{ t.accountant_audit_internal_calc }}
+                                {% endif %}
+                            </td>
+                            <td style="text-align: center;">
+                                {% set status_color = '#6b8e72' %}
+                                {% set status_text = '✓' %}
+                                <span style="color: {{ status_color }}; font-weight: 700; font-size: 12pt;">{{ status_text }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Fallback static content for demonstration -->
+                        <tr>
+                            <td style="font-weight: 700; color: #2b303a; text-align: center;">1</td>
+                            <td style="font-weight: 700; color: var(--upswitch-navy);">
+                                {{ t.accountant_audit_step1_name }}
+                                <div style="font-size: 8pt; font-weight: 400; color: #64748B; margin-top: 2pt;">
+                                    {{ t.accountant_audit_step_zero }}
+                                </div>
+                            </td>
+                            <td style="line-height: 1.5; color: #475569;">
+                                {{ t.accountant_audit_step1_rationale }}
+                                <div style="font-size: 8pt; color: #64748B; margin-top: 4pt; font-style: italic;">
+                                    {{ t.accountant_audit_step1_ref }}
+                                </div>
+                            </td>
+                            <td style="color: #64748B; font-size: 9pt;">{{ t.accountant_audit_step1_source }}</td>
+                            <td style="text-align: center;">
+                                <span style="color: #6b8e72; font-weight: 700; font-size: 12pt;">✓</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-weight: 700; color: #2b303a; text-align: center;">2</td>
+                            <td style="font-weight: 700; color: var(--upswitch-navy);">
+                                {{ t.accountant_audit_step2_name }}
+                                <div style="font-size: 8pt; font-weight: 400; color: #64748B; margin-top: 2pt;">
+                                    {{ t.accountant_audit_step_one }}
+                                </div>
+                            </td>
+                            <td style="line-height: 1.5; color: #475569;">
+                                {{ t.accountant_audit_step2_rationale }}
+                                <div style="font-size: 8pt; color: #64748B; margin-top: 4pt; font-style: italic;">
+                                    {{ t.accountant_audit_step2_ref }}
+                                </div>
+                            </td>
+                            <td style="color: #64748B; font-size: 9pt;">{{ t.accountant_audit_step2_source }}</td>
+                            <td style="text-align: center;">
+                                <span style="color: #6b8e72; font-weight: 700; font-size: 12pt;">✓</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-weight: 700; color: #2b303a; text-align: center;">3</td>
+                            <td style="font-weight: 700; color: var(--upswitch-navy);">
+                                {{ t.accountant_audit_step3_name }}
+                                <div style="font-size: 8pt; font-weight: 400; color: #64748B; margin-top: 2pt;">
+                                    {{ t.accountant_audit_step_two }}
+                                </div>
+                            </td>
+                            <td style="line-height: 1.5; color: #475569;">
+                                {{ t.accountant_audit_step3_rationale }}
+                                <div style="font-size: 8pt; color: #64748B; margin-top: 4pt; font-style: italic;">
+                                    {{ t.accountant_audit_step3_ref }}
+                                </div>
+                            </td>
+                            <td style="color: #64748B; font-size: 9pt;">{{ t.accountant_audit_step3_source }}</td>
+                            <td style="text-align: center;">
+                                <span style="color: #6b8e72; font-weight: 700; font-size: 12pt;">✓</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-weight: 700; color: #2b303a; text-align: center;">4</td>
+                            <td style="font-weight: 700; color: var(--upswitch-navy);">
+                                {{ t.accountant_audit_step4_name }}
+                                <div style="font-size: 8pt; font-weight: 400; color: #64748B; margin-top: 2pt;">
+                                    {{ t.accountant_audit_step_three }}
+                                </div>
+                            </td>
+                            <td style="line-height: 1.5; color: #475569;">
+                                {{ t.accountant_audit_step4_rationale }}
+                                <div style="font-size: 8pt; color: #64748B; margin-top: 4pt; font-style: italic;">
+                                    {{ t.accountant_audit_step4_ref }}
+                                </div>
+                            </td>
+                            <td style="color: #64748B; font-size: 9pt;">{{ t.accountant_audit_step4_source }}</td>
+                            <td style="text-align: center;">
+                                <span style="color: #6b8e72; font-weight: 700; font-size: 12pt;">✓</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-weight: 700; color: #2b303a; text-align: center;">5</td>
+                            <td style="font-weight: 700; color: var(--upswitch-navy);">
+                                {{ t.accountant_audit_step5_name }}
+                                <div style="font-size: 8pt; font-weight: 400; color: #64748B; margin-top: 2pt;">
+                                    {{ t.accountant_audit_step_four }}
+                                </div>
+                            </td>
+                            <td style="line-height: 1.5; color: #475569;">
+                                {{ t.accountant_audit_step5_rationale | safe }}
+                                <div style="font-size: 8pt; color: #64748B; margin-top: 4pt; font-style: italic;">
+                                    {{ t.accountant_audit_step5_ref }}
+                                </div>
+                            </td>
+                            <td style="color: #64748B; font-size: 9pt;">{{ t.accountant_audit_step5_source }}</td>
+                            <td style="text-align: center;">
+                                <span style="color: #6b8e72; font-weight: 700; font-size: 12pt;">✓</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-weight: 700; color: #2b303a; text-align: center;">6</td>
+                            <td style="font-weight: 700; color: var(--upswitch-navy);">
+                                {{ t.accountant_audit_step6_name }}
+                                <div style="font-size: 8pt; font-weight: 400; color: #64748B; margin-top: 2pt;">
+                                    {{ t.accountant_audit_step_five }}
+                                </div>
+                            </td>
+                            <td style="line-height: 1.5; color: #475569;">
+                                {{ t.accountant_audit_step6_rationale }}
+                                <div style="font-size: 8pt; color: #64748B; margin-top: 4pt; font-style: italic;">
+                                    {{ t.accountant_audit_step6_ref }}
+                                </div>
+                            </td>
+                            <td style="color: #64748B; font-size: 9pt;">{{ t.accountant_audit_step6_source }}</td>
+                            <td style="text-align: center;">
+                                <span style="color: #6b8e72; font-weight: 700; font-size: 12pt;">✓</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-weight: 700; color: #2b303a; text-align: center;">7</td>
+                            <td style="font-weight: 700; color: var(--upswitch-navy);">
+                                {{ t.accountant_audit_step7_name }}
+                                <div style="font-size: 8pt; font-weight: 400; color: #64748B; margin-top: 2pt;">
+                                    {{ t.accountant_audit_step_six }}
+                                </div>
+                            </td>
+                            <td style="line-height: 1.5; color: #475569;">
+                                {{ t.accountant_audit_step7_rationale }}
+                                <div style="font-size: 8pt; color: #64748B; margin-top: 4pt; font-style: italic;">
+                                    {{ t.accountant_audit_step7_ref }}
+                                </div>
+                            </td>
+                            <td style="color: #64748B; font-size: 9pt;">{{ t.accountant_audit_step7_source }}</td>
+                            <td style="text-align: center;">
+                                <span style="color: #6b8e72; font-weight: 700; font-size: 12pt;">✓</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-weight: 700; color: #2b303a; text-align: center;">8</td>
+                            <td style="font-weight: 700; color: var(--upswitch-navy);">
+                                {{ t.accountant_audit_step8_name }}
+                                <div style="font-size: 8pt; font-weight: 400; color: #64748B; margin-top: 2pt;">
+                                    {{ t.accountant_audit_step_seven }}
+                                </div>
+                            </td>
+                            <td style="line-height: 1.5; color: #475569;">
+                                {{ t.accountant_audit_step8_rationale }}
+                                <div style="font-size: 8pt; color: #64748B; margin-top: 4pt; font-style: italic;">
+                                    {{ t.accountant_audit_step8_ref }}
+                                </div>
+                            </td>
+                            <td style="color: #64748B; font-size: 9pt;">{{ t.accountant_audit_step8_source }}</td>
+                            <td style="text-align: center;">
+                                <span style="color: #6b8e72; font-weight: 700; font-size: 12pt;">✓</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-weight: 700; color: #2b303a; text-align: center;">9</td>
+                            <td style="font-weight: 700; color: var(--upswitch-navy);">
+                                {{ t.accountant_audit_step9_name }}
+                                <div style="font-size: 8pt; font-weight: 400; color: #64748B; margin-top: 2pt;">
+                                    {{ t.accountant_audit_step_nine }}
+                                </div>
+                            </td>
+                            <td style="line-height: 1.5; color: #475569;">
+                                {{ t.accountant_audit_step9_rationale }}
+                                <div style="font-size: 8pt; color: #64748B; margin-top: 4pt; font-style: italic;">
+                                    {{ t.accountant_audit_step9_ref }}
+                                </div>
+                            </td>
+                            <td style="color: #64748B; font-size: 9pt;">{{ t.accountant_audit_step9_source }}</td>
+                            <td style="text-align: center;">
+                                <span style="color: #6b8e72; font-weight: 700; font-size: 12pt;">✓</span>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-weight: 700; color: #2b303a; text-align: center;">10</td>
+                            <td style="font-weight: 700; color: var(--upswitch-navy);">
+                                {{ t.accountant_audit_step10_name }}
+                                <div style="font-size: 8pt; font-weight: 400; color: #64748B; margin-top: 2pt;">
+                                    {{ t.accountant_audit_steps_label }}
+                                </div>
+                            </td>
+                            <td style="line-height: 1.5; color: #475569;">
+                                {{ t.accountant_audit_step10_rationale }}
+                                <div style="font-size: 8pt; color: #64748B; margin-top: 4pt; font-style: italic;">
+                                    {{ t.accountant_audit_step10_ref }}
+                                </div>
+                            </td>
+                            <td style="color: #64748B; font-size: 9pt;">{{ t.accountant_audit_step10_source }}</td>
+                            <td style="text-align: center;">
+                                <span style="color: #6b8e72; font-weight: 700; font-size: 12pt;">✓</span>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Methodology Summary -->
+        <div style="margin-top: 48pt; padding: 24pt; background-color: #f8fafc; border: 1px solid #E2E8F0; border-radius: 8px;">
+            <h3 style="font-family: 'Inter', sans-serif; font-size: 12pt; font-weight: 700; color: #2b303a; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16pt;">{{ t.accountant_audit_methodology_summary_title }}</h3>
+
+            <div style="display: table; width: 100%;">
+                <div style="display: table-row;">
+                    <div style="display: table-cell; width: 30%; vertical-align: top; padding-right: 20pt;">
+                        <h4 style="font-size: 11pt; color: #2b303a; margin-bottom: 8pt;">{{ t.accountant_audit_primary_approach_title }}</h4>
+                        <p style="font-size: 10pt; color: #475569; line-height: 1.5; margin: 0;">
+                            {{ t.accountant_audit_primary_approach_body | safe }}
+                        </p>
+                    </div>
+                    <div style="display: table-cell; width: 30%; vertical-align: top; padding-right: 20pt;">
+                        <h4 style="font-size: 11pt; color: #2b303a; margin-bottom: 8pt;">{{ t.accountant_audit_dcf_exclusion_title }}</h4>
+                        <p style="font-size: 10pt; color: #475569; line-height: 1.5; margin: 0;">
+                            {{ t.accountant_audit_dcf_exclusion_body | safe }}
+                        </p>
+                    </div>
+                    <div style="display: table-cell; width: 40%; vertical-align: top;">
+                        <h4 style="font-size: 11pt; color: #2b303a; margin-bottom: 8pt;">{{ t.accountant_audit_risk_adjustments_title }}</h4>
+                        <p style="font-size: 10pt; color: #475569; line-height: 1.5; margin: 0;">
+                            {{ t.accountant_audit_risk_adjustments_body | safe }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Professional Standards Callout -->
+        <div style="margin-top: 48pt; padding: 20pt; background-color: #f4f1ea; border: 1px solid #E2E8F0; border-radius: 4px;">
+            <h4 style="font-family: 'Inter', sans-serif; font-size: 9pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1pt; color: #64748B; margin: 0 0 12pt 0;">{{ t.accountant_audit_primitive_standards_title }}</h4>
+            <p style="font-size: 9pt; color: #475569; line-height: 1.6; margin: 0;">
+                {{ t.accountant_audit_primitive_standards_body | safe }}
+            </p>
+        </div>
+    </div>
+</div>

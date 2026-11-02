@@ -1,0 +1,9 @@
+<div class="a4-page last-report-page" style="page-break-before:always;">
+    <div class="section-header"><span class="section-number">C</span><h1 class="section-title">{{ sealed_memorandum.labels.limitations }}</h1></div>
+    <div class="pdf-card"><p>{{ sealed_memorandum.attestation.no_ivs }}</p></div>
+    {% if sealed_memorandum.scope.limitations %}<ul style="margin-top:14pt;">{% for limitation in sealed_memorandum.scope.limitations %}<li>{{ limitation }}</li>{% endfor %}</ul>{% endif %}
+    <div style="margin-top:30mm; padding-top:10pt; border-top:1pt solid #dfe2e7;">
+        <p class="pdf-mono">{{ sealed_memorandum.labels.reference }} {{ sealed_memorandum.identity.report_id }}</p>
+        <p class="pdf-prose-small">{{ sealed_memorandum.labels.confidential }} · {{ sealed_memorandum.identity.advisor_firm }} × Upswitch</p>
+    </div>
+</div>

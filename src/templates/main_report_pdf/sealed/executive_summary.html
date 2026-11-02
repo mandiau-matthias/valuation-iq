@@ -1,0 +1,21 @@
+<div class="a4-page" style="page-break-before:always;">
+    <div class="section-header"><span class="section-number">04</span><h1 class="section-title">{{ sealed_memorandum.labels.summary }}</h1></div>
+    <div class="value-hero keep-together">
+        <div class="value-hero-label">{{ sealed_memorandum.labels.equity_value }}</div>
+        <div class="value-hero-amount" data-sealed-field-id="{{ sealed_memorandum.conclusion.equity_mid_field_id }}">{{ sealed_memorandum.conclusion.equity_mid }}</div>
+        <div class="value-hero-range">
+            <span data-sealed-field-id="{{ sealed_memorandum.conclusion.equity_low_field_id }}">{{ sealed_memorandum.conclusion.equity_low }}</span>
+            <span> — </span>
+            <span data-sealed-field-id="{{ sealed_memorandum.conclusion.equity_high_field_id }}">{{ sealed_memorandum.conclusion.equity_high }}</span>
+        </div>
+        <div class="value-hero-basis">{{ sealed_memorandum.conclusion.range_classification }}</div>
+    </div>
+    <div class="pdf-grid pdf-grid-2" style="margin-top:18pt;">
+        <div class="pdf-card pdf-card-primary"><div class="pdf-card-eyebrow">{{ sealed_memorandum.labels.selected_method }}</div><div class="pdf-card-headline">{{ sealed_memorandum.conclusion.selected_method }}</div></div>
+        <div class="pdf-card"><div class="pdf-card-eyebrow">{{ sealed_memorandum.labels.enterprise_value }}</div><div class="pdf-card-headline" data-sealed-field-id="{{ sealed_memorandum.conclusion.enterprise_value_field_id }}">{{ sealed_memorandum.conclusion.enterprise_value }}</div></div>
+    </div>
+    <div class="pdf-grid pdf-grid-2" style="margin-top:16pt;">
+        <div class="pdf-card"><div class="pdf-card-eyebrow">{{ sealed_memorandum.labels.value_drivers }}</div>{% if sealed_memorandum.conclusion.principal_value_drivers %}<ul>{% for item in sealed_memorandum.conclusion.principal_value_drivers %}<li>{{ item }}</li>{% endfor %}</ul>{% else %}<p>{{ sealed_memorandum.labels.none }}</p>{% endif %}</div>
+        <div class="pdf-card pdf-card-muted"><div class="pdf-card-eyebrow">{{ sealed_memorandum.labels.principal_caveats }}</div>{% if sealed_memorandum.conclusion.principal_caveats %}<ul>{% for item in sealed_memorandum.conclusion.principal_caveats %}<li>{{ item }}</li>{% endfor %}</ul>{% else %}<p>{{ sealed_memorandum.labels.none }}</p>{% endif %}</div>
+    </div>
+</div>

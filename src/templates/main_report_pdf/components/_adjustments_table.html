@@ -1,0 +1,140 @@
+{# 
+    EBITDA ADJUSTMENTS TABLE COMPONENT
+    Detailed breakdown of all normalization adjustments
+    
+    Expected context variables:
+    - t: ReportTranslations object
+    - ebitda_adjustments: list of dicts with {id, label, value, type, category, source, source_ref, status, approved_by, description}
+    
+    All inline styles use hardcoded values for WeasyPrint compatibility.
+#}
+
+{% set _is_sde = is_sde_methodology|default(has_sde|default(is_sde|default(false))) %}
+{% set _is_dcf_only = is_dcf_only_methodology|default(false) %}
+{% set _sde_bridge = sde_bridge|default([]) %}
+{% set _owner_comp_pending = show_owner_comp_pending_note|default(false) and not _is_sde and not _is_dcf_only %}
+{% if (not ebitda_adjustments or ebitda_adjustments|length == 0) and _is_sde and _sde_bridge|length > 0 %}
+{# SDE channel fallback: when no EBITDA normalization adjustments are
+   present (typical for an SDE-eligible micro/small business that runs the
+   SDE channel) but the SDE bridge contains an owner-compensation
+   add-back, render the bridge here so the report never shows €0
+   adjustments while a non-zero owner add-back was in fact applied. #}
+<table>
+    <thead>
+        <tr>
+            <th style="width: 60%;">{{ t.adj_description }}</th>
+            <th style="width: 20%;">{{ t.adj_category }}</th>
+            <th class="text-right" style="width: 20%;">{{ t.adj_amount }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in _sde_bridge %}
+            {% if row.kind == 'anchor' %}
+            <tr>
+                <td><strong>{{ row.label }}</strong></td>
+                <td><span class="badge badge-primary">{{ t.adj_base }}</span></td>
+                <td class="text-right tabular" style="white-space: nowrap;"><strong>{{ row.amount|format_currency }}</strong></td>
+            </tr>
+            {% elif row.kind == 'total' %}
+            <tr class="row-result">
+                <td><strong>{{ row.label }}</strong></td>
+                <td><span class="badge" style="background: hsla({{ teal_hsl }}, 0.2); color: hsl({{ teal_hsl }});">{{ t.adj_result }}</span></td>
+                <td class="text-right tabular" style="white-space: nowrap;"><strong>{{ row.amount|format_currency }}</strong></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td>{{ row.label }}</td>
+                <td><span class="badge badge-primary">{{ t.adj_owner|default('Eigenaar') }}</span></td>
+                <td class="text-right tabular" style="color: hsl(143, 40%, 42%); white-space: nowrap;"><span style="white-space: nowrap;">+{{ row.amount|format_currency }}</span></td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+{% elif (not ebitda_adjustments or ebitda_adjustments|length == 0) and _owner_comp_pending %}
+{% elif not ebitda_adjustments or ebitda_adjustments|length == 0 %}
+<div class="callout callout-info" style="margin: 12pt 0;">
+    <p style="font-size: 8pt; margin: 0;">
+        {{ t.adj_no_adjustments }}
+    </p>
+</div>
+{% else %}
+<table>
+    <thead>
+        <tr>
+            <th style="width: 40%;">{{ t.adj_description }}</th>
+            <th style="width: 20%;">{{ t.adj_source }}</th>
+            <th style="width: 20%;">{{ t.adj_category }}</th>
+            <th class="text-right" style="width: 20%;">{{ t.adj_amount }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for adj in ebitda_adjustments|default([]) %}
+            {% if adj.type == 'result' %}
+            <tr class="row-result">
+                <td><strong>{{ adj.label }}</strong></td>
+                <td>—</td>
+                <td><span class="badge" style="background: hsla({{ teal_hsl }}, 0.2); color: hsl({{ teal_hsl }});">{{ t.adj_result }}</span></td>
+                <td class="text-right tabular" style="white-space: nowrap;"><strong>{{ adj.value|format_currency }}</strong></td>
+            </tr>
+            {% elif adj.type == 'base' %}
+            <tr>
+                <td><strong>{{ adj.label }}</strong></td>
+                <td>
+                    {% if adj.source_ref %}
+                    <span style="font-size: 8pt; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: hsl(224, 10%, 45%);">
+                        {{ adj.source_ref }}
+                    </span>
+                    {% else %}—{% endif %}
+                </td>
+                <td><span class="badge badge-primary">{{ t.adj_base }}</span></td>
+                <td class="text-right tabular" style="white-space: nowrap;"><strong>{{ adj.value|format_currency }}</strong></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td>
+                    {{ adj.label }}
+                    {% if adj.description %}
+                    <span style="display: block; font-size: 8pt; color: hsl(224, 10%, 45%); margin-top: 2pt;">
+                        {{ adj.description }}
+                    </span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span style="font-size: 8pt; font-family: 'JetBrains Mono', 'Noto Sans', 'Noto Sans Symbols 2', 'Satoshi', monospace; color: {% if adj.source == 'yuki' %}hsl({{ teal_hsl }}){% elif adj.source == 'exact' %}hsl(210, 60%, 50%){% elif adj.source == 'suggestion' %}hsl(37, 65%, 55%){% else %}hsl(224, 10%, 45%){% endif %}; display: block;">
+                        {{ adj.source_ref|default(t.adj_manual if adj.source == 'manual' else '—') }}
+                    </span>
+                </td>
+                <td>
+                    {% set cat = adj.category|default('') %}
+                    {% if cat in ('owner', 'owner_compensation_adjustment', 'salary') %}
+                    <span class="badge badge-primary">{{ t.adj_owner|default('Eigenaar') }}</span>
+                    {% elif cat in ('nonRecurring', 'one_time_expenses', 'non_recurring_revenue', 'non_recurring_costs', 'one-time', 'unusual_transactions') %}
+                    <span class="badge badge-warning">{{ t.adj_non_recurring|default('Eenmalig') }}</span>
+                    {% elif cat in ('personal_expenses', 'family_expenses', 'personal') %}
+                    <span class="badge badge-warning">{{ t.adj_personal|default('Persoonlijk') }}</span>
+                    {% elif cat in ('related_party_transactions') %}
+                    <span class="badge badge-info">{{ t.adj_related_party|default('Verbonden') }}</span>
+                    {% elif cat in ('depreciation_adjustment', 'depreciation') %}
+                    <span class="badge badge-info">{{ t.adj_depreciation|default('Afschrijving') }}</span>
+                    {% elif cat in ('tax_optimization_reversal') %}
+                    <span class="badge badge-info">{{ t.adj_tax|default('Fiscaal') }}</span>
+                    {% elif cat in ('discretionary_expenses') %}
+                    <span class="badge badge-warning">{{ t.adj_discretionary|default('Discretionair') }}</span>
+                    {% elif cat in ('accounting') %}
+                    <span class="badge badge-info">{{ t.adj_accounting|default('Boekhoudkundig') }}</span>
+                    {% elif cat in ('real_estate_carve_out') %}
+                    <span class="badge badge-info">{{ t.adj_real_estate|default('Vastgoed') }}</span>
+                    {% else %}
+                    <span class="badge badge-secondary">{{ t.adj_other|default('Overig') }}</span>
+                    {% endif %}
+                </td>
+                <td class="text-right tabular" style="color: {% if adj.type == 'add' %}hsl(143, 40%, 42%){% else %}hsl(6, 55%, 50%){% endif %}; white-space: nowrap;">
+                    <span style="white-space: nowrap;">{% if adj.type == 'add' %}+{% else %}−{% endif %}{{ adj.value|abs|format_currency }}</span>
+                </td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}

@@ -1,0 +1,8 @@
+{% set _direct_lang = (locale|default('nl')|lower)[:2] %}
+<span data-value-basis="direct_equity">
+    {% if _direct_lang == 'fr' %}Conclusion directe en capitaux propres ; la valeur d’entreprise ne s’applique pas.
+    {% elif _direct_lang == 'en' %}Direct equity conclusion; enterprise value is not applicable.
+    {% else %}Directe eigenvermogensconclusie; ondernemingswaarde is niet van toepassing.
+    {% endif %}
+    {% if methodology_statement|default(false) %} {{ methodology_statement }}{% endif %}
+</span>

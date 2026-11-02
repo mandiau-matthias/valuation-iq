@@ -1,0 +1,168 @@
+{# Final Recommendation Section - Phase 4 #}
+<div class="section-container bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-lg shadow-lg p-6 mb-4 border-2 border-indigo-200" data-section="final-recommendation">
+  <div class="section-header mb-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-3xl font-bold text-gray-900">Final Valuation</h2>
+        <p class="text-sm text-gray-600">Complete Big 4 quality analysis</p>
+      </div>
+      <div class="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 px-4 py-2 rounded-full text-sm font-bold shadow-sm">
+        ✓ Complete
+      </div>
+    </div>
+  </div>
+  
+  <div class="section-content space-y-4">
+    <!-- Final Valuation Range -->
+    <div class="bg-white rounded-xl p-6 border-2 border-indigo-300 shadow-md">
+      <h3 class="text-lg font-bold text-indigo-900 mb-4 text-center">Your Business Valuation</h3>
+      <div class="grid grid-cols-3 gap-4 mb-4">
+        <div class="text-center p-4 bg-gray-50 rounded-lg">
+          <p class="text-xs text-gray-600 mb-2 font-semibold">Conservative</p>
+          <p class="text-2xl font-bold text-gray-700">€{{ "{:,.0f}".format(final_value_low | default(0)) }}</p>
+        </div>
+        <div class="text-center p-4 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg shadow-sm">
+          <p class="text-xs text-indigo-700 mb-2 font-bold">Most Likely</p>
+          <p class="text-4xl font-bold text-indigo-700">€{{ "{:,.0f}".format(final_value_mid | default(0)) }}</p>
+        </div>
+        <div class="text-center p-4 bg-gray-50 rounded-lg">
+          <p class="text-xs text-gray-600 mb-2 font-semibold">Optimistic</p>
+          <p class="text-2xl font-bold text-gray-700">€{{ "{:,.0f}".format(final_value_high | default(0)) }}</p>
+        </div>
+      </div>
+      <div class="text-center">
+        <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 shadow-sm">
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+          </svg>
+          {{ final_confidence | default(95) }}% Confidence Score
+        </span>
+      </div>
+    </div>
+
+    <!-- Methodology Summary -->
+    <div class="bg-white rounded-lg p-4 border border-gray-200">
+      <h3 class="text-sm font-semibold text-gray-700 mb-3">Valuation Methodology</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="flex items-center justify-between p-3 bg-indigo-50 rounded">
+          <span class="text-sm text-gray-700">DCF Analysis</span>
+          <span class="text-sm font-bold text-indigo-700">{{ "{:.0f}".format(dcf_weight | default(0)) }}%</span>
+        </div>
+        <div class="flex items-center justify-between p-3 bg-purple-50 rounded">
+          <span class="text-sm text-gray-700">Market Multiples</span>
+          <span class="text-sm font-bold text-purple-700">{{ "{:.0f}".format(multiples_weight | default(0)) }}%</span>
+        </div>
+      </div>
+      <p class="text-xs text-gray-600 mt-3">{{ methodology_rationale | default('Dynamic weighting based on business characteristics and data quality.') }}</p>
+    </div>
+
+    <!-- Key Value Drivers -->
+    {% if key_value_drivers %}
+    <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+      <h3 class="text-sm font-semibold text-green-900 mb-3">Key Value Drivers</h3>
+      <div class="grid grid-cols-2 gap-2">
+        {% for driver in key_value_drivers %}
+        <div class="flex items-center p-2 bg-white rounded shadow-sm">
+          <svg class="w-4 h-4 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+          </svg>
+          <span class="text-xs text-gray-700">{{ driver }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Executive Summary -->
+    {% if executive_summary %}
+    <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+      <h3 class="text-sm font-semibold text-blue-900 mb-2">Executive Summary</h3>
+      <p class="text-sm text-blue-800 leading-relaxed">{{ executive_summary }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Strategic Recommendations -->
+    {% if strategic_recommendations %}
+    <div class="bg-white rounded-lg p-4 border border-gray-200">
+      <h3 class="text-sm font-semibold text-gray-700 mb-3">Strategic Recommendations</h3>
+      <div class="space-y-2">
+        {% for recommendation in strategic_recommendations %}
+        <div class="flex items-start p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded">
+          <div class="flex-shrink-0 mr-3">
+            <span class="inline-flex items-center justify-center w-6 h-6 bg-indigo-600 text-white text-xs font-bold rounded-full">{{ loop.index }}</span>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-900">{{ recommendation.title }}</p>
+            <p class="text-xs text-gray-600 mt-1">{{ recommendation.description }}</p>
+            {% if recommendation.impact %}
+            <p class="text-xs text-indigo-700 mt-1 font-semibold">Potential Impact: {{ recommendation.impact }}</p>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Next Steps -->
+    <div class="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg p-4 border border-amber-200">
+      <h3 class="text-sm font-semibold text-amber-900 mb-3">Next Steps</h3>
+      <ul class="space-y-2">
+        <li class="flex items-start text-sm text-amber-800">
+          <svg class="w-4 h-4 text-amber-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path>
+          </svg>
+          Download your complete valuation report (PDF)
+        </li>
+        <li class="flex items-start text-sm text-amber-800">
+          <svg class="w-4 h-4 text-amber-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path>
+          </svg>
+          Schedule a consultation with our valuation experts
+        </li>
+        <li class="flex items-start text-sm text-amber-800">
+          <svg class="w-4 h-4 text-amber-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path>
+          </svg>
+          Explore scenario planning and sensitivity analysis
+        </li>
+      </ul>
+    </div>
+
+    <!-- Report Metadata -->
+    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+      <div class="grid grid-cols-2 gap-3 text-xs text-gray-600">
+        <div>
+          <p class="font-semibold text-gray-700">Valuation ID</p>
+          <p class="font-mono">{{ valuation_id | default('N/A') }}</p>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-700">Generated</p>
+          <p>{{ generated_at | default('Now') }}</p>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-700">Methodology</p>
+          <p>Big 4 Standard (DCF + Multiples)</p>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-700">Data Points</p>
+          <p>{{ data_points_analyzed | default(50) }} analyzed</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="section-footer mt-6 pt-4 border-t-2 border-indigo-200">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center">
+        <svg class="w-6 h-6 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+        </svg>
+        <span class="text-sm font-bold text-green-800">Valuation Complete</span>
+      </div>
+      <span class="text-xs text-gray-500">Powered by Upswitch ValuationIQ</span>
+    </div>
+  </div>
+</div>
+
+

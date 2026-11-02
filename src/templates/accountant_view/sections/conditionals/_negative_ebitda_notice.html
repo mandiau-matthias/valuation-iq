@@ -1,0 +1,17 @@
+{# Special handling for negative EBITDA #}
+{% if negative_ebitda_strategy == 'revenue_multiples' %}
+<div class="report-callout">
+    <p style="font-family: 'Inter', sans-serif; margin: 0; color: #2b303a; font-weight: 700;">{{ t.accountant_cond_neg_revenue_title }}</p>
+    <p style="font-family: 'Inter', sans-serif; margin: 8pt 0 0 0; color: #4b5563;">{{ t.accountant_cond_neg_revenue_body }}</p>
+</div>
+{% elif negative_ebitda_strategy == 'high_risk' %}
+<div class="report-callout warning">
+    <p style="font-family: 'Inter', sans-serif; margin: 0; color: #d9a558; font-weight: 700;">{{ t.accountant_cond_neg_high_risk_title }}</p>
+    <p style="font-family: 'Inter', sans-serif; margin: 8pt 0 0 0; color: #d9a558;">{{ t.accountant_cond_neg_high_risk_body }}</p>
+</div>
+{% elif negative_ebitda_strategy == 'not_determinable' %}
+<div class="report-callout danger">
+    <p style="font-family: 'Inter', sans-serif; margin: 0; color: #b85c56; font-weight: 700;">{{ t.accountant_cond_neg_not_determinable_title }}</p>
+    <p style="font-family: 'Inter', sans-serif; margin: 8pt 0 0 0; color: #b85c56;">{{ t.accountant_cond_neg_not_determinable_body }}</p>
+</div>
+{% endif %}

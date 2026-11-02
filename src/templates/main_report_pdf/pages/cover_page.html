@@ -1,0 +1,514 @@
+{# 
+    COVER PAGE - ABSOLUTE POSITIONING FOR WEASYPRINT COMPATIBILITY
+    Page 1 of 5
+    
+    Uses position: absolute within a fixed 297mm × 210mm container.
+    Three zones (top bar, hero, bottom bar) are each absolutely positioned
+    so content can never overflow to a second page.
+#}
+
+{% macro cover_value_amount(value) -%}
+{% set _value = value|string %}
+<span class="cover-value-amount{% if _value|length > 17 %} cover-value-amount--very-long cover-value-amount--extra-long{% elif _value|length > 13 %} cover-value-amount--very-long{% elif _value|length > 9 %} cover-value-amount--long{% endif %}">{{ _value }}</span>
+{%- endmacro %}
+
+{% macro cover_value_range(low, high) -%}
+{% set _range = (low|string) ~ ' — ' ~ (high|string) %}
+<span class="cover-value-range{% if _range|length > 32 %} cover-value-range--long cover-value-range--very-long{% elif _range|length > 24 %} cover-value-range--long{% endif %}">{{ _range }}</span>
+{%- endmacro %}
+
+<div class="cover-page{% if not show_cover_price %} cover-page--slim{% endif %}" style="page: cover;">
+    {% set is_sde_method = is_sde_methodology|default(has_sde|default(false)) %}
+    {% set is_asset_anchored_method = is_asset_anchored_methodology|default(is_asset_methodology|default(false)) %}
+    {# Meerwaarde-tax cover variant — see screen twin for rationale.
+       Hero leads with forfaitaire referentiewaarde; M&A value is a
+       secondary chip. Fires only when fiscal_4x is the selected method
+       AND the forfait headline is computable (book equity present). #}
+    {% set is_fiscal_method = (selected_method|default('') == 'fiscal_4x') and fiscal_value_complete|default(false) %}
+    {# Emoji watermark intentionally omitted from the PDF: WeasyPrint routes
+       emoji-presentation codepoints to the host colour-emoji font regardless of
+       CSS, which breaks deterministic embedding. Cover stays type-only. #}
+
+    {# ── Top Bar: Logo + Accountant Co-branding ── #}
+    {# A firm using the native Upswitch brand is not a co-brand. Rendering its
+       name after the platform logo produces the redundant "Upswitch ×
+       Upswitch" lock-up. Keep genuine third-party firm branding intact. #}
+    {% set _show_cover_cobrand = accountant_firm_name and (accountant_firm_name|lower|trim != 'upswitch') %}
+    <div class="cover-top-bar">
+        <table>
+            <tr>
+                <td>
+                    <span class="cover-branding">
+                        <svg class="cover-logo" viewBox="0 0 381 112" fill="none" xmlns="http://www.w3.org/2000/svg" style="height: 28pt; width: auto;">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M348.084 35.9104V23.4579C338.664 23.4579 335.862 23.5461 335.779 23.6551C335.696 23.7641 335.66 39.2026 335.701 57.9644L335.774 92.0765C344.611 92.1906 347.41 92.1647 347.695 92.0972C348.206 91.9701 348.214 91.7548 348.214 77.6238C348.214 63.4565 348.221 63.2567 348.802 61.3343C349.126 60.2655 349.665 58.9217 350.002 58.3509C350.341 57.7802 351.183 56.7944 351.875 56.1588C352.57 55.5232 353.778 54.7137 354.563 54.3609C355.467 53.9536 356.649 53.676 357.802 53.5982C359.16 53.5074 360.073 53.6112 361.431 54.0159C362.747 54.4076 363.592 54.8616 364.512 55.6736C365.206 56.2911 366.046 57.2613 366.378 57.8321C366.707 58.4028 367.184 59.6299 367.438 60.5561C367.852 62.0789 367.899 63.6951 367.904 77.1594L367.909 92.0765H380.608C380.73 66.4476 380.657 60.4549 380.468 58.9995C380.313 57.7854 379.947 55.9175 379.662 54.8487C379.375 53.7772 378.641 51.8523 378.03 50.5681C377.117 48.6587 376.589 47.9271 375.114 46.547C374.124 45.6208 372.507 44.4326 371.519 43.906C370.532 43.382 368.85 42.71 367.78 42.4143C366.424 42.0381 365.072 41.8773 363.309 41.8773C361.92 41.8773 359.878 42.0615 358.774 42.2846C357.67 42.5077 355.892 43.1122 354.822 43.6258C353.303 44.3574 352.383 45.063 350.611 46.8505C349.017 48.4615 348.304 49.0245 348.214 48.7521C348.141 48.5394 348.084 42.7593 348.084 35.9104ZM268.393 43.0447L268.528 27.8682C267.621 27.8993 266.247 28.4104 264.895 29.0201C263.542 29.6323 261.238 30.6752 259.776 31.3367C258.315 31.9957 256.83 32.7143 256.472 32.927L255.824 33.3162L255.695 43.0447C249.871 43.0836 247.974 43.1692 247.725 43.2626C247.313 43.4183 247.272 43.919 247.272 48.6224V53.8109H255.565C255.739 78.0103 255.827 80.6824 256.156 81.9588C256.374 82.8149 256.684 83.9227 256.843 84.4234C257.003 84.9241 257.475 85.8554 257.89 86.4988C258.307 87.1422 259.149 88.1513 259.763 88.7454C260.375 89.3395 261.461 90.1697 262.173 90.5874C262.886 91.0051 264.519 91.6692 265.802 92.0609C267.439 92.5616 268.943 92.8159 270.855 92.9118C272.353 92.9871 274.393 92.9222 275.39 92.764C276.388 92.6083 277.816 92.2996 278.565 92.0843L279.926 91.6874V81.0508C278.218 81.2402 277.023 81.3725 276.168 81.4659C275.313 81.5567 273.913 81.5515 273.058 81.4477C271.653 81.2817 271.389 81.1442 270.321 80.0546C269.588 79.3023 268.974 78.3554 268.702 77.5485C268.31 76.3967 268.269 75.0114 268.328 65.096L268.393 53.9407L279.926 53.8109V43.1744L268.393 43.0447ZM86.5947 42.4065C84.8946 42.0719 83.0002 41.8851 81.5411 41.9084C80.2583 41.9292 78.9521 42.0122 78.6386 42.0874C78.325 42.1652 77.2754 42.4506 76.3062 42.7204C75.3369 42.9928 73.7845 43.631 72.8594 44.1395C71.8564 44.6921 70.3248 45.9166 69.0757 47.1696C67.0776 49.1672 66.9661 49.2398 66.8262 48.6224C66.7433 48.267 66.593 46.9231 66.4919 45.639C66.3882 44.3548 66.1757 43.2185 66.0202 43.1147C65.8621 43.0084 63.3405 42.9228 60.4198 42.9228C57.4965 42.9228 54.8454 42.9798 54.524 43.0473C54.0083 43.1588 53.9409 43.3327 53.9461 44.5364C53.9487 45.2862 54.0601 46.6585 54.1897 47.5847C54.3219 48.5108 54.4644 63.2489 54.5085 80.3348C54.5603 100.76 54.6769 111.422 54.848 111.466C54.9905 111.502 57.8179 111.505 61.1325 111.469L67.1579 111.404L67.1527 86.3691C69.6665 88.8259 70.9805 89.9284 71.6932 90.4058C72.4058 90.8805 73.7172 91.5965 74.6087 91.9987C75.5002 92.3982 76.9566 92.8989 77.8481 93.1116C78.7396 93.3217 80.5174 93.4956 81.8003 93.493C83.1894 93.493 85.076 93.2802 86.4651 92.9689C87.7479 92.6809 89.4972 92.1076 90.3524 91.6951C91.2077 91.28 92.6071 90.4888 93.4623 89.9336C94.3176 89.3784 95.7585 88.1747 96.6629 87.2563C97.57 86.3405 98.9202 84.6569 99.6665 83.5154C100.413 82.3739 101.291 80.7966 101.621 80.0131C101.947 79.2296 102.434 77.8287 102.704 76.9C102.971 75.9738 103.375 74.106 103.598 72.7491C103.821 71.3923 103.997 69.1172 103.984 67.6903C103.974 66.2635 103.839 64.1621 103.683 63.0206C103.531 61.8791 103.178 60.0709 102.901 58.9995C102.624 57.9306 102.105 56.2963 101.75 55.3675C101.395 54.4413 100.786 53.1364 100.395 52.4671C100.003 51.8004 98.9539 50.3709 98.0624 49.2891C97.1709 48.2099 95.7714 46.8038 94.9525 46.163C94.1335 45.5248 92.5294 44.539 91.3891 43.9709C89.9715 43.2678 88.4554 42.7723 86.5947 42.4065ZM71.0193 56.9189C71.8175 56.1328 73.1703 55.1185 74.0256 54.6645C74.9819 54.1586 76.2154 53.7591 77.2339 53.6267C78.1436 53.5074 79.543 53.4944 80.3438 53.5982C81.1446 53.702 82.3238 53.9744 82.9665 54.2001C83.6092 54.4284 84.7054 54.9887 85.4077 55.4453C86.1075 55.9019 87.1726 56.8592 87.7712 57.5726C88.3725 58.2861 89.0981 59.3367 89.3858 59.9075C89.6709 60.4782 90.0985 61.5886 90.3317 62.372C90.5676 63.1555 90.8293 64.8496 90.92 66.1337C91.0159 67.5269 90.9485 69.4622 90.7515 70.9332C90.5442 72.4975 90.1607 73.9659 89.7071 74.9543C89.3132 75.8104 88.4114 77.1542 87.7039 77.9377C86.986 78.7367 85.7446 79.7251 84.8868 80.1843C84.0446 80.6357 82.6555 81.2065 81.8003 81.4529C80.6289 81.7876 79.7659 81.8576 78.3017 81.7331C76.8659 81.6086 75.8837 81.3362 74.5439 80.6928C73.5461 80.2129 72.2633 79.4761 71.6932 79.0584C71.123 78.6381 70.1926 77.603 69.6277 76.7547C69.0627 75.9064 68.3189 74.4536 67.9768 73.5274C67.4741 72.1732 67.3264 71.1796 67.2253 68.4686C67.1294 65.8198 67.1968 64.7069 67.5492 63.28C67.7954 62.2812 68.35 60.7636 68.7828 59.9075C69.2156 59.0514 70.2211 57.7075 71.0193 56.9189ZM135.834 42.7567C133.728 42.173 132.738 42.0615 128.967 41.981C125.359 41.9032 124.162 41.9733 122.358 42.3728C121.145 42.64 119.513 43.0992 118.73 43.3949C117.947 43.6907 116.605 44.3859 115.75 44.9437C114.895 45.4989 113.459 46.7 112.56 47.6132C111.614 48.5705 110.642 49.8728 110.258 50.6978C109.893 51.4813 109.437 52.8848 109.242 53.8109C109.051 54.7371 108.89 56.4312 108.89 57.5726C108.89 58.7141 109.064 60.377 109.273 61.2695C109.486 62.1619 109.877 63.3293 110.144 63.8638C110.411 64.3982 111.215 65.48 111.927 66.2635C112.64 67.0469 113.967 68.1313 114.876 68.6683C115.784 69.2054 117.46 70.007 118.601 70.4454C119.741 70.8864 123.299 71.8204 126.505 72.5234C129.713 73.2239 132.966 74.0592 133.738 74.3757C134.508 74.6948 135.472 75.333 135.876 75.7974C136.324 76.3111 136.674 77.0738 136.773 77.7431C136.861 78.3502 136.806 79.253 136.653 79.7537C136.501 80.2544 136.05 80.9885 135.65 81.3881C135.254 81.7876 134.461 82.3272 133.891 82.5892C133.321 82.8512 132.154 83.2093 131.299 83.3857C130.304 83.5906 129.045 83.6399 127.801 83.5232C126.733 83.4246 125.274 83.1236 124.561 82.859C123.848 82.5918 122.693 81.8732 121.99 81.2584C121.252 80.6124 120.461 79.598 120.114 78.8457C119.782 78.1323 119.513 77.2269 119.51 76.8351C119.508 76.4434 119.391 76.062 119.248 75.992C119.106 75.9219 116.512 76.0984 113.482 76.3889C110.453 76.6795 107.77 76.97 107.522 77.0375C107.161 77.1335 107.102 77.3332 107.231 78.0025C107.319 78.4669 107.623 79.5461 107.905 80.4022C108.188 81.2584 108.758 82.6593 109.172 83.5154C109.587 84.3715 110.479 85.7413 111.155 86.5585C111.829 87.3757 113.14 88.6313 114.065 89.3473C115.177 90.2086 116.652 91.0025 118.406 91.6874C119.868 92.2581 122.084 92.9015 123.33 93.1168C124.577 93.3321 127.057 93.5085 128.837 93.5085C130.62 93.5085 133.069 93.3373 134.28 93.1298C135.49 92.9222 137.358 92.4371 138.426 92.0505C139.496 91.664 141.069 90.9376 141.925 90.4369C142.78 89.9362 144.236 88.7558 145.164 87.8167C146.092 86.875 147.217 85.4066 147.668 84.5505C148.119 83.697 148.694 82.2961 148.948 81.44C149.264 80.3659 149.404 79.0403 149.394 77.1594C149.386 75.0347 149.254 74.0644 148.803 72.7491C148.481 71.823 147.795 70.4299 147.276 69.6594C146.755 68.8863 145.688 67.6747 144.905 66.9665C144.122 66.2583 142.956 65.4151 142.313 65.096C141.671 64.7744 140.331 64.2218 139.333 63.8663C138.335 63.5109 136.063 62.9117 134.28 62.5303C132.499 62.1515 129.757 61.5393 128.189 61.1735C126.621 60.8051 124.756 60.2318 124.043 59.8971C123.33 59.5624 122.457 58.9787 122.099 58.6C121.622 58.0941 121.425 57.5623 121.358 56.5764C121.272 55.3831 121.358 55.1107 122.135 54.0859C122.633 53.427 123.556 52.6513 124.294 52.2699C125.427 51.6862 125.885 51.6084 128.052 51.6292C129.921 51.6447 130.869 51.7848 131.947 52.2077C132.73 52.5112 133.782 53.0949 134.28 53.5022C134.777 53.9069 135.448 54.7864 135.77 55.4531C136.091 56.1198 136.353 56.8981 136.353 57.1835C136.353 57.4715 136.547 57.7309 136.788 57.7672C137.027 57.8035 138.631 57.7465 140.352 57.6427C142.072 57.5363 144.586 57.3002 145.942 57.116L148.404 56.784C148.303 54.7812 148.139 53.8499 147.976 53.4218C147.813 52.9937 147.333 51.8834 146.916 50.9572C146.351 49.7068 145.641 48.7677 144.169 47.3227C142.785 45.9685 141.596 45.0838 140.24 44.4067C139.172 43.8723 137.19 43.1303 135.834 42.7567ZM311.932 42.2846C310.649 42.0615 308.433 41.8851 307.008 41.8954C305.393 41.9058 303.341 42.1315 301.565 42.4973C299.997 42.819 297.898 43.4624 296.9 43.9242C295.903 44.3885 294.169 45.4314 293.047 46.2408C291.925 47.0503 290.458 48.3578 289.787 49.1412C289.113 49.9247 288.097 51.2686 287.524 52.1247C286.951 52.9808 286.122 54.4413 285.682 55.3675C285.238 56.2937 284.632 57.8139 284.331 58.7401C284.033 59.6662 283.619 61.5341 283.414 62.8909C283.207 64.2477 283.038 66.4632 283.038 67.82C283.038 69.1768 283.217 71.3923 283.435 72.7491C283.655 74.106 284.238 76.3811 284.736 77.808C285.233 79.2348 286.151 81.2194 286.775 82.2182C287.402 83.217 288.374 84.618 288.939 85.3314C289.502 86.0448 290.766 87.2823 291.748 88.0787C292.728 88.8752 294.172 89.8895 294.957 90.3305C295.742 90.7716 297.315 91.4928 298.455 91.9312C299.596 92.3722 301.462 92.9222 302.602 93.1531C304.211 93.4774 305.546 93.5397 308.563 93.4281C310.721 93.3451 313.199 93.0986 314.134 92.8677C315.062 92.6394 317.04 91.843 318.535 91.0984C320.647 90.0426 321.704 89.3084 323.293 87.7959C324.418 86.7271 325.877 85.033 326.532 84.0342C327.188 83.0354 328.178 81.0508 328.733 79.624C329.287 78.1971 329.756 76.5679 329.777 76.005C329.808 75.1203 329.723 74.9517 329.165 74.7857C328.81 74.6793 326.214 74.2357 323.399 73.7998C320.585 73.364 318.193 73.0527 318.087 73.1071C317.98 73.159 317.794 73.6546 317.672 74.2097C317.55 74.7623 317.159 75.7974 316.801 76.5108C316.443 77.2243 315.552 78.3735 314.819 79.0636C314.085 79.7537 312.73 80.6876 311.802 81.139C310.252 81.894 309.91 81.9588 307.526 81.9562C305.139 81.9536 304.794 81.8862 303.185 81.1131C302.167 80.6228 300.86 79.7044 300.06 78.9105C299.303 78.1608 298.258 76.7884 297.74 75.8623C297.219 74.9309 296.558 73.1902 296.268 71.9709C295.975 70.7567 295.737 68.92 295.737 67.8849C295.734 66.8498 295.903 65.2154 296.107 64.2529C296.31 63.2904 296.924 61.4589 297.468 60.1825C298.23 58.3898 298.779 57.5363 299.881 56.4338C300.749 55.5647 301.964 54.6982 302.991 54.2156C304.551 53.4815 304.888 53.4218 307.526 53.4218C310.035 53.4218 310.548 53.5022 311.802 54.0833C312.587 54.4465 313.797 55.2637 314.495 55.8993C315.192 56.5349 316.018 57.4611 316.335 57.9618C316.648 58.4625 317.097 59.482 317.332 60.2318C317.641 61.2072 317.892 61.5886 318.216 61.5782C318.465 61.5704 321.176 61.132 324.242 60.6053L329.813 59.6481C329.692 58.6441 329.414 57.5908 329.119 56.6646C328.826 55.7385 328.108 53.9873 327.528 52.7732C326.67 50.9858 326.071 50.1738 324.358 48.4927C323.15 47.3045 321.373 45.8984 320.199 45.2057C319.074 44.539 317.278 43.7011 316.208 43.343C315.14 42.985 313.214 42.5077 311.932 42.2846ZM193.367 43.1744C193.069 43.0239 190.574 42.9228 187.471 42.9306C184.515 42.9409 181.856 43.0499 181.565 43.1744C181.27 43.2989 180.948 43.7763 180.832 44.2588C180.718 44.7336 180.461 45.7038 180.259 46.4173C180.057 47.1307 179.422 49.4059 178.847 51.4761C178.271 53.5463 177.561 56.1121 177.271 57.1835C176.981 58.2523 176.579 59.7129 176.377 60.4263C176.175 61.1398 175.325 64.1751 174.49 67.1715C173.653 70.1678 172.806 73.2343 172.606 73.984C172.409 74.7364 172.186 75.3512 172.116 75.3538C172.046 75.3538 171.785 74.6222 171.538 73.7272C171.295 72.8322 170.678 70.4091 170.17 68.3389C169.662 66.2687 168.968 63.293 168.626 61.7235C168.284 60.1539 167.82 58.4313 167.597 57.8969C167.374 57.3625 166.832 55.5517 166.389 53.8758C165.948 52.1999 165.153 49.1361 164.624 47.0658L163.663 43.3041C153.846 43.1978 150.85 43.2263 150.671 43.3015C150.425 43.4001 150.503 43.9242 150.985 45.4444C151.337 46.5496 152.104 49.0297 152.69 50.9572C153.276 52.8848 154.051 55.4505 154.411 56.6646C154.771 57.8788 155.333 59.8037 155.66 60.9452C155.989 62.0867 157.684 67.5736 159.428 73.1383C161.172 78.703 163.051 84.7736 163.601 86.6285C164.153 88.4834 164.65 90.2345 164.707 90.5199C164.767 90.8053 164.883 91.2437 164.966 91.4928C165.049 91.7418 165.381 92.009 165.702 92.0843C166.024 92.1595 168.955 92.1906 172.22 92.1491L178.152 92.0765C179.077 89.0593 179.99 85.8502 180.777 82.9965C181.565 80.1428 182.755 75.8804 183.418 73.5274C184.082 71.1744 184.968 68.0198 185.388 66.5229C185.642 65.6158 185.961 64.4743 186.243 63.4685C186.425 62.8146 186.592 62.218 186.715 61.7806C187.023 60.6702 187.337 59.7648 187.407 59.7648C187.477 59.7648 188.039 61.6664 188.656 63.9883C189.27 66.3102 190.107 69.3169 190.511 70.6737C190.918 72.0305 192.139 76.3474 193.225 80.2725C194.311 84.1951 195.438 88.224 195.731 89.2228C196.024 90.2216 196.368 91.3008 196.501 91.6225C196.736 92.2062 196.749 92.2062 202.956 92.2062C209.145 92.2062 209.178 92.2036 209.474 91.6225C209.637 91.3008 210.054 90.0478 210.396 88.8336C210.741 87.6195 211.703 84.4701 212.535 81.8291C213.364 79.1881 214.356 75.9219 214.74 74.5651C215.121 73.2083 215.784 70.9331 216.209 69.5063C216.637 68.0794 217.275 66.0352 217.63 64.9663C217.982 63.8949 218.381 62.7871 218.513 62.5018C218.645 62.2164 218.861 61.5159 218.993 60.9452C219.122 60.3745 220.167 56.8125 221.315 53.0327C222.463 49.2528 223.582 45.5741 223.8 44.8607C224.02 44.1473 224.202 43.4754 224.204 43.369C224.207 43.2626 221.291 43.1744 217.728 43.1744C212.768 43.1744 211.226 43.2497 211.153 43.4987C211.099 43.6777 210.855 44.6973 210.612 45.7687C210.365 46.8375 209.946 48.5316 209.676 49.5304C209.477 50.2693 209.039 51.8999 208.584 53.5933C208.425 54.189 208.263 54.7924 208.108 55.3675C207.834 56.3836 207.54 57.476 207.279 58.4497C206.971 59.594 206.707 60.5745 206.571 61.0749C206.32 62.0011 205.628 64.6291 205.029 66.912C204.433 69.195 203.715 71.9968 203.436 73.1383C203.156 74.2798 202.881 75.2734 202.827 75.3434C202.772 75.4135 202.443 74.4821 202.093 73.268C201.746 72.0539 201.401 70.8294 201.329 70.544C201.259 70.2586 200.481 67.4568 199.605 64.3177C198.727 61.1787 197.553 56.8592 196.993 54.7189C196.433 52.5787 195.578 49.6601 195.093 48.2333C194.609 46.8064 194.14 45.1435 194.049 44.5364C193.94 43.8014 193.713 43.3474 193.367 43.1744ZM241.757 43.2289C241.516 42.9721 240.238 42.9046 236.387 42.9409C233.607 42.9669 230.888 43.0603 230.344 43.1459L229.354 43.3041C229.261 91.773 229.266 91.9701 229.779 92.0972C230.064 92.1647 232.922 92.1906 236.128 92.1491L241.959 92.0765C242.06 49.0063 242.003 43.4883 241.757 43.2289ZM12.6054 43.3041L0 43.164L0.116621 59.3186C0.212509 72.3704 0.308397 75.8467 0.62716 77.4188C0.84226 78.4903 1.37612 80.4749 1.80891 81.8291C2.2443 83.1937 3.05546 84.9889 3.62042 85.8502C4.18279 86.7063 5.33086 88.0502 6.17052 88.8336C7.01019 89.6197 8.50812 90.6859 9.50328 91.2074C10.4959 91.7289 12.1259 92.4034 13.1237 92.7069C14.1215 93.0104 15.6945 93.3295 16.6223 93.4125C17.5475 93.4982 19.3564 93.4281 20.6393 93.2595C21.9221 93.0908 23.788 92.668 24.7858 92.3229C25.7835 91.9753 27.4058 91.1374 28.3932 90.4577C29.378 89.778 30.8371 88.499 31.6327 87.6117C32.4283 86.7245 33.1358 85.9955 33.2084 85.9877C33.2783 85.9825 33.4338 87.233 33.5479 88.7662C33.6645 90.302 33.8977 91.7081 34.0662 91.8923C34.302 92.1491 35.6781 92.2244 39.8169 92.214C42.8101 92.2062 45.3939 92.1128 45.5572 92.0064C45.7749 91.8689 45.7852 91.3345 45.5961 90.0011C45.4483 88.9582 45.2877 78.6252 45.2255 65.7446L45.1114 43.3041L32.773 43.164C32.6797 57.5467 32.5553 64.2918 32.4335 67.4309C32.2866 71.2358 32.0776 73.6139 31.8063 74.5651C31.5834 75.3486 31.0729 76.516 30.6712 77.1594C30.2721 77.8028 29.3677 78.7601 28.6602 79.2919C27.9475 79.8263 26.4832 80.5475 25.3689 80.9133C24.1094 81.3258 22.7566 81.5723 21.7407 81.5775C20.4138 81.5826 19.7918 81.4218 18.3068 80.6954C17.0655 80.0858 16.1558 79.4086 15.4302 78.5473C14.8445 77.8547 14.2329 77.0271 14.0696 76.7054C13.9064 76.3837 13.5746 75.3927 13.3336 74.5003C12.9553 73.102 12.8775 70.8475 12.7505 58.0915L12.6054 43.3041Z" fill="#F4F1EA"/>
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M262.044 0.27809C261.546 0.200261 260.554 0.0861132 259.841 0.0264449C259.128 -0.0358177 257.789 0.0160678 256.861 0.137999C255.503 0.314409 254.075 0.892933 249.475 3.1292C246.339 4.65204 241.031 7.25928 237.683 8.92221C234.335 10.5825 230.6 12.4841 229.39 13.1431C228.18 13.802 226.617 14.8449 225.917 15.4624C225.22 16.0772 224.334 17.0501 223.948 17.6208C223.562 18.1916 222.979 19.359 222.649 20.2151C222.191 21.4162 222.059 22.2775 222.069 23.9768C222.077 25.4581 222.245 26.6489 222.579 27.6088C222.854 28.3948 223.432 29.5623 223.862 30.203C224.292 30.8438 225.158 31.8193 225.788 32.3667C226.415 32.9141 227.599 33.7027 228.418 34.1178C229.237 34.5329 230.753 35.0102 231.787 35.1789C233.233 35.4149 234.055 35.4149 235.351 35.1789C236.605 34.9506 239.189 33.835 245.458 30.8179C250.089 28.5894 256.096 25.7046 258.804 24.41C261.513 23.1129 264.4 21.6679 265.219 21.1983C266.18 20.6483 267.217 19.7222 268.139 18.5937C269.098 17.4185 269.707 16.373 269.987 15.4157C270.215 14.6296 270.464 13.2287 270.536 12.3026C270.612 11.3764 270.529 9.85615 270.352 8.92999C270.176 8.00384 269.723 6.67298 269.342 5.97771C268.963 5.27985 267.924 4.02422 267.033 3.18887C266.141 2.35091 264.858 1.38584 264.182 1.0434C263.505 0.700956 262.541 0.355918 262.044 0.27809Z" fill="#C87F63"/>
+                        </svg>
+                        {% if _show_cover_cobrand %}
+                        <span class="cover-brand-divider">×</span>
+                        {% if accountant_logo_url %}
+                        <img src="{{ accountant_logo_url }}" alt="{{ accountant_firm_name }}" class="cover-accountant-logo">
+                        {% else %}
+                        <span class="cover-accountant-name">{{ accountant_firm_name }}</span>
+                        {% endif %}
+                        {% endif %}
+                    </span>
+                </td>
+                <td class="cover-ref">
+                    <span class="cover-ref-id">{{ (report_id_display or report_id) | format_ref(valuation_date) }}</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    {# ── Hero Area: Company + Value — vertically centered via display:table-cell ── #}
+    <div class="cover-hero-wrapper">
+        <div class="cover-hero-area">
+            <div class="cover-company">
+                <span class="cover-label">{% if is_seller_report|default(false) %}{{ t.cover_estimate_label_seller }}{% else %}{{ t.cover_estimate_label }}{% endif %}</span>
+                <h1 class="cover-company-name{% if (company_name|default(''))|length > 30 %} very-long-name{% elif (company_name|default(''))|length > 18 %} long-name{% endif %}">{{ company_name }}</h1>
+                
+                {% if industry or business_type_title %}
+                <div class="cover-industry-badge">
+                    {% set _cover_activity = (business_type_title or industry or '')|lower %}
+                    {% if _cover_activity in ['apotheek', 'pharmacy'] or (nace_code or '')[:5] == '47.73' %}
+                    {# Deterministic inline vector: no host emoji/font dependency. #}
+                    <svg class="cover-industry-icon" viewBox="0 0 32 32" role="img" aria-label="Apotheek" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 3h6v7h7v6h-7v7h-6v-7H6v-6h7z" fill="#32B8A8" opacity=".98"/>
+                        <path d="M7 22h18c-.8 4.2-4.4 7-9 7s-8.2-2.8-9-7z" fill="none" stroke="#32B8A8" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M23.5 5.5 18 20" fill="none" stroke="#32B8A8" stroke-width="2.2" stroke-linecap="round"/>
+                    </svg>
+                    {% endif %}
+                    <span>{{ business_type_title or industry }}</span>
+                </div>
+                {% endif %}
+                
+                {% if legal_form or founded_year %}
+                <div style="margin-top: 4pt; font-size: 8pt; color: hsl(224, 10%, 60%);">
+                    {% if legal_form %}{{ legal_form }}{% endif %}
+                    {% if legal_form and founded_year %} · {% endif %}
+                    {% if founded_year %}{{ t.cover_founded }} {{ founded_year }}{% endif %}
+                    {% if company_age_years %}{% if company_age_years == 1 %} (1 {{ t.cover_year_suffix }}){% else %} ({{ company_age_years }} {{ t.cover_years_suffix }}){% endif %}{% endif %}
+                </div>
+                {% endif %}
+
+                {% if report_scope|default('standard') == 'client_indicative' and (registration_number or financial_reference_date) %}
+                <div style="margin-top: 3pt; font-size: 7.5pt; color: hsl(224, 10%, 60%);">
+                    {% if registration_number %}{% if country_code|default('') == 'BE' %}KBO{% else %}{% if (locale|default('nl'))|lower == 'fr' %}N° d'entreprise{% elif (locale|default('nl'))|lower == 'en' %}Registration no.{% else %}Ondernemingsnummer{% endif %}{% endif %} {{ registration_number }}{% endif %}
+                    {% if registration_number and financial_reference_date %} · {% endif %}
+                    {% if financial_reference_date %}{% if (locale|default('nl'))|lower == 'fr' %}Référence financière{% elif (locale|default('nl'))|lower == 'en' %}Financial reference{% else %}Financiële referentie{% endif %} {{ financial_reference_date|format_date(locale|default('nl')) }}{% endif %}
+                </div>
+                {% endif %}
+
+                {% if show_consolidation|default(false) and cover_sub_line %}
+                <div class="cover-consolidation-subline" style="margin-top: 5pt; font-size: 8pt; font-weight: 700; color: hsl(172, 55%, 45%);">
+                    {{ cover_sub_line }}
+                </div>
+                {% endif %}
+
+                {% if show_holdings_fallback|default(false) and holdings_fallback_message %}
+                <div class="cover-consolidation-fallback" style="margin-top: 5pt; max-width: 320pt; font-size: 8pt; line-height: 1.35; color: hsl(224, 10%, 48%);">
+                    {{ holdings_fallback_message }}
+                </div>
+                {% endif %}
+
+                {% if discussion_signoff_line %}
+                <div class="cover-discussion-signoff" style="margin-top: 5pt; font-size: 7pt; font-weight: 600; color: hsl(224, 10%, 68%);">
+                    {{ discussion_signoff_line }}
+                </div>
+                {% endif %}
+
+                {% if not indicative_presentation|default(false) %}{% include "main_report_pdf/partials/attestation-block.jinja" %}{% endif %}
+                {% include "main_report_pdf/partials/_assurance_banner.html" %}
+            </div>
+
+        {% if show_cover_price %}
+        <div class="cover-value-block">
+            {% if has_negative_ebitda_recovery|default(false) and negative_ebitda_no_range|default(false) %}
+            <span class="cover-value-label">{{ negative_ebitda_recovery_copy.title }}</span>
+            <div class="cover-value-amount" style="max-width: 155mm; font-size: 20pt; line-height: 1.15; letter-spacing: -0.2pt;">{{ negative_ebitda_recovery_copy.no_range }}</div>
+            <span class="cover-value-note">{{ negative_ebitda_recovery_copy.subtitle }}</span>
+            {% elif is_fiscal_method %}
+                {# Meerwaarde-tax — leads with the forfaitaire
+                   referentiewaarde (the number being filed for the
+                   cedent's 31/12/2025 cost basis). M&A value is a
+                   secondary chip below; the four-anchor "hoogste van"
+                   worksheet lives on the dedicated fiscal page. #}
+                <span class="cover-value-label">{{ t.cover_fiscal_label|default(t.fiscal_reference_value_short) }}</span>
+                {{ cover_value_amount(fiscal_reference_value|format_currency_compact) }}
+                <span class="cover-value-note">
+                    {% if fiscal_reference_date %}{{ t.cover_fiscal_note|default(t.fiscal_subtitle)|replace('{date}', fiscal_reference_date) }}{% else %}{{ t.fiscal_subtitle }}{% endif %}
+                </span>
+                {% if valuation %}
+                <div style="margin-top: 8pt; display: inline-block; padding: 4pt 10pt; border-radius: 12pt; background: rgba(60, 60, 60, 0.08); border: 1pt solid rgba(60, 60, 60, 0.20);">
+                    <span style="font-size: 7pt; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: hsl(0, 0%, 35%); white-space: nowrap;">
+                        {{ t.cover_fiscal_market_chip|default(t.fiscal_ma_market_value) }}: {{ valuation|format_currency_compact }}
+                    </span>
+                </div>
+                {% endif %}
+                {% elif is_startup_valuation_report and startup_report %}
+                {# Startup branch — pre-revenue ventures never have an
+                   EV / equity split, so the SME-style "Enterprise
+                   Value" / "Equity Value" headline is wrong here.
+                   Use the engine's canonical pre-money number with
+                   a methodology subtitle that reads what investors
+                   actually look for. #}
+                <span class="cover-value-label">{{ startup_report.t.cover_pre_money_label }}</span>
+                {{ cover_value_amount(startup_report.equity_value_mid|format_currency_compact) }}
+                {% if startup_report.equity_value_low and startup_report.equity_value_high
+                      and startup_report.equity_value_low < startup_report.equity_value_high %}
+                {{ cover_value_range(startup_report.equity_value_low|format_currency_compact, startup_report.equity_value_high|format_currency_compact) }}
+                {% endif %}
+                <span class="cover-value-note">
+                    {{ startup_report.t.cover_pre_money_methodology }} · {{ startup_report.stage_display }}
+                </span>
+                {% elif equity_value and (is_holding_sotp_report|default(false) or (enterprise_value_applicability|default('applicable')) == 'not_applicable' or (show_ev_equity_bridge and headline_value_basis|default('equity_value') != 'enterprise_value')) %}
+                <span class="cover-value-label">{% if is_holding_sotp_report|default(false) or (enterprise_value_applicability|default('applicable')) == 'not_applicable' or show_enterprise_to_equity_bridge|default(true) %}{{ t.fiscal_title if is_fiscal_method_only|default(false) else t.cover_equity_label }}{% else %}{{ t.calib_dcf_calculated_value }}{% endif %}</span>
+                {# Range gate also requires ``equity_value_band_is_meaningful``
+                   (set by the aggregator) so a band thinner than 2 % of the
+                   mid — which rounds to the same compact "€X.YM" string —
+                   does not render as a collapsed range after compact rounding. #}
+                {# A divergent hybrid's low–high is the method SPREAD (market vs DCF),
+                   not a confidence band — suppress it on the cover and lead with the
+                   single blended figure; the per-method values are on the breakdown
+                   pages. `method_divergence_caveat` is set by the aggregator. #}
+                {% set _cover_eq_band_show = equity_value_low is not none and equity_value_high is not none and equity_value_low < equity_value_high and equity_value_band_is_meaningful|default(true) and not method_divergence_caveat %}
+                {# Pending EBITDA normalisation: lead with the indicative band and
+                   demote the midpoint until the basis is verified. #}
+                {% if cover_anchor_low is defined and cover_anchor_low and cover_anchor_high %}
+                {# Lead with the conservative market anchor followed by the
+                   engine-weighted hybrid value. #}
+                {{ cover_value_amount((cover_anchor_low|format_currency_compact) ~ ' — ' ~ (cover_anchor_high|format_currency_compact)) }}
+                <span class="cover-value-note">{% if (locale|default('nl'))|lower == 'fr' %}Ancrage conservateur par multiple de marché {{ cover_anchor_low|format_currency_compact }} → valeur pondérée moteur incluant le potentiel DCF {{ cover_anchor_high|format_currency_compact }} (sous réserve de validation des flux de trésorerie).{% elif (locale|default('nl'))|lower == 'en' %}Conservative market-multiple anchor {{ cover_anchor_low|format_currency_compact }} → engine-weighted value incl. DCF upside {{ cover_anchor_high|format_currency_compact }} (pending cash-flow validation).{% else %}Conservatief marktanker {{ cover_anchor_low|format_currency_compact }} → engine-gewogen waarde incl. DCF-opwaarts {{ cover_anchor_high|format_currency_compact }} (onder voorbehoud van kasstroomvalidatie).{% endif %}</span>
+                {% elif ebitda_basis_pending_validation and _cover_eq_band_show %}
+                {{ cover_value_amount((equity_value_low|format_currency_compact) ~ ' — ' ~ (equity_value_high|format_currency_compact)) }}
+                <span class="cover-value-note">{% if (locale|default('nl'))|lower == 'fr' %}Fourchette indicative · valeur de référence {{ equity_value|format_currency_compact }}{% elif (locale|default('nl'))|lower == 'en' %}Indicative range · reference value {{ equity_value|format_currency_compact }}{% else %}Indicatieve bandbreedte · indicatieve richtwaarde {{ equity_value|format_currency_compact }}{% endif %}</span>
+                {% else %}
+                {{ cover_value_amount(equity_value|format_currency_compact) }}
+                {% if _cover_eq_band_show %}
+                {{ cover_value_range(equity_value_low|format_currency_compact, equity_value_high|format_currency_compact) }}
+                {% endif %}
+                {% endif %}
+                {% if is_holding_sotp_report|default(false) %}
+                <span class="cover-value-note">{% if (locale|default('nl'))|lower == 'fr' %}Conclusion SOTP des capitaux propres du groupe après pondération des participations et éliminations vérifiées.{% elif (locale|default('nl'))|lower == 'en' %}Group SOTP equity conclusion after ownership weighting and verified eliminations.{% else %}SOTP-conclusie voor het eigen vermogen van de groep na eigendomsweging en geverifieerde eliminaties.{% endif %}</span>
+                {% elif show_enterprise_to_equity_bridge|default(true) %}
+                {# Consolidated equity remains provisional until minority interest
+                   is deducted from the seller-attributable value. #}
+                <span class="cover-value-note">{% if is_fiscal_method_only|default(false) %}{{ t.fiscal_scope_disclaimer }}{% elif has_minority_interest %}{% if (locale|default('nl'))|lower == 'fr' %}Capitaux propres consolidés, avant déduction des intérêts minoritaires — la valeur finale vendeur nécessite une décote de minoritaires.{% elif (locale|default('nl'))|lower == 'en' %}Consolidated equity, before deduction of minority interest — final seller value requires a minority haircut.{% else %}Geconsolideerd eigen vermogen, vóór aftrek van minderheidsbelang — definitieve verkoperswaarde vereist een minderheidsaftrek.{% endif %}{% elif is_asset_anchored_method or is_yield_methodology|default(false) %}{% if (locale|default('nl'))|lower == 'fr' %}Capitaux propres autonomes indicatifs — le produit final du groupe nécessite une valorisation Sum-of-the-Parts.{% elif (locale|default('nl'))|lower == 'en' %}Indicative stand-alone equity — final group proceeds require a Sum-of-the-Parts valuation.{% else %}Indicatief stand-alone eigen vermogen — finale groepsopbrengst vereist een Sum-of-the-Parts-waardering.{% endif %}{% else %}{{ t.cover_equity_note }}{% endif %}</span>
+                {# A caller-provided note can explain material surplus cash that is
+                   normally swept before completion. #}
+                {% if surplus_cash_note %}
+                <span class="cover-value-note" style="color: hsl(35, 60%, 38%);">{{ surplus_cash_note }}</span>
+                {% endif %}
+                {% if ebitda_basis_pending_validation %}
+                {# Surface unresolved earnings-basis and ownership adjustments on the
+                   first page without introducing dossier-specific facts. #}
+                <span class="cover-value-note" style="color: hsl(35, 60%, 38%);">{% if (locale|default('nl'))|lower == 'fr' %}Base : exercice {{ latest_year|default(current_year) }}. La base de résultat et les ajustements de normalisation ou de participation en attente doivent être validés avant toute conclusion distribuable.{% elif (locale|default('nl'))|lower == 'en' %}Basis: FY{{ latest_year|default(current_year) }}. The earnings basis and any pending normalization or ownership adjustments require validation before any distributable conclusion.{% else %}Basis: boekjaar {{ latest_year|default(current_year) }}. De resultaatsbasis en eventuele openstaande normalisatie- of deelnemingscorrecties moeten worden gevalideerd vóór enige verspreidbare conclusie.{% endif %}</span>
+                {% endif %}
+                {% endif %}
+                {% if is_nav_methodology|default(false) and show_enterprise_to_equity_bridge|default(true) %}
+                <span class="cover-value-note">({{ t.equity_adjusted_label }})</span>
+                {% endif %}
+                {% elif thin_benchmark_force_range|default(false) and valuation_low is not none and valuation_high is not none and valuation_low < valuation_high %}
+                {# Min-sample floor: ≤3 comparables (or country-baseline proxy). The
+                   benchmark is thin, so we keep the honest thin-reference caveat — but
+                   we LEAD with the central indicative figure and show the low–high as a
+                   band, matching the Summary page. (This branch previously led with the
+                   bare range as the hero, which read as inconsistent against the rest of
+                   the report.) Honesty preserved; headline consistent. #}
+                <span class="cover-value-label">{{ t.cover_ev_label }}</span>
+                {{ cover_value_amount(valuation|format_currency_compact) }}
+                {# Suppress the benchmark band when the methods diverge — the divergence
+                   note below explains the headline; the thin-reference caveat stays. #}
+                {% if not method_divergence_caveat %}
+                {{ cover_value_range(valuation_low|format_currency_compact, valuation_high|format_currency_compact) }}
+                {% endif %}
+                <span class="cover-value-note">{% if (locale|default('nl'))|lower == 'fr' %}Base de référence mince (≤3 transactions / moyenne pays) — indicatif{% if not method_divergence_caveat %} ; la fourchette reflète l’incertitude du benchmark{% endif %}.{% elif (locale|default('nl'))|lower == 'en' %}Thin reference base (≤3 transactions / country average) — indicative{% if not method_divergence_caveat %}; the range reflects benchmark uncertainty{% endif %}.{% else %}Dunne referentiebasis (≤3 transacties / landgemiddelde) — indicatief{% if not method_divergence_caveat %}; de bandbreedte weerspiegelt de benchmarkonzekerheid{% endif %}.{% endif %}</span>
+                {% elif honest_present_range|default(false) and valuation_low is not none and valuation_high is not none and valuation_low < valuation_high %}
+                {# BET-458 — indicative valuation (public data only): headline the low–high
+                   RANGE, never a false-precision point. Gated by honest_present_range
+                   (render flag AND present_point_estimate False); OFF ⇒ this elif is
+                   skipped and the point-led branch below renders byte-identically. #}
+                <span class="cover-value-label">{% if (locale|default('nl'))|lower == 'fr' %}Fourchette de valorisation indicative{% elif (locale|default('nl'))|lower == 'en' %}Indicative valuation range{% else %}Indicatieve waarderingsrange{% endif %}</span>
+                {{ cover_value_amount((valuation_low|format_currency_compact) ~ ' – ' ~ (valuation_high|format_currency_compact)) }}
+                <span class="cover-value-note">{% if is_disclosed_external_market_fallback|default(false) %}{% if (locale|default('nl'))|lower == 'fr' %}Fourchette VE indicative fondée sur l'EBITDA publié et une référence externe divulguée; aucun benchmark empirique {{ fallback_market_key }}.{% elif (locale|default('nl'))|lower == 'en' %}Indicative EV range on reported EBITDA using a disclosed external reference; no empirical {{ fallback_market_key }} benchmark.{% else %}Indicatieve EV-band op gerapporteerde EBITDA met een bekendgemaakte externe referentie; geen empirische {{ fallback_market_key }}-benchmark.{% endif %}{% elif (locale|default('nl'))|lower == 'fr' %}Une fourchette de départ basée sur des données publiques — connectez vos chiffres pour une valorisation défendable.{% elif (locale|default('nl'))|lower == 'en' %}A starting range from public data — connect your financials for a defensible valuation.{% else %}Een startrange op basis van publieke data — koppel uw cijfers voor een onderbouwde waardering.{% endif %}</span>
+                {% else %}
+                <span class="cover-value-label">{{ t.cover_ev_label }}</span>
+                {% set _headline_value = synthesis_blended_value if has_weighted_synthesis and synthesis_blended_value else valuation %}
+                {{ cover_value_amount(_headline_value|format_currency_compact) }}
+                {% if has_weighted_synthesis %}
+                    {# Suppress the synthesis low–high when the legs diverge — it is the
+                       market-vs-DCF spread, not a band (see method_divergence_caveat). #}
+                    {% if synthesis_valuation_low is defined and synthesis_valuation_high is defined
+                          and synthesis_valuation_low is not none and synthesis_valuation_high is not none
+                          and synthesis_valuation_low < synthesis_valuation_high
+                          and (not method_divergence_caveat or show_weighted_synthesis_range_on_cover|default(false)) %}
+                    {% if headline_ebitda_is_reported|default(false) or show_owner_comp_pending_note|default(false) %}<span style="display: block; margin-top: 8pt; margin-bottom: 2pt; font-size: 6.5pt; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: hsl(224, 10%, 58%);">{% if (locale|default('nl'))|lower == 'fr' %}Sensibilité du modèle avant normalisations — pas une fourchette statistique{% elif (locale|default('nl'))|lower == 'en' %}Model sensitivity before normalisations — not a statistical range{% else %}Modelgevoeligheid vóór normalisaties — geen statistische transactierange{% endif %}</span>{% endif %}
+                    {{ cover_value_range(synthesis_valuation_low|format_currency_compact, synthesis_valuation_high|format_currency_compact) }}
+                    {% endif %}
+                {% elif valuation_low is defined and valuation_high is defined
+                      and valuation_low is not none and valuation_high is not none
+                      and valuation_low < valuation_high
+                      and valuation_band_is_meaningful|default(true)
+                      and not method_divergence_caveat %}
+                {{ cover_value_range(valuation_low|format_currency_compact, valuation_high|format_currency_compact) }}
+                {% endif %}
+                <span class="cover-value-note">
+                    {% if has_weighted_synthesis %}
+                    {{ client_presentation_method_label|default(synthesis_methodology_label|default(synthesis_badge_label), true) }}.{% if headline_ebitda_is_reported|default(false) or show_owner_comp_pending_note|default(false) %} {% if (locale|default('nl'))|lower == 'fr' %}Base déclarée, avant normalisations · aucun résultat intermédiaire 2026 intégré.{% elif (locale|default('nl'))|lower == 'en' %}Reported basis, before normalisations · no 2026 interim results incorporated.{% else %}Gerapporteerde basis, vóór normalisaties · geen tussentijdse cijfers 2026 verwerkt.{% endif %}{% endif %}
+                    {% elif is_adaptive_only_path|default(false) %}
+                    {# VAL-2026-35A4: lens-disclosing variant when DCF excluded. #}
+                    {% if is_adaptive_multiples_only|default(false) %}
+                    {{ t.cover_ev_note_adaptive_multiples_only }}.
+                    {% else %}
+                    {{ t.cover_ev_note_adaptive }}.
+                    {% endif %}
+                    {% elif primary_method_label is defined and primary_method_label %}
+                    {{ primary_method_label }}
+                    {% elif is_dcf_only_methodology %}
+                    {{ t.cover_ev_note_dcf }}{% if dcf_wacc %} ({{ t.cover_wacc_label }} {{ dcf_wacc|format_percentage }}){% endif %}.
+                    {% elif is_hybrid %}
+                    {{ t.cover_ev_note_hybrid }}.
+                    {% else %}
+                    {{ t.cover_ev_note_default }}
+                    {% endif %}
+                </span>
+                {% endif %}
+
+                {# DCF↔market divergence — slim page-1 note so a wide headline
+                   range is not read as a precision band; the full notice lives on
+                   the Important Notes page. Renders after every value branch (it is
+                   outside the if/elif chain) and is gated on the aggregator's
+                   `method_divergence_caveat` (hybrid + divergent only). #}
+                {% if method_divergence_caveat %}
+                <span class="cover-value-note" style="color: hsl(35, 60%, 38%);">{% if (locale|default('nl'))|lower == 'fr' %}Ce chiffre combine un multiple de marché et un DCF qui divergent sensiblement — voir les valeurs par méthode dans les Notes importantes.{% elif (locale|default('nl'))|lower == 'en' %}This figure blends a market multiple and a DCF that diverge materially — see the per-method values in the Important Notes.{% else %}Dit cijfer combineert een markt-multiple en een DCF die sterk uiteenlopen — zie de waarden per methode in de Belangrijke opmerkingen.{% endif %}</span>
+                {% endif %}
+
+                {# Manual override badge — fires when an explicit method
+                   override is in effect (`show_method_override`). Visible
+                   on the very first page so a buyer immediately knows the
+                   headline is the advisor's manual selection, not the AI
+                   recommendation. Suppressed on Adaptive (default) runs. #}
+                {% if show_method_override and t.cover_manual_override_badge %}
+                <div class="cover-manual-override-chip" style="margin-top: 10pt; display: inline-block; padding: 4pt 10pt; border-radius: 12pt;
+                            background: rgba(60, 100, 180, 0.12); border: 1pt solid rgba(60, 100, 180, 0.42);">
+                    <span style="font-size: 7pt; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: hsl(220, 50%, 32%);">
+                        {{ t.cover_manual_override_badge }}
+                    </span>
+                </div>
+                {% endif %}
+
+                {# Confidence chip on the cover. Visible at first glance so
+                   sophisticated readers anchor on the engine's own
+                   uncertainty signal before the headline value. Three Towers
+                   Capital regression: the 58%-LOW score was only on page 2.
+                   Color-banded: ≥80 high (green), ≥60 medium (amber),
+                   else low (grey-red). #}
+                {# Suppressed when score is 0 (default-uninitialized) or
+                   negative — those aren't real confidence signals and would
+                   render a misleading "0% LOW" chip on the cover.
+                   Client-suppressed (report clean-up, May 2026): the engine
+                   confidence % is internal-only (logs / API). A "X% · LOW"
+                   chip on the cover anchors a seller on doubt before they read
+                   the value; set show_engine_confidence to re-enable. #}
+                {% if show_engine_confidence|default(false) and overall_confidence_score is defined and overall_confidence_score is not none and (overall_confidence_score|float) > 0 %}
+                {# Use a numeric intermediate: safe_round returns Markup, which breaks >= comparisons. #}
+                {% set _conf_pct_num = overall_confidence_score|float|round(0) %}
+                {% set _conf_high = _conf_pct_num >= 80 %}
+                {% set _conf_medium = (_conf_pct_num >= 60) and (_conf_pct_num < 80) %}
+                <div class="cover-confidence-chip" style="margin-top: 10pt; display: inline-block; padding: 4pt 10pt; border-radius: 12pt;
+                            background: {% if _conf_high %}rgba(63, 145, 90, 0.18){% elif _conf_medium %}rgba(214, 158, 46, 0.20){% else %}rgba(196, 87, 79, 0.20){% endif %};
+                            border: 1pt solid {% if _conf_high %}rgba(63, 145, 90, 0.45){% elif _conf_medium %}rgba(214, 158, 46, 0.55){% else %}rgba(196, 87, 79, 0.50){% endif %};">
+                    <span style="font-size: 7pt; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;
+                                 color: {% if _conf_high %}hsl(143, 40%, 28%){% elif _conf_medium %}hsl(35, 60%, 28%){% else %}hsl(6, 50%, 32%){% endif %};">
+                        {{ t.exec_confidence_score }}: {{ _conf_pct_num|int }}%
+                        {% if _conf_high %}
+                        &middot; HIGH
+                        {% elif _conf_medium %}
+                        &middot; MEDIUM
+                        {% else %}
+                        &middot; LOW
+                        {% endif %}
+                    </span>
+                </div>
+                {% endif %}
+
+                {# Phase 5 — non-EUR statutory currency disclosure.
+                   Reads `cover_statutory_currency` (resolved via
+                   `_resolve_cover_statutory_currency` in the aggregator,
+                   which prefers the Upswitch Index-backed runtime cache). Hidden
+                   when the company is in a eurozone country (the comparison
+                   is the only gate — the engine math is always EUR). #}
+                {% if cover_statutory_currency and cover_statutory_currency != 'EUR' %}
+                <div class="cover-currency-disclosure" style="margin-top: 10pt; display: inline-block; padding: 4pt 10pt; border-radius: 12pt;
+                            background: rgba(60, 60, 60, 0.10);
+                            border: 1pt solid rgba(60, 60, 60, 0.25);">
+                    <span style="font-size: 7pt; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: hsl(0, 0%, 35%);">
+                        {{ t.cover_statutory_currency_label }}: {{ cover_statutory_currency }} &middot; {{ t.cover_statutory_currency_note }}
+                    </span>
+                </div>
+                {% endif %}
+
+                {# Owner-profiling disclosure on cover (localized one-liner).
+                   Suppressed when the headline methodology is asset-based
+                   (adjusted_nav / fiscal_4x) — both are owner-independent
+                   by construction. Mirrors the section gate at
+                   master_report.html. #}
+                {# Owner-profiling chip suppressed on fiscal_method too —
+                   the forfait formula is owner-agnostic. See screen twin. #}
+                {% if show_cover_owner_profiling and cover_owner_profiling_text and not is_asset_anchored_method and not is_fiscal_method %}
+                {% set _opb = cover_owner_profiling_band|default('neutral') %}
+                <div class="cover-owner-profiling-chip" style="margin-top: 10pt; display: inline-block; max-width: 100%; padding: 4pt 10pt; border-radius: 12pt;
+                  {% if _opb == 'good' %}
+                  background: rgba(63, 145, 90, 0.18); border: 1pt solid rgba(63, 145, 90, 0.45);
+                  {% elif _opb == 'caution' %}
+                  background: rgba(214, 158, 46, 0.20); border: 1pt solid rgba(214, 158, 46, 0.55);
+                  {% elif _opb == 'warn' %}
+                  background: rgba(196, 87, 79, 0.20); border: 1pt solid rgba(196, 87, 79, 0.50);
+                  {% else %}
+                  background: rgba(107, 114, 128, 0.16); border: 1pt solid rgba(107, 114, 128, 0.42);
+                  {% endif %}">
+                  <span style="font-size: 7pt; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;
+                               {% if _opb == 'good' %}color: hsl(143, 40%, 28%);
+                               {% elif _opb == 'caution' %}color: hsl(35, 60%, 28%);
+                               {% elif _opb == 'warn' %}color: hsl(6, 50%, 32%);
+                               {% else %}color: hsl(224, 14%, 32%);{% endif %}">
+                    {{ cover_owner_profiling_text }}
+                  </span>
+                </div>
+                {# v2 cover badge — severity tier only (PDF twin).
+                   Confidence chip lives in the section hero card,
+                   not on the cover. #}
+                {% if cover_owner_profiling_v2 %}
+                {% set _sevb = cover_owner_profiling_v2.severity_band %}
+                <span class="cover-owner-profiling-badge cover-owner-profiling-badge--severity" style="margin-top: 10pt; margin-left: 6pt; display: inline-block; padding: 4pt 10pt; border-radius: 12pt;
+                  {% if _sevb == 'good' %}background: rgba(63, 145, 90, 0.12); border: 1pt solid rgba(63, 145, 90, 0.40);
+                  {% elif _sevb == 'caution' %}background: rgba(214, 158, 46, 0.14); border: 1pt solid rgba(214, 158, 46, 0.50);
+                  {% elif _sevb == 'warn' %}background: rgba(196, 87, 79, 0.14); border: 1pt solid rgba(196, 87, 79, 0.45);
+                  {% else %}background: rgba(107, 114, 128, 0.10); border: 1pt solid rgba(107, 114, 128, 0.38);{% endif %}">
+                  <span style="font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; margin-right: 4pt;
+                               {% if _sevb == 'good' %}color: hsl(143, 40%, 28%);
+                               {% elif _sevb == 'caution' %}color: hsl(35, 60%, 28%);
+                               {% elif _sevb == 'warn' %}color: hsl(6, 50%, 32%);
+                               {% else %}color: hsl(224, 14%, 32%);{% endif %}">
+                    {{ cover_owner_profiling_v2.severity_tier_label }}
+                  </span>
+                  <span style="font-size: 8pt; font-weight: 800;
+                               {% if _sevb == 'good' %}color: hsl(143, 40%, 24%);
+                               {% elif _sevb == 'caution' %}color: hsl(35, 60%, 24%);
+                               {% elif _sevb == 'warn' %}color: hsl(6, 50%, 28%);
+                               {% else %}color: hsl(224, 14%, 28%);{% endif %}">
+                    {{ cover_owner_profiling_v2.severity_label }}
+                  </span>
+                </span>
+                {% endif %}
+                {% endif %}
+
+                {# PDF twin of the screen cover defensibility chips (Yuki audit,
+                   May 2026). The EBITDA-volatility chip was removed from the
+                   cover (it read as a second multiple beside the applied
+                   EV/EBITDA multiple); the volatility signal stays on the
+                   Executive Summary page. The engine-warnings chip remains. #}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ── Bottom Bar: Data Grid (hidden when cover price is hidden).
+       Two stacked rows: data grid on top, confidential label on its
+       own row right-aligned. Single-row layout caused the date column
+       to overlap with the confidential label at A4 width. #}
+    {% if show_cover_price %}
+    <div class="cover-bottom-bar">
+        <table>
+            <tr>
+                <td>
+                    <div class="cover-data-grid{% if is_holding_sotp_report|default(false) %} cover-data-grid--holding-sotp{% endif %}">
+                        <div class="cover-data-item">
+                            <span class="cover-data-label">
+                                {% if is_holding_sotp_report|default(false) %}{% if (locale|default('nl'))|lower == 'fr' %}Capitaux propres du groupe{% elif (locale|default('nl'))|lower == 'en' %}Group equity value{% else %}Eigen vermogen groep{% endif %}
+                                {% elif is_asset_anchored_method %}{{ t.fiscal_title if is_fiscal_method_only|default(false) else t.cover_equity_label }}
+                                {% elif is_sde_method %}{{ t.cover_sde_label }}
+                                {% elif multiple_metric_type == 'REVENUE' %}{{ t.exec_revenue_label }}
+                                {% elif is_dcf_only_methodology|default(false) %}{{ t.ebitda_reported_label }}{% elif headline_ebitda_is_reported|default(false) %}{% if (locale|default('nl'))|lower == 'fr' %}EBITDA déclaré{% elif (locale|default('nl'))|lower == 'en' %}Reported EBITDA{% else %}{{ t.ebitda_reported_label }}{% endif %}
+                                {# Use pre-normalisation wording while advisor validation is pending. #}
+                                {% elif ebitda_basis_pending_validation|default(false) %}{% if (locale|default('nl'))|lower == 'fr' %}Base EBITDA {{ latest_year|default(current_year) }} (normalisation en attente){% elif (locale|default('nl'))|lower == 'en' %}EBITDA basis {{ latest_year|default(current_year) }} (normalization pending){% else %}EBITDA-basis {{ latest_year|default(current_year) }} (normalisatie in behandeling){% endif %}
+                                {% elif is_disclosed_external_market_fallback|default(false) and is_explicitly_weighted_reported_ebitda|default(false) %}Gewogen gerapporteerde EBITDA
+                                {% elif is_disclosed_external_market_fallback|default(false) %}{{ t.ebitda_reported_label }}
+                                {% else %}{# Derived once in the aggregator: "genormaliseerd" only with a non-zero adjustment total, "(gewogen)" only when the weighted basis is priced. #}{{ cover_ebitda_basis_label|default(t.cover_ebitda_label, true) }}{% endif %}
+                            </span>
+                            <span class="cover-data-value">
+                                {% if is_holding_sotp_report|default(false) %}{{ equity_value|format_currency_compact }}
+                                {% elif is_asset_anchored_method %}{{ equity_value|format_currency_compact }}
+                                {% elif is_sde_method and sde_value %}{{ sde_value|format_currency_compact }}
+                                {% elif multiple_metric_type == 'REVENUE' %}{{ revenue|format_currency_compact }}
+                                {% elif is_dcf_only_methodology|default(false) %}{{ reported_ebitda|format_currency_compact }}{% else %}{{ sustainable_ebitda|format_currency_compact }}{% endif %}
+                            </span>
+                        </div>
+                        {# Cover bottom-bar middle stat — see screen twin for full
+                           rationale. Adaptive hybrid blends now show
+                           "60% / 40%" with label "Adaptive blend" instead
+                           of the misleading single-multiple readout. ── #}
+                        {% if sealed_display is defined %}
+                            {% set _cover_w_mults_pct = sealed_display.weights.market_pct %}
+                            {% set _cover_w_dcf_pct = sealed_display.weights.dcf_pct %}
+                        {% else %}
+                            {% set _cover_w_mults_raw = (adaptive_presentation_multiples_weight|float) if (adaptive_presentation_multiples_weight is defined and adaptive_presentation_multiples_weight is not none) else 0 %}
+                            {% set _cover_w_dcf_raw = (adaptive_presentation_dcf_weight|float) if (adaptive_presentation_dcf_weight is defined and adaptive_presentation_dcf_weight is not none) else 0 %}
+                            {% set _cover_w_total = _cover_w_mults_raw + _cover_w_dcf_raw %}
+                            {% if _cover_w_total > 0 %}
+                                {% set _cover_w_mults_pct = ((_cover_w_mults_raw / _cover_w_total * 100)|safe_round(0))|int %}
+                                {% set _cover_w_dcf_pct = 100 - _cover_w_mults_pct %}
+                            {% else %}
+                                {% set _cover_w_mults_pct = none %}
+                                {% set _cover_w_dcf_pct = none %}
+                            {% endif %}
+                        {% endif %}
+                        {% set _is_adaptive_blend = is_adaptive_only_path|default(false) and _cover_w_dcf_pct is not none and _cover_w_dcf_pct > 0 %}
+                        {% set _cover_synthesis_weight = synthesis_weight_compact|default(synthesis_method_count_label|default('', true), true) %}
+                        {% set _is_weighted_synthesis_blend = has_weighted_synthesis is sameas true and _cover_synthesis_weight %}
+                        <div class="cover-data-item">
+                            <span class="cover-data-label">
+                                {# This tile's VALUE is the gross asset
+                                   substance, not the net NAV/equity. When the caller supplies
+                                   ``cover_asset_value_label`` (e.g. "Bruto substantiewaarde"),
+                                   use it so the gross figure is not mislabelled "(NAV)" — NAV is
+                                   reserved for the net equity tile. Yield dossiers (D2) do not set
+                                   it and keep the method label. #}
+                                {% if is_holding_sotp_report|default(false) %}{% if (enterprise_value_applicability|default('applicable')) == 'not_applicable' %}{% if (locale|default('nl'))|lower == 'fr' %}Base de valeur{% elif (locale|default('nl'))|lower == 'en' %}Value basis{% else %}Waardebasis{% endif %}{% else %}{% if (locale|default('nl'))|lower == 'fr' %}Valeur d'entreprise du groupe{% elif (locale|default('nl'))|lower == 'en' %}Group enterprise value{% else %}Ondernemingswaarde groep{% endif %}{% endif %}
+                                {% elif is_asset_anchored_method %}{{ cover_asset_value_label|default(primary_method_label|default(valuation_methodology_display|default(valuation_methodology))) }}
+                                {% elif is_dcf_only_methodology %}{{ t.cover_wacc_label }}
+                                {% elif _is_weighted_synthesis_blend %}{{ synthesis_badge_label|default(t.synthesis_title, true) }}
+                                {% elif _is_adaptive_blend %}{{ t.cover_adaptive_blend_label }}
+                                {% else %}{{ multiple_display_label|default(t.cover_multiple_label) }}{% endif %}
+                            </span>
+                            <span class="cover-data-value{% if _is_weighted_synthesis_blend %} cover-data-value--phrase{% endif %}">
+                                {% if is_holding_sotp_report|default(false) %}{% if (enterprise_value_applicability|default('applicable')) == 'not_applicable' %}{% if (locale|default('nl'))|lower == 'fr' %}Capitaux propres{% elif (locale|default('nl'))|lower == 'en' %}Equity value{% else %}Eigen vermogen{% endif %}{% else %}{{ enterprise_value_mid|format_currency_compact }}{% endif %}
+                                {% elif is_asset_anchored_method %}{{ valuation|format_currency_compact }}
+                                {% elif is_dcf_only_methodology %}{{ dcf_wacc|format_percentage }}
+                                {% elif _is_weighted_synthesis_blend %}{{ _cover_synthesis_weight }}
+                                {% elif _is_adaptive_blend %}{{ _cover_w_mults_pct }}% / {{ _cover_w_dcf_pct }}%
+                                {% elif is_sde_method and sde_multiple %}{{ sde_multiple|safe_round(2) }}×
+                                {# The cover tile is read as THE multiple. When it sits on the pre-discount
+                                   rail it must say so — unlabelled it contradicts the post-discount band
+                                   printed in the executive summary. #}
+                                {% else %}{{ applied_multiple|safe_round(2) }}×{% if multiple_is_pre_discount|default(false) %}<span style="font-size: 0.62em; opacity: 0.75;"> {% if (locale|default('nl'))|lower == 'fr' %}avant décotes{% elif (locale|default('nl'))|lower == 'en' %}before discounts{% else %}vóór kortingen{% endif %}</span>{% endif %}{% endif %}
+                            </span>
+                        </div>
+                        <div class="cover-data-item">
+                            {# Under dual dating (a financial reference date is shown above) a bare
+                               "Datum" tile is ambiguous — name it as the report date explicitly. #}
+                            <span class="cover-data-label">{% if financial_reference_date %}{% if (locale|default('nl'))|lower == 'fr' %}Date du rapport{% elif (locale|default('nl'))|lower == 'en' %}Report date{% else %}Rapportdatum{% endif %}{% else %}{{ t.cover_date_label }}{% endif %}</span>
+                            <span class="cover-data-value">{{ valuation_date }}</span>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="cover-confidential-row" style="text-align: right; padding-top: 8pt;">
+                    <span class="cover-confidential">{{ t.cover_confidential }}</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+    {% endif %}
+</div>

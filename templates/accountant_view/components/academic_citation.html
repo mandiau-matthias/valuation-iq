@@ -1,0 +1,22 @@
+<!-- 
+Academic Citation Component
+
+Renders inline academic citations with links to bibliography.
+
+Usage:
+    {% include 'accountant_view/components/academic_citation.html' with citation=cite %}
+
+Author: Upswitch CTO Team
+Date: December 2025
+-->
+
+{% if citation %}
+<sup class="academic-citation">
+    <a href="#ref-{{ citation.academic_source.source_id }}" 
+       class="citation-link"
+       title="{{ citation.academic_source.author }} ({{ citation.academic_source.year }}): {{ citation.academic_source.title }}">
+        {{ citation.citation_number }}
+    </a>
+</sup>
+{% endif %}
+

@@ -1,0 +1,11 @@
+{% set _cea_locale = (locale|default('nl'))|lower %}
+<div class="a4-page">
+  {% include "main_report/partials/_page_header.html" %}
+  <div class="section-header">
+    <span class="section-number">{{ canonical_actionable_adjustments_section_number|default('B') }}</span>
+    <h1 class="section-title">{% if _cea_locale == 'fr' %}Cascade d'ajustements actionnables{% elif _cea_locale == 'en' %}Actionable adjustment waterfall{% else %}Actiegerichte aanpassingswaterval{% endif %}</h1>
+  </div>
+  {% set canonical_projection_show_register = false %}
+  {% set canonical_projection_show_adjustments = true %}
+  {% include "shared/components/_canonical_evidence_adjustments_body.html" %}
+</div>

@@ -1,0 +1,28 @@
+{# PDF tree: hardcoded pt/hsl only. The screen tokens (var(--space-*),
+   var(--font-size-*), var(--report-*)) are UNDEFINED in main_report_pdf/base.html,
+   so WeasyPrint dropped every declaration referencing one — the box lost its
+   border, background, padding and font sizes and the chips lost their gap.
+   Values mirror the screen twin (space-2=8pt, space-3=12pt, space-4=16pt,
+   font-size-xs=7pt, font-size-sm=8pt, slate-200=224 10% 91%, surface=40 15% 98%,
+   text-muted=224 10% 45%); teal stays themable via the PDF base's --pdf-teal. #}
+{% if show_multiple_calibration_bridge|default(false) %}
+<div style="margin: 8pt 0; padding: 8pt 12pt; border-radius: 6pt; border: 1pt solid hsl(224, 10%, 91%); background: hsl(40, 15%, 98%);">
+    <p style="margin: 0 0 4pt; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(224, 10%, 45%);">
+        {% if is_seller_report|default(false) %}{{ t.seller_multiple_bridge_title }}{% else %}{{ t.advisor_multiple_bridge_title }}{% endif %}
+    </p>
+    <div style="display: flex; flex-wrap: wrap; gap: 16pt; font-size: 8pt;">
+        {% if bridge_reference_multiple %}
+        <span><strong>{% if is_seller_report|default(false) %}{{ t.seller_multiple_bridge_reference }}{% else %}{{ t.advisor_multiple_bridge_reference }}{% endif %}:</strong> {{ bridge_reference_multiple|safe_round(2) }}×</span>
+        {% endif %}
+        {% if bridge_base_multiple %}
+        <span><strong>{% if is_seller_report|default(false) %}{{ t.seller_multiple_bridge_base }}{% else %}{{ t.advisor_multiple_bridge_base }}{% endif %}:</strong> {{ bridge_base_multiple|safe_round(2) }}×</span>
+        {% endif %}
+        {% if bridge_applied_multiple %}
+        <span style="color: hsl(var(--pdf-teal));"><strong>{% if is_seller_report|default(false) %}{{ t.seller_multiple_bridge_applied }}{% else %}{{ t.advisor_multiple_bridge_applied }}{% endif %}:</strong> {{ bridge_applied_multiple|safe_round(2) }}×</span>
+        {% endif %}
+    </div>
+    <p style="margin: 4pt 0 0; font-size: 7pt; color: hsl(224, 10%, 45%); line-height: 1.5;">
+        {{ t.exec_benchmark_applied_vs_reference }}
+    </p>
+</div>
+{% endif %}

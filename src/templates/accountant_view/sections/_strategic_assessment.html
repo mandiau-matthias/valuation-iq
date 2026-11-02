@@ -1,0 +1,69 @@
+<div class="page">
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 24pt; border: none; border-top: none;">
+    <tr>
+        <td style="padding: 0; border: none; vertical-align: middle;" colspan="2">
+            <h1 id="section-1-1" style="margin: 0 0 32pt 0; page-break-before: always; break-before: page;">{{ t.accountant_strategic_section_title }}</h1>
+        </td>
+    </tr>
+    </table>
+
+    <div class="report-section" style="margin-bottom: 32pt;">
+        <p style="font-size: 12pt; line-height: 1.6; color: #334155; margin-bottom: 16pt;">
+            {{ t.accountant_strategic_intro }}
+        </p>
+        <p style="font-size: 11pt; line-height: 1.5; color: #475569; margin-bottom: 24pt;">
+            {{ t.accountant_strategic_methodology | safe }}
+        </p>
+    </div>
+
+    <!-- Primary Value Drivers -->
+    <div class="report-section">
+        <div style="margin-bottom: 32pt; border-left: 3pt solid #E2E8F0; padding-left: 20pt;">
+            <h2 style="font-family: 'Inter', sans-serif; font-size: 13pt; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16pt;">
+                {{ t.accountant_strategic_drivers_title }}
+            </h2>
+            <p style="font-size: 11pt; line-height: 1.6; color: #334155; margin-bottom: 16pt;">
+                {{ t.accountant_strategic_drivers_intro }}
+            </p>
+            <div style="font-size: 11pt; color: #334155; line-height: 1.6;">
+                {% for driver in (executive_summary.value_drivers if executive_summary else [])|default([]) %}
+                <p style="margin-bottom: 8pt;">{{ driver }}</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Critical Risk Considerations -->
+        <div style="margin-bottom: 40pt; border-left: 3pt solid #E2E8F0; padding-left: 20pt;">
+            <h2 style="font-family: 'Inter', sans-serif; font-size: 13pt; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16pt;">
+                {{ t.accountant_strategic_risks_title }}
+            </h2>
+            <p style="font-size: 11pt; line-height: 1.6; color: #334155; margin-bottom: 16pt;">
+                {{ t.accountant_strategic_risks_intro }}
+            </p>
+            <div style="font-size: 11pt; color: #334155; line-height: 1.6;">
+                {% for risk in (executive_summary.risk_factors if executive_summary else [])|default([]) %}
+                <p style="margin-bottom: 8pt;">{{ risk }}</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    {# 
+    REMOVED: Hardcoded "Strategic Value Optimization Framework" section
+    
+    This section previously contained generic recommendations that appeared for ALL businesses:
+    - "Normalization Audit" 
+    - "Data Depth Enhancement"
+    - "Key Person Risk Mitigation"
+    - "Revenue Model Evolution"
+    - "Operational Decentralization"
+    - "Customer Concentration Diversification"
+    
+    These were NOT data-driven and could be factually incorrect for specific businesses.
+    The report now shows ONLY calculated values and data-driven insights.
+    
+    Academic compliance: USPAP Standard 9, IVS 105
+    Principle: "Less is more" - accuracy over comprehensiveness
+    #}
+
+</div>
