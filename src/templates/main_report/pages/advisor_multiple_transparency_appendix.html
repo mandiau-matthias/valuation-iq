@@ -139,10 +139,7 @@
     <table style="width: 100%; border-collapse: collapse; font-size: 8pt; margin-bottom: 12pt;">
         <tbody>
             {% if amt.reported_earnings is not none %}
-            <tr style="border-bottom: 0.5pt solid hsl(224, 15%, 92%);">
-                <td style="padding: 4pt; color: hsl(224, 10%, 45%);">{% if _is_fr_amt %}EBITDA déclaré{% elif _is_en_amt %}Reported EBITDA{% else %}Gerapporteerde EBITDA{% endif %}</td>
-                <td style="padding: 4pt; text-align: right; font-weight: 600;">{{ amt.reported_earnings|format_currency }}</td>
-            </tr>
+            {% include "main_report/components/_appendix_reported_earnings.html" %}
             {% endif %}
             {% for row in amt.add_back_rows %}
             <tr style="border-bottom: 0.5pt solid hsl(224, 15%, 92%);">

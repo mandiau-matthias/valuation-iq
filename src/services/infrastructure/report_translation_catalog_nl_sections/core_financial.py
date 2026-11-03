@@ -313,9 +313,9 @@ def build_dutch_core_financial_translations() -> dict[str, object]:
         "ebitda_owner_led_pending_body": (
             "Bij een eigenaar-geleide onderneming zal een ervaren koper doorgaans "
             "onderbouwing vragen voor marktconforme eigenaarsvergoeding en voor "
-            "eenmalige of privé-uitgaven. Er zijn nog geen aanpassingen ingevoerd; "
-            "de gerapporteerde EBITDA wordt daarom zonder normalisatie als basis "
-            "gebruikt. Laat deze posten bevestigen vóór externe distributie."
+            "eenmalige of privé-uitgaven. De jaarcijfers die voor de waardering "
+            "zijn gebruikt, bevatten geen normalisatieaanpassingen. "
+            "Laat deze posten bevestigen vóór externe distributie."
         ),
         "ebitda_owner_led_pending_body_prior_year_norms": (
             "Bij een eigenaar-geleide onderneming zal een ervaren koper doorgaans "

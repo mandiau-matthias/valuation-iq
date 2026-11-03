@@ -1,0 +1,11 @@
+{% set weighted = show_ebitda_weighting_footnote|default(false) %}
+{% if weighted and reported_ebitda is defined and reported_ebitda is not none %}
+<tr style="border-bottom: 0.5pt solid hsl(224, 15%, 92%);">
+    <td style="padding: 4pt; color: hsl(224, 10%, 45%);">{% if _is_fr_amt %}EBITDA déclaré du dernier exercice{% elif _is_en_amt %}Latest reported EBITDA{% else %}Gerapporteerde EBITDA van het laatste boekjaar{% endif %}</td>
+    <td style="padding: 4pt; text-align: right; font-weight: 600;">{{ reported_ebitda|format_currency }}</td>
+</tr>
+{% endif %}
+<tr style="border-bottom: 0.5pt solid hsl(224, 15%, 92%);">
+    <td style="padding: 4pt; color: hsl(224, 10%, 45%);">{% if weighted %}{% if _is_fr_amt %}EBITDA pondéré avant ajustements{% elif _is_en_amt %}Weighted EBITDA before adjustments{% else %}Gewogen EBITDA vóór aanpassingen{% endif %}{% else %}{{ t.ebitda_reported_label }}{% endif %}</td>
+    <td style="padding: 4pt; text-align: right; font-weight: 600;">{{ amt.reported_earnings|format_currency }}</td>
+</tr>

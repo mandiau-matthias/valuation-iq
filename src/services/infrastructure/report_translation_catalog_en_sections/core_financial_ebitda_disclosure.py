@@ -37,8 +37,8 @@ EBITDA_AND_DISCLOSURE_TRANSLATIONS: dict[str, object] = {'ebitda_sde_title': 'SD
  'ebitda_owner_led_pending_title': 'Owner-led business — normalisation not yet confirmed.',
  'ebitda_owner_led_pending_body': 'An experienced buyer will normally request support for '
                                   'market-rate owner compensation and any one-time or personal '
-                                  'expenses. No adjustments have been entered yet; reported EBITDA '
-                                  'is therefore used as the valuation basis without normalisation. '
+                                  'expenses. The annual figures used in the valuation have no '
+                                  'normalisation adjustments. '
                                   'Confirm these items before external distribution.',
  'ebitda_owner_led_pending_body_prior_year_norms': 'An experienced buyer will normally request '
                                                    'support for market-rate owner compensation and '

@@ -44,6 +44,15 @@ async def run(input_file: Path, output: Path):
     (output / "valuation.json").write_text(result.model_dump_json(indent=2) + "\n")
     (output / "report.pdf").write_bytes(pdf)
     print(f"Generated {output / 'report.pdf'} and {output / 'valuation.json'}")
+    if result.methodology_selection_reason:
+        print(f"Headline method: {result.methodology_selection_reason}")
+    if result.valuation_run is not None:
+        eligibility = result.valuation_run.calculation_lineage.get("method_eligibility") or {}
+        methods = eligibility.get("methods") or {}
+        if methods:
+            eligible = [name for name, decision in methods.items() if decision.get("eligible") is True]
+            print("Eligible methods:", ", ".join(eligible) if eligible else "none recorded")
+            print("See valuation_run.calculation_lineage.method_eligibility.methods in valuation.json for individual decisions.")
 
 
 if __name__ == "__main__":
